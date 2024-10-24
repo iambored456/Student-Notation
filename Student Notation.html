@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <title>Student Notation Web Applet</title>
+  <style>
+    /* Reset and basic styles */
+    body, html {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      overflow: hidden;
+      font-family: Arial, sans-serif;
+    }
+
+    #app-container {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      width: 100%;
+    }
+
+    /* Note Bank Styles */
+    #note-bank {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 10px;
+      background-color: #f0f0f0;
+      flex: 0 0 auto;
+    }
+
+    .note {
+      width: 30px;
+      height: 30px;
+      background-color: #FFD700;
+      border: 2px solid #000;
+      border-radius: 50%;
+      margin: 0 5px;
+      cursor: grab;
+    }
+
+    /* Grid Container */
+    #grid-container {
+      position: relative;
+      flex: 1 1 auto;
+      overflow: hidden;
+    }
+
+    #notation-grid {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+
+    /* Controls */
+    #controls {
+      display: flex;
+      justify-content: center;
+      padding: 10px;
+      background-color: #f0f0f0;
+      flex: 0 0 auto;
+    }
+
+    #controls button {
+      margin: 0 10px;
+      padding: 10px 20px;
+      font-size: 16px;
+    }
+  </style>
+</head>
+<body>
+  <div id="app-container">
+    <!-- Note Bank -->
+    <div id="note-bank">
+      <div class="note" draggable="true"></div>
+      <!-- You can add more note circles if needed -->
+    </div>
+
+    <!-- Grid Container -->
+    <div id="grid-container">
+      <canvas id="notation-grid"></canvas>
+    </div>
+
+    <!-- Control Buttons -->
+    <div id="controls">
+      <button id="play-button">Play</button>
+      <button id="stop-button">Stop</button>
+    </div>
+  </div>
+
+  <script>
+    // Initialize canvas and context
+    const canvas = document.getElementById('notation-grid');
+    const ctx = canvas.getContext('2d');
+
+    // Grid parameters
+    const rows = 21;
+    const columns = 40;
+    let cellWidth, cellHeight;
+
+    // Store placed notes
+    const placedNotes = [];
+
+    // Audio context for playback
+    let AudioContext = window.AudioContext || window.webkitAudioContext;
+    let audioCtx = new AudioContext();
+
+    // Map rows to pitch frequencies (C4 to C6)
+    const pitchFrequencies = [
+      1046.50, // C6
+      987.77,  // B5
+      932.33,  // Bb5
+      880.00,  // A5
+      830.61,  // Ab5
+      783.99,  // G5
+      739.99,  // Gb5
+      698.46,  // F5
+      659.25,  // E5
+      622.25,  // Eb5
+      587.33,  // D5
+      554.37,  // Db5
+      523.25,  // C5
+      493.88,  // B4
+      466.16,  // Bb4
+      440.00,  // A4
+      415.30,  // Ab4
+      392.00,  // G4
+      369.99,  // Gb4
+      349.23,  // F4
+      329.63   // E4
+    ];
+
+    // Pitch names for labeling
+    const pitchNames = [
+      'C6', 'B5', 'Bb5', 'A5', 'Ab5', 'G5', 'Gb5',
+      'F5', 'E5', 'Eb5', 'D5', 'Db5', 'C5', 'B4',
+      'Bb4', 'A4', 'Ab4', 'G4', 'Gb4', 'F4', 'E4'
+    ];
+
+    // Responsive canvas resizing
+    function resizeCanvas() {
+      canvas.width = canvas.offsetWidth;
+      canvas.height = canvas.offsetHeight;
+      cellWidth = canvas.width / columns;
+      cellHeight = canvas.height / rows;
+      drawGrid();
+      redrawNotes();
+    }
+
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    // Draw the grid with labels and markers
+    function drawGrid() {
+      // Clear the canvas
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // Draw rows
+      for (let i = 0; i <= rows; i++) {
+        ctx.beginPath();
+        ctx.moveTo(0, i * cellHeight);
+        ctx.lineTo(canvas.width, i * cellHeight);
+        ctx.strokeStyle = '#ccc';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+      }
+
+      // Draw columns
+      for (let j = 0; j <= columns; j++) {
+        ctx.beginPath();
+        ctx.moveTo(j * cellWidth, 0);
+        ctx.lineTo(j * cellWidth, canvas.height);
+
+        if (j % 2 === 0) {
+          ctx.strokeStyle = '#000'; // Solid line for full beats
+          ctx.setLineDash([]);
+        } else {
+          ctx.strokeStyle = '#888'; // Dotted line for subdivisions
+          ctx.setLineDash([5, 5]);
+        }
+
+        ctx.lineWidth = 1;
+        ctx.stroke();
+      }
+
+      // Dashed line after the anacrusis (after column 3)
+      const anacrusisEndColumn = 3;
+      ctx.beginPath();
+      ctx.moveTo(anacrusisEndColumn * cellWidth, 0);
+      ctx.lineTo(anacrusisEndColumn * cellWidth, canvas.height);
+      ctx.strokeStyle = '#f00';
+      ctx.setLineDash([10, 5]);
+      ctx.lineWidth = 2;
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      // Grey out the G space (row index 14)
+      const gRow = 14;
+      ctx.fillStyle = 'rgba(200, 200, 200, 0.5)';
+      ctx.fillRect(0, gRow * cellHeight, canvas.width, cellHeight);
+
+      // Add pitch labels on both sides
+      ctx.fillStyle = '#000';
+      ctx.font = `${Math.max(12, cellHeight / 2)}px Arial`;
+
+      for (let i = 0; i < rows; i++) {
+        const y = i * cellHeight + cellHeight / 2 + 4; // Adjust for vertical alignment
+        const pitchName = pitchNames[i];
+
+        // Left side labels
+        ctx.textAlign = 'right';
+        ctx.fillText(pitchName, -5, y);
+
+        // Right side labels
+        ctx.textAlign = 'left';
+        ctx.fillText(pitchName, canvas.width + 5, y);
+      }
+    }
+
+    // Handle dragging notes from the note bank
+    const notes = document.querySelectorAll('.note');
+    notes.forEach(note => {
+      note.addEventListener('dragstart', dragStart);
+    });
+
+    function dragStart(event) {
+      event.dataTransfer.setData('text/plain', 'note');
+    }
+
+    // Handle drop events on the canvas
+    canvas.addEventListener('dragover', dragOverCanvas);
+    canvas.addEventListener('drop', dropOnCanvas);
+
+    function dragOverCanvas(event) {
+      event.preventDefault();
+    }
+
+    function dropOnCanvas(event) {
+      event.preventDefault();
+
+      // Get mouse position relative to the canvas
+      const rect = canvas.getBoundingClientRect();
+      const x = event.clientX - rect.left;
+      const y = event.clientY - rect.top;
+
+      // Calculate grid position with snapping
+      let column = Math.round((x / cellWidth) * 2) / 2;
+      let row = Math.floor(y / cellHeight);
+
+      // Ensure column and row are within bounds
+      column = Math.max(0, Math.min(columns - 1, column));
+      row = Math.max(0, Math.min(rows - 1, row));
+
+      // Place the note at the snapped position
+      placeNoteAt(row, column);
+      drawGrid();
+      redrawNotes();
+    }
+
+    // Function to place note data
+    function placeNoteAt(row, column) {
+      // Check if a note already exists at this position
+      const existingNoteIndex = placedNotes.findIndex(note => note.row === row && note.column === column);
+      if (existingNoteIndex === -1) {
+        // Add new note
+        placedNotes.push({ row, column });
+      } else {
+        // Remove existing note (toggle off)
+        placedNotes.splice(existingNoteIndex, 1);
+      }
+    }
+
+    // Redraw all placed notes
+    function redrawNotes() {
+      placedNotes.forEach(note => {
+        drawNoteOnCanvas(note.row, note.column);
+      });
+    }
+
+    // Function to draw a note on the canvas
+    function drawNoteOnCanvas(row, column) {
+      const x = column * cellWidth;
+      const y = row * cellHeight;
+      const radius = Math.min(cellWidth, cellHeight) / 2 - 2;
+
+      ctx.beginPath();
+      ctx.arc(x + cellWidth / 2, y + cellHeight / 2, radius, 0, 2 * Math.PI);
+      ctx.fillStyle = '#00f';
+      ctx.fill();
+      ctx.strokeStyle = '#000';
+      ctx.lineWidth = 1;
+      ctx.stroke();
+    }
+
+    // Playback functionality
+    document.getElementById('play-button').addEventListener('click', playMusic);
+
+    function playMusic() {
+      // Check if audio context is in suspended state (autoplay policy)
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+
+      const beatDuration = 0.5; // Duration of one beat in seconds
+
+      placedNotes.forEach(note => {
+        const startTime = audioCtx.currentTime + (note.column * (beatDuration / 2));
+        const frequency = pitchFrequencies[note.row];
+
+        playNoteAtTime(frequency, startTime, beatDuration / 2);
+      });
+    }
+
+    function playNoteAtTime(frequency, time, duration) {
+      const oscillator = audioCtx.createOscillator();
+      const gainNode = audioCtx.createGain();
+
+      oscillator.type = 'sine';
+      oscillator.frequency.setValueAtTime(frequency, time);
+
+      oscillator.connect(gainNode);
+      gainNode.connect(audioCtx.destination);
+
+      oscillator.start(time);
+      oscillator.stop(time + duration);
+
+      // Fade out the note
+      gainNode.gain.setValueAtTime(1, time);
+      gainNode.gain.exponentialRampToValueAtTime(0.001, time + duration);
+    }
+
+    // Stop functionality
+    document.getElementById('stop-button').addEventListener('click', stopMusic);
+
+    function stopMusic() {
+      if (audioCtx.state !== 'closed') {
+        audioCtx.close();
+        // Reinitialize the audio context
+        audioCtx = new AudioContext();
+      }
+    }
+
+    // Resume audio context on user interaction
+    document.addEventListener('click', () => {
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+    });
+  </script>
+</body>
+</html>
