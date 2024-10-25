@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <base target="_top">
   <title>Student Notation Web Applet</title>
   <style>
     /* Reset and basic styles */
@@ -107,53 +106,52 @@
     const ctx = canvas.getContext('2d');
 
     // Grid parameters
-    const rows = 21; // Total number of rows (one per pitch)
+    const logicRows = 21; // Total number of logic rows (one per pitch)
+    const visualRows = logicRows * 2 - 1; // Number of visual steps due to overlapping
+
     let cellWidth, cellHeight;
 
     // Define units
-    const unitHeight = 10; // Each row is 10 units high
+    const unitHeight = 10; // Base unit for height
     const unitWidth = 10;  // Base unit for width
 
     // Define column widths in units
     const columnWidths = [
-      32, // Column A
-      32, // Column B
+      32, // Column A (Left)
+      32, // Column B (Left)
       72, // Column C (anacrusis/pickup bar)
       // Main grid columns (D to AI)
-      // Each box consists of two 10-unit columns
-      // So we have 16 boxes (columns D to AI)
-      // Total columns in main grid: 32 columns of 10 units
       ...Array(32).fill(10), // Columns D to AI
-      32, // Column AJ
-      32  // Column AK
+      32, // Column B (Right)
+      32  // Column A (Right)
     ];
 
     // Calculate total columns
     const totalColumns = columnWidths.length;
 
-    // Map grid rows to pitches
+    // Map grid rows to pitches and specify column ('A' or 'B')
     const rowData = [
-      { pitch: 'C6', frequency: 1046.50, color: '#f77878' }, // Row 0
-      { pitch: 'B5', frequency: 987.77, color: '#f778e0' },
-      { pitch: 'Bb/A#', frequency: 932.33, color: null },
-      { pitch: 'A5', frequency: 880.00, color: '#b288ff' },
-      { pitch: 'Ab/G#', frequency: 830.61, color: null },
-      { pitch: 'G5', frequency: 783.99, color: '#78d9f7' },
-      { pitch: 'Gb/F#', frequency: 739.99, color: null },
-      { pitch: 'F5', frequency: 698.46, color: '#9ef777' },
-      { pitch: 'E5', frequency: 659.25, color: '#fcfc74' },
-      { pitch: 'Eb/D#', frequency: 622.25, color: null },
-      { pitch: 'D5', frequency: 587.33, color: '#ffc076' },
-      { pitch: 'Db/C#', frequency: 554.37, color: null },
-      { pitch: 'C5', frequency: 523.25, color: '#f77878' },
-      { pitch: 'B4', frequency: 493.88, color: '#f778e0' },
-      { pitch: 'Bb/A#', frequency: 466.16, color: null },
-      { pitch: 'A4', frequency: 440.00, color: '#b288ff' },
-      { pitch: 'Ab/G#', frequency: 415.30, color: null },
-      { pitch: 'G4', frequency: 392.00, color: '#78d9f7' },
-      { pitch: 'Gb/F#', frequency: 369.99, color: null },
-      { pitch: 'F4', frequency: 349.23, color: '#9ef777' },
-      { pitch: 'E4', frequency: 329.63, color: '#fcfc74' } // Row 20
+      { pitch: 'C6', frequency: 1046.50, color: '#f77878', column: 'A' }, // Row 0
+      { pitch: 'G', frequency: 783.99, color: '#78d9f7', column: 'B' },
+      { pitch: 'Bb/A#', frequency: 932.33, color: null, column: 'A' },
+      { pitch: 'F', frequency: 698.46, color: '#9ef777', column: 'B' },
+      { pitch: 'Ab/G#', frequency: 830.61, color: null, column: 'A' },
+      { pitch: 'Eb/D#', frequency: 622.25, color: null, column: 'B' },
+      { pitch: 'Gb/F#', frequency: 739.99, color: null, column: 'A' },
+      { pitch: 'Db/C#', frequency: 554.37, color: null, column: 'B' },
+      { pitch: 'E', frequency: 659.25, color: '#fcfc74', column: 'A' },
+      { pitch: 'B', frequency: 493.88, color: '#f778e0', column: 'B' },
+      { pitch: 'D', frequency: 587.33, color: '#ffc076', column: 'A' },
+      { pitch: 'A', frequency: 440.00, color: '#b288ff', column: 'B' },
+      { pitch: 'C5', frequency: 523.25, color: '#f77878', column: 'A' },
+      { pitch: 'G', frequency: 392.00, color: '#78d9f7', column: 'B' },
+      { pitch: 'Bb/A#', frequency: 466.16, color: null, column: 'A' },
+      { pitch: 'F', frequency: 349.23, color: '#9ef777', column: 'B' },
+      { pitch: 'Ab/G#', frequency: 415.30, color: null, column: 'A' },
+      { pitch: 'Eb/D#', frequency: 311.13, color: null, column: 'B' }, // Lower Eb/D#
+      { pitch: 'Gb/F#', frequency: 369.99, color: null, column: 'A' },
+      { pitch: 'Db/C#', frequency: 277.18, color: null, column: 'B' }, // Lower Db/C#
+      { pitch: 'E4', frequency: 329.63, color: '#fcfc74', column: 'A' } // Row 20
     ];
 
     // Store placed notes
@@ -170,15 +168,16 @@
 
       // Calculate total width and height in units
       const totalWidthUnits = columnWidths.reduce((a, b) => a + b, 0);
-      const totalHeightUnits = rows * unitHeight;
 
       // Calculate unit sizes based on canvas dimensions
       const unitWidthSize = canvas.width / totalWidthUnits;
-      const unitHeightSize = canvas.height / totalHeightUnits;
 
-      // Set cell dimensions
+      // Calculate cell dimensions
       cellWidth = unitWidthSize * unitWidth;
-      cellHeight = unitHeightSize * unitHeight;
+
+      // Calculate cell height to accommodate overlapping
+      const totalHeightUnits = unitHeight * (logicRows + 0.5); // Adjusted for overlapping
+      cellHeight = canvas.height / totalHeightUnits * unitHeight;
 
       drawGrid();
       redrawNotes();
@@ -208,6 +207,16 @@
       return columnWidths.length - 1;
     }
 
+    // Function to get Y position of a logic row index, accounting for overlapping
+    function getRowY(index) {
+      return index * (cellHeight / 2);
+    }
+
+    // Function to get logic row index from Y position
+    function getRowIndex(y) {
+      return Math.floor(y / (cellHeight / 2));
+    }
+
     // Draw the grid with labels and markers
     function drawGrid() {
       // Clear the canvas
@@ -215,41 +224,18 @@
 
       // Calculate total width and height in units
       const totalWidthUnits = columnWidths.reduce((a, b) => a + b, 0);
-      const totalHeightUnits = rows * unitHeight;
 
-      // Draw horizontal lines
-      for (let i = 0; i <= rows; i++) {
-        const y = i * cellHeight;
+      // Draw horizontal lines (for 11 lines)
+      for (let i = 0; i <= logicRows; i++) {
+        const y = getRowY(i);
         ctx.beginPath();
         ctx.moveTo(0, y);
         ctx.lineTo(canvas.width, y);
 
-        // Get current and next pitches
-        const currentPitch = rowData[i - 1] ? rowData[i - 1].pitch : null;
-        const nextPitch = rowData[i] ? rowData[i].pitch : null;
-
-        // Dashed line between E and F pitches
-        if ((currentPitch && nextPitch) && (
-          (currentPitch.startsWith('E') && nextPitch.startsWith('F')) ||
-          (currentPitch.startsWith('F') && nextPitch.startsWith('E'))
-        )) {
-          ctx.strokeStyle = '#888';
-          ctx.setLineDash([5, 5]);
-          ctx.lineWidth = 1;
-        }
-        // Thicken line between C and B pitches
-        else if ((currentPitch && nextPitch) && (
-          (currentPitch.startsWith('C') && nextPitch.startsWith('B')) ||
-          (currentPitch.startsWith('B') && nextPitch.startsWith('C'))
-        )) {
-          ctx.strokeStyle = '#000';
-          ctx.setLineDash([]);
-          ctx.lineWidth = 2;
-        } else {
-          ctx.strokeStyle = '#ccc';
-          ctx.setLineDash([]);
-          ctx.lineWidth = 1;
-        }
+        // Determine line style
+        ctx.strokeStyle = '#000';
+        ctx.setLineDash([]);
+        ctx.lineWidth = 1;
 
         ctx.stroke();
         ctx.setLineDash([]); // Reset dash
@@ -288,55 +274,47 @@
         x += columnWidths[i] * (canvas.width / totalWidthUnits);
       }
 
-      // Grey out the G5 and G4 rows
-      const gRows = ['G5', 'G4'];
-      for (let i = 0; i < rows; i++) {
-        const row = rowData[i];
-        if (gRows.includes(row.pitch)) {
-          ctx.fillStyle = 'rgba(200, 200, 200, 0.5)';
-          ctx.fillRect(0, i * cellHeight, canvas.width, cellHeight);
-        }
-      }
-
       // Draw legends
-      drawLegend(0, 2); // Left legend columns
-      drawLegend(totalColumns - 2, totalColumns, true); // Right legend columns
+      drawLegend(0, 2, false, ['A', 'B']); // Left legend columns A and B
+      drawLegend(totalColumns - 2, totalColumns, true, ['B', 'A']); // Right legend columns B and A
     }
 
     // Function to draw legends
-    function drawLegend(startColumnIndex, endColumnIndex, isRightSide = false) {
+    function drawLegend(startColumnIndex, endColumnIndex, isRightSide = false, columnsOrder = ['A', 'B']) {
       const xStart = getColumnX(startColumnIndex);
-      const xWidth = (columnWidths.slice(startColumnIndex, endColumnIndex).reduce((a, b) => a + b, 0)) * (canvas.width / columnWidths.reduce((a, b) => a + b, 0));
+      const xWidthTotal = (columnWidths.slice(startColumnIndex, endColumnIndex).reduce((a, b) => a + b, 0)) * (canvas.width / columnWidths.reduce((a, b) => a + b, 0));
+      const columnWidthsPx = columnWidths.slice(startColumnIndex, endColumnIndex).map(widthUnit => widthUnit * (canvas.width / columnWidths.reduce((a, b) => a + b, 0)));
 
-      for (let i = 0; i < rows; i++) {
-        const y = i * cellHeight;
-        const row = rowData[i];
+      let cumulativeX = xStart;
+      for (let col = 0; col < columnsOrder.length; col++) {
+        const columnLabel = columnsOrder[col];
+        const colWidth = columnWidthsPx[col];
 
-        const color = row.color || '#fff'; // Use white if no color
-        let pitchName = row.pitch;
+        for (let i = 0; i < logicRows; i++) {
+          const y = getRowY(i);
+          const row = rowData[i];
 
-        // Remove octave numbers from enharmonic labels
-        if (pitchName.includes('/')) {
-          // Do nothing, as enharmonic labels already have no octave numbers
-        } else {
-          // Basic letter names should have octave numbers
-          pitchName = row.pitch;
+          if (row.column === columnLabel) {
+            const color = row.color || '#fff'; // Use white if no color
+            let pitchName = row.pitch;
+
+            // Draw background for the label
+            ctx.fillStyle = color;
+            ctx.fillRect(cumulativeX, y, colWidth, cellHeight);
+
+            // Draw the pitch label
+            ctx.fillStyle = '#000';
+            ctx.font = `${Math.max(10, cellHeight * 0.6)}px Arial`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(
+              pitchName,
+              cumulativeX + colWidth / 2,
+              y + cellHeight / 2
+            );
+          }
         }
-
-        // Draw background for the label
-        ctx.fillStyle = color;
-        ctx.fillRect(xStart, y, xWidth, cellHeight);
-
-        // Draw the pitch label
-        ctx.fillStyle = '#000';
-        ctx.font = `${Math.max(10, cellHeight * 0.6)}px Arial`;
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText(
-          pitchName,
-          xStart + xWidth / 2,
-          y + cellHeight / 2
-        );
+        cumulativeX += colWidth;
       }
     }
 
@@ -383,10 +361,11 @@
         columnIndex += 0.5;
       }
 
-      const row = Math.floor(y / cellHeight);
+      // Get logic row index
+      const row = getRowIndex(y);
 
       // Ensure row is within bounds
-      if (row < 0 || row >= rows) {
+      if (row < 0 || row >= logicRows) {
         return;
       }
 
@@ -425,7 +404,7 @@
       const nextX = getColumnX(Math.floor(columnIndex) + 1);
       const xPos = x + ((columnIndex % 1) * (nextX - x));
 
-      const y = row * cellHeight;
+      const y = getRowY(row);
       const radius = Math.min(nextX - x, cellHeight) / 2 - 2;
 
       ctx.beginPath();
@@ -448,9 +427,6 @@
 
       const beatDuration = 0.5; // Duration of one beat in seconds
       const unitDuration = beatDuration / 20; // Each 10 units (cell) corresponds to half a beat
-
-      // Calculate total units in main grid (excluding legends and anacrusis)
-      const mainGridUnits = columnWidths.slice(2, totalColumns - 2).reduce((a, b) => a + b, 0);
 
       placedNotes.forEach(note => {
         const columnIndex = note.columnIndex;
