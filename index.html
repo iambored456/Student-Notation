@@ -1,23 +1,89 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Student Notation Web Applet</title>
+  <!-- Google Fonts for Zodeka One -->
+  <link href="https://fonts.googleapis.com/css2?family=Zodeka+One&display=swap" rel="stylesheet">
   <style>
-    /* Reset and basic styles */
-    body, html {
-      margin: 10px;
-      padding: 0;
-      height: calc(100% - 20px);
-      overflow: hidden;
-      font-family: Arial, sans-serif;
+    /* CSS Variables for Consistent Spacing and Colors */
+    :root {
+      --app-padding: 10px;
+      --note-size: 30px;
+      --note-margin: 5px;
+      --control-button-padding: 15px 30px;
+      --control-button-font-size: 16px;
+      --control-button-margin: 0 10px;
+      --background-color: #777777;
+      --note-default-color: #000;
+      --canvas-background: #fff;
+      --line-color: #000;
+      --grid-line-color: #ccc;
+      --grid-subdivision-color: #888;
+      --legend-text-color: #000;
+      --legend-background-default: #fff;
+      --highlight-color: rgba(255, 255, 0, 0.3); /* Semi-transparent yellow */
+      --greyed-row-color: #dcdcdc; /* Grey color for G-rows */
+      --button-click-color: #d3d3d3; /* Light grey for button click */
+      --slider-height: 12px; /* Increased slider height */
+      --slider-thumb-size: 20px; /* Increased thumb size */
+      --slider-track-color: #ddd;
+      --slider-thumb-color: #fff; /* White thumb */
+      --slider-thumb-stroke: 2px solid #000; /* Black stroke */
+      --slider-notch-color: #000;
+      --tempo-label-color: #fff;
+      --volume-label-color: #fff;
+      --tempo-container-width: 220px; /* Increased width for tempo slider */
+      --volume-container-width: 220px; /* Width for volume slider */
+      --slider-margin-top: 10px; /* Margin to adjust slider alignment */
     }
 
+    /* Global Box Sizing */
+    *, *::before, *::after {
+      box-sizing: border-box;
+    }
+
+    /* Reset and Basic Styles */
+    body, html {
+      margin: 0;
+      padding: var(--app-padding);
+      height: 100%;
+      width: 100%;
+      overflow: hidden;
+      font-family: Arial, sans-serif;
+      background-color: var(--background-color);
+    }
+
+    /* App Container */
     #app-container {
       display: flex;
       flex-direction: column;
-      height: calc(100vh - 20px); /* Use viewport height minus margins */
-      width: calc(100vw - 20px);  /* Use viewport width minus margins */
-      box-sizing: border-box;
+      height: 100%;
+      width: 100%;
+      padding: var(--app-padding);
+    }
+
+    /* Title Container */
+    #title-container {
+      text-align: center;
+      margin-bottom: 10px; /* Reduced space */
+    }
+
+    #title-container h1 {
+      font-family: 'Zodeka One', sans-serif; /* Changed to Zodeka One */
+      font-size: 48px;
+      font-weight: bold;
+      margin: 0;
+      letter-spacing: 0; /* Removed space between letters */
+    }
+
+    #title-container h2 {
+      font-family: 'Zodeka One', sans-serif; /* Changed to Zodeka One */
+      font-size: 24px;
+      font-weight: bold;
+      margin: 5px 0 20px 0;
+      letter-spacing: 0; /* Removed space between letters */
     }
 
     /* Note Bank Styles */
@@ -26,526 +92,877 @@
       justify-content: center;
       align-items: center;
       padding: 10px;
-      background-color: #f0f0f0;
-      flex: 0 0 auto; /* Make height variable */
+      background-color: var(--background-color);
+      flex: 0 0 auto;
+      flex-wrap: wrap;
     }
 
     .note {
-      width: 30px;
-      height: 30px;
-      background-color: #000; /* Default to black for the main melody */
-      border: 2px solid #000;
+      width: var(--note-size);
+      height: var(--note-size);
+      background-color: var(--note-default-color);
+      border: 2px solid var(--note-default-color);
       border-radius: 50%;
-      margin: 0 5px;
+      margin: var(--note-margin);
       cursor: grab;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .note:focus {
+      outline: 2px solid #555;
     }
 
     /* Grid Container */
     #grid-container {
       position: relative;
-      flex: 1; /* Allow grid to take up remaining space */
+      flex: 1;
       display: flex;
       justify-content: center;
       align-items: center;
       overflow: hidden;
+      background-color: var(--canvas-background);
+      border: 1px solid #ccc;
+      border-radius: 5px;
     }
 
     #notation-grid {
-      display: block;
-      width: 100%; /* Set width to 100% of the container */
-      height: 100%; /* Set height to match the container height */
-      margin: 0 auto; /* Center the canvas horizontally */
-      background-color: #fff; /* Optional: White background for better visibility */
+      width: 100%;
+      height: 100%;
+      background-color: var(--canvas-background);
+      cursor: crosshair;
     }
 
     /* Controls */
     #controls {
       display: flex;
       justify-content: center;
-      padding: 10px; /* Reduced padding for smaller space */
-      background-color: #f0f0f0;
-      flex: 0 0 auto; /* Make height variable */
+      align-items: center;
+      padding: 10px;
+      background-color: var(--background-color);
+      flex: 0 0 auto;
+      flex-wrap: wrap;
     }
 
     #controls button {
-      margin: 0 10px;
-      padding: 15px 30px; /* Increased padding for larger buttons */
-      font-size: 16px; /* Increased font size */
-      background-color: #000; /* Black background */
-      color: #fff; /* White text */
+      margin: var(--control-button-margin);
+      padding: var(--control-button-padding);
+      font-size: var(--control-button-font-size);
+      background-color: #000;
+      color: #fff;
       border: none;
+      border-radius: 5px;
       cursor: pointer;
-      transition: opacity 0.3s;
+      transition: background-color 0.1s, opacity 0.3s;
     }
 
-    #controls button:hover {
+    #controls button:active {
+      background-color: var(--button-click-color);
+    }
+
+    #controls button:hover,
+    #controls button:focus {
       opacity: 0.8;
+      outline: none;
     }
 
-    /* Optional: Visual feedback during dragging */
-    #notation-grid.drag-over {
-      border: 2px dashed #000;
+    /* Tempo Slider Container */
+    #tempo-container {
+      position: relative;
+      width: var(--tempo-container-width); /* Increased width */
+      margin-left: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    /* Volume Slider Container */
+    #volume-container {
+      position: relative;
+      width: var(--volume-container-width);
+      margin-right: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    /* Tempo Labels */
+    .tempo-labels {
+      position: absolute;
+      top: -30px; /* Adjusted for larger slider */
+      left: 0;
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      font-size: 14px; /* Increased font size */
+      color: var(--tempo-label-color);
+    }
+
+    /* Volume Labels */
+    .volume-labels {
+      position: absolute;
+      top: -30px; /* Adjusted for larger slider */
+      left: 0;
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      font-size: 14px; /* Increased font size */
+      color: var(--volume-label-color);
+    }
+
+    /* Slider Styles */
+    #tempo-slider,
+    #volume-slider {
+      -webkit-appearance: none;
+      width: 100%;
+      height: var(--slider-height);
+      border-radius: 5px;
+      background: #ddd;
+      outline: none;
+      margin: 0;
+      padding: 0;
+      position: relative;
+      z-index: 2;
+      /* Adding background with notches */
+      background-image: linear-gradient(to right, 
+        transparent 25%, 
+        var(--slider-notch-color) 25%, 
+        var(--slider-notch-color) 26%, 
+        transparent 26%, 
+        transparent 50%, 
+        var(--slider-notch-color) 50%, 
+        var(--slider-notch-color) 51%, 
+        transparent 51%, 
+        transparent 75%, 
+        var(--slider-notch-color) 75%, 
+        var(--slider-notch-color) 76%, 
+        transparent 76%, 
+        transparent 100%);
+      background-size: 100% var(--slider-height);
+      background-repeat: no-repeat;
+      margin-top: var(--slider-margin-top); /* Adjusted margin for alignment */
+    }
+
+    /* Customized Slider Thumbs */
+    #tempo-slider::-webkit-slider-thumb,
+    #volume-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: var(--slider-thumb-size); /* Increased thumb size */
+      height: var(--slider-thumb-size);
+      border-radius: 50%;
+      background: var(--slider-thumb-color); /* White thumb */
+      border: var(--slider-thumb-stroke); /* Black stroke */
+      cursor: pointer;
+      border: none;
+      margin-top: calc((var(--slider-height) - var(--slider-thumb-size)) / 2);
+      position: relative;
+      z-index: 3;
+    }
+
+    #tempo-slider::-moz-range-thumb,
+    #volume-slider::-moz-range-thumb {
+      width: var(--slider-thumb-size); /* Increased thumb size */
+      height: var(--slider-thumb-size);
+      border-radius: 50%;
+      background: var(--slider-thumb-color); /* White thumb */
+      border: var(--slider-thumb-stroke); /* Black stroke */
+      cursor: pointer;
+      border: none;
+      position: relative;
+      z-index: 3;
+    }
+
+    /* Slider Labels */
+    .slider-label {
+      margin-top: 8px; /* Space between slider and label */
+      font-size: 14px;
+      color: #fff;
+      text-align: center;
+    }
+
+    /* Media Queries for Mobile Responsiveness */
+    @media (max-width: 600px) {
+      #controls {
+        flex-direction: column;
+        align-items: center;
+      }
+
+      #tempo-container,
+      #volume-container {
+        margin-left: 0;
+        margin-right: 0;
+        margin-top: 20px;
+      }
+
+      #controls button {
+        padding: 10px 20px;
+        font-size: 14px;
+        margin: 5px;
+      }
+
+      .note {
+        width: 25px;
+        height: 25px;
+        margin: 3px;
+      }
+
+      #title-container h1 {
+        font-size: 36px;
+      }
+
+      #title-container h2 {
+        font-size: 18px;
+      }
+
+      .tempo-labels,
+      .volume-labels {
+        font-size: 12px;
+      }
+
+      #tempo-container,
+      #volume-container {
+        width: 180px; /* Adjusted width for smaller screens */
+      }
+
+      .slider-label {
+        font-size: 12px;
+      }
     }
   </style>
 </head>
 <body>
   <div id="app-container">
+    <!-- Title Container -->
+    <div id="title-container" aria-label="Title">
+      <h1 id="title">
+        <span style="color: #78d9f7;">S</span>
+        <span style="color: #9ef777;">t</span>
+        <span style="color: #fcfc74;">u</span>
+        <span style="color: #ffc076;">d</span>
+        <span style="color: #f77878;">e</span>
+        <span style="color: #b288ff;">n</span>
+        <span style="color: #78d9f7;">t</span>
+        &nbsp; <!-- Non-breaking space -->
+        <span style="color: #9ef777;">N</span>
+        <span style="color: #fcfc74;">o</span>
+        <span style="color: #ffc076;">t</span>
+        <span style="color: #f77878;">a</span>
+        <span style="color: #b288ff;">t</span>
+        <span style="color: #78d9f7;">i</span>
+        <span style="color: #9ef777;">o</span>
+        <span style="color: #fcfc74;">n</span>
+      </h1>
+      <h2 id="subtitle">
+        <span style="color: #78d9f7;">B</span>
+        <span style="color: #9ef777;">y</span>
+        &nbsp; <!-- Non-breaking space -->
+        <span style="color: #fcfc74;">Q</span>
+        <span style="color: #ffc076;">u</span>
+        <span style="color: #f77878;">i</span>
+        <span style="color: #b288ff;">n</span>
+        <span style="color: #78d9f7;">n</span>
+        &nbsp; <!-- Non-breaking space -->
+        <span style="color: #9ef777;">F</span>
+        <span style="color: #fcfc74;">l</span>
+        <span style="color: #ffc076;">i</span>
+        <span style="color: #f77878;">m</span>
+        <span style="color: #b288ff;">i</span>
+        <span style="color: #78d9f7;">n</span>
+        <span style="color: #9ef777;">g</span>
+      </h2>
+    </div>
+
     <!-- Note Bank -->
-    <div id="note-bank">
-      <div class="note" draggable="true" data-color="#000"></div>
-      <div class="note" draggable="true" data-color="#ff0000" style="background-color: #ff0000;"></div>
-      <div class="note" draggable="true" data-color="#0000ff" style="background-color: #0000ff;"></div>
+    <div id="note-bank" aria-label="Note Bank">
+      <div class="note" draggable="true" data-color="#000" tabindex="0" aria-label="Black Note"></div>
+      <div class="note" draggable="true" data-color="#ff0000" style="background-color: #ff0000;" tabindex="0" aria-label="Red Note"></div>
+      <div class="note" draggable="true" data-color="#0000ff" style="background-color: #0000ff;" tabindex="0" aria-label="Blue Note"></div>
       <!-- Add more note circles with different colors if needed -->
     </div>
 
     <!-- Grid Container -->
-    <div id="grid-container">
-      <canvas id="notation-grid"></canvas>
+    <div id="grid-container" aria-label="Notation Grid">
+      <canvas id="notation-grid" role="img" aria-label="Musical Notation Grid" tabindex="0"></canvas>
     </div>
 
-    <!-- Control Buttons -->
-    <div id="controls">
-      <button id="play-button">Play</button>
-      <button id="stop-button">Stop</button>
-      <button id="clear-button">Clear</button>
+    <!-- Control Buttons and Sliders -->
+    <div id="controls" aria-label="Control Buttons">
+      <!-- Volume Slider Container -->
+      <div id="volume-container">
+        <div class="volume-labels">
+          <span>0</span>
+          <span>50</span>
+          <span>100</span>
+        </div>
+        <input type="range" id="volume-slider" min="0" max="100" value="100" step="1" aria-label="Volume Slider">
+        <div class="slider-label">Volume</div> <!-- Added Volume Label -->
+      </div>
+
+      <!-- Control Buttons -->
+      <button id="play-button" aria-label="Play Music">Play</button>
+      <button id="stop-button" aria-label="Stop Music">Stop</button>
+      <button id="clear-button" aria-label="Clear Notes">Clear</button>
+
+      <!-- Tempo Slider Container -->
+      <div id="tempo-container">
+        <div class="tempo-labels">
+          <span>60</span>
+          <span>90</span>
+          <span>120</span>
+          <span>150</span>
+          <span>180</span>
+        </div>
+        <input type="range" id="tempo-slider" min="60" max="180" value="120" step="1" aria-label="Tempo Slider">
+        <div class="slider-label">Tempo</div> <!-- Added Tempo Label -->
+      </div>
     </div>
   </div>
 
   <script>
-    // Initialize canvas and context
-    const canvas = document.getElementById('notation-grid');
-    const ctx = canvas.getContext('2d');
+    // Modular JavaScript Structure
+    (function() {
+      'use strict';
 
-    // Grid parameters
-    const logicRows = 20; // Each logic row represents a pitch
-    const visualRows = 10; // Represents the 5-line staff with spaces in between
+      /* Constants and Configuration */
+      const config = {
+        logicRows: 20, // Each logic row represents a pitch
+        visualRows: 10, // Represents the 5-line staff with spaces in between
+        columnWidths: [
+          32, // Column A (Left)
+          32, // Column B (Left)
+          12, 12, 12, 12, 12, 12, // Split Column C into six 12-unit columns
+          // Main grid columns (D to AI)
+          ...Array(32).fill(10),
+          32, // Column B (Right)
+          32  // Column A (Right)
+        ],
+        rowData: [
+          { pitch: 'Ab/G#', frequency: 830.61, color: null, column: 'A' },     // Row 0
+          { pitch: 'G5', frequency: 783.99, color: '#78d9f7', column: 'B' },   // Row 1
+          { pitch: 'Gb/F#', frequency: 739.99, color: null, column: 'A' },     // Row 2
+          { pitch: 'F5', frequency: 698.46, color: '#9ef777', column: 'B' },   // Row 3
+          { pitch: 'E5', frequency: 659.25, color: '#fcfc74', column: 'A' },   // Row 4
+          { pitch: 'Eb/D#', frequency: 622.25, color: null, column: 'B' },     // Row 5
+          { pitch: 'D5', frequency: 587.33, color: '#ffc076', column: 'A' },   // Row 6
+          { pitch: 'Db/C#', frequency: 554.37, color: null, column: 'B' },     // Row 7
+          { pitch: 'C5', frequency: 523.25, color: '#f77878', column: 'A' },   // Row 8
+          { pitch: 'B4', frequency: 493.88, color: '#f778e0', column: 'B' },   // Row 9
+          { pitch: 'Bb/A#', frequency: 466.16, color: null, column: 'A' },     // Row 10
+          { pitch: 'A4', frequency: 440.00, color: '#b288ff', column: 'B' },   // Row 11
+          { pitch: 'Ab/G#', frequency: 415.30, color: null, column: 'A' },     // Row 12
+          { pitch: 'G4', frequency: 392.00, color: '#78d9f7', column: 'B' },   // Row 13
+          { pitch: 'Gb/F#', frequency: 369.99, color: null, column: 'A' },     // Row 14
+          { pitch: 'F4', frequency: 349.23, color: '#9ef777', column: 'B' },   // Row 15
+          { pitch: 'E4', frequency: 329.63, color: '#fcfc74', column: 'A' },   // Row 16
+          { pitch: 'Eb/D#', frequency: 311.13, color: null, column: 'B' },     // Row 17
+          { pitch: 'D4', frequency: 293.66, color: '#ffc076', column: 'A' },   // Row 18
+          { pitch: 'Db/C#', frequency: 277.18, color: null, column: 'B' }      // Row 19
+        ],
+        debounceDelay: 200, // milliseconds
+        beatDuration: 60 / 120 // seconds (default 120 BPM)
+      };
 
-    let cellWidth, cellHeight;
+      /* State Variables */
+      let cellWidth, cellHeight;
+      let totalWidthUnits = config.columnWidths.reduce((a, b) => a + b, 0);
+      const placedNotes = [];
+      let audioCtx = null;
+      let masterGainNode = null; // Master gain node for volume control
+      let resizeTimeout;
+      let currentHoverCell = null; // To track the cell being hovered during drag
 
-    // Define column widths in units
-    const columnWidths = [
-      32, // Column A (Left)
-      32, // Column B (Left)
-      72, // Column C (anacrusis/pickup bar)
-      // Main grid columns (D to AI)
-      ...Array(32).fill(10), // Columns D to AI
-      32, // Column B (Right)
-      32  // Column A (Right)
-    ];
+      /* DOM Elements */
+      const canvas = document.getElementById('notation-grid');
+      const ctx = canvas.getContext('2d');
+      const playButton = document.getElementById('play-button');
+      const stopButton = document.getElementById('stop-button');
+      const clearButton = document.getElementById('clear-button');
+      const notes = document.querySelectorAll('.note');
+      const gridContainer = document.getElementById('grid-container');
+      const tempoSlider = document.getElementById('tempo-slider');
+      const volumeSlider = document.getElementById('volume-slider');
 
-    // Calculate total columns
-    const totalColumns = columnWidths.length;
-
-    // Map grid rows to pitches and specify column ('A' or 'B')
-    const rowData = [
-      // Row 0 starts at the top
-      { pitch: 'Ab/G#', frequency: 830.61, color: null, column: 'A' },     // Row 0
-      { pitch: 'G5', frequency: 783.99, color: '#78d9f7', column: 'B' },   // Row 1
-      { pitch: 'Gb/F#', frequency: 739.99, color: null, column: 'A' },     // Row 2
-      { pitch: 'F5', frequency: 698.46, color: '#9ef777', column: 'B' },   // Row 3
-      { pitch: 'E5', frequency: 659.25, color: '#fcfc74', column: 'A' },   // Row 4
-      { pitch: 'Eb/D#', frequency: 622.25, color: null, column: 'B' },     // Row 5
-      { pitch: 'D5', frequency: 587.33, color: '#ffc076', column: 'A' },   // Row 6
-      { pitch: 'Db/C#', frequency: 554.37, color: null, column: 'B' },     // Row 7
-      { pitch: 'C5', frequency: 523.25, color: '#f77878', column: 'A' },   // Row 8
-      { pitch: 'B4', frequency: 493.88, color: '#f778e0', column: 'B' },   // Row 9
-      { pitch: 'Bb/A#', frequency: 466.16, color: null, column: 'A' },     // Row 10
-      { pitch: 'A4', frequency: 440.00, color: '#b288ff', column: 'B' },   // Row 11
-      { pitch: 'Ab/G#', frequency: 415.30, color: null, column: 'A' },     // Row 12
-      { pitch: 'G4', frequency: 392.00, color: '#78d9f7', column: 'B' },   // Row 13
-      { pitch: 'Gb/F#', frequency: 369.99, color: null, column: 'A' },     // Row 14
-      { pitch: 'F4', frequency: 349.23, color: '#9ef777', column: 'B' },   // Row 15
-      { pitch: 'E4', frequency: 329.63, color: '#fcfc74', column: 'A' },   // Row 16
-      { pitch: 'Eb/D#', frequency: 311.13, color: null, column: 'B' },     // Row 17
-      { pitch: 'D4', frequency: 293.66, color: '#ffc076', column: 'A' },   // Row 18
-      { pitch: 'Db/C#', frequency: 277.18, color: null, column: 'B' }      // Row 19
-    ];
-
-    // Store placed notes
-    const placedNotes = [];
-
-    // Audio context for playback
-    let AudioContext = window.AudioContext || window.webkitAudioContext;
-    let audioCtx = new AudioContext();
-
-    // Responsive canvas resizing with debouncing
-    let resizeTimeout;
-    function resizeCanvas() {
-      clearTimeout(resizeTimeout);
-      resizeTimeout = setTimeout(() => {
-        const parentWidth = canvas.parentElement.offsetWidth;
-        const parentHeight = canvas.parentElement.offsetHeight;
-
-        // Set canvas dimensions based on container dimensions
-        canvas.width = parentWidth;
-        canvas.height = parentHeight;
-
-        // Calculate total width in units
-        const totalWidthUnits = columnWidths.reduce((a, b) => a + b, 0);
-
-        // Calculate unit sizes based on canvas dimensions
-        const unitWidthSize = canvas.width / totalWidthUnits;
-
-        // Calculate cell dimensions
-        cellWidth = unitWidthSize * 10; // Adjust if necessary
-        cellHeight = canvas.height / visualRows;
-
-        drawGrid();
-        redrawNotes();
-      }, 200); // Debounce delay
-    }
-
-    window.addEventListener('resize', resizeCanvas);
-    resizeCanvas();
-
-    // Function to get X position of a column index
-    function getColumnX(index) {
-      let x = 0;
-      for (let i = 0; i < index; i++) {
-        x += columnWidths[i] * (canvas.width / columnWidths.reduce((a, b) => a + b, 0));
-      }
-      return x;
-    }
-
-    // Function to get column index from X position
-    function getColumnIndex(x) {
-      let cumulativeWidth = 0;
-      for (let i = 0; i < columnWidths.length; i++) {
-        cumulativeWidth += columnWidths[i] * (canvas.width / columnWidths.reduce((a, b) => a + b, 0));
-        if (x < cumulativeWidth) {
-          return i;
+      /* Initialize Audio Context and Master Gain Node */
+      function initAudioContext() {
+        if (!audioCtx) {
+          window.AudioContext = window.AudioContext || window.webkitAudioContext;
+          audioCtx = new AudioContext();
+          masterGainNode = audioCtx.createGain();
+          masterGainNode.gain.value = 1; // Default volume at 100%
+          masterGainNode.connect(audioCtx.destination);
         }
       }
-      return columnWidths.length - 1;
-    }
 
-    // Function to get Y position of a logic row index
-    function getRowY(index) {
-      return (index * 0.5) * cellHeight;
-    }
+      /* Responsive Canvas Resizing with Debouncing and requestAnimationFrame */
+      function resizeCanvas() {
+        clearTimeout(resizeTimeout);
+        resizeTimeout = setTimeout(() => {
+          const parentWidth = gridContainer.offsetWidth;
+          const parentHeight = gridContainer.offsetHeight;
 
-    // Function to get logic row index from Y position
-    function getRowIndex(y) {
-      return Math.floor((y / canvas.height) * logicRows);
-    }
+          canvas.width = parentWidth;
+          canvas.height = parentHeight;
 
-    // Draw the grid with labels and markers
-    function drawGrid() {
-      // Clear the canvas
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
+          cellWidth = canvas.width / totalWidthUnits;
+          cellHeight = canvas.height / config.visualRows;
 
-      // Calculate total width and height in units
-      const totalWidthUnits = columnWidths.reduce((a, b) => a + b, 0);
-      const totalHeight = canvas.height; // Since visualRows = 10
-
-      // Draw horizontal lines (for 10 lines)
-      for (let i = 0; i <= visualRows; i++) {
-        const y = i * cellHeight;
-        ctx.beginPath();
-        ctx.moveTo(0, y);
-        ctx.lineTo(canvas.width, y);
-
-        ctx.strokeStyle = '#000';
-        ctx.setLineDash([]);
-        ctx.lineWidth = 1;
-
-        ctx.stroke();
+          drawGrid(currentHoverCell);
+          // No need to call redrawNotes() here as drawGrid handles it
+        }, config.debounceDelay);
       }
 
-      // Draw vertical lines
-      let x = 0;
-      for (let i = 0; i <= totalColumns; i++) {
-        ctx.beginPath();
-        ctx.moveTo(x, 0);
-        ctx.lineTo(x, totalHeight);
+      window.addEventListener('resize', resizeCanvas);
+      window.addEventListener('orientationchange', resizeCanvas);
+      resizeCanvas();
 
-        if (i >= 2 && i <= totalColumns - 2) { // Main grid area
-          const gridColumn = i - 2; // Adjust for legend columns
-          if (i === 2 || i === 3) {
-            // Column C (anacrusis/pickup bar)
-            ctx.strokeStyle = '#000';
-            ctx.setLineDash([]);
-            ctx.lineWidth = 1;
-          } else if ((gridColumn - 1) % 2 === 0) {
-            ctx.strokeStyle = '#000'; // Solid line for full beats
-            ctx.setLineDash([]);
-            ctx.lineWidth = 1;
-          } else {
-            ctx.strokeStyle = '#888'; // Dotted line for subdivisions
-            ctx.setLineDash([5, 5]);
-            ctx.lineWidth = 1;
+      /* Utility Functions */
+      function getColumnX(index) {
+        let x = 0;
+        for (let i = 0; i < index; i++) {
+          x += config.columnWidths[i] * cellWidth;
+        }
+        return x;
+      }
+
+      function getColumnIndex(x) {
+        let cumulativeWidth = 0;
+        for (let i = 0; i < config.columnWidths.length; i++) {
+          cumulativeWidth += config.columnWidths[i] * cellWidth;
+          if (x < cumulativeWidth) {
+            return i;
           }
-        } else {
-          ctx.strokeStyle = '#ccc';
+        }
+        return config.columnWidths.length - 1;
+      }
+
+      function getRowY(index) {
+        return (index * 0.5) * cellHeight;
+      }
+
+      function getRowIndex(y) {
+        return Math.floor((y / canvas.height) * config.logicRows);
+      }
+
+      /* Drawing Functions */
+      function drawGrid(highlightCell = null) {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        drawGreyedRows(); // Draw greyed rows first to put them behind the lines
+        drawHorizontalLines();
+        drawVerticalLines();
+        drawLegends();
+
+        if (highlightCell) {
+          highlightSpecificCell(highlightCell);
+        }
+
+        // Draw placed notes after highlighting to ensure they are visible
+        redrawNotes();
+      }
+
+      function drawHorizontalLines() {
+        for (let i = 0; i <= config.visualRows; i++) {
+          const y = i * cellHeight;
+          ctx.beginPath();
+          ctx.moveTo(0, y);
+          ctx.lineTo(canvas.width, y);
+          ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--line-color');
           ctx.setLineDash([]);
           ctx.lineWidth = 1;
+          ctx.stroke();
         }
-
-        ctx.stroke();
-        x += columnWidths[i] * (canvas.width / columnWidths.reduce((a, b) => a + b, 0));
       }
 
-      // Draw legends
-      drawLegend(0, 2, false, ['A', 'B']); // Left legend columns A and B
-      drawLegend(totalColumns - 2, totalColumns, true, ['B', 'A']); // Right legend columns B and A
-    }
+      function drawVerticalLines() {
+        let x = 0;
+        for (let i = 0; i <= config.columnWidths.length; i++) {
+          // Check if the current column is within the split anacrusis columns (indices 2-7)
+          if (i > 2 && i < 7) {
+            // Do not draw vertical lines between these columns
+            x += config.columnWidths[i] * cellWidth;
+            continue;
+          }
 
-    // Function to draw legends
-    function drawLegend(startColumnIndex, endColumnIndex, isRightSide = false, columnsOrder = ['A', 'B']) {
+          ctx.beginPath();
+          ctx.moveTo(x, 0);
+          ctx.lineTo(x, canvas.height);
+
+          if (i >= 2 && i <= config.columnWidths.length - 2) { // Main grid area
+            const gridColumn = i - 2; // Adjust for legend columns
+            if (i === 2 || i === 7) {
+              // Draw vertical lines only at the start and end of the split anacrusis columns
+              ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--line-color');
+              ctx.setLineDash([]);
+              ctx.lineWidth = 1;
+            } else if ((gridColumn - 1) % 2 === 0) {
+              ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--line-color'); // Solid line for full beats
+              ctx.setLineDash([]);
+              ctx.lineWidth = 1;
+            } else {
+              ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--grid-subdivision-color'); // Dotted line for subdivisions
+              ctx.setLineDash([5, 5]);
+              ctx.lineWidth = 1;
+            }
+          } else {
+            ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--grid-line-color');
+            ctx.setLineDash([]);
+            ctx.lineWidth = 1;
+          }
+
+          ctx.stroke();
+          if (i < config.columnWidths.length) {
+            x += config.columnWidths[i] * cellWidth;
+          }
+        }
+      }
+
+      function drawLegends() {
+        // Left Legends (Columns A and B)
+        drawLegend(0, 2, false, ['A', 'B']);
+
+        // Right Legends (Columns B and A)
+        drawLegend(config.columnWidths.length - 2, config.columnWidths.length, true, ['B', 'A']);
+      }
+
+      function drawLegend(startColumnIndex, endColumnIndex, isRightSide = false, columnsOrder = ['A', 'B']) {
         const xStart = getColumnX(startColumnIndex);
-        const columnWidthsPx = columnWidths.slice(startColumnIndex, endColumnIndex).map(widthUnit => 
-            widthUnit * (canvas.width / columnWidths.reduce((a, b) => a + b, 0)));
+        const columnWidthsPx = config.columnWidths.slice(startColumnIndex, endColumnIndex).map(widthUnit => widthUnit * cellWidth);
 
         let cumulativeX = xStart;
-        for (let col = 0; col < columnsOrder.length; col++) {
-            const columnLabel = columnsOrder[col];
-            const colWidth = columnWidthsPx[col];
+        columnsOrder.forEach((columnLabel, colIndex) => {
+          const columnWidth = columnWidthsPx[colIndex];
 
-            for (let i = 0; i < logicRows; i++) {
-                const isLine = i % 2 === 0; // Even rows on lines, odd on spaces
-                const y = getRowY(i);
+          config.rowData.forEach((row, rowIndex) => {
+            if (row.column === columnLabel) {
+              const y = getRowY(rowIndex);
+              const color = row.color || getComputedStyle(document.documentElement).getPropertyValue('--legend-background-default');
+              const pitchName = row.pitch;
 
-                const row = rowData[i];
+              // Draw background for the label
+              ctx.fillStyle = color;
+              ctx.fillRect(
+                cumulativeX,
+                y - cellHeight / 2,
+                columnWidth,
+                cellHeight
+              );
 
-                if (row.column === columnLabel) {
-                    const color = row.color || '#fff'; // Use white if no color
-                    let pitchName = row.pitch;
-
-                    // Adjust y position for 'A' columns
-                    const yOffset = columnLabel === 'A' ? -cellHeight / 2 : 0;
-                    
-                    // Draw background for the label
-                    ctx.fillStyle = color;
-                    ctx.fillRect(
-                        cumulativeX, 
-                        y - (isLine ? 0 : cellHeight / 2) + yOffset, 
-                        colWidth, 
-                        cellHeight
-                    );
-
-                    // Draw the pitch label
-                    ctx.fillStyle = '#000';
-                    ctx.font = `${Math.max(10, cellHeight * 0.6)}px Arial`;
-                    ctx.textAlign = 'center';
-                    ctx.textBaseline = 'middle';
-                    ctx.fillText(
-                        pitchName,
-                        cumulativeX + colWidth / 2,
-                        y - (isLine ? 0 : cellHeight / 2) + cellHeight / 2 + yOffset
-                    );
-                }
+              // Calculate responsive font size based on both cellWidth and cellHeight
+              const fontSize = Math.max(12, Math.min(cellWidth * 0.8, cellHeight * 0.8)); // Increased minimum font size
+              ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--legend-text-color');
+              ctx.font = `${fontSize}px 'Zodeka One', sans-serif`;
+              ctx.textAlign = 'center';
+              ctx.textBaseline = 'middle';
+              ctx.fillText(
+                pitchName,
+                cumulativeX + columnWidth / 2,
+                y
+              );
             }
-            cumulativeX += colWidth;
+          });
+
+          cumulativeX += columnWidth;
+        });
+      }
+
+      function highlightSpecificCell(cell) {
+        const { columnIndex, rowIndex } = cell;
+        const x = getColumnX(columnIndex);
+        const y = getRowY(rowIndex);
+        const columnWidth = config.columnWidths[columnIndex] * cellWidth;
+        const rowHeight = cellHeight; // Full cell height for consistent highlighting
+
+        // Set highlight color
+        ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--highlight-color');
+
+        // Draw highlight
+        ctx.fillRect(x, y - rowHeight / 2, columnWidth, rowHeight);
+      }
+
+      /* Draw Greyed Rows for G Notes */
+      function drawGreyedRows() {
+        // Define main grid area x_start and x_end
+        const mainGridStartX = getColumnX(2); // After the first two legend columns
+        const mainGridEndX = getColumnX(config.columnWidths.length - 2); // Before the last two legend columns
+
+        config.rowData.forEach((row, rowIndex) => {
+          if (row.pitch.toLowerCase().includes('g4') || row.pitch.toLowerCase().includes('g5')) {
+            const y = getRowY(rowIndex);
+            const rowHeight = cellHeight; // Height of the row
+
+            ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--greyed-row-color');
+            ctx.fillRect(mainGridStartX, y - rowHeight / 2, mainGridEndX - mainGridStartX, rowHeight);
+          }
+        });
+      }
+
+      /* Note Placement and Drawing */
+      function placeNoteAt(row, columnIndex, color) {
+        const existingNoteIndex = placedNotes.findIndex(note => note.row === row && note.columnIndex === columnIndex);
+        if (existingNoteIndex === -1) {
+          placedNotes.push({ row, columnIndex, color });
+        } else {
+          placedNotes.splice(existingNoteIndex, 1);
         }
-    }
-
-    // Handle dragging notes from the note bank
-    const notes = document.querySelectorAll('.note');
-    notes.forEach(note => {
-      note.addEventListener('dragstart', dragStart);
-    });
-
-    function dragStart(event) {
-      const color = event.target.getAttribute('data-color');
-      event.dataTransfer.setData('text/plain', color);
-    }
-
-    // Handle drop events on the canvas
-    canvas.addEventListener('dragover', dragOverCanvas);
-    canvas.addEventListener('drop', dropOnCanvas);
-
-    function dragOverCanvas(event) {
-      event.preventDefault();
-    }
-
-    function dropOnCanvas(event) {
-      event.preventDefault();
-
-      // Get mouse position relative to the canvas
-      const rect = canvas.getBoundingClientRect();
-      const x = event.clientX - rect.left;
-      const y = event.clientY - rect.top;
-
-      // Get column index
-      let columnIndex = getColumnIndex(x);
-
-      // Adjust for legend columns
-      if (columnIndex < 2 || columnIndex >= totalColumns - 2) {
-        alert('Cannot place note outside the main grid!');
-        return; // Outside main grid
       }
 
-      // Snap to nearest column
-      const columnX = getColumnX(Math.floor(columnIndex));
-      const nextColumnX = getColumnX(Math.floor(columnIndex) + 1);
-      const columnMidpoint = (columnX + nextColumnX) / 2;
-      if (x > columnMidpoint) {
-        columnIndex = Math.ceil(columnIndex);
-      } else {
-        columnIndex = Math.floor(columnIndex);
+      function drawNoteOnCanvas(note) {
+        const x = getColumnX(Math.floor(note.columnIndex));
+        const nextX = getColumnX(Math.floor(note.columnIndex) + 1);
+        const y = getRowY(note.row);
+        const radius = Math.min(nextX - x, cellHeight) / 2 - 2;
+
+        ctx.beginPath();
+        ctx.arc(x + (nextX - x) / 2, y, radius, 0, 2 * Math.PI);
+        ctx.fillStyle = note.color;
+        ctx.fill();
+        ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--line-color');
+        ctx.lineWidth = 1;
+        ctx.stroke();
       }
 
-      // Get logic row index using the updated cellHeight
-      const row = Math.min(logicRows - 1, Math.floor((y / canvas.height) * logicRows));
-
-      // Ensure row is within bounds
-      if (row < 0 || row >= logicRows) {
-        alert('Cannot place note outside the grid!');
-        return;
+      function redrawNotes() {
+        placedNotes.forEach(drawNoteOnCanvas);
       }
 
-      // Get the color from the dragged note
-      const color = event.dataTransfer.getData('text/plain') || '#000';
-
-      // Place the note at the snapped position
-      placeNoteAt(row, columnIndex, color);
-      drawGrid();
-      redrawNotes();
-    }
-
-    // Function to place note data
-    function placeNoteAt(row, columnIndex, color) {
-      // Check if a note already exists at this position
-      const existingNoteIndex = placedNotes.findIndex(note => note.row === row && note.columnIndex === columnIndex);
-      if (existingNoteIndex === -1) {
-        // Add new note
-        placedNotes.push({ row, columnIndex, color });
-      } else {
-        // Remove existing note (toggle off)
-        placedNotes.splice(existingNoteIndex, 1);
-      }
-    }
-
-    // Redraw all placed notes
-    function redrawNotes() {
-      placedNotes.forEach(note => {
-        drawNoteOnCanvas(note.row, note.columnIndex, note.color);
+      /* Drag and Drop Functionality */
+      notes.forEach(note => {
+        note.addEventListener('dragstart', dragStart);
+        note.addEventListener('keydown', noteKeyDown);
       });
-    }
 
-    // Function to draw a note on the canvas
-    function drawNoteOnCanvas(row, columnIndex, color) {
-      const x = getColumnX(Math.floor(columnIndex));
-      const nextX = getColumnX(Math.floor(columnIndex) + 1);
-      // Position notes at 0.5 increments
-      const xPos = x + ((columnIndex % 1) * (nextX - x));
-
-      const y = getRowY(row);
-      const radius = Math.min(nextX - x, cellHeight) / 2 - 2;
-
-      ctx.beginPath();
-      ctx.arc(x + (nextX - x) / 2, y, radius, 0, 2 * Math.PI); // Adjust Y position to align with lines/spaces
-      ctx.fillStyle = color;
-      ctx.fill();
-      ctx.strokeStyle = '#000';
-      ctx.lineWidth = 1;
-      ctx.stroke();
-    }
-
-    // Playback functionality
-    document.getElementById('play-button').addEventListener('click', playMusic);
-
-    function playMusic() {
-      // Check if audio context is in suspended state (autoplay policy)
-      if (audioCtx.state === 'suspended') {
-        audioCtx.resume();
+      function dragStart(event) {
+        const color = event.target.getAttribute('data-color') || getComputedStyle(document.documentElement).getPropertyValue('--note-default-color');
+        event.dataTransfer.setData('text/plain', color);
       }
 
-      const beatDuration = 0.5; // Duration of one beat in seconds
-      const unitDuration = beatDuration / logicRows; // Adjust based on logicRows
-
-      placedNotes.forEach(note => {
-        const columnIndex = note.columnIndex;
-
-        // Calculate cumulative units up to the note (excluding legends)
-        let cumulativeUnits = 0;
-        for (let i = 2; i < Math.floor(columnIndex); i++) {
-          cumulativeUnits += columnWidths[i];
+      function noteKeyDown(event) {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          // Simulate drag and drop via keyboard
+          const color = event.target.getAttribute('data-color') || getComputedStyle(document.documentElement).getPropertyValue('--note-default-color');
+          // Implement keyboard-based note placement if desired
+          alert('Keyboard placement not implemented.');
         }
-        // Add fractional part
-        cumulativeUnits += (columnIndex % 1) * columnWidths[Math.floor(columnIndex)];
+      }
 
-        // Calculate start time
-        const startTime = audioCtx.currentTime + cumulativeUnits * unitDuration;
+      canvas.addEventListener('dragover', dragOverCanvas);
+      canvas.addEventListener('drop', dropOnCanvas);
+      canvas.addEventListener('dragleave', dragLeaveCanvas);
 
-        const rowInfo = rowData[note.row];
-        const frequency = rowInfo.frequency;
+      function dragOverCanvas(event) {
+        event.preventDefault();
 
-        if (frequency) {
-          playNoteAtTime(frequency, startTime, beatDuration / 2);
+        const rect = canvas.getBoundingClientRect();
+        const x = event.clientX - rect.left;
+        const y = event.clientY - rect.top;
+
+        const columnIndex = getColumnIndex(x);
+        const row = Math.min(config.logicRows - 1, getRowIndex(y));
+
+        // Avoid highlighting if outside main grid
+        if (columnIndex < 2 || columnIndex >= config.columnWidths.length - 2) {
+          currentHoverCell = null;
+          drawGrid();
+          return;
         }
-      });
-    }
 
-    function playNoteAtTime(frequency, time, duration) {
-      const oscillator = audioCtx.createOscillator();
-      const gainNode = audioCtx.createGain();
-
-      oscillator.type = 'sine';
-      oscillator.frequency.setValueAtTime(frequency, time);
-
-      oscillator.connect(gainNode);
-      gainNode.connect(audioCtx.destination);
-
-      oscillator.start(time);
-      oscillator.stop(time + duration);
-
-      // Fade out the note
-      gainNode.gain.setValueAtTime(1, time);
-      gainNode.gain.exponentialRampToValueAtTime(0.001, time + duration);
-    }
-
-    // Stop functionality
-    document.getElementById('stop-button').addEventListener('click', stopMusic);
-
-    function stopMusic() {
-      if (audioCtx.state !== 'closed' && audioCtx.state !== 'suspended') {
-        audioCtx.suspend();
+        const hoverCell = { columnIndex: Math.floor(columnIndex), rowIndex: row };
+        // Update only if the hovered cell has changed
+        if (!currentHoverCell || currentHoverCell.columnIndex !== hoverCell.columnIndex || currentHoverCell.rowIndex !== hoverCell.rowIndex) {
+          currentHoverCell = hoverCell;
+          drawGrid(currentHoverCell);
+        }
       }
-    }
 
-    // Resume audio context on user interaction
-    document.addEventListener('click', () => {
-      if (audioCtx.state === 'suspended') {
-        audioCtx.resume();
-      }
-    });
-
-    // Clear functionality
-    document.getElementById('clear-button').addEventListener('click', clearNotes);
-
-    function clearNotes() {
-        placedNotes.length = 0; // Clear the array
-        localStorage.removeItem('placedNotes'); // Remove from localStorage
-        drawGrid(); // Redraw the empty grid
-    }
-
-    // Optional: Visual feedback during dragging
-    canvas.addEventListener('dragenter', () => {
-      canvas.classList.add('drag-over');
-    });
-
-    canvas.addEventListener('dragleave', () => {
-      canvas.classList.remove('drag-over');
-    });
-
-    canvas.addEventListener('drop', () => {
-      canvas.classList.remove('drag-over');
-    });
-
-    // Optional: Saving and Loading Notes (Using localStorage)
-    // Save notes before unloading the page
-    window.addEventListener('beforeunload', () => {
-      localStorage.setItem('placedNotes', JSON.stringify(placedNotes));
-    });
-
-    // Load notes when the page loads
-    window.addEventListener('load', () => {
-        // Clear any existing notes
-        placedNotes.length = 0;
-        localStorage.removeItem('placedNotes');
+      function dropOnCanvas(event) {
+        event.preventDefault();
+        currentHoverCell = null;
         drawGrid();
-    });
+
+        const color = event.dataTransfer.getData('text/plain') || getComputedStyle(document.documentElement).getPropertyValue('--note-default-color');
+
+        // Get mouse position relative to the canvas
+        const rect = canvas.getBoundingClientRect();
+        const x = event.clientX - rect.left;
+        const y = event.clientY - rect.top;
+
+        // Get column index
+        let columnIndex = getColumnIndex(x);
+
+        // Adjust for legend columns
+        if (columnIndex < 2 || columnIndex >= config.columnWidths.length - 2) {
+          alert('Cannot place note outside the main grid!');
+          return;
+        }
+
+        // Snap to nearest column
+        const columnX = getColumnX(Math.floor(columnIndex));
+        const nextColumnX = getColumnX(Math.floor(columnIndex) + 1);
+        const columnMidpoint = (columnX + nextColumnX) / 2;
+        if (x > columnMidpoint) {
+          columnIndex = Math.ceil(columnIndex);
+        } else {
+          columnIndex = Math.floor(columnIndex);
+        }
+
+        // Get logic row index
+        const row = Math.min(config.logicRows - 1, Math.floor((y / canvas.height) * config.logicRows));
+
+        if (row < 0 || row >= config.logicRows) {
+          alert('Cannot place note outside the grid!');
+          return;
+        }
+
+        // Place the note
+        placeNoteAt(row, columnIndex, color);
+        drawGrid();
+        // No need to call redrawNotes() here as drawGrid already does it
+      }
+
+      function dragLeaveCanvas(event) {
+        currentHoverCell = null;
+        drawGrid();
+      }
+
+      /* Keyboard Accessibility for Canvas Drop */
+      canvas.setAttribute('tabindex', '0');
+      canvas.addEventListener('keydown', function(event) {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          // Define a default color or get from a selected note
+          const color = getComputedStyle(document.documentElement).getPropertyValue('--note-default-color');
+          // Implement a method to place a note via keyboard
+          // For simplicity, alert the user
+          alert('Keyboard placement not implemented.');
+        }
+      });
+
+      /* Playback Functionality */
+      playButton.addEventListener('click', playMusic);
+      stopButton.addEventListener('click', stopMusic);
+
+      function playMusic() {
+        initAudioContext();
+
+        if (audioCtx.state === 'suspended') {
+          audioCtx.resume();
+        }
+
+        const unitDuration = config.beatDuration / 2; // Half beat per column
+
+        placedNotes.forEach(note => {
+          const columnIndex = note.columnIndex;
+
+          // Calculate number of half-beats from column C (index 2)
+          const halfBeatsFromStart = columnIndex - 2;
+
+          if (halfBeatsFromStart < 0) return; // Notes before column C are not played
+
+          const startTime = audioCtx.currentTime + halfBeatsFromStart * unitDuration;
+
+          const rowInfo = config.rowData[note.row];
+          const frequency = rowInfo.frequency;
+
+          if (frequency) {
+            playNoteAtTime(frequency, startTime, config.beatDuration / 2);
+          }
+        });
+      }
+
+      function playNoteAtTime(frequency, time, duration) {
+        const oscillator = audioCtx.createOscillator();
+        const gainNode = audioCtx.createGain();
+
+        oscillator.type = 'sine';
+        oscillator.frequency.setValueAtTime(frequency, time);
+
+        oscillator.connect(gainNode);
+        gainNode.connect(masterGainNode); // Connect to master gain node
+
+        oscillator.start(time);
+        oscillator.stop(time + duration);
+
+        // Fade out the note
+        gainNode.gain.setValueAtTime(1, time);
+        gainNode.gain.exponentialRampToValueAtTime(0.001, time + duration);
+      }
+
+      /* Stop Functionality */
+      function stopMusic() {
+        if (audioCtx && audioCtx.state !== 'closed') {
+          audioCtx.suspend();
+        }
+      }
+
+      /* Clear Functionality */
+      clearButton.addEventListener('click', clearNotes);
+
+      function clearNotes() {
+        placedNotes.length = 0; // Clear the array
+        // Remove localStorage functionality to prevent persistence
+        // localStorage.removeItem('placedNotes'); // Removed
+        drawGrid(); // Redraw the empty grid
+      }
+
+      /* Accessibility: Save and Load Notes */
+      // Removed localStorage save and load to ensure notes are cleared on refresh
+      /*
+      window.addEventListener('beforeunload', () => {
+        localStorage.setItem('placedNotes', JSON.stringify(placedNotes));
+      });
+
+      window.addEventListener('load', () => {
+        const savedNotes = JSON.parse(localStorage.getItem('placedNotes'));
+        if (savedNotes && Array.isArray(savedNotes)) {
+          placedNotes.push(...savedNotes);
+          drawGrid();
+          redrawNotes();
+        } else {
+          drawGrid();
+        }
+      });
+      */
+
+      /* Keyboard Navigation for Notes */
+      document.addEventListener('keydown', function(event) {
+        // Implement keyboard shortcuts if necessary
+      });
+
+      /* Tempo Slider Functionality */
+      tempoSlider.addEventListener('input', function(event) {
+        const bpm = parseInt(event.target.value, 10);
+        config.beatDuration = 60 / bpm; // Convert BPM to seconds per beat
+        console.log(`Tempo set to ${bpm} BPM (${config.beatDuration.toFixed(3)} sec per beat)`);
+      });
+
+      /* Volume Slider Functionality */
+      volumeSlider.addEventListener('input', function(event) {
+        const volume = parseInt(event.target.value, 10); // 0 to 100
+        if (masterGainNode) {
+          masterGainNode.gain.value = volume / 100; // Convert to 0.0 - 1.0
+          console.log(`Volume set to ${volume}%`);
+        }
+      });
+
+      /* Initialize Sliders with Default Values */
+      document.addEventListener('DOMContentLoaded', function() {
+        const defaultBPM = 120;
+        tempoSlider.value = defaultBPM;
+        config.beatDuration = 60 / defaultBPM;
+
+        const defaultVolume = 100;
+        volumeSlider.value = defaultVolume;
+        if (masterGainNode) {
+          masterGainNode.gain.value = defaultVolume / 100;
+        }
+      });
+
+      /* Initial Drawing */
+      drawGrid();
+    })();
   </script>
 </body>
 </html>
