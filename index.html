@@ -27,7 +27,7 @@
       align-items: center;
       padding: 10px;
       background-color: #f0f0f0;
-      flex: 0 0 auto;
+      flex: 0 0 auto; /* Make height variable */
     }
 
     .note {
@@ -43,24 +43,28 @@
     /* Grid Container */
     #grid-container {
       position: relative;
-      flex: 1 1 auto;
+      flex: 1; /* Allow grid to take up remaining space */
+      display: flex;
+      justify-content: center;
+      align-items: center;
       overflow: hidden;
-      margin: 10px;
     }
 
     #notation-grid {
       display: block;
-      width: 100%;
-      height: 100%;
+      width: 100%; /* Set width to 100% of the container */
+      height: 100%; /* Set height to match the container height */
+      margin: 0 auto; /* Center the canvas horizontally */
+      background-color: #fff; /* Optional: White background for better visibility */
     }
 
     /* Controls */
     #controls {
       display: flex;
       justify-content: center;
-      padding: 20px; /* Increased padding for larger space */
+      padding: 10px; /* Reduced padding for smaller space */
       background-color: #f0f0f0;
-      flex: 0 0 auto;
+      flex: 0 0 auto; /* Make height variable */
     }
 
     #controls button {
@@ -71,10 +75,16 @@
       color: #fff; /* White text */
       border: none;
       cursor: pointer;
+      transition: opacity 0.3s;
     }
 
     #controls button:hover {
       opacity: 0.8;
+    }
+
+    /* Optional: Visual feedback during dragging */
+    #notation-grid.drag-over {
+      border: 2px dashed #000;
     }
   </style>
 </head>
@@ -97,6 +107,7 @@
     <div id="controls">
       <button id="play-button">Play</button>
       <button id="stop-button">Stop</button>
+      <button id="clear-button">Clear</button>
     </div>
   </div>
 
@@ -106,14 +117,10 @@
     const ctx = canvas.getContext('2d');
 
     // Grid parameters
-    const logicRows = 21; // Total number of logic rows (one per pitch)
-    const visualRows = logicRows * 2 - 1; // Number of visual steps due to overlapping
+    const logicRows = 20; // Each logic row represents a pitch
+    const visualRows = 10; // Represents the 5-line staff with spaces in between
 
     let cellWidth, cellHeight;
-
-    // Define units
-    const unitHeight = 10; // Base unit for height
-    const unitWidth = 10;  // Base unit for width
 
     // Define column widths in units
     const columnWidths = [
@@ -131,27 +138,27 @@
 
     // Map grid rows to pitches and specify column ('A' or 'B')
     const rowData = [
-      { pitch: 'C6', frequency: 1046.50, color: '#f77878', column: 'A' }, // Row 0
-      { pitch: 'G', frequency: 783.99, color: '#78d9f7', column: 'B' },
-      { pitch: 'Bb/A#', frequency: 932.33, color: null, column: 'A' },
-      { pitch: 'F', frequency: 698.46, color: '#9ef777', column: 'B' },
-      { pitch: 'Ab/G#', frequency: 830.61, color: null, column: 'A' },
-      { pitch: 'Eb/D#', frequency: 622.25, color: null, column: 'B' },
-      { pitch: 'Gb/F#', frequency: 739.99, color: null, column: 'A' },
-      { pitch: 'Db/C#', frequency: 554.37, color: null, column: 'B' },
-      { pitch: 'E', frequency: 659.25, color: '#fcfc74', column: 'A' },
-      { pitch: 'B', frequency: 493.88, color: '#f778e0', column: 'B' },
-      { pitch: 'D', frequency: 587.33, color: '#ffc076', column: 'A' },
-      { pitch: 'A', frequency: 440.00, color: '#b288ff', column: 'B' },
-      { pitch: 'C5', frequency: 523.25, color: '#f77878', column: 'A' },
-      { pitch: 'G', frequency: 392.00, color: '#78d9f7', column: 'B' },
-      { pitch: 'Bb/A#', frequency: 466.16, color: null, column: 'A' },
-      { pitch: 'F', frequency: 349.23, color: '#9ef777', column: 'B' },
-      { pitch: 'Ab/G#', frequency: 415.30, color: null, column: 'A' },
-      { pitch: 'Eb/D#', frequency: 311.13, color: null, column: 'B' }, // Lower Eb/D#
-      { pitch: 'Gb/F#', frequency: 369.99, color: null, column: 'A' },
-      { pitch: 'Db/C#', frequency: 277.18, color: null, column: 'B' }, // Lower Db/C#
-      { pitch: 'E4', frequency: 329.63, color: '#fcfc74', column: 'A' } // Row 20
+      // Row 0 starts at the top
+      { pitch: 'Ab/G#', frequency: 830.61, color: null, column: 'A' },     // Row 0
+      { pitch: 'G5', frequency: 783.99, color: '#78d9f7', column: 'B' },   // Row 1
+      { pitch: 'Gb/F#', frequency: 739.99, color: null, column: 'A' },     // Row 2
+      { pitch: 'F5', frequency: 698.46, color: '#9ef777', column: 'B' },   // Row 3
+      { pitch: 'E5', frequency: 659.25, color: '#fcfc74', column: 'A' },   // Row 4
+      { pitch: 'Eb/D#', frequency: 622.25, color: null, column: 'B' },     // Row 5
+      { pitch: 'D5', frequency: 587.33, color: '#ffc076', column: 'A' },   // Row 6
+      { pitch: 'Db/C#', frequency: 554.37, color: null, column: 'B' },     // Row 7
+      { pitch: 'C5', frequency: 523.25, color: '#f77878', column: 'A' },   // Row 8
+      { pitch: 'B4', frequency: 493.88, color: '#f778e0', column: 'B' },   // Row 9
+      { pitch: 'Bb/A#', frequency: 466.16, color: null, column: 'A' },     // Row 10
+      { pitch: 'A4', frequency: 440.00, color: '#b288ff', column: 'B' },   // Row 11
+      { pitch: 'Ab/G#', frequency: 415.30, color: null, column: 'A' },     // Row 12
+      { pitch: 'G4', frequency: 392.00, color: '#78d9f7', column: 'B' },   // Row 13
+      { pitch: 'Gb/F#', frequency: 369.99, color: null, column: 'A' },     // Row 14
+      { pitch: 'F4', frequency: 349.23, color: '#9ef777', column: 'B' },   // Row 15
+      { pitch: 'E4', frequency: 329.63, color: '#fcfc74', column: 'A' },   // Row 16
+      { pitch: 'Eb/D#', frequency: 311.13, color: null, column: 'B' },     // Row 17
+      { pitch: 'D4', frequency: 293.66, color: '#ffc076', column: 'A' },   // Row 18
+      { pitch: 'Db/C#', frequency: 277.18, color: null, column: 'B' }      // Row 19
     ];
 
     // Store placed notes
@@ -161,26 +168,31 @@
     let AudioContext = window.AudioContext || window.webkitAudioContext;
     let audioCtx = new AudioContext();
 
-    // Responsive canvas resizing
+    // Responsive canvas resizing with debouncing
+    let resizeTimeout;
     function resizeCanvas() {
-      canvas.width = canvas.offsetWidth;
-      canvas.height = canvas.offsetHeight;
+      clearTimeout(resizeTimeout);
+      resizeTimeout = setTimeout(() => {
+        const parentWidth = canvas.parentElement.offsetWidth;
+        const parentHeight = canvas.parentElement.offsetHeight;
 
-      // Calculate total width and height in units
-      const totalWidthUnits = columnWidths.reduce((a, b) => a + b, 0);
+        // Set canvas dimensions based on container dimensions
+        canvas.width = parentWidth;
+        canvas.height = parentHeight;
 
-      // Calculate unit sizes based on canvas dimensions
-      const unitWidthSize = canvas.width / totalWidthUnits;
+        // Calculate total width in units
+        const totalWidthUnits = columnWidths.reduce((a, b) => a + b, 0);
 
-      // Calculate cell dimensions
-      cellWidth = unitWidthSize * unitWidth;
+        // Calculate unit sizes based on canvas dimensions
+        const unitWidthSize = canvas.width / totalWidthUnits;
 
-      // Calculate cell height to accommodate overlapping
-      const totalHeightUnits = unitHeight * (logicRows + 0.5); // Adjusted for overlapping
-      cellHeight = canvas.height / totalHeightUnits * unitHeight;
+        // Calculate cell dimensions
+        cellWidth = unitWidthSize * 10; // Adjust if necessary
+        cellHeight = canvas.height / visualRows;
 
-      drawGrid();
-      redrawNotes();
+        drawGrid();
+        redrawNotes();
+      }, 200); // Debounce delay
     }
 
     window.addEventListener('resize', resizeCanvas);
@@ -207,14 +219,14 @@
       return columnWidths.length - 1;
     }
 
-    // Function to get Y position of a logic row index, accounting for overlapping
+    // Function to get Y position of a logic row index
     function getRowY(index) {
-      return index * (cellHeight / 2);
+      return (index * 0.5) * cellHeight;
     }
 
     // Function to get logic row index from Y position
     function getRowIndex(y) {
-      return Math.floor(y / (cellHeight / 2));
+      return Math.floor((y / canvas.height) * logicRows);
     }
 
     // Draw the grid with labels and markers
@@ -224,21 +236,20 @@
 
       // Calculate total width and height in units
       const totalWidthUnits = columnWidths.reduce((a, b) => a + b, 0);
+      const totalHeight = canvas.height; // Since visualRows = 10
 
-      // Draw horizontal lines (for 11 lines)
-      for (let i = 0; i <= logicRows; i++) {
-        const y = getRowY(i);
+      // Draw horizontal lines (for 10 lines)
+      for (let i = 0; i <= visualRows; i++) {
+        const y = i * cellHeight;
         ctx.beginPath();
         ctx.moveTo(0, y);
         ctx.lineTo(canvas.width, y);
 
-        // Determine line style
         ctx.strokeStyle = '#000';
         ctx.setLineDash([]);
         ctx.lineWidth = 1;
 
         ctx.stroke();
-        ctx.setLineDash([]); // Reset dash
       }
 
       // Draw vertical lines
@@ -246,7 +257,7 @@
       for (let i = 0; i <= totalColumns; i++) {
         ctx.beginPath();
         ctx.moveTo(x, 0);
-        ctx.lineTo(x, canvas.height);
+        ctx.lineTo(x, totalHeight);
 
         if (i >= 2 && i <= totalColumns - 2) { // Main grid area
           const gridColumn = i - 2; // Adjust for legend columns
@@ -271,7 +282,7 @@
         }
 
         ctx.stroke();
-        x += columnWidths[i] * (canvas.width / totalWidthUnits);
+        x += columnWidths[i] * (canvas.width / columnWidths.reduce((a, b) => a + b, 0));
       }
 
       // Draw legends
@@ -281,41 +292,51 @@
 
     // Function to draw legends
     function drawLegend(startColumnIndex, endColumnIndex, isRightSide = false, columnsOrder = ['A', 'B']) {
-      const xStart = getColumnX(startColumnIndex);
-      const xWidthTotal = (columnWidths.slice(startColumnIndex, endColumnIndex).reduce((a, b) => a + b, 0)) * (canvas.width / columnWidths.reduce((a, b) => a + b, 0));
-      const columnWidthsPx = columnWidths.slice(startColumnIndex, endColumnIndex).map(widthUnit => widthUnit * (canvas.width / columnWidths.reduce((a, b) => a + b, 0)));
+        const xStart = getColumnX(startColumnIndex);
+        const columnWidthsPx = columnWidths.slice(startColumnIndex, endColumnIndex).map(widthUnit => 
+            widthUnit * (canvas.width / columnWidths.reduce((a, b) => a + b, 0)));
 
-      let cumulativeX = xStart;
-      for (let col = 0; col < columnsOrder.length; col++) {
-        const columnLabel = columnsOrder[col];
-        const colWidth = columnWidthsPx[col];
+        let cumulativeX = xStart;
+        for (let col = 0; col < columnsOrder.length; col++) {
+            const columnLabel = columnsOrder[col];
+            const colWidth = columnWidthsPx[col];
 
-        for (let i = 0; i < logicRows; i++) {
-          const y = getRowY(i);
-          const row = rowData[i];
+            for (let i = 0; i < logicRows; i++) {
+                const isLine = i % 2 === 0; // Even rows on lines, odd on spaces
+                const y = getRowY(i);
 
-          if (row.column === columnLabel) {
-            const color = row.color || '#fff'; // Use white if no color
-            let pitchName = row.pitch;
+                const row = rowData[i];
 
-            // Draw background for the label
-            ctx.fillStyle = color;
-            ctx.fillRect(cumulativeX, y, colWidth, cellHeight);
+                if (row.column === columnLabel) {
+                    const color = row.color || '#fff'; // Use white if no color
+                    let pitchName = row.pitch;
 
-            // Draw the pitch label
-            ctx.fillStyle = '#000';
-            ctx.font = `${Math.max(10, cellHeight * 0.6)}px Arial`;
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-            ctx.fillText(
-              pitchName,
-              cumulativeX + colWidth / 2,
-              y + cellHeight / 2
-            );
-          }
+                    // Adjust y position for 'A' columns
+                    const yOffset = columnLabel === 'A' ? -cellHeight / 2 : 0;
+                    
+                    // Draw background for the label
+                    ctx.fillStyle = color;
+                    ctx.fillRect(
+                        cumulativeX, 
+                        y - (isLine ? 0 : cellHeight / 2) + yOffset, 
+                        colWidth, 
+                        cellHeight
+                    );
+
+                    // Draw the pitch label
+                    ctx.fillStyle = '#000';
+                    ctx.font = `${Math.max(10, cellHeight * 0.6)}px Arial`;
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText(
+                        pitchName,
+                        cumulativeX + colWidth / 2,
+                        y - (isLine ? 0 : cellHeight / 2) + cellHeight / 2 + yOffset
+                    );
+                }
+            }
+            cumulativeX += colWidth;
         }
-        cumulativeX += colWidth;
-      }
     }
 
     // Handle dragging notes from the note bank
@@ -350,22 +371,26 @@
 
       // Adjust for legend columns
       if (columnIndex < 2 || columnIndex >= totalColumns - 2) {
+        alert('Cannot place note outside the main grid!');
         return; // Outside main grid
       }
 
-      // Calculate grid position with snapping
+      // Snap to nearest column
       const columnX = getColumnX(Math.floor(columnIndex));
       const nextColumnX = getColumnX(Math.floor(columnIndex) + 1);
       const columnMidpoint = (columnX + nextColumnX) / 2;
       if (x > columnMidpoint) {
-        columnIndex += 0.5;
+        columnIndex = Math.ceil(columnIndex);
+      } else {
+        columnIndex = Math.floor(columnIndex);
       }
 
-      // Get logic row index
-      const row = getRowIndex(y);
+      // Get logic row index using the updated cellHeight
+      const row = Math.min(logicRows - 1, Math.floor((y / canvas.height) * logicRows));
 
       // Ensure row is within bounds
       if (row < 0 || row >= logicRows) {
+        alert('Cannot place note outside the grid!');
         return;
       }
 
@@ -402,13 +427,14 @@
     function drawNoteOnCanvas(row, columnIndex, color) {
       const x = getColumnX(Math.floor(columnIndex));
       const nextX = getColumnX(Math.floor(columnIndex) + 1);
+      // Position notes at 0.5 increments
       const xPos = x + ((columnIndex % 1) * (nextX - x));
 
       const y = getRowY(row);
       const radius = Math.min(nextX - x, cellHeight) / 2 - 2;
 
       ctx.beginPath();
-      ctx.arc(xPos + (nextX - x) / 2, y + cellHeight / 2, radius, 0, 2 * Math.PI);
+      ctx.arc(x + (nextX - x) / 2, y, radius, 0, 2 * Math.PI); // Adjust Y position to align with lines/spaces
       ctx.fillStyle = color;
       ctx.fill();
       ctx.strokeStyle = '#000';
@@ -426,7 +452,7 @@
       }
 
       const beatDuration = 0.5; // Duration of one beat in seconds
-      const unitDuration = beatDuration / 20; // Each 10 units (cell) corresponds to half a beat
+      const unitDuration = beatDuration / logicRows; // Adjust based on logicRows
 
       placedNotes.forEach(note => {
         const columnIndex = note.columnIndex;
@@ -473,10 +499,8 @@
     document.getElementById('stop-button').addEventListener('click', stopMusic);
 
     function stopMusic() {
-      if (audioCtx.state !== 'closed') {
-        audioCtx.close();
-        // Reinitialize the audio context
-        audioCtx = new AudioContext();
+      if (audioCtx.state !== 'closed' && audioCtx.state !== 'suspended') {
+        audioCtx.suspend();
       }
     }
 
@@ -485,6 +509,42 @@
       if (audioCtx.state === 'suspended') {
         audioCtx.resume();
       }
+    });
+
+    // Clear functionality
+    document.getElementById('clear-button').addEventListener('click', clearNotes);
+
+    function clearNotes() {
+        placedNotes.length = 0; // Clear the array
+        localStorage.removeItem('placedNotes'); // Remove from localStorage
+        drawGrid(); // Redraw the empty grid
+    }
+
+    // Optional: Visual feedback during dragging
+    canvas.addEventListener('dragenter', () => {
+      canvas.classList.add('drag-over');
+    });
+
+    canvas.addEventListener('dragleave', () => {
+      canvas.classList.remove('drag-over');
+    });
+
+    canvas.addEventListener('drop', () => {
+      canvas.classList.remove('drag-over');
+    });
+
+    // Optional: Saving and Loading Notes (Using localStorage)
+    // Save notes before unloading the page
+    window.addEventListener('beforeunload', () => {
+      localStorage.setItem('placedNotes', JSON.stringify(placedNotes));
+    });
+
+    // Load notes when the page loads
+    window.addEventListener('load', () => {
+        // Clear any existing notes
+        placedNotes.length = 0;
+        localStorage.removeItem('placedNotes');
+        drawGrid();
     });
   </script>
 </body>
