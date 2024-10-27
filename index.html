@@ -104,10 +104,16 @@
       border: 2px solid var(--note-default-color);
       border-radius: 50%;
       margin: var(--note-margin);
-      cursor: grab;
+      cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
+      transition: border 0.3s;
+    }
+
+    /* Selected Note Style */
+    .note.selected {
+      border: 4px solid yellow; /* Visual indicator for selected note */
     }
 
     .note:focus {
@@ -215,6 +221,7 @@
     #tempo-slider,
     #volume-slider {
       -webkit-appearance: none;
+      appearance: none;
       width: 100%;
       height: var(--slider-height);
       border-radius: 5px;
@@ -355,7 +362,7 @@
         <span style="color: #fcfc74;">n</span>
       </h1>
       <h2 id="subtitle">
-        <span style="color: #78d9f7;">B</span>
+        <span style="color: #78d9f7;">b</span>
         <span style="color: #9ef777;">y</span>
         &nbsp; <!-- Non-breaking space -->
         <span style="color: #fcfc74;">Q</span>
@@ -366,7 +373,7 @@
         &nbsp; <!-- Non-breaking space -->
         <span style="color: #9ef777;">F</span>
         <span style="color: #fcfc74;">l</span>
-        <span style="color: #ffc076;">i</span>
+        <span style="color: #ffc076;">e</span>
         <span style="color: #f77878;">m</span>
         <span style="color: #b288ff;">i</span>
         <span style="color: #78d9f7;">n</span>
@@ -376,9 +383,9 @@
 
     <!-- Note Bank -->
     <div id="note-bank" aria-label="Note Bank">
-      <div class="note" draggable="true" data-color="#000" tabindex="0" aria-label="Black Note"></div>
-      <div class="note" draggable="true" data-color="#ff0000" style="background-color: #ff0000;" tabindex="0" aria-label="Red Note"></div>
-      <div class="note" draggable="true" data-color="#0000ff" style="background-color: #0000ff;" tabindex="0" aria-label="Blue Note"></div>
+      <div class="note" data-color="#000" tabindex="0" aria-label="Black Note"></div>
+      <div class="note" data-color="#ff0000" style="background-color: #ff0000;" tabindex="0" aria-label="Red Note"></div>
+      <div class="note" data-color="#0000ff" style="background-color: #0000ff;" tabindex="0" aria-label="Blue Note"></div>
       <!-- Add more note circles with different colors if needed -->
     </div>
 
@@ -430,13 +437,13 @@
         logicRows: 20, // Each logic row represents a pitch
         visualRows: 10, // Represents the 5-line staff with spaces in between
         columnWidths: [
-          32, // Column A (Left)
-          32, // Column B (Left)
-          12, 12, 12, 12, 12, 12, // Split Column C into six 12-unit columns
-          // Main grid columns (D to AI)
+          32, // Column A (Left) index 0
+          32, // Column B (Left) index 1
+          12, 12, 12, 12, 12, 12, // Column C split into six 12-unit columns (Indices 2-7)
+          // Main grid columns (D to AI) indices 8-39
           ...Array(32).fill(10),
-          32, // Column B (Right)
-          32  // Column A (Right)
+          32, // Column B (Right) index 40
+          32  // Column A (Right) index 41
         ],
         rowData: [
           { pitch: 'Ab/G#', frequency: 830.61, color: null, column: 'A' },     // Row 0
@@ -471,7 +478,8 @@
       let audioCtx = null;
       let masterGainNode = null; // Master gain node for volume control
       let resizeTimeout;
-      let currentHoverCell = null; // To track the cell being hovered during drag
+      let highlightedCell = null; // Cell currently under cursor for hover highlighting
+      let selectedNoteColor = null; // Currently selected note color
 
       /* DOM Elements */
       const canvas = document.getElementById('notation-grid');
@@ -508,7 +516,7 @@
           cellWidth = canvas.width / totalWidthUnits;
           cellHeight = canvas.height / config.visualRows;
 
-          drawGrid(currentHoverCell);
+          drawGrid();
           // No need to call redrawNotes() here as drawGrid handles it
         }, config.debounceDelay);
       }
@@ -546,16 +554,16 @@
       }
 
       /* Drawing Functions */
-      function drawGrid(highlightCell = null) {
+      function drawGrid() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
         drawGreyedRows(); // Draw greyed rows first to put them behind the lines
-        drawHorizontalLines();
-        drawVerticalLines();
-        drawLegends();
+        drawHorizontalLines(); // Draw horizontal lines next
+        drawVerticalLines(); // Then vertical lines
+        drawLegends(); // Legends after lines
 
-        if (highlightCell) {
-          highlightSpecificCell(highlightCell);
+        if (highlightedCell) {
+          highlightSpecificCell(highlightedCell, 'rgba(255, 255, 0, 0.3)'); // Semi-transparent yellow
         }
 
         // Draw placed notes after highlighting to ensure they are visible
@@ -563,8 +571,22 @@
       }
 
       function drawHorizontalLines() {
+        // Define epsilon for floating point comparison
+        const epsilon = 0.5;
+
+        // **Draw Standard Horizontal Grid Lines, Excluding 'E4' and 'E5' Rows**
         for (let i = 0; i <= config.visualRows; i++) {
           const y = i * cellHeight;
+
+          // Determine if current y corresponds to 'E4' or 'E5' rows
+          const isE4 = Math.abs(y - getRowY(16)) < epsilon; // 'E4' at rowIndex=16
+          const isE5 = Math.abs(y - getRowY(4)) < epsilon;  // 'E5' at rowIndex=4
+
+          if (isE4 || isE5) {
+            // Skip drawing standard line on 'E' rows
+            continue;
+          }
+
           ctx.beginPath();
           ctx.moveTo(0, y);
           ctx.lineTo(canvas.width, y);
@@ -573,6 +595,35 @@
           ctx.lineWidth = 1;
           ctx.stroke();
         }
+
+        // **Add 3pt Horizontal Lines Adjacent to 'C' Pitches**
+        config.rowData.forEach((row, rowIndex) => {
+          if (row.pitch.includes('C') && row.pitch !== 'Db/C#') { 
+            const y = getRowY(rowIndex);
+            ctx.beginPath();
+            ctx.moveTo(0, y);
+            ctx.lineTo(canvas.width, y);
+            ctx.strokeStyle = '#000';
+            ctx.lineWidth = 3;
+            ctx.setLineDash([]);
+            ctx.stroke();
+          }
+        });
+
+        // **Add Dashed Lines Adjacent to 'E' Pitches**
+        config.rowData.forEach((row, rowIndex) => {
+          // Updated condition to only include 'E4' and 'E5'
+          if (/^E\d+$/.test(row.pitch)) { 
+            const y = getRowY(rowIndex);
+            ctx.beginPath();
+            ctx.moveTo(0, y);
+            ctx.lineTo(canvas.width, y);
+            ctx.strokeStyle = '#000';
+            ctx.lineWidth = 1;
+            ctx.setLineDash([5, 5]);
+            ctx.stroke();
+          }
+        });
       }
 
       function drawVerticalLines() {
@@ -589,29 +640,42 @@
           ctx.moveTo(x, 0);
           ctx.lineTo(x, canvas.height);
 
-          if (i >= 2 && i <= config.columnWidths.length - 2) { // Main grid area
-            const gridColumn = i - 2; // Adjust for legend columns
-            if (i === 2 || i === 7) {
-              // Draw vertical lines only at the start and end of the split anacrusis columns
-              ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--line-color');
-              ctx.setLineDash([]);
-              ctx.lineWidth = 1;
-            } else if ((gridColumn - 1) % 2 === 0) {
-              ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--line-color'); // Solid line for full beats
-              ctx.setLineDash([]);
-              ctx.lineWidth = 1;
+          // **Special Cases for Styling Specific Vertical Lines**
+          if (i === 0) { // Left border of Column A
+            ctx.strokeStyle = '#000';
+            ctx.lineWidth = 3;
+            ctx.setLineDash([]);
+          } else if (i === 2) { // Right border of Column B / Left border of Column C
+            ctx.strokeStyle = '#000';
+            ctx.lineWidth = 3;
+            ctx.setLineDash([]);
+          } else {
+            // Existing line style code for other columns
+            if (i >= 2 && i <= config.columnWidths.length - 2) { // Main grid area
+              const gridColumn = i - 2; // Adjust for legend columns
+              if (i === 2 || i === 7) {
+                // Draw vertical lines only at the start and end of the split anacrusis columns
+                ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--line-color');
+                ctx.setLineDash([]);
+                ctx.lineWidth = 1;
+              } else if ((gridColumn - 1) % 2 === 0) {
+                ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--line-color'); // Solid line for full beats
+                ctx.setLineDash([]);
+                ctx.lineWidth = 1;
+              } else {
+                ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--grid-subdivision-color'); // Dotted line for subdivisions
+                ctx.setLineDash([5, 5]);
+                ctx.lineWidth = 1;
+              }
             } else {
-              ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--grid-subdivision-color'); // Dotted line for subdivisions
-              ctx.setLineDash([5, 5]);
+              ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--grid-line-color');
+              ctx.setLineDash([]);
               ctx.lineWidth = 1;
             }
-          } else {
-            ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--grid-line-color');
-            ctx.setLineDash([]);
-            ctx.lineWidth = 1;
           }
 
           ctx.stroke();
+
           if (i < config.columnWidths.length) {
             x += config.columnWidths[i] * cellWidth;
           }
@@ -640,14 +704,19 @@
               const color = row.color || getComputedStyle(document.documentElement).getPropertyValue('--legend-background-default');
               const pitchName = row.pitch;
 
-              // Draw background for the label
+              // Draw background with 1pt black border
               ctx.fillStyle = color;
-              ctx.fillRect(
+              ctx.strokeStyle = '#000';
+              ctx.lineWidth = 1;
+              ctx.beginPath();
+              ctx.rect(
                 cumulativeX,
                 y - cellHeight / 2,
                 columnWidth,
                 cellHeight
               );
+              ctx.fill();
+              ctx.stroke();
 
               // Calculate responsive font size based on both cellWidth and cellHeight
               const fontSize = Math.max(12, Math.min(cellWidth * 0.8, cellHeight * 0.8)); // Increased minimum font size
@@ -667,7 +736,7 @@
         });
       }
 
-      function highlightSpecificCell(cell) {
+      function highlightSpecificCell(cell, color = 'rgba(255, 255, 0, 0.3)') {
         const { columnIndex, rowIndex } = cell;
         const x = getColumnX(columnIndex);
         const y = getRowY(rowIndex);
@@ -675,7 +744,7 @@
         const rowHeight = cellHeight; // Full cell height for consistent highlighting
 
         // Set highlight color
-        ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--highlight-color');
+        ctx.fillStyle = color;
 
         // Draw highlight
         ctx.fillRect(x, y - rowHeight / 2, columnWidth, rowHeight);
@@ -704,7 +773,7 @@
         if (existingNoteIndex === -1) {
           placedNotes.push({ row, columnIndex, color });
         } else {
-          placedNotes.splice(existingNoteIndex, 1);
+          placedNotes.splice(existingNoteIndex, 1); // Toggle off if already placed
         }
       }
 
@@ -727,116 +796,208 @@
         placedNotes.forEach(drawNoteOnCanvas);
       }
 
-      /* Drag and Drop Functionality */
+      /* Selection Mechanism for Notes */
       notes.forEach(note => {
-        note.addEventListener('dragstart', dragStart);
-        note.addEventListener('keydown', noteKeyDown);
+        note.addEventListener('click', function(event) {
+          const color = event.target.getAttribute('data-color') || getComputedStyle(document.documentElement).getPropertyValue('--note-default-color');
+          
+          if (selectedNoteColor === color) {
+            // Unselect if already selected
+            selectedNoteColor = null;
+            note.classList.remove('selected');
+            highlightedCell = null; // Remove highlight when deselected
+            drawGrid();
+          } else {
+            // Select this note
+            selectedNoteColor = color;
+            // Deselect other notes
+            notes.forEach(n => n.classList.remove('selected'));
+            note.classList.add('selected');
+            drawGrid();
+          }
+        });
       });
 
-      function dragStart(event) {
-        const color = event.target.getAttribute('data-color') || getComputedStyle(document.documentElement).getPropertyValue('--note-default-color');
-        event.dataTransfer.setData('text/plain', color);
-      }
+      /* Canvas Mouse Events for Hover Highlighting */
+      canvas.addEventListener('mousemove', function(event) {
+        if (selectedNoteColor) {
+          // Get mouse position
+          const rect = canvas.getBoundingClientRect();
+          const x = event.clientX - rect.left;
+          const y = event.clientY - rect.top;
 
-      function noteKeyDown(event) {
-        if (event.key === 'Enter' || event.key === ' ') {
-          event.preventDefault();
-          // Simulate drag and drop via keyboard
-          const color = event.target.getAttribute('data-color') || getComputedStyle(document.documentElement).getPropertyValue('--note-default-color');
-          // Implement keyboard-based note placement if desired
-          alert('Keyboard placement not implemented.');
+          // Get column index and row index
+          let columnIndex = getColumnIndex(x);
+
+          // Adjust for legend columns
+          if (columnIndex < 2 || columnIndex >= config.columnWidths.length - 2) {
+            if (highlightedCell !== null) {
+              highlightedCell = null;
+              drawGrid();
+            }
+            return;
+          }
+
+          // Snap to nearest column
+          const columnX = getColumnX(Math.floor(columnIndex));
+          const nextColumnX = getColumnX(Math.floor(columnIndex) + 1);
+          const columnMidpoint = (columnX + nextColumnX) / 2;
+          if (x > columnMidpoint) {
+            columnIndex = Math.ceil(columnIndex);
+          } else {
+            columnIndex = Math.floor(columnIndex);
+          }
+
+          // Get logic row index
+          const row = Math.min(config.logicRows - 1, Math.floor((y / canvas.height) * config.logicRows));
+
+          if (row < 0 || row >= config.logicRows) {
+            if (highlightedCell !== null) {
+              highlightedCell = null;
+              drawGrid();
+            }
+            return;
+          }
+
+          // Update highlighted cell if changed
+          if (!highlightedCell || highlightedCell.columnIndex !== columnIndex || highlightedCell.rowIndex !== row) {
+            highlightedCell = { columnIndex, rowIndex: row };
+            drawGrid();
+          }
         }
-      }
+      });
 
-      canvas.addEventListener('dragover', dragOverCanvas);
-      canvas.addEventListener('drop', dropOnCanvas);
-      canvas.addEventListener('dragleave', dragLeaveCanvas);
+      canvas.addEventListener('mouseout', function(event) {
+        if (selectedNoteColor) {
+          if (highlightedCell !== null) {
+            highlightedCell = null;
+            drawGrid();
+          }
+        }
+      });
 
-      function dragOverCanvas(event) {
-        event.preventDefault();
-
-        const rect = canvas.getBoundingClientRect();
-        const x = event.clientX - rect.left;
-        const y = event.clientY - rect.top;
-
-        const columnIndex = getColumnIndex(x);
-        const row = Math.min(config.logicRows - 1, getRowIndex(y));
-
-        // Avoid highlighting if outside main grid
-        if (columnIndex < 2 || columnIndex >= config.columnWidths.length - 2) {
-          currentHoverCell = null;
+      /* Canvas Click Event for Placing and Erasing Notes */
+      canvas.addEventListener('click', function(event) {
+        if (selectedNoteColor) {
+          // Get mouse position
+          const rect = canvas.getBoundingClientRect();
+          const x = event.clientX - rect.left;
+          const y = event.clientY - rect.top;
+          
+          // Get column index and row index
+          let columnIndex = getColumnIndex(x);
+          
+          // Adjust for legend columns
+          if (columnIndex < 2 || columnIndex >= config.columnWidths.length - 2) {
+            alert('Cannot place note outside the main grid!');
+            return;
+          }
+          
+          // Snap to nearest column
+          const columnX = getColumnX(Math.floor(columnIndex));
+          const nextColumnX = getColumnX(Math.floor(columnIndex) + 1);
+          const columnMidpoint = (columnX + nextColumnX) / 2;
+          if (x > columnMidpoint) {
+            columnIndex = Math.ceil(columnIndex);
+          } else {
+            columnIndex = Math.floor(columnIndex);
+          }
+          
+          // Get logic row index
+          const row = Math.min(config.logicRows - 1, Math.floor((y / canvas.height) * config.logicRows));
+          
+          if (row < 0 || row >= config.logicRows) {
+            alert('Cannot place note outside the grid!');
+            return;
+          }
+          
+          // Check if clicked on an existing note
+          const clickedNote = placedNotes.find(n => n.row === row && n.columnIndex === columnIndex);
+          if (clickedNote) {
+            // Erase the note
+            placeNoteAt(row, columnIndex, selectedNoteColor);
+            // Optionally, keep the note selected for further placements
+            // If you want to unlock the selection after erasing, uncomment the lines below:
+            /*
+            selectedNoteColor = null;
+            notes.forEach(n => n.classList.remove('selected'));
+            highlightedCell = null;
+            */
+            drawGrid();
+            return;
+          }
+          
+          // Place the note
+          placeNoteAt(row, columnIndex, selectedNoteColor);
           drawGrid();
-          return;
         }
+      });
 
-        const hoverCell = { columnIndex: Math.floor(columnIndex), rowIndex: row };
-        // Update only if the hovered cell has changed
-        if (!currentHoverCell || currentHoverCell.columnIndex !== hoverCell.columnIndex || currentHoverCell.rowIndex !== hoverCell.rowIndex) {
-          currentHoverCell = hoverCell;
-          drawGrid(currentHoverCell);
-        }
-      }
-
-      function dropOnCanvas(event) {
+      /* Right-Click (Context Menu) to Unlock */
+      canvas.addEventListener('contextmenu', function(event) {
         event.preventDefault();
-        currentHoverCell = null;
+        // Unlock
+        selectedNoteColor = null;
+        notes.forEach(n => n.classList.remove('selected'));
+        highlightedCell = null;
         drawGrid();
+      });
 
-        const color = event.dataTransfer.getData('text/plain') || getComputedStyle(document.documentElement).getPropertyValue('--note-default-color');
-
-        // Get mouse position relative to the canvas
-        const rect = canvas.getBoundingClientRect();
-        const x = event.clientX - rect.left;
-        const y = event.clientY - rect.top;
-
-        // Get column index
-        let columnIndex = getColumnIndex(x);
-
-        // Adjust for legend columns
-        if (columnIndex < 2 || columnIndex >= config.columnWidths.length - 2) {
-          alert('Cannot place note outside the main grid!');
-          return;
+      /* Click Outside the Canvas to Unlock */
+      document.addEventListener('click', function(event) {
+        const isClickInsideCanvas = canvas.contains(event.target);
+        const isClickOnNote = event.target.classList.contains('note');
+        const isClickOnControl = document.getElementById('controls').contains(event.target);
+        
+        if (!isClickInsideCanvas && !isClickOnNote && !isClickOnControl) {
+          // Unlock
+          selectedNoteColor = null;
+          notes.forEach(n => n.classList.remove('selected'));
+          highlightedCell = null;
+          drawGrid();
         }
-
-        // Snap to nearest column
-        const columnX = getColumnX(Math.floor(columnIndex));
-        const nextColumnX = getColumnX(Math.floor(columnIndex) + 1);
-        const columnMidpoint = (columnX + nextColumnX) / 2;
-        if (x > columnMidpoint) {
-          columnIndex = Math.ceil(columnIndex);
-        } else {
-          columnIndex = Math.floor(columnIndex);
-        }
-
-        // Get logic row index
-        const row = Math.min(config.logicRows - 1, Math.floor((y / canvas.height) * config.logicRows));
-
-        if (row < 0 || row >= config.logicRows) {
-          alert('Cannot place note outside the grid!');
-          return;
-        }
-
-        // Place the note
-        placeNoteAt(row, columnIndex, color);
-        drawGrid();
-        // No need to call redrawNotes() here as drawGrid already does it
-      }
-
-      function dragLeaveCanvas(event) {
-        currentHoverCell = null;
-        drawGrid();
-      }
+      });
 
       /* Keyboard Accessibility for Canvas Drop */
       canvas.setAttribute('tabindex', '0');
       canvas.addEventListener('keydown', function(event) {
         if (event.key === 'Enter' || event.key === ' ') {
           event.preventDefault();
-          // Define a default color or get from a selected note
-          const color = getComputedStyle(document.documentElement).getPropertyValue('--note-default-color');
-          // Implement a method to place a note via keyboard
-          // For simplicity, alert the user
-          alert('Keyboard placement not implemented.');
+          if (selectedNoteColor) {
+            // For simplicity, place the note at the center of the canvas
+            const x = canvas.width / 2;
+            const y = canvas.height / 2;
+
+            let columnIndex = getColumnIndex(x);
+            
+            // Adjust for legend columns
+            if (columnIndex < 2 || columnIndex >= config.columnWidths.length - 2) {
+              alert('Cannot place note outside the main grid!');
+              return;
+            }
+            
+            // Snap to nearest column
+            const columnX = getColumnX(Math.floor(columnIndex));
+            const nextColumnX = getColumnX(Math.floor(columnIndex) + 1);
+            const columnMidpoint = (columnX + nextColumnX) / 2;
+            if (x > columnMidpoint) {
+              columnIndex = Math.ceil(columnIndex);
+            } else {
+              columnIndex = Math.floor(columnIndex);
+            }
+            
+            // Get logic row index
+            const row = Math.min(config.logicRows - 1, Math.floor((y / canvas.height) * config.logicRows));
+            
+            if (row < 0 || row >= config.logicRows) {
+              alert('Cannot place note outside the grid!');
+              return;
+            }
+            
+            // Place the note
+            placeNoteAt(row, columnIndex, selectedNoteColor);
+            drawGrid();
+          }
         }
       });
 
