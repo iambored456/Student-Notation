@@ -618,18 +618,31 @@
     (function() {
       'use strict';
 
+      /* Function to Detect Mobile Devices */
+      function isMobileDevice() {
+        return /Mobi|Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+      }
+
+      /* State Variables */
+      const isMobile = isMobileDevice();
+
       /* Constants and Configuration */
       const config = {
         logicRows: 20,
-          visualRows: 10,
-          columnWidths: [
-            3, // Column A (Left) index 0
-            3, // Column B (Left) index 1
-            ...Array(12).fill(1), // Anacrusis columns (Indices 2-13)
-            ...Array(64).fill(1), // Main grid columns (Indices 14-77)
-            3, // Column B (Right) index 78
-            3  // Column A (Right) index 79
-          ],
+        visualRows: 10,
+        columnWidths: isMobile ? [
+          3, // Column A (Left) index 0
+          3, // Column B (Left) index 1
+          ...Array(32).fill(1), // Main grid columns for 4 bars (4 bars * 8 columns per bar)
+          // No right Y-Axis columns on mobile
+        ] : [
+          3, // Column A (Left) index 0
+          3, // Column B (Left) index 1
+          ...Array(12).fill(1), // Anacrusis columns (Indices 2-13)
+          ...Array(64).fill(1), // Main grid columns (Indices 14-77)
+          3, // Column B (Right) index 78
+          3  // Column A (Right) index 79
+        ],
 
         rowData: [
           { pitch: 'Ab/G#', frequency: 830.61, color: null, column: 'A' },     // Row 0
@@ -672,9 +685,6 @@
       let playbackStartTime = null;
       let animationFrameId = null;
       let totalPlaybackDuration = null;
-
-
-
 
       /* DOM Elements */
       const canvas = document.getElementById('notation-grid');
@@ -840,80 +850,69 @@
 
       function drawVerticalLines() {
         let x = 0;
-        for (let i = 0; i <= config.columnWidths.length; i++) {
-          // Skip drawing vertical lines between the anacrusis columns (indices 2-13)
-          if (i > 2 && i < 14) {
-            x += config.columnWidths[i] * cellWidth;
-            continue;
-          }
+        const columnCount = config.columnWidths.length;
 
+        for (let i = 0; i <= columnCount; i++) {
           ctx.beginPath();
           ctx.moveTo(x, 0);
           ctx.lineTo(x, canvas.height);
 
-          // **Special Cases for Styling Specific Vertical Lines**
-          if (i === 0) { // Left border of Column A
+          // Left Legend Columns
+          if (i === 0 || i === 1) {
             ctx.strokeStyle = '#000';
             ctx.lineWidth = 3;
             ctx.setLineDash([]);
-          } else if (i === 2) { // Right border of Column B / Left border of Main Grid
+          }
+          // Right Legend Columns (only on desktop)
+          else if (!isMobile && (i === columnCount - 2 || i === columnCount)) {
             ctx.strokeStyle = '#000';
             ctx.lineWidth = 3;
             ctx.setLineDash([]);
-          } else if (i === config.columnWidths.length - 2) { // Left border of right legend columns
-            ctx.strokeStyle = '#000';
-            ctx.lineWidth = 3;
-            ctx.setLineDash([]);
-          } else if (i === config.columnWidths.length) { // Right border of Column A (Right)
-            ctx.strokeStyle = '#000';
-            ctx.lineWidth = 3;
-            ctx.setLineDash([]);
-          } else {
-            // Main grid area
-            if (i >= 14 && i < config.columnWidths.length - 2) {
-              const gridColumn = i - 14; // Adjust for legend and anacrusis columns
+          }
+          // Main Grid Columns
+          else {
+            const gridColumn = isMobile ? i - 2 : i - 14; // Adjust for legends and anacrusis if not mobile
 
-              if (gridColumn % 8 === 0) {
-                // Bar line every 8 columns
-                ctx.strokeStyle = '#000';
-                ctx.lineWidth = 2;
-                ctx.setLineDash([]);
-              } else if (gridColumn % 8 === 2 || gridColumn % 8 === 4 || gridColumn % 8 === 6) {
-                // Dashed lines for quarter notes
-                ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--grid-subdivision-color'); // Dashed line for quarter notes
-                ctx.lineWidth = 1;
-                ctx.setLineDash([5, 5]);
-              } else {
-                // No lines for eighth-note subdivisions
-                // Do not draw any line
-                ctx.closePath();
-                x += config.columnWidths[i] * cellWidth;
-                continue;
-              }
-            } else {
-              // Other columns (should not occur in this setup)
-              ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--grid-line-color');
+            if (gridColumn % 8 === 0) {
+              // Bar line every 8 columns
+              ctx.strokeStyle = '#000';
+              ctx.lineWidth = 2;
               ctx.setLineDash([]);
+            } else if (gridColumn % 8 === 2 || gridColumn % 8 === 4 || gridColumn % 8 === 6) {
+              // Dashed lines for quarter notes
+              ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--grid-subdivision-color');
               ctx.lineWidth = 1;
+              ctx.setLineDash([5, 5]);
+            } else {
+              // No lines for eighth-note subdivisions
+              ctx.closePath();
+              if (i < columnCount) {
+                x += config.columnWidths[i] * cellWidth;
+              }
+              continue;
             }
           }
 
           ctx.stroke();
 
-          if (i < config.columnWidths.length) {
+          if (i < columnCount) {
             x += config.columnWidths[i] * cellWidth;
           }
         }
       }
 
 
+
       function drawLegends() {
         // Left Legends (Columns A and B)
         drawLegend(0, 2, false, ['A', 'B']);
 
-        // Right Legends (Columns B and A)
-        drawLegend(config.columnWidths.length - 2, config.columnWidths.length, true, ['B', 'A']);
+        if (!isMobile) {
+          // Right Legends (Columns B and A)
+          drawLegend(config.columnWidths.length - 2, config.columnWidths.length, true, ['B', 'A']);
+        }
       }
+
 
       function drawLegend(startColumnIndex, endColumnIndex, isRightSide = false, columnsOrder = ['A', 'B']) {
         const xStart = getColumnX(startColumnIndex);
@@ -979,7 +978,7 @@
       function drawGreyedRows() {
         // Define main grid area x_start and x_end
         const mainGridStartX = getColumnX(2); // After the first two legend columns
-        const mainGridEndX = getColumnX(config.columnWidths.length - 2); // Before the last two legend columns
+        const mainGridEndX = isMobile ? getColumnX(config.columnWidths.length) : getColumnX(config.columnWidths.length - 2); // Before the last two legend columns on desktop
 
         config.rowData.forEach((row, rowIndex) => {
           if (row.pitch.toLowerCase().includes('g4') || row.pitch.toLowerCase().includes('g5')) {
@@ -1200,16 +1199,17 @@
         // Record the playback start time
         playbackStartTime = audioCtx.currentTime;
 
-        // Calculate total playback duration
         const unitDuration = config.beatDuration / 2; // Half beat per column (eighth note)
-        const totalUnits = config.columnWidths.slice(2, -2).reduce((a, b) => a + b, 0); // Exclude legend columns
+
+        // Calculate total playback duration
+        const totalUnits = config.columnWidths.slice(2, isMobile ? undefined : -2).reduce((a, b) => a + b, 0); // Exclude legends and right Y-Axis columns on desktop
         totalPlaybackDuration = totalUnits * unitDuration;
 
         // Schedule notes
         placedNotes.forEach(note => {
           const columnIndex = note.columnIndex;
 
-          // Calculate time from the start, considering anacrusis columns
+          // Calculate time from the start, considering legends and anacrusis (if any)
           const unitsFromStart = getUnitsFromStart(columnIndex);
 
           const startTime = playbackStartTime + unitsFromStart * unitDuration;
@@ -1226,11 +1226,15 @@
         animatePlayhead();
       }
 
+
       function getUnitsFromStart(columnIndex) {
         // Sum the widths of columns before the given columnIndex, excluding legends
-        const unitsFromStart = config.columnWidths.slice(2, columnIndex).reduce((a, b) => a + b, 0);
+        const startIndex = 2; // After legends
+        const endIndex = columnIndex;
+        const unitsFromStart = config.columnWidths.slice(startIndex, endIndex).reduce((a, b) => a + b, 0);
         return unitsFromStart;
       }
+
 
       function animatePlayhead() {
         const currentTime = audioCtx.currentTime - playbackStartTime;
@@ -1261,7 +1265,9 @@
         // Calculate cumulative widths to find x position
         let cumulativeWidth = getColumnX(2); // Start after legends
         let unitsCounted = 0;
-        for (let i = 2; i < config.columnWidths.length - 2; i++) { // Exclude legends
+        const columnCount = isMobile ? config.columnWidths.length : config.columnWidths.length - 2; // Exclude right legends on desktop
+
+        for (let i = 2; i < columnCount; i++) { // Exclude left legend columns
           const columnWidthUnits = config.columnWidths[i];
           if (unitsCounted + columnWidthUnits > unitsFromStart) {
             const remainingUnits = unitsFromStart - unitsCounted;
@@ -1282,6 +1288,7 @@
           cumulativeWidth += columnWidthUnits * cellWidth;
         }
       }
+
 
 
       function playNoteAtTime(frequency, time, duration) {
