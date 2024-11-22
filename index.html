@@ -638,10 +638,10 @@
         ] : [
           3, // Column A (Left) index 0
           3, // Column B (Left) index 1
-          ...Array(12).fill(1), // Anacrusis columns (Indices 2-13)
-          ...Array(64).fill(1), // Main grid columns (Indices 14-77)
-          3, // Column B (Right) index 78
-          3  // Column A (Right) index 79
+          ...Array(6).fill(1),  // Anacrusis columns (Indices 2-7)
+          ...Array(64).fill(1), // Main grid columns (Indices 8-71)
+          3, // Column B (Right) index 72
+          3  // Column A (Right) index 73
         ],
 
         rowData: [
@@ -748,6 +748,11 @@
       resizeCanvas();
 
       /* Utility Functions */
+
+      function mod(n, m) {
+        return ((n % m) + m) % m;
+      }
+
       function getColumnX(index) {
         let x = 0;
         for (let i = 0; i < index; i++) {
@@ -869,22 +874,51 @@
             ctx.lineWidth = 3;
             ctx.setLineDash([]);
           }
-          // Main Grid Columns
-          else {
-            const gridColumn = isMobile ? i - 2 : i - 14; // Adjust for legends and anacrusis if not mobile
+          // Anacrusis Columns (Indices 2-7 on desktop)
+          else if (!isMobile && i >= 2 && i <= 7) {
+            // Skip drawing lines in anacrusis columns
+            ctx.closePath();
+            if (i < columnCount) {
+              x += config.columnWidths[i] * cellWidth;
+            }
 
-            if (gridColumn % 8 === 0) {
-              // Bar line every 8 columns
+            // After advancing x, draw the vertical line at the end of the anacrusis
+            if (i === 7) {
+              ctx.beginPath();
+              ctx.moveTo(x, 0);
+              ctx.lineTo(x, canvas.height);
               ctx.strokeStyle = '#000';
               ctx.lineWidth = 2;
               ctx.setLineDash([]);
-            } else if (gridColumn % 8 === 2 || gridColumn % 8 === 4 || gridColumn % 8 === 6) {
-              // Dashed lines for quarter notes
-              ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--grid-subdivision-color');
-              ctx.lineWidth = 1;
-              ctx.setLineDash([5, 5]);
+              ctx.stroke();
+            }
+            continue;
+          }
+          // Main Grid Columns
+          else {
+            const gridColumn = isMobile ? i - 2 : i - 8; // Adjust for legends and anacrusis if not mobile
+
+            if (gridColumn >= 0) {
+              if (mod(gridColumn, 8) === 0) {
+                // Bar line every 8 columns
+                ctx.strokeStyle = '#000';
+                ctx.lineWidth = 2;
+                ctx.setLineDash([]);
+              } else if ([2, 4, 6].includes(mod(gridColumn, 8))) {
+                // Dashed lines for quarter notes
+                ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--grid-subdivision-color');
+                ctx.lineWidth = 1;
+                ctx.setLineDash([5, 5]);
+              } else {
+                // No lines for eighth-note subdivisions
+                ctx.closePath();
+                if (i < columnCount) {
+                  x += config.columnWidths[i] * cellWidth;
+                }
+                continue;
+              }
             } else {
-              // No lines for eighth-note subdivisions
+              // Skip negative gridColumn values
               ctx.closePath();
               if (i < columnCount) {
                 x += config.columnWidths[i] * cellWidth;
@@ -901,8 +935,6 @@
         }
       }
 
-
-
       function drawLegends() {
         // Left Legends (Columns A and B)
         drawLegend(0, 2, false, ['A', 'B']);
@@ -912,7 +944,6 @@
           drawLegend(config.columnWidths.length - 2, config.columnWidths.length, true, ['B', 'A']);
         }
       }
-
 
       function drawLegend(startColumnIndex, endColumnIndex, isRightSide = false, columnsOrder = ['A', 'B']) {
         const xStart = getColumnX(startColumnIndex);
@@ -973,6 +1004,7 @@
         // Draw highlight
         ctx.fillRect(x, y - rowHeight / 2, columnWidth, rowHeight);
       }
+
 
       /* Draw Greyed Rows for G Notes */
       function drawGreyedRows() {
