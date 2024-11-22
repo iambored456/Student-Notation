@@ -2,7 +2,6 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Student Notation Web Applet</title>
   <!-- Google Fonts for Zodeka One -->
   <link href="https://fonts.googleapis.com/css2?family=Zodeka+One&display=swap" rel="stylesheet">
@@ -28,6 +27,7 @@
       --button-click-color: #d3d3d3; /* Light grey for button click */
       --slider-height: 12px; /* Increased slider height */
       --slider-thumb-size: 20px; /* Increased thumb size */
+      --slider-fill-color: lightblue;
       --slider-track-color: #ddd;
       --slider-thumb-color: #fff; /* White thumb */
       --slider-thumb-stroke: 2px solid #000; /* Black stroke */
@@ -58,7 +58,7 @@
     /* App Container */
     #app-container {
       display: flex;
-      flex-direction: column;
+      flex-direction: column; /* Stack children vertically */
       height: 100%;
       width: 100%;
       padding: var(--app-padding);
@@ -67,36 +67,153 @@
     /* Title Container */
     #title-container {
       text-align: center;
-      margin-bottom: 10px; /* Reduced space */
     }
 
     #title-container h1 {
-      font-family: 'Zodeka One', sans-serif; /* Changed to Zodeka One */
+      font-family: 'Zodeka One', sans-serif;
       font-size: 48px;
       font-weight: bold;
       margin: 0;
-      letter-spacing: 0; /* Removed space between letters */
+      letter-spacing: 0;
     }
 
     #title-container h2 {
-      font-family: 'Zodeka One', sans-serif; /* Changed to Zodeka One */
+      font-family: 'Zodeka One', sans-serif;
       font-size: 24px;
       font-weight: bold;
       margin: 5px 0 20px 0;
-      letter-spacing: 0; /* Removed space between letters */
+      letter-spacing: 0;
     }
 
-    /* Note Bank Styles */
-    #note-bank {
+    /* Toolbar */
+    #toolbar {
       display: flex;
+      flex-direction: row; /* Arrange children side by side */
       justify-content: center;
-      align-items: center;
+      align-items: flex-start;
       padding: 10px;
       background-color: var(--background-color);
-      flex: 0 0 auto;
-      flex-wrap: wrap;
+      flex-wrap: wrap; /* Allow wrapping on smaller screens */
     }
 
+    /* Harmonic Controls */
+    #harmonic-controls {
+      display: flex;
+      flex-direction: column; /* Stack preset buttons and sliders vertically */
+      align-items: center;
+      margin-right: 20px;
+    }
+
+    /* Preset Buttons */
+    #preset-buttons {
+      display: grid;
+      grid-template-columns: repeat(2, auto);
+      grid-gap: 5px;
+      margin-bottom: 10px;
+    }
+
+    .preset-button {
+      padding: 10px;
+      font-size: 14px;
+      background-color: #000;
+      color: #fff;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    .preset-button:hover,
+    .preset-button:focus {
+      opacity: 0.8;
+      outline: none;
+    }
+
+    /* Harmonic Sliders Container */
+    #harmonic-sliders-container {
+      display: flex;
+      flex-direction: row; /* Arrange sliders horizontally */
+      align-items: flex-end; /* Align slider bottoms */
+    }
+
+    /* Slider Wrapper */
+    .slider-wrapper {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin: 0 5px;
+    }
+
+      /* Harmonic Sliders */
+      .harmonic-slider {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 100px;
+        height: 8px;
+        background: transparent; /* Make background transparent */
+        border-radius: 5px;
+        margin: 5px 0;
+        transform: rotate(270deg); /* Vertical slider */
+        position: relative;
+      }
+
+      .harmonic-slider::-webkit-slider-runnable-track {
+        width: 100%;
+        height: 100%;
+        background: transparent; /* Background will be set via JavaScript */
+        border-radius: 5px;
+      }
+
+      .harmonic-slider::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        width: 16px;
+        height: 16px;
+        background: var(--slider-thumb-color);
+        border: var(--slider-thumb-stroke);
+        border-radius: 50%;
+        cursor: pointer;
+        position: relative;
+        z-index: 2;
+      }
+
+      .harmonic-slider::-moz-range-track {
+        width: 100%;
+        height: 100%;
+        background: transparent; /* Background will be set via JavaScript */
+        border-radius: 5px;
+      }
+
+      .harmonic-slider::-moz-range-thumb {
+        width: 16px;
+        height: 16px;
+        background: var(--slider-thumb-color);
+        border: var(--slider-thumb-stroke);
+        border-radius: 50%;
+        cursor: pointer;
+        position: relative;
+        z-index: 2;
+      }
+
+      .harmonic-slider:focus {
+        outline: none;
+      }
+
+    /* Slider Labels */
+    .slider-label {
+      text-align: center;
+      color: #fff;
+      font-size: 12px;
+    }
+
+    /* Notes Container */
+    #notes-container {
+      display: flex;
+      flex-direction: row; /* Arrange notes horizontally */
+      flex-wrap: wrap;
+      justify-content: center;
+      align-items: center;
+    }
+
+    /* Note Styles */
     .note {
       width: var(--note-size);
       height: var(--note-size);
@@ -113,7 +230,7 @@
 
     /* Selected Note Style */
     .note.selected {
-      border: 4px solid yellow; /* Visual indicator for selected note */
+      border: 4px solid yellow;
     }
 
     .note:focus {
@@ -122,7 +239,6 @@
 
     /* Grid Container */
     #grid-container {
-      position: relative;
       flex: 1;
       display: flex;
       justify-content: center;
@@ -131,6 +247,7 @@
       background-color: var(--canvas-background);
       border: 1px solid #ccc;
       border-radius: 5px;
+      margin-top: 10px; /* Add spacing above grid */
     }
 
     #notation-grid {
@@ -143,12 +260,13 @@
     /* Controls */
     #controls {
       display: flex;
+      flex-direction: row; /* Arrange controls horizontally */
       justify-content: center;
       align-items: center;
       padding: 10px;
       background-color: var(--background-color);
-      flex: 0 0 auto;
-      flex-wrap: wrap;
+      flex-wrap: wrap; /* Allow wrapping on smaller screens */
+      margin-top: 10px; /* Add spacing above controls */
     }
 
     #controls button {
@@ -196,7 +314,7 @@
     /* Tempo Labels */
     .tempo-labels {
       position: absolute;
-      top: -30px; /* Adjusted for larger slider */
+      top: -12px; /* Adjusted for larger slider */
       left: 0;
       width: 100%;
       display: flex;
@@ -208,7 +326,7 @@
     /* Volume Labels */
     .volume-labels {
       position: absolute;
-      top: -30px; /* Adjusted for larger slider */
+      top: -12px; /* Adjusted for larger slider */
       left: 0;
       width: 100%;
       display: flex;
@@ -291,6 +409,16 @@
 
     /* Media Queries for Mobile Responsiveness */
     @media (max-width: 600px) {
+      #toolbar {
+        flex-direction: column;
+        align-items: center;
+      }
+
+      #harmonic-controls {
+        margin-right: 0;
+        margin-bottom: 10px;
+      }
+
       #controls {
         flex-direction: column;
         align-items: center;
@@ -344,59 +472,117 @@
     <!-- Title Container -->
     <div id="title-container" aria-label="Title">
       <h1 id="title">
-        <span style="color: #78d9f7;">S</span>
-        <span style="color: #9ef777;">t</span>
-        <span style="color: #fcfc74;">u</span>
-        <span style="color: #ffc076;">d</span>
-        <span style="color: #f77878;">e</span>
-        <span style="color: #b288ff;">n</span>
-        <span style="color: #78d9f7;">t</span>
-        &nbsp; <!-- Non-breaking space -->
-        <span style="color: #9ef777;">N</span>
-        <span style="color: #fcfc74;">o</span>
+        <span style="color: #f77878;">S</span>
         <span style="color: #ffc076;">t</span>
-        <span style="color: #f77878;">a</span>
-        <span style="color: #b288ff;">t</span>
-        <span style="color: #78d9f7;">i</span>
-        <span style="color: #9ef777;">o</span>
-        <span style="color: #fcfc74;">n</span>
+        <span style="color: #fcfc74;">u</span>
+        <span style="color: #9ef777;">d</span>
+        <span style="color: #78d9f7;">e</span>
+        <span style="color: #b288ff;">n</span>
+        <span style="color: #f778e0;">t</span>
+        &nbsp; <!-- Non-breaking space -->
+        <span style="color: #f77878;">N</span>
+        <span style="color: #ffc076;">o</span>
+        <span style="color: #fcfc74;">t</span>
+        <span style="color: #9ef777;">a</span>
+        <span style="color: #78d9f7;">t</span>
+        <span style="color: #b288ff;">i</span>
+        <span style="color: #f778e0;">o</span>
+        <span style="color: #f77878;">n</span>
       </h1>
       <h2 id="subtitle">
-        <span style="color: #78d9f7;">b</span>
-        <span style="color: #9ef777;">y</span>
+        <span style="color: #f77878;">b</span>
+        <span style="color: #ffc076;">y</span>
         &nbsp; <!-- Non-breaking space -->
         <span style="color: #fcfc74;">Q</span>
-        <span style="color: #ffc076;">u</span>
-        <span style="color: #f77878;">i</span>
+        <span style="color: #9ef777;">u</span>
+        <span style="color: #78d9f7;">i</span>
         <span style="color: #b288ff;">n</span>
-        <span style="color: #78d9f7;">n</span>
+        <span style="color: #f778e0;">n</span>
         &nbsp; <!-- Non-breaking space -->
-        <span style="color: #9ef777;">F</span>
-        <span style="color: #fcfc74;">l</span>
-        <span style="color: #ffc076;">e</span>
-        <span style="color: #f77878;">m</span>
-        <span style="color: #b288ff;">i</span>
-        <span style="color: #78d9f7;">n</span>
-        <span style="color: #9ef777;">g</span>
+        <span style="color: #f77878;">F</span>
+        <span style="color: #ffc076;">l</span>
+        <span style="color: #fcfc74;">e</span>
+        <span style="color: #9ef777;">m</span>
+        <span style="color: #78d9f7;">i</span>
+        <span style="color: #b288ff;">n</span>
+        <span style="color: #f778e0;">g</span>
       </h2>
     </div>
 
-    <!-- Note Bank -->
-    <div id="note-bank" aria-label="Note Bank">
-      <div class="note" data-color="#000" tabindex="0" aria-label="Black Note"></div>
-      <div class="note" data-color="#ff0000" style="background-color: #ff0000;" tabindex="0" aria-label="Red Note"></div>
-      <div class="note" data-color="#0000ff" style="background-color: #0000ff;" tabindex="0" aria-label="Blue Note"></div>
-      <!-- Add more note circles with different colors if needed -->
+    <!-- Toolbar -->
+    <div id="toolbar">
+      <!-- Preset Buttons -->
+      <div id="preset-buttons">
+        <button class="preset-button" id="preset-sine">Sine</button>
+        <button class="preset-button" id="preset-triangle">Triangle</button>
+        <button class="preset-button" id="preset-square">Square</button>
+        <button class="preset-button" id="preset-sawtooth">Sawtooth</button>
+      </div>
+
+      <!-- Harmonic Sliders -->
+      <div id="harmonic-sliders-container">
+        <!-- H0 Slider -->
+        <div class="slider-wrapper">
+          <input type="range" min="0" max="1" step="0.001" value="1" class="harmonic-slider" id="harmonic-0" aria-label="Harmonic 0">
+          <div class="slider-label">H0</div>
+        </div>
+        <!-- H1 Slider -->
+        <div class="slider-wrapper">
+          <input type="range" min="0" max="1" step="0.001" value="0" class="harmonic-slider" id="harmonic-1" aria-label="Harmonic 1">
+          <div class="slider-label">H1</div>
+        </div>
+        <!-- H2 Slider -->
+        <div class="slider-wrapper">
+          <input type="range" min="0" max="1" step="0.001" value="0" class="harmonic-slider" id="harmonic-2" aria-label="Harmonic 2">
+          <div class="slider-label">H2</div>
+        </div>
+        <!-- Continue for H3 to H9 -->
+        <div class="slider-wrapper">
+          <input type="range" min="0" max="1" step="0.001" value="0" class="harmonic-slider" id="harmonic-3" aria-label="Harmonic 3">
+          <div class="slider-label">H3</div>
+        </div>
+        <div class="slider-wrapper">
+          <input type="range" min="0" max="1" step="0.001" value="0" class="harmonic-slider" id="harmonic-4" aria-label="Harmonic 4">
+          <div class="slider-label">H4</div>
+        </div>
+        <div class="slider-wrapper">
+          <input type="range" min="0" max="1" step="0.001" value="0" class="harmonic-slider" id="harmonic-5" aria-label="Harmonic 5">
+          <div class="slider-label">H5</div>
+        </div>
+        <div class="slider-wrapper">
+          <input type="range" min="0" max="1" step="0.001" value="0" class="harmonic-slider" id="harmonic-6" aria-label="Harmonic 6">
+          <div class="slider-label">H6</div>
+        </div>
+        <div class="slider-wrapper">
+          <input type="range" min="0" max="1" step="0.001" value="0" class="harmonic-slider" id="harmonic-7" aria-label="Harmonic 7">
+          <div class="slider-label">H7</div>
+        </div>
+        <div class="slider-wrapper">
+          <input type="range" min="0" max="1" step="0.001" value="0" class="harmonic-slider" id="harmonic-8" aria-label="Harmonic 8">
+          <div class="slider-label">H8</div>
+        </div>
+        <div class="slider-wrapper">
+          <input type="range" min="0" max="1" step="0.001" value="0" class="harmonic-slider" id="harmonic-9" aria-label="Harmonic 9">
+          <div class="slider-label">H9</div>
+        </div>
+      </div>
+            <!-- Notes Container -->
+            <div id="notes-container">
+              <div class="note" data-color="#000000" style="background-color: #000000;" tabindex="0" aria-label="Black Note"></div>
+              <div class="note" data-color="#ff0000" style="background-color: #ff0000;" tabindex="0" aria-label="Red Note"></div>
+              <div class="note" data-color="#0000ff" style="background-color: #0000ff;" tabindex="0" aria-label="Blue Note"></div>
+              <!-- Add more note circles if needed -->
+            </div>
     </div>
 
-    <!-- Grid Container -->
+    <!-- Notation Grid -->
     <div id="grid-container" aria-label="Notation Grid">
       <canvas id="notation-grid" role="img" aria-label="Musical Notation Grid" tabindex="0"></canvas>
     </div>
 
-    <!-- Control Buttons and Sliders -->
+    <!-- Controls -->
     <div id="controls" aria-label="Control Buttons">
-      <!-- Volume Slider Container -->
+      <!-- Volume Slider -->
       <div id="volume-container">
         <div class="volume-labels">
           <span>0</span>
@@ -412,7 +598,7 @@
       <button id="stop-button" aria-label="Stop Music">Stop</button>
       <button id="clear-button" aria-label="Clear Notes">Clear</button>
 
-      <!-- Tempo Slider Container -->
+      <!-- Tempo Slider -->
       <div id="tempo-container">
         <div class="tempo-labels">
           <span>60</span>
@@ -434,17 +620,17 @@
 
       /* Constants and Configuration */
       const config = {
-        logicRows: 20, // Each logic row represents a pitch
-        visualRows: 10, // Represents the 5-line staff with spaces in between
-        columnWidths: [
-          32, // Column A (Left) index 0
-          32, // Column B (Left) index 1
-          12, 12, 12, 12, 12, 12, // Column C split into six 12-unit columns (Indices 2-7)
-          // Main grid columns (D to AI) indices 8-39
-          ...Array(32).fill(10),
-          32, // Column B (Right) index 40
-          32  // Column A (Right) index 41
-        ],
+        logicRows: 20,
+          visualRows: 10,
+          columnWidths: [
+            3, // Column A (Left) index 0
+            3, // Column B (Left) index 1
+            ...Array(12).fill(1), // Anacrusis columns (Indices 2-13)
+            ...Array(64).fill(1), // Main grid columns (Indices 14-77)
+            3, // Column B (Right) index 78
+            3  // Column A (Right) index 79
+          ],
+
         rowData: [
           { pitch: 'Ab/G#', frequency: 830.61, color: null, column: 'A' },     // Row 0
           { pitch: 'G5', frequency: 783.99, color: '#78d9f7', column: 'B' },   // Row 1
@@ -480,6 +666,15 @@
       let resizeTimeout;
       let highlightedCell = null; // Cell currently under cursor for hover highlighting
       let selectedNoteColor = null; // Currently selected note color
+      let harmonicLevels = Array(10).fill(0);
+      harmonicLevels[0] = 1; // Start with h0 at 1 for a sine wave
+      let scheduledOscillators = [];
+      let playbackStartTime = null;
+      let animationFrameId = null;
+      let totalPlaybackDuration = null;
+
+
+
 
       /* DOM Elements */
       const canvas = document.getElementById('notation-grid');
@@ -491,17 +686,16 @@
       const gridContainer = document.getElementById('grid-container');
       const tempoSlider = document.getElementById('tempo-slider');
       const volumeSlider = document.getElementById('volume-slider');
-
-      /* Initialize Audio Context and Master Gain Node */
-      function initAudioContext() {
-        if (!audioCtx) {
-          window.AudioContext = window.AudioContext || window.webkitAudioContext;
-          audioCtx = new AudioContext();
-          masterGainNode = audioCtx.createGain();
-          masterGainNode.gain.value = 1; // Default volume at 100%
-          masterGainNode.connect(audioCtx.destination);
-        }
+      const harmonicSliders = [];
+      for (let i = 0; i <= 9; i++) {
+        harmonicSliders.push(document.getElementById(`harmonic-${i}`));
       }
+      const presetButtons = {
+        sine: document.getElementById('preset-sine'),
+        triangle: document.getElementById('preset-triangle'),
+        square: document.getElementById('preset-square'),
+        sawtooth: document.getElementById('preset-sawtooth')
+      };
 
       /* Responsive Canvas Resizing with Debouncing and requestAnimationFrame */
       function resizeCanvas() {
@@ -510,16 +704,34 @@
           const parentWidth = gridContainer.offsetWidth;
           const parentHeight = gridContainer.offsetHeight;
 
-          canvas.width = parentWidth;
-          canvas.height = parentHeight;
+          // Total width and height units
+          const totalWidthUnits = config.columnWidths.reduce((a, b) => a + b, 0);
+          const totalHeightUnits = config.visualRows * 2; // Each visual row is 2 units high
 
-          cellWidth = canvas.width / totalWidthUnits;
-          cellHeight = canvas.height / config.visualRows;
+          // Calculate scaling factors
+          const widthScalingFactor = parentWidth / totalWidthUnits;
+          const heightScalingFactor = parentHeight / totalHeightUnits;
+
+          // Use the smaller scaling factor to ensure the grid fits within the container
+          const scalingFactor = Math.min(widthScalingFactor, heightScalingFactor);
+
+          // Set cellWidth and cellHeight
+          cellWidth = scalingFactor;
+          cellHeight = scalingFactor * 2; // Each row is 2 units
+
+          // Set canvas dimensions
+          canvas.width = cellWidth * totalWidthUnits;
+          canvas.height = cellHeight * config.visualRows;
+
+          // Set canvas dimensions
+          canvas.style.width = `${canvas.width}px`;
+          canvas.style.height = `${canvas.height}px`;
 
           drawGrid();
-          // No need to call redrawNotes() here as drawGrid handles it
         }, config.debounceDelay);
       }
+
+
 
       window.addEventListener('resize', resizeCanvas);
       window.addEventListener('orientationchange', resizeCanvas);
@@ -542,7 +754,7 @@
             return i;
           }
         }
-        return config.columnWidths.length - 1;
+        return config.columnWidths.length - 1; // Return last index if x exceeds total width
       }
 
       function getRowY(index) {
@@ -629,9 +841,8 @@
       function drawVerticalLines() {
         let x = 0;
         for (let i = 0; i <= config.columnWidths.length; i++) {
-          // Check if the current column is within the split anacrusis columns (indices 2-7)
-          if (i > 2 && i < 7) {
-            // Do not draw vertical lines between these columns
+          // Skip drawing vertical lines between the anacrusis columns (indices 2-13)
+          if (i > 2 && i < 14) {
             x += config.columnWidths[i] * cellWidth;
             continue;
           }
@@ -645,29 +856,42 @@
             ctx.strokeStyle = '#000';
             ctx.lineWidth = 3;
             ctx.setLineDash([]);
-          } else if (i === 2) { // Right border of Column B / Left border of Column C
+          } else if (i === 2) { // Right border of Column B / Left border of Main Grid
+            ctx.strokeStyle = '#000';
+            ctx.lineWidth = 3;
+            ctx.setLineDash([]);
+          } else if (i === config.columnWidths.length - 2) { // Left border of right legend columns
+            ctx.strokeStyle = '#000';
+            ctx.lineWidth = 3;
+            ctx.setLineDash([]);
+          } else if (i === config.columnWidths.length) { // Right border of Column A (Right)
             ctx.strokeStyle = '#000';
             ctx.lineWidth = 3;
             ctx.setLineDash([]);
           } else {
-            // Existing line style code for other columns
-            if (i >= 2 && i <= config.columnWidths.length - 2) { // Main grid area
-              const gridColumn = i - 2; // Adjust for legend columns
-              if (i === 2 || i === 7) {
-                // Draw vertical lines only at the start and end of the split anacrusis columns
-                ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--line-color');
+            // Main grid area
+            if (i >= 14 && i < config.columnWidths.length - 2) {
+              const gridColumn = i - 14; // Adjust for legend and anacrusis columns
+
+              if (gridColumn % 8 === 0) {
+                // Bar line every 8 columns
+                ctx.strokeStyle = '#000';
+                ctx.lineWidth = 2;
                 ctx.setLineDash([]);
+              } else if (gridColumn % 8 === 2 || gridColumn % 8 === 4 || gridColumn % 8 === 6) {
+                // Dashed lines for quarter notes
+                ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--grid-subdivision-color'); // Dashed line for quarter notes
                 ctx.lineWidth = 1;
-              } else if ((gridColumn - 1) % 2 === 0) {
-                ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--line-color'); // Solid line for full beats
-                ctx.setLineDash([]);
-                ctx.lineWidth = 1;
-              } else {
-                ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--grid-subdivision-color'); // Dotted line for subdivisions
                 ctx.setLineDash([5, 5]);
-                ctx.lineWidth = 1;
+              } else {
+                // No lines for eighth-note subdivisions
+                // Do not draw any line
+                ctx.closePath();
+                x += config.columnWidths[i] * cellWidth;
+                continue;
               }
             } else {
+              // Other columns (should not occur in this setup)
               ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--grid-line-color');
               ctx.setLineDash([]);
               ctx.lineWidth = 1;
@@ -681,6 +905,7 @@
           }
         }
       }
+
 
       function drawLegends() {
         // Left Legends (Columns A and B)
@@ -778,19 +1003,20 @@
       }
 
       function drawNoteOnCanvas(note) {
-        const x = getColumnX(Math.floor(note.columnIndex));
-        const nextX = getColumnX(Math.floor(note.columnIndex) + 1);
+        const x = getColumnX(note.columnIndex);
         const y = getRowY(note.row);
-        const radius = Math.min(nextX - x, cellHeight) / 2 - 2;
+        const radius = cellWidth; // Diameter is 2 * cellWidth
 
         ctx.beginPath();
-        ctx.arc(x + (nextX - x) / 2, y, radius, 0, 2 * Math.PI);
+        ctx.arc(x + cellWidth, y, radius, 0, 2 * Math.PI);
         ctx.fillStyle = note.color;
         ctx.fill();
         ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--line-color');
         ctx.lineWidth = 1;
         ctx.stroke();
       }
+
+
 
       function redrawNotes() {
         placedNotes.forEach(drawNoteOnCanvas);
@@ -831,10 +1057,8 @@
 
           // Adjust for legend columns
           if (columnIndex < 2 || columnIndex >= config.columnWidths.length - 2) {
-            if (highlightedCell !== null) {
-              highlightedCell = null;
-              drawGrid();
-            }
+            highlightedCell = null; // Do not highlight outside main grid
+            drawGrid();
             return;
           }
 
@@ -852,18 +1076,14 @@
           const row = Math.min(config.logicRows - 1, Math.floor((y / canvas.height) * config.logicRows));
 
           if (row < 0 || row >= config.logicRows) {
-            if (highlightedCell !== null) {
-              highlightedCell = null;
-              drawGrid();
-            }
+            highlightedCell = null; // Do not highlight outside grid
+            drawGrid();
             return;
           }
 
-          // Update highlighted cell if changed
-          if (!highlightedCell || highlightedCell.columnIndex !== columnIndex || highlightedCell.rowIndex !== row) {
-            highlightedCell = { columnIndex, rowIndex: row };
-            drawGrid();
-          }
+          // Update the highlighted cell
+          highlightedCell = { columnIndex, rowIndex: row };
+          drawGrid();
         }
       });
 
@@ -916,13 +1136,6 @@
           if (clickedNote) {
             // Erase the note
             placeNoteAt(row, columnIndex, selectedNoteColor);
-            // Optionally, keep the note selected for further placements
-            // If you want to unlock the selection after erasing, uncomment the lines below:
-            /*
-            selectedNoteColor = null;
-            notes.forEach(n => n.classList.remove('selected'));
-            highlightedCell = null;
-            */
             drawGrid();
             return;
           }
@@ -958,48 +1171,17 @@
         }
       });
 
-      /* Keyboard Accessibility for Canvas Drop */
-      canvas.setAttribute('tabindex', '0');
-      canvas.addEventListener('keydown', function(event) {
-        if (event.key === 'Enter' || event.key === ' ') {
-          event.preventDefault();
-          if (selectedNoteColor) {
-            // For simplicity, place the note at the center of the canvas
-            const x = canvas.width / 2;
-            const y = canvas.height / 2;
-
-            let columnIndex = getColumnIndex(x);
-            
-            // Adjust for legend columns
-            if (columnIndex < 2 || columnIndex >= config.columnWidths.length - 2) {
-              alert('Cannot place note outside the main grid!');
-              return;
-            }
-            
-            // Snap to nearest column
-            const columnX = getColumnX(Math.floor(columnIndex));
-            const nextColumnX = getColumnX(Math.floor(columnIndex) + 1);
-            const columnMidpoint = (columnX + nextColumnX) / 2;
-            if (x > columnMidpoint) {
-              columnIndex = Math.ceil(columnIndex);
-            } else {
-              columnIndex = Math.floor(columnIndex);
-            }
-            
-            // Get logic row index
-            const row = Math.min(config.logicRows - 1, Math.floor((y / canvas.height) * config.logicRows));
-            
-            if (row < 0 || row >= config.logicRows) {
-              alert('Cannot place note outside the grid!');
-              return;
-            }
-            
-            // Place the note
-            placeNoteAt(row, columnIndex, selectedNoteColor);
-            drawGrid();
-          }
+      /* Initialize Audio Context and Master Gain Node */
+      function initAudioContext() {
+        if (!audioCtx) {
+          window.AudioContext = window.AudioContext || window.webkitAudioContext;
+          audioCtx = new AudioContext();
+          masterGainNode = audioCtx.createGain();
+          masterGainNode.gain.value = volumeSlider.value / 100; // Default volume
+          masterGainNode.connect(audioCtx.destination);
         }
-      });
+      }
+
 
       /* Playback Functionality */
       playButton.addEventListener('click', playMusic);
@@ -1012,85 +1194,164 @@
           audioCtx.resume();
         }
 
-        const unitDuration = config.beatDuration / 2; // Half beat per column
+        // Clear any previously scheduled oscillators
+        scheduledOscillators = [];
 
+        // Record the playback start time
+        playbackStartTime = audioCtx.currentTime;
+
+        // Calculate total playback duration
+        const unitDuration = config.beatDuration / 2; // Half beat per column (eighth note)
+        const totalUnits = config.columnWidths.slice(2, -2).reduce((a, b) => a + b, 0); // Exclude legend columns
+        totalPlaybackDuration = totalUnits * unitDuration;
+
+        // Schedule notes
         placedNotes.forEach(note => {
           const columnIndex = note.columnIndex;
 
-          // Calculate number of half-beats from column C (index 2)
-          const halfBeatsFromStart = columnIndex - 2;
+          // Calculate time from the start, considering anacrusis columns
+          const unitsFromStart = getUnitsFromStart(columnIndex);
 
-          if (halfBeatsFromStart < 0) return; // Notes before column C are not played
-
-          const startTime = audioCtx.currentTime + halfBeatsFromStart * unitDuration;
+          const startTime = playbackStartTime + unitsFromStart * unitDuration;
 
           const rowInfo = config.rowData[note.row];
           const frequency = rowInfo.frequency;
 
           if (frequency) {
-            playNoteAtTime(frequency, startTime, config.beatDuration / 2);
+            playNoteAtTime(frequency, startTime, unitDuration); // Duration of one unit (eighth note)
           }
         });
+
+        // Start the animation loop
+        animatePlayhead();
       }
 
+      function getUnitsFromStart(columnIndex) {
+        // Sum the widths of columns before the given columnIndex, excluding legends
+        const unitsFromStart = config.columnWidths.slice(2, columnIndex).reduce((a, b) => a + b, 0);
+        return unitsFromStart;
+      }
+
+      function animatePlayhead() {
+        const currentTime = audioCtx.currentTime - playbackStartTime;
+
+        // If playback has ended, stop the animation
+        if (currentTime >= totalPlaybackDuration) {
+          cancelAnimationFrame(animationFrameId);
+          animationFrameId = null;
+          playbackStartTime = null;
+          drawGrid(); // Redraw the grid without the playhead
+          return;
+        }
+
+        // Redraw the grid with the playhead
+        drawGrid();
+
+        // Draw the playhead
+        drawPlayhead(currentTime);
+
+        // Request the next frame
+        animationFrameId = requestAnimationFrame(animatePlayhead);
+      }
+
+      function drawPlayhead(currentTime) {
+        const unitDuration = config.beatDuration / 2; // Half beat per column (eighth note)
+        const unitsFromStart = currentTime / unitDuration;
+
+        // Calculate cumulative widths to find x position
+        let cumulativeWidth = getColumnX(2); // Start after legends
+        let unitsCounted = 0;
+        for (let i = 2; i < config.columnWidths.length - 2; i++) { // Exclude legends
+          const columnWidthUnits = config.columnWidths[i];
+          if (unitsCounted + columnWidthUnits > unitsFromStart) {
+            const remainingUnits = unitsFromStart - unitsCounted;
+            const x = cumulativeWidth + remainingUnits * cellWidth;
+            // Draw the playhead
+            ctx.save();
+            ctx.beginPath();
+            ctx.moveTo(x, 0);
+            ctx.lineTo(x, canvas.height);
+            ctx.strokeStyle = 'red';
+            ctx.lineWidth = 2;
+            ctx.setLineDash([5, 5]);
+            ctx.stroke();
+            ctx.restore();
+            break;
+          }
+          unitsCounted += columnWidthUnits;
+          cumulativeWidth += columnWidthUnits * cellWidth;
+        }
+      }
+
+
       function playNoteAtTime(frequency, time, duration) {
-        const oscillator = audioCtx.createOscillator();
+        const noteOscillator = audioCtx.createOscillator();
         const gainNode = audioCtx.createGain();
 
-        oscillator.type = 'sine';
-        oscillator.frequency.setValueAtTime(frequency, time);
+        // Use the harmonic levels for waveform synthesis
+        const real = new Float32Array(harmonicLevels.length + 1);
+        const imag = new Float32Array(harmonicLevels.length + 1);
+        real[0] = 0;
+        imag[0] = 0;
+        harmonicLevels.forEach((level, index) => {
+          real[index + 1] = level; // Assign amplitude to the real part
+          imag[index + 1] = 0;     // Imaginary part is zero
+        });
+        const periodicWave = audioCtx.createPeriodicWave(real, imag, { disableNormalization: false });
+        noteOscillator.setPeriodicWave(periodicWave);
 
-        oscillator.connect(gainNode);
+        noteOscillator.frequency.setValueAtTime(frequency, time);
+
+        noteOscillator.connect(gainNode);
         gainNode.connect(masterGainNode); // Connect to master gain node
 
-        oscillator.start(time);
-        oscillator.stop(time + duration);
+        noteOscillator.start(time);
+        noteOscillator.stop(time + duration);
 
         // Fade out the note
         gainNode.gain.setValueAtTime(1, time);
         gainNode.gain.exponentialRampToValueAtTime(0.001, time + duration);
+
+        // Store the oscillator so we can stop it later
+        scheduledOscillators.push(noteOscillator);
       }
+
+
 
       /* Stop Functionality */
       function stopMusic() {
         if (audioCtx && audioCtx.state !== 'closed') {
+          scheduledOscillators.forEach(oscillator => {
+            try {
+              oscillator.stop();
+            } catch (e) {
+              // Ignore errors if oscillator has already stopped
+            }
+          });
+          scheduledOscillators = [];
+
+          // Optionally suspend the audio context
           audioCtx.suspend();
         }
+
+        // Cancel the animation
+        if (animationFrameId) {
+          cancelAnimationFrame(animationFrameId);
+          animationFrameId = null;
+        }
+        playbackStartTime = null;
+        drawGrid(); // Redraw the grid without the playhead
       }
+
+
 
       /* Clear Functionality */
       clearButton.addEventListener('click', clearNotes);
 
       function clearNotes() {
         placedNotes.length = 0; // Clear the array
-        // Remove localStorage functionality to prevent persistence
-        // localStorage.removeItem('placedNotes'); // Removed
         drawGrid(); // Redraw the empty grid
       }
-
-      /* Accessibility: Save and Load Notes */
-      // Removed localStorage save and load to ensure notes are cleared on refresh
-      /*
-      window.addEventListener('beforeunload', () => {
-        localStorage.setItem('placedNotes', JSON.stringify(placedNotes));
-      });
-
-      window.addEventListener('load', () => {
-        const savedNotes = JSON.parse(localStorage.getItem('placedNotes'));
-        if (savedNotes && Array.isArray(savedNotes)) {
-          placedNotes.push(...savedNotes);
-          drawGrid();
-          redrawNotes();
-        } else {
-          drawGrid();
-        }
-      });
-      */
-
-      /* Keyboard Navigation for Notes */
-      document.addEventListener('keydown', function(event) {
-        // Implement keyboard shortcuts if necessary
-      });
 
       /* Tempo Slider Functionality */
       tempoSlider.addEventListener('input', function(event) {
@@ -1108,6 +1369,58 @@
         }
       });
 
+      /* Update Harmonic Levels from Sliders */
+      function updateHarmonicLevels() {
+        harmonicLevels = harmonicSliders.map(slider => parseFloat(slider.value));
+      }
+
+      /* Update Slider Background */
+      function updateSliderBackground(slider) {
+      const value = parseFloat(slider.value);
+      const percentage = value * 100;
+      slider.style.background = `linear-gradient(
+        to right,
+        var(--slider-fill-color) ${percentage}%,
+        var(--slider-track-color) ${percentage}%
+      )`;
+    }
+
+      /* Event Listeners for Harmonic Sliders */
+      harmonicSliders.forEach(slider => {
+        slider.addEventListener('input', function() {
+          updateHarmonicLevels();
+          updateSliderBackground(slider);
+        });
+        
+        // Initialize the background when the page loads
+        updateSliderBackground(slider);
+      });
+
+      /* Preset Buttons Functionality */
+      presetButtons.sine.addEventListener('click', () => {
+        setPreset([1.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000]); // Sine wave
+      });
+
+      presetButtons.triangle.addEventListener('click', () => {
+        setPreset([1.000, 1.000, 0.000, 0.111, 0.000, 0.040, 0.000, 0.020, 0.000, 0.012]); // Triangle wave
+      });
+
+      presetButtons.square.addEventListener('click', () => {
+        setPreset([1.000, 1.000, 0.000, 0.333, 0.000, 0.200, 0.000, 0.143, 0.000, 0.111]); // Square wave
+      });
+
+      presetButtons.sawtooth.addEventListener('click', () => {
+        setPreset([1.000, 0.500, 0.333, 0.250, 0.200, 0.167, 0.143, 0.125, 0.111, 0.100]); // Sawtooth wave
+      });
+
+      function setPreset(values) {
+      harmonicSliders.forEach((slider, index) => {
+        slider.value = values[index];
+        updateSliderBackground(slider); // Update the background
+      });
+        updateHarmonicLevels(); // Update levels used during playback
+      }
+
       /* Initialize Sliders with Default Values */
       document.addEventListener('DOMContentLoaded', function() {
         const defaultBPM = 120;
@@ -1116,9 +1429,9 @@
 
         const defaultVolume = 100;
         volumeSlider.value = defaultVolume;
-        if (masterGainNode) {
-          masterGainNode.gain.value = defaultVolume / 100;
-        }
+
+        // Initialize harmonic levels to represent a sine wave
+        setPreset([1, 0, 0, 0, 0, 0, 0, 0, 0, 0]); // Default to Sine wave
       });
 
       /* Initial Drawing */
