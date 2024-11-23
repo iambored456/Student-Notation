@@ -128,20 +128,22 @@
       outline: none;
     }
 
-    /* Harmonic Sliders Container */
-    #harmonic-sliders-container {
-      display: flex;
-      flex-direction: row; /* Arrange sliders horizontally */
-      align-items: flex-end; /* Align slider bottoms */
-    }
-
     /* Slider Wrapper */
     .slider-wrapper {
       display: flex;
       flex-direction: column;
       align-items: center;
-      margin: 0 5px;
+      margin: 0; /* Remove margins */
     }
+
+    /* Harmonic Sliders Container */
+    #harmonic-sliders-container {
+      display: flex;
+      flex-direction: row;
+      align-items: flex-end;
+      gap: 2px; /* Adjust this value as needed */
+    }
+
 
       /* Harmonic Sliders */
       .harmonic-slider {
@@ -685,6 +687,9 @@
       let playbackStartTime = null;
       let animationFrameId = null;
       let totalPlaybackDuration = null;
+      let isDragging = false; // Flag to indicate if dragging is in progress
+      let currentDraggedNote = null; // Reference to the note being dragged
+
 
       /* DOM Elements */
       const canvas = document.getElementById('notation-grid');
@@ -733,13 +738,15 @@
           canvas.width = cellWidth * totalWidthUnits;
           canvas.height = cellHeight * config.visualRows;
 
-          // Set canvas dimensions
+          // Set canvas display size
           canvas.style.width = `${canvas.width}px`;
           canvas.style.height = `${canvas.height}px`;
 
           drawGrid();
         }, config.debounceDelay);
       }
+
+
 
 
 
@@ -766,11 +773,14 @@
         for (let i = 0; i < config.columnWidths.length; i++) {
           cumulativeWidth += config.columnWidths[i] * cellWidth;
           if (x < cumulativeWidth) {
+            console.log(`Clicked X: ${x}, Column Index: ${i}`);
             return i;
           }
         }
+        console.log(`Clicked X: ${x}, Column Index: ${config.columnWidths.length - 1}`);
         return config.columnWidths.length - 1; // Return last index if x exceeds total width
       }
+
 
       function getRowY(index) {
         return (index * 0.5) * cellHeight;
@@ -793,9 +803,11 @@
           highlightSpecificCell(highlightedCell, 'rgba(255, 255, 0, 0.3)'); // Semi-transparent yellow
         }
 
-        // Draw placed notes after highlighting to ensure they are visible
-        redrawNotes();
+        // Draw placed notes and their tails after highlighting to ensure they are visible
+        redrawNotesAndTails();
       }
+
+
 
       function drawHorizontalLines() {
         // Define epsilon for floating point comparison
@@ -823,7 +835,7 @@
           ctx.stroke();
         }
 
-        // **Add 3pt Horizontal Lines Adjacent to 'C' Pitches**
+        // **Add 4pt Horizontal Lines Adjacent to 'C' Pitches**
         config.rowData.forEach((row, rowIndex) => {
           if (row.pitch.includes('C') && row.pitch !== 'Db/C#') { 
             const y = getRowY(rowIndex);
@@ -831,7 +843,7 @@
             ctx.moveTo(0, y);
             ctx.lineTo(canvas.width, y);
             ctx.strokeStyle = '#000';
-            ctx.lineWidth = 3;
+            ctx.lineWidth = 4;
             ctx.setLineDash([]);
             ctx.stroke();
           }
@@ -991,19 +1003,35 @@
         });
       }
 
-      function highlightSpecificCell(cell, color = 'rgba(255, 255, 0, 0.3)') {
+      function highlightSpecificCell(cell, color = 'rgba(255, 255, 0, 0.5)') {
         const { columnIndex, rowIndex } = cell;
-        const x = getColumnX(columnIndex);
-        const y = getRowY(rowIndex);
-        const columnWidth = config.columnWidths[columnIndex] * cellWidth;
-        const rowHeight = cellHeight; // Full cell height for consistent highlighting
+        console.log('Highlighting cell:', columnIndex, rowIndex); // Debugging Line
+        const cellsToHighlight = [{ columnIndex, rowIndex }];
 
-        // Set highlight color
-        ctx.fillStyle = color;
+        // Check if the right-adjacent cell exists within the main grid
+        const isDesktop = !isMobile;
+        const mainGridStart = isDesktop ? 8 : 2; // Starting index of main grid columns
+        const mainGridEnd = isDesktop ? config.columnWidths.length - 2 : config.columnWidths.length; // Ending index
 
-        // Draw highlight
-        ctx.fillRect(x, y - rowHeight / 2, columnWidth, rowHeight);
+        if (columnIndex + 1 < mainGridEnd) {
+          cellsToHighlight.push({ columnIndex: columnIndex + 1, rowIndex });
+        }
+
+        cellsToHighlight.forEach(c => {
+          const x = getColumnX(c.columnIndex);
+          const y = getRowY(c.rowIndex);
+          const columnWidth = config.columnWidths[c.columnIndex] * cellWidth;
+          const rowHeight = cellHeight; // Full cell height for consistent highlighting
+
+          // Set highlight color
+          ctx.fillStyle = color;
+
+          // Draw highlight
+          ctx.fillRect(x, y - rowHeight / 2, columnWidth, rowHeight);
+        });
       }
+
+
 
 
       /* Draw Greyed Rows for G Notes */
@@ -1023,76 +1051,175 @@
         });
       }
 
-      /* Note Placement and Drawing */
-      function placeNoteAt(row, columnIndex, color) {
-        const existingNoteIndex = placedNotes.findIndex(note => note.row === row && note.columnIndex === columnIndex);
-        if (existingNoteIndex === -1) {
-          placedNotes.push({ row, columnIndex, color });
-        } else {
-          placedNotes.splice(existingNoteIndex, 1); // Toggle off if already placed
-        }
-      }
-
       function drawNoteOnCanvas(note) {
-        const x = getColumnX(note.columnIndex);
+        console.log('Drawing ring for note:', note);
+        
+        const xStart = getColumnX(note.startColumnIndex); // Corrected property name
         const y = getRowY(note.row);
-        const radius = cellWidth; // Diameter is 2 * cellWidth
+
+        const columnWidth = config.columnWidths[note.startColumnIndex] * cellWidth;
+        // Safely access endColumnIndex without exceeding array bounds
+        const nextColumnWidth = (note.endColumnIndex + 1 < config.columnWidths.length) 
+          ? config.columnWidths[note.endColumnIndex + 1] * cellWidth 
+          : config.columnWidths[note.endColumnIndex] * cellWidth; // Use current column width if out of bounds
+
+        const totalWidth = columnWidth + nextColumnWidth;
+        const radius = (totalWidth / 2) * 0.9; // 0.9 to provide some padding
+
+        // Center the circle across two columns
+        const centerX = xStart + (totalWidth) / 2;
 
         ctx.beginPath();
-        ctx.arc(x + cellWidth, y, radius, 0, 2 * Math.PI);
-        ctx.fillStyle = note.color;
-        ctx.fill();
-        ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--line-color');
-        ctx.lineWidth = 1;
+        ctx.arc(centerX, y, radius, 0, 2 * Math.PI);
+        
+        // Set stroke properties
+        ctx.strokeStyle = note.color; // Use note color for the ring
+        ctx.lineWidth = 6; // Thicker line for better visibility
+        ctx.setLineDash([]); // Solid line
+
         ctx.stroke();
       }
 
 
 
-      function redrawNotes() {
-        placedNotes.forEach(drawNoteOnCanvas);
-      }
 
-      /* Selection Mechanism for Notes */
-      notes.forEach(note => {
-        note.addEventListener('click', function(event) {
-          const color = event.target.getAttribute('data-color') || getComputedStyle(document.documentElement).getPropertyValue('--note-default-color');
-          
-          if (selectedNoteColor === color) {
-            // Unselect if already selected
-            selectedNoteColor = null;
-            note.classList.remove('selected');
-            highlightedCell = null; // Remove highlight when deselected
-            drawGrid();
-          } else {
-            // Select this note
-            selectedNoteColor = color;
-            // Deselect other notes
-            notes.forEach(n => n.classList.remove('selected'));
-            note.classList.add('selected');
-            drawGrid();
+      function redrawNotesAndTails() {
+        placedNotes.forEach(note => {
+          if (note.startColumnIndex === note.endColumnIndex) {
+            // Single note without a tail
+            drawNoteOnCanvas(note);
+          } else if (note.startColumnIndex < note.endColumnIndex) {
+            // Note with a tail
+            drawNoteWithTail(note);
           }
         });
+      }
+
+
+
+      function drawNoteWithTail(note) {
+        // Draw the note circle
+        drawNoteOnCanvas(note);
+
+        // Calculate the start and end positions for the tail
+        const startX = getColumnX(note.startColumnIndex) + (config.columnWidths[note.startColumnIndex] * cellWidth) / 2;
+        const endX = getColumnX(note.endColumnIndex) + (config.columnWidths[note.endColumnIndex] * cellWidth) / 2;
+        const y = getRowY(note.row);
+
+        // Draw the tail as a line from the center of the start cell to the end cell
+        ctx.beginPath();
+        ctx.moveTo(startX, y);
+        ctx.lineTo(endX, y);
+        ctx.strokeStyle = note.color;
+        ctx.lineWidth = cellWidth * 0.3; // Adjust line width as needed
+        ctx.stroke();
+      }
+
+
+
+
+    /* Selection Mechanism for Notes */
+    notes.forEach(note => {
+      note.addEventListener('click', function(event) {
+        const color = event.target.getAttribute('data-color') || getComputedStyle(document.documentElement).getPropertyValue('--note-default-color');
+        
+        console.log('Note clicked, color:', color);
+        
+        if (selectedNoteColor === color) {
+          // Unselect if already selected
+          selectedNoteColor = null;
+          note.classList.remove('selected');
+          highlightedCell = null; // Remove highlight when deselected
+          console.log('Note unselected');
+          drawGrid();
+        } else {
+          // Select this note
+          selectedNoteColor = color;
+          // Deselect other notes
+          notes.forEach(n => n.classList.remove('selected'));
+          note.classList.add('selected');
+          console.log('Note selected, color:', color);
+          drawGrid();
+        }
       });
+    });
 
-      /* Canvas Mouse Events for Hover Highlighting */
-      canvas.addEventListener('mousemove', function(event) {
-        if (selectedNoteColor) {
-          // Get mouse position
-          const rect = canvas.getBoundingClientRect();
-          const x = event.clientX - rect.left;
-          const y = event.clientY - rect.top;
+    /* Canvas MouseDown Event to Start Dragging */
+    canvas.addEventListener('mousedown', function(event) {
+      if (selectedNoteColor) {
+        console.log('Canvas mousedown event detected');
 
-          // Get column index and row index
-          let columnIndex = getColumnIndex(x);
+        // Get mouse position relative to the canvas
+        const rect = canvas.getBoundingClientRect();
+        const x = event.clientX - rect.left;
+        const y = event.clientY - rect.top;
 
-          // Adjust for legend columns
-          if (columnIndex < 2 || columnIndex >= config.columnWidths.length - 2) {
-            highlightedCell = null; // Do not highlight outside main grid
-            drawGrid();
-            return;
-          }
+        // Determine the column index based on the x-coordinate
+        let columnIndex = getColumnIndex(x);
 
+        // Adjust for legend columns (assuming legends occupy first 2 columns)
+        if (columnIndex < 2 || columnIndex >= config.columnWidths.length - 2) {
+          alert('Cannot place note outside the main grid!');
+          return;
+        }
+
+        // Snap to the nearest column based on the mouse position
+        const columnX = getColumnX(Math.floor(columnIndex));
+        const nextColumnX = getColumnX(Math.floor(columnIndex) + 1);
+        const columnMidpoint = (columnX + nextColumnX) / 2;
+        if (x > columnMidpoint) {
+          columnIndex = Math.ceil(columnIndex);
+        } else {
+          columnIndex = Math.floor(columnIndex);
+        }
+
+        // Determine the row index based on the y-coordinate
+        const row = Math.min(config.logicRows - 1, Math.floor((y / canvas.height) * config.logicRows));
+
+        if (row < 0 || row >= config.logicRows) {
+          alert('Cannot place note outside the grid!');
+          return;
+        }
+
+        // Create a new note object
+        const newNote = {
+          row: row,
+          startColumnIndex: columnIndex,
+          endColumnIndex: columnIndex, // Initially, no tail
+          color: selectedNoteColor
+        };
+
+        // Add the new note to the placedNotes array
+        placedNotes.push(newNote);
+        console.log('Placed Notes:', placedNotes);
+
+        // Set dragging state to allow tail creation
+        isDragging = true;
+        currentDraggedNote = newNote;
+
+        // Prevent default behaviors like text selection
+        event.preventDefault();
+
+        // Redraw the grid to show the new note
+        drawGrid();
+      }
+    });
+
+
+    /* Canvas Mouse Events for Hover Highlighting and Dragging */
+    canvas.addEventListener('mousemove', function(event) {
+      const rect = canvas.getBoundingClientRect();
+      const x = event.clientX - rect.left;
+      const y = event.clientY - rect.top;
+
+      // Handle Hover Highlighting
+      if (selectedNoteColor && !isDragging) { // Only highlight when not dragging
+        let columnIndex = getColumnIndex(x);
+
+        // Adjust for legend columns
+        if (columnIndex < 2 || columnIndex >= config.columnWidths.length - 2) {
+          highlightedCell = null; // Do not highlight outside main grid
+        } else {
           // Snap to nearest column
           const columnX = getColumnX(Math.floor(columnIndex));
           const nextColumnX = getColumnX(Math.floor(columnIndex) + 1);
@@ -1108,83 +1235,75 @@
 
           if (row < 0 || row >= config.logicRows) {
             highlightedCell = null; // Do not highlight outside grid
-            drawGrid();
-            return;
-          }
-
-          // Update the highlighted cell
-          highlightedCell = { columnIndex, rowIndex: row };
-          drawGrid();
-        }
-      });
-
-      canvas.addEventListener('mouseout', function(event) {
-        if (selectedNoteColor) {
-          if (highlightedCell !== null) {
-            highlightedCell = null;
-            drawGrid();
-          }
-        }
-      });
-
-      /* Canvas Click Event for Placing and Erasing Notes */
-      canvas.addEventListener('click', function(event) {
-        if (selectedNoteColor) {
-          // Get mouse position
-          const rect = canvas.getBoundingClientRect();
-          const x = event.clientX - rect.left;
-          const y = event.clientY - rect.top;
-          
-          // Get column index and row index
-          let columnIndex = getColumnIndex(x);
-          
-          // Adjust for legend columns
-          if (columnIndex < 2 || columnIndex >= config.columnWidths.length - 2) {
-            alert('Cannot place note outside the main grid!');
-            return;
-          }
-          
-          // Snap to nearest column
-          const columnX = getColumnX(Math.floor(columnIndex));
-          const nextColumnX = getColumnX(Math.floor(columnIndex) + 1);
-          const columnMidpoint = (columnX + nextColumnX) / 2;
-          if (x > columnMidpoint) {
-            columnIndex = Math.ceil(columnIndex);
           } else {
-            columnIndex = Math.floor(columnIndex);
+            highlightedCell = { columnIndex, rowIndex: row };
           }
+        }
+        drawGrid();
+      }
+
+      // Handle Dragging
+      if (isDragging && currentDraggedNote) {
+        let columnIndex = getColumnIndex(x);
+
+        // Adjust for legend columns
+        if (columnIndex < 2) {
+          columnIndex = 2; // Clamp to the first main grid column
+        }
+        const mainGridEnd = isMobile ? config.columnWidths.length : config.columnWidths.length - 2;
+        if (columnIndex >= mainGridEnd) {
+          columnIndex = mainGridEnd - 1; // Clamp to the last main grid column
+        }
+
+        // Snap to nearest column
+        const columnX = getColumnX(Math.floor(columnIndex));
+        const nextColumnX = getColumnX(Math.floor(columnIndex) + 1);
+        const columnMidpoint = (columnX + nextColumnX) / 2;
+        if (x > columnMidpoint) {
+          columnIndex = Math.ceil(columnIndex);
+        } else {
+          columnIndex = Math.floor(columnIndex);
+        }
+
+        // Ensure the tail does not go to the left of the start column
+        if (columnIndex < currentDraggedNote.startColumnIndex) {
+          columnIndex = currentDraggedNote.startColumnIndex;
+        }
+
+        // Update the endColumnIndex of the current dragged note
+        currentDraggedNote.endColumnIndex = columnIndex;
+
+        // Redraw the grid to show the updated tail
+        drawGrid();
+      }
+    });
+
+
+      /* Canvas MouseUp Event to Finalize Tail */
+      canvas.addEventListener('mouseup', function(event) {
+        if (isDragging && currentDraggedNote) {
+          // Finalize the tail
+          // (Already updated in mousemove)
           
-          // Get logic row index
-          const row = Math.min(config.logicRows - 1, Math.floor((y / canvas.height) * config.logicRows));
+          // Reset dragging state
+          isDragging = false;
+          currentDraggedNote = null;
           
-          if (row < 0 || row >= config.logicRows) {
-            alert('Cannot place note outside the grid!');
-            return;
-          }
-          
-          // Check if clicked on an existing note
-          const clickedNote = placedNotes.find(n => n.row === row && n.columnIndex === columnIndex);
-          if (clickedNote) {
-            // Erase the note
-            placeNoteAt(row, columnIndex, selectedNoteColor);
-            drawGrid();
-            return;
-          }
-          
-          // Place the note
-          placeNoteAt(row, columnIndex, selectedNoteColor);
+          // Redraw to ensure final state
           drawGrid();
         }
       });
 
-      /* Right-Click (Context Menu) to Unlock */
-      canvas.addEventListener('contextmenu', function(event) {
-        event.preventDefault();
-        // Unlock
-        selectedNoteColor = null;
-        notes.forEach(n => n.classList.remove('selected'));
-        highlightedCell = null;
-        drawGrid();
+      /* Canvas MouseLeave Event to Cancel Dragging if Mouse Leaves Canvas */
+      canvas.addEventListener('mouseleave', function(event) {
+        if (isDragging && currentDraggedNote) {
+          // Finalize the tail as per current state
+          isDragging = false;
+          currentDraggedNote = null;
+          
+          // Redraw to ensure final state
+          drawGrid();
+        }
       });
 
       /* Click Outside the Canvas to Unlock */
@@ -1237,22 +1356,27 @@
         const totalUnits = config.columnWidths.slice(2, isMobile ? undefined : -2).reduce((a, b) => a + b, 0); // Exclude legends and right Y-Axis columns on desktop
         totalPlaybackDuration = totalUnits * unitDuration;
 
-        // Schedule notes
-        placedNotes.forEach(note => {
-          const columnIndex = note.columnIndex;
+      // Schedule notes
+      placedNotes.forEach(note => {
+        const columnIndex = note.startColumnIndex;
 
-          // Calculate time from the start, considering legends and anacrusis (if any)
-          const unitsFromStart = getUnitsFromStart(columnIndex);
+        // Calculate time from the start, considering legends and anacrusis (if any)
+        const unitsFromStart = getUnitsFromStart(columnIndex);
 
-          const startTime = playbackStartTime + unitsFromStart * unitDuration;
+        const startTime = playbackStartTime + unitsFromStart * unitDuration;
 
-          const rowInfo = config.rowData[note.row];
-          const frequency = rowInfo.frequency;
+        const rowInfo = config.rowData[note.row];
+        const frequency = rowInfo.frequency;
 
-          if (frequency) {
-            playNoteAtTime(frequency, startTime, unitDuration); // Duration of one unit (eighth note)
-          }
-        });
+        if (frequency) {
+          // Calculate the duration based on the tail's length
+          const unitsDuration = note.endColumnIndex - note.startColumnIndex + 1; // +1 to include the starting column
+          const duration = unitsDuration * unitDuration;
+
+          playNoteAtTime(frequency, startTime, duration); // Duration based on tail length
+        }
+      });
+
 
         // Start the animation loop
         animatePlayhead();
