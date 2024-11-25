@@ -96,6 +96,48 @@
       flex-wrap: wrap; /* Allow wrapping on smaller screens */
     }
 
+    /* Toolkit Buttons */
+    .toolkit-button {
+      padding: 10px;
+      font-size: 16px;
+      background-color: #000;
+      color: #fff;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      margin: 5px;
+    }
+
+    .toolkit-button:hover,
+    .toolkit-button:focus {
+      opacity: 0.8;
+      outline: none;
+    }
+
+
+
+      /* Eraser Tool Styles */
+      #eraser-tool {
+        width: var(--note-size);
+        height: var(--note-size);
+        background-color: #fff;
+        border: 2px solid #000;
+        border-radius: 50%;
+        margin: var(--note-margin);
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px; /* Adjust size as needed */
+        transition: border 0.3s;
+      }
+
+      /* Selected Eraser Style */
+      #eraser-tool.selected {
+        border: 4px solid yellow;
+      }
+
+
     /* Harmonic Controls */
     #harmonic-controls {
       display: flex;
@@ -513,6 +555,13 @@
 
     <!-- Toolbar -->
     <div id="toolbar">
+
+      <!-- Export and Import Buttons -->
+      <div id="export-import-buttons">
+        <button class="toolkit-button" id="export-button">Export</button>
+        <button class="toolkit-button" id="import-button">Import</button>
+      </div>
+
       <!-- Preset Buttons -->
       <div id="preset-buttons">
         <button class="preset-button" id="preset-sine">Sine</button>
@@ -568,14 +617,27 @@
           <div class="slider-label">H9</div>
         </div>
       </div>
-            <!-- Notes Container -->
-            <div id="notes-container">
-              <div class="note" data-color="#000000" style="background-color: #000000;" tabindex="0" aria-label="Black Note"></div>
-              <div class="note" data-color="#ff0000" style="background-color: #ff0000;" tabindex="0" aria-label="Red Note"></div>
-              <div class="note" data-color="#0000ff" style="background-color: #0000ff;" tabindex="0" aria-label="Blue Note"></div>
-              <!-- Add more note circles if needed -->
-            </div>
-    </div>
+        <!-- Notes Container -->
+        <div id="notes-container">
+          <div class="note" data-color="#000000" style="background-color: #000000;" tabindex="0" aria-label="Black Note"></div>
+          <div class="note" data-color="#ff0000" style="background-color: #ff0000;" tabindex="0" aria-label="Red Note"></div>
+          <div class="note" data-color="#0000ff" style="background-color: #0000ff;" tabindex="0" aria-label="Blue Note"></div>
+          <!-- Add more note circles if needed -->
+          
+          <!-- Eraser Icon -->
+          <div class="eraser" id="eraser-tool" tabindex="0" aria-label="Eraser Tool">
+            <!-- Unicode Eraser Symbol -->
+            🩹
+          </div>
+        </div>
+
+                <!-- Shift Grid Buttons -->
+        <div id="shift-grid-buttons">
+          <button class="toolkit-button" id="shift-up-button" aria-label="Shift Grid Up">▲</button>
+          <button class="toolkit-button" id="shift-down-button" aria-label="Shift Grid Down">▼</button>
+        </div>
+
+      </div>
 
     <!-- Notation Grid -->
     <div id="grid-container" aria-label="Notation Grid">
@@ -645,36 +707,123 @@
           3, // Column B (Right) index 72
           3  // Column A (Right) index 73
         ],
-
-        rowData: [
-          { pitch: 'Ab/G#', frequency: 830.61, color: null, column: 'A' },     // Row 0
-          { pitch: 'G5', frequency: 783.99, color: '#78d9f7', column: 'B' },   // Row 1
-          { pitch: 'Gb/F#', frequency: 739.99, color: null, column: 'A' },     // Row 2
-          { pitch: 'F5', frequency: 698.46, color: '#9ef777', column: 'B' },   // Row 3
-          { pitch: 'E5', frequency: 659.25, color: '#fcfc74', column: 'A' },   // Row 4
-          { pitch: 'Eb/D#', frequency: 622.25, color: null, column: 'B' },     // Row 5
-          { pitch: 'D5', frequency: 587.33, color: '#ffc076', column: 'A' },   // Row 6
-          { pitch: 'Db/C#', frequency: 554.37, color: null, column: 'B' },     // Row 7
-          { pitch: 'C5', frequency: 523.25, color: '#f77878', column: 'A' },   // Row 8
-          { pitch: 'B4', frequency: 493.88, color: '#f778e0', column: 'B' },   // Row 9
-          { pitch: 'Bb/A#', frequency: 466.16, color: null, column: 'A' },     // Row 10
-          { pitch: 'A4', frequency: 440.00, color: '#b288ff', column: 'B' },   // Row 11
-          { pitch: 'Ab/G#', frequency: 415.30, color: null, column: 'A' },     // Row 12
-          { pitch: 'G4', frequency: 392.00, color: '#78d9f7', column: 'B' },   // Row 13
-          { pitch: 'Gb/F#', frequency: 369.99, color: null, column: 'A' },     // Row 14
-          { pitch: 'F4', frequency: 349.23, color: '#9ef777', column: 'B' },   // Row 15
-          { pitch: 'E4', frequency: 329.63, color: '#fcfc74', column: 'A' },   // Row 16
-          { pitch: 'Eb/D#', frequency: 311.13, color: null, column: 'B' },     // Row 17
-          { pitch: 'D4', frequency: 293.66, color: '#ffc076', column: 'A' },   // Row 18
-          { pitch: 'Db/C#', frequency: 277.18, color: null, column: 'B' }      // Row 19
-        ],
         debounceDelay: 200, // milliseconds
         beatDuration: 60 / 120 // seconds (default 120 BPM)
       };
 
+      /* Full Pitch Data from C1 to C8 with 'column' and 'color' properties */
+      const fullRowData = [
+        { pitch: 'C8', frequency: 4186.01, color: null, column: 'A' },
+        { pitch: 'B7', frequency: 3951.07, color: null, column: 'B' },
+        { pitch: 'Bb/A#7', frequency: 3729.31, color: null, column: 'A' },
+        { pitch: 'A7', frequency: 3520.00, color: null, column: 'B' },
+        { pitch: 'Ab/G#7', frequency: 3322.44, color: null, column: 'A' },
+        { pitch: 'G7', frequency: 3135.96, color: null, column: 'B' },
+        { pitch: 'Gb/F#7', frequency: 2959.96, color: null, column: 'A' },
+        { pitch: 'F7', frequency: 2793.83, color: null, column: 'B' },
+        { pitch: 'E7', frequency: 2637.02, color: null, column: 'A' },
+        { pitch: 'Eb/D#7', frequency: 2489.02, color: null, column: 'B' },
+        { pitch: 'D7', frequency: 2349.32, color: null, column: 'A' },
+        { pitch: 'Db/C#7', frequency: 2217.46, color: null, column: 'B' },
+        { pitch: 'C7', frequency: 2093.00, color: null, column: 'A' },
+        { pitch: 'B6', frequency: 1975.53, color: null, column: 'B' },
+        { pitch: 'Bb/A#6', frequency: 1864.66, color: null, column: 'A' },
+        { pitch: 'A6', frequency: 1760.00, color: null, column: 'B' },
+        { pitch: 'Ab/G#6', frequency: 1661.22, color: null, column: 'A' },
+        { pitch: 'G6', frequency: 1567.94, color: null, column: 'B' },
+        { pitch: 'Gb/F#6', frequency: 1479.98, color: null, column: 'A' },
+        { pitch: 'F6', frequency: 1396.91, color: null, column: 'B' },
+        { pitch: 'E6', frequency: 1318.51, color: null, column: 'A' },
+        { pitch: 'Eb/D#6', frequency: 1244.51, color: null, column: 'B' },
+        { pitch: 'D6', frequency: 1174.66, color: null, column: 'A' },
+        { pitch: 'Db/C#6', frequency: 1108.73, color: null, column: 'B' },
+        { pitch: 'C6', frequency: 1046.50, color: null, column: 'A' },
+        { pitch: 'B5', frequency: 987.77, color: null, column: 'B' },
+        { pitch: 'Bb/A#5', frequency: 932.33, color: null, column: 'A' },
+        { pitch: 'A5', frequency: 880.00, color: null, column: 'B' },
+        { pitch: 'Ab/G#5', frequency: 830.61, color: null, column: 'A' },
+        { pitch: 'G5', frequency: 783.99, color: '#78d9f7', column: 'B' },
+        { pitch: 'Gb/F#5', frequency: 739.99, color: null, column: 'A' },
+        { pitch: 'F5', frequency: 698.46, color: '#9ef777', column: 'B' },
+        { pitch: 'E5', frequency: 659.25, color: '#fcfc74', column: 'A' },
+        { pitch: 'Eb/D#5', frequency: 622.25, color: null, column: 'B' },
+        { pitch: 'D5', frequency: 587.33, color: '#ffc076', column: 'A' },
+        { pitch: 'Db/C#5', frequency: 554.37, color: null, column: 'B' },
+        { pitch: 'C5', frequency: 523.25, color: '#f77878', column: 'A' },
+        { pitch: 'B4', frequency: 493.88, color: '#f778e0', column: 'B' },
+        { pitch: 'Bb/A#4', frequency: 466.16, color: null, column: 'A' },
+        { pitch: 'A4', frequency: 440.00, color: '#b288ff', column: 'B' },
+        { pitch: 'Ab/G#4', frequency: 415.30, color: null, column: 'A' },
+        { pitch: 'G4', frequency: 392.00, color: '#78d9f7', column: 'B' },
+        { pitch: 'Gb/F#4', frequency: 369.99, color: null, column: 'A' },
+        { pitch: 'F4', frequency: 349.23, color: '#9ef777', column: 'B' },
+        { pitch: 'E4', frequency: 329.63, color: '#fcfc74', column: 'A' },
+        { pitch: 'Eb/D#4', frequency: 311.13, color: null, column: 'B' },
+        { pitch: 'D4', frequency: 293.66, color: '#ffc076', column: 'A' },
+        { pitch: 'Db/C#4', frequency: 277.18, color: null, column: 'B' },
+        { pitch: 'C4', frequency: 261.63, color: null, column: 'A' },
+        { pitch: 'B3', frequency: 246.94, color: null, column: 'B' },
+        { pitch: 'Bb/A#3', frequency: 233.08, color: null, column: 'A' },
+        { pitch: 'A3', frequency: 220.00, color: null, column: 'B' },
+        { pitch: 'Ab/G#3', frequency: 207.65, color: null, column: 'A' },
+        { pitch: 'G3', frequency: 196.00, color: null, column: 'B' },
+        { pitch: 'Gb/F#3', frequency: 185.00, color: null, column: 'A' },
+        { pitch: 'F3', frequency: 174.61, color: null, column: 'B' },
+        { pitch: 'E3', frequency: 164.81, color: null, column: 'A' },
+        { pitch: 'Eb/D#3', frequency: 155.56, color: null, column: 'B' },
+        { pitch: 'D3', frequency: 146.83, color: null, column: 'A' },
+        { pitch: 'Db/C#3', frequency: 138.59, color: null, column: 'B' },
+        { pitch: 'C3', frequency: 130.81, color: null, column: 'A' },
+        { pitch: 'B2', frequency: 123.47, color: null, column: 'B' },
+        { pitch: 'Bb/A#2', frequency: 116.54, color: null, column: 'A' },
+        { pitch: 'A2', frequency: 110.00, color: null, column: 'B' },
+        { pitch: 'Ab/G#2', frequency: 103.83, color: null, column: 'A' },
+        { pitch: 'G2', frequency: 98.00, color: null, column: 'B' },
+        { pitch: 'Gb/F#2', frequency: 92.50, color: null, column: 'A' },
+        { pitch: 'F2', frequency: 87.31, color: null, column: 'B' },
+        { pitch: 'E2', frequency: 82.41, color: null, column: 'A' },
+        { pitch: 'Eb/D#2', frequency: 77.78, color: null, column: 'B' },
+        { pitch: 'D2', frequency: 73.42, color: null, column: 'A' },
+        { pitch: 'Db/C#2', frequency: 69.30, color: null, column: 'B' },
+        { pitch: 'C2', frequency: 65.41, color: null, column: 'A' },
+        { pitch: 'B1', frequency: 61.74, color: null, column: 'B' },
+        { pitch: 'Bb/A#1', frequency: 58.27, color: null, column: 'A' },
+        { pitch: 'A1', frequency: 55.00, color: null, column: 'B' },
+        { pitch: 'Ab/G#1', frequency: 51.91, color: null, column: 'A' },
+        { pitch: 'G1', frequency: 49.00, color: null, column: 'B' },
+        { pitch: 'Gb/F#1', frequency: 46.25, color: null, column: 'A' },
+        { pitch: 'F1', frequency: 43.65, color: null, column: 'B' },
+        { pitch: 'E1', frequency: 41.20, color: null, column: 'A' },
+        { pitch: 'Eb/D#1', frequency: 38.89, color: null, column: 'B' },
+        { pitch: 'D1', frequency: 36.71, color: null, column: 'A' },
+        { pitch: 'Db/C#1', frequency: 34.65, color: null, column: 'B' },
+        { pitch: 'C1', frequency: 32.70, color: null, column: 'A' },
+      ];
+
+      // Define colors for each base pitch
+      const pitchColors = {
+        'C': '#f77878',    // Red
+        'D': '#ffc076',    // Orange
+        'E': '#fcfc74',    // Yellow
+        'F': '#9ef777',    // Green
+        'G': '#78d9f7',    // Blue
+        'A': '#b288ff',    // Purple
+        'B': '#f778e0'     // Pink
+      };
+
+      // Assign colors to pitches in fullRowData
+      fullRowData.forEach(row => {
+        const basePitchMatch = row.pitch.match(/^[A-G]/);
+        if (basePitchMatch && !row.pitch.includes('#') && !row.pitch.includes('b')) {
+          const basePitch = basePitchMatch[0];
+          row.color = pitchColors[basePitch];
+        } else {
+          row.color = null; // Keep accidentals white
+        }
+      });
+
       /* State Variables */
       let cellWidth, cellHeight;
-      let totalWidthUnits = config.columnWidths.reduce((a, b) => a + b, 0);
       const placedNotes = [];
       let audioCtx = null;
       let masterGainNode = null; // Master gain node for volume control
@@ -689,9 +838,19 @@
       let totalPlaybackDuration = null;
       let isDragging = false; // Flag to indicate if dragging is in progress
       let currentDraggedNote = null; // Reference to the note being dragged
+      let isErasing = false; // Flag to indicate if erasing is in progress
+      let eraseHighlightedCell = null; // Cell currently highlighted for erasing
+
+      /* New State Variable for Grid Position */
+      let gridPosition = 28; // Index in fullRowData where the current grid starts
+
+      /* Initialize rowData */
+      let rowData = fullRowData.slice(gridPosition, gridPosition + config.logicRows);
 
 
       /* DOM Elements */
+      const exportButton = document.getElementById('export-button');
+      const importButton = document.getElementById('import-button');
       const canvas = document.getElementById('notation-grid');
       const ctx = canvas.getContext('2d');
       const playButton = document.getElementById('play-button');
@@ -701,6 +860,7 @@
       const gridContainer = document.getElementById('grid-container');
       const tempoSlider = document.getElementById('tempo-slider');
       const volumeSlider = document.getElementById('volume-slider');
+      const eraserTool = document.getElementById('eraser-tool');
       const harmonicSliders = [];
       for (let i = 0; i <= 9; i++) {
         harmonicSliders.push(document.getElementById(`harmonic-${i}`));
@@ -710,7 +870,54 @@
         triangle: document.getElementById('preset-triangle'),
         square: document.getElementById('preset-square'),
         sawtooth: document.getElementById('preset-sawtooth')
+
       };
+      const shiftUpButton = document.getElementById('shift-up-button');
+      const shiftDownButton = document.getElementById('shift-down-button');
+
+      /* Shift Grid Up Function */
+      function shiftGridUp() {
+        if (gridPosition > 0) {
+          gridPosition -= 2; // Shift up by two notes
+          updateRowData();
+          adjustPlacedNotes();
+          drawGrid();
+        }
+      }
+
+      /* Shift Grid Down Function */
+      function shiftGridDown() {
+        if (gridPosition + config.logicRows < fullRowData.length) {
+          gridPosition += 2; // Shift down by two notes
+          updateRowData();
+          adjustPlacedNotes();
+          drawGrid();
+        }
+      }
+
+      /* Update rowData based on gridPosition */
+      function updateRowData() {
+        rowData = fullRowData.slice(gridPosition, gridPosition + config.logicRows);
+      }
+
+      /* Adjust Placed Notes when Grid Shifts */
+      function adjustPlacedNotes() {
+        // Remove notes that are no longer visible
+        for (let i = placedNotes.length - 1; i >= 0; i--) {
+          const noteRow = placedNotes[i].row;
+          if (noteRow < gridPosition || noteRow >= gridPosition + config.logicRows) {
+            placedNotes.splice(i, 1);
+          } else {
+            // Adjust the row index of remaining notes
+            placedNotes[i].rowIndex = placedNotes[i].row - gridPosition;
+          }
+        }
+      }
+
+      shiftUpButton.addEventListener('click', shiftGridUp);
+    shiftDownButton.addEventListener('click', shiftGridDown);
+
+
 
       /* Responsive Canvas Resizing with Debouncing and requestAnimationFrame */
       function resizeCanvas() {
@@ -790,38 +997,42 @@
         return Math.floor((y / canvas.height) * config.logicRows);
       }
 
-      /* Drawing Functions */
+      /* Draw Functions */
       function drawGrid() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-        drawGreyedRows(); // Draw greyed rows first to put them behind the lines
-        drawHorizontalLines(); // Draw horizontal lines next
-        drawVerticalLines(); // Then vertical lines
-        drawLegends(); // Legends after lines
+        drawGreyedRows();       // Draw greyed rows first
+        drawLegends();          // Draw legends before lines
+        drawHorizontalLines();  // Draw horizontal lines over legends
+        drawVerticalLines();    // Draw vertical lines
 
         if (highlightedCell) {
           highlightSpecificCell(highlightedCell, 'rgba(255, 255, 0, 0.3)'); // Semi-transparent yellow
         }
 
-        // Draw placed notes and their tails after highlighting to ensure they are visible
+        if (eraseHighlightedCell) {
+          highlightSpecificCell(eraseHighlightedCell, 'rgba(255, 0, 0, 0.3)'); // Semi-transparent red
+        }
+
+        // Draw placed notes and their tails
         redrawNotesAndTails();
       }
-
-
 
       function drawHorizontalLines() {
         // Define epsilon for floating point comparison
         const epsilon = 0.5;
 
-        // **Draw Standard Horizontal Grid Lines, Excluding 'E4' and 'E5' Rows**
+        // **Draw Standard Horizontal Grid Lines, Excluding 'E' Rows**
         for (let i = 0; i <= config.visualRows; i++) {
           const y = i * cellHeight;
 
-          // Determine if current y corresponds to 'E4' or 'E5' rows
-          const isE4 = Math.abs(y - getRowY(16)) < epsilon; // 'E4' at rowIndex=16
-          const isE5 = Math.abs(y - getRowY(4)) < epsilon;  // 'E5' at rowIndex=4
+          // Determine if current y corresponds to 'E' rows
+          const isE = rowData.some((row, index) => {
+            const rowY = getRowY(index);
+            return Math.abs(y - rowY) < epsilon && row.pitch.startsWith('E') && !row.pitch.includes('#') && !row.pitch.includes('b');
+          });
 
-          if (isE4 || isE5) {
+          if (isE) {
             // Skip drawing standard line on 'E' rows
             continue;
           }
@@ -836,8 +1047,8 @@
         }
 
         // **Add 4pt Horizontal Lines Adjacent to 'C' Pitches**
-        config.rowData.forEach((row, rowIndex) => {
-          if (row.pitch.includes('C') && row.pitch !== 'Db/C#') { 
+        rowData.forEach((row, rowIndex) => {
+          if (row.pitch.startsWith('C') && !row.pitch.includes('#') && !row.pitch.includes('b')) {
             const y = getRowY(rowIndex);
             ctx.beginPath();
             ctx.moveTo(0, y);
@@ -850,9 +1061,8 @@
         });
 
         // **Add Dashed Lines Adjacent to 'E' Pitches**
-        config.rowData.forEach((row, rowIndex) => {
-          // Updated condition to only include 'E4' and 'E5'
-          if (/^E\d+$/.test(row.pitch)) { 
+        rowData.forEach((row, rowIndex) => {
+          if (row.pitch.startsWith('E') && !row.pitch.includes('#') && !row.pitch.includes('b')) {
             const y = getRowY(rowIndex);
             ctx.beginPath();
             ctx.moveTo(0, y);
@@ -965,7 +1175,7 @@
         columnsOrder.forEach((columnLabel, colIndex) => {
           const columnWidth = columnWidthsPx[colIndex];
 
-          config.rowData.forEach((row, rowIndex) => {
+          rowData.forEach((row, rowIndex) => {
             if (row.column === columnLabel) {
               const y = getRowY(rowIndex);
               const color = row.color || getComputedStyle(document.documentElement).getPropertyValue('--legend-background-default');
@@ -1040,7 +1250,7 @@
         const mainGridStartX = getColumnX(2); // After the first two legend columns
         const mainGridEndX = isMobile ? getColumnX(config.columnWidths.length) : getColumnX(config.columnWidths.length - 2); // Before the last two legend columns on desktop
 
-        config.rowData.forEach((row, rowIndex) => {
+        rowData.forEach((row, rowIndex) => {
           if (row.pitch.toLowerCase().includes('g4') || row.pitch.toLowerCase().includes('g5')) {
             const y = getRowY(rowIndex);
             const rowHeight = cellHeight; // Height of the row
@@ -1051,40 +1261,40 @@
         });
       }
 
+      /* Corrected drawNoteOnCanvas Function */
       function drawNoteOnCanvas(note) {
-        console.log('Drawing ring for note:', note);
-        
-        const xStart = getColumnX(note.startColumnIndex); // Corrected property name
-        const y = getRowY(note.row);
+        const noteRowIndex = note.row - gridPosition;
+        const y = getRowY(noteRowIndex);
 
+        const xStart = getColumnX(note.startColumnIndex);
         const columnWidth = config.columnWidths[note.startColumnIndex] * cellWidth;
-        // Safely access endColumnIndex without exceeding array bounds
         const nextColumnWidth = (note.endColumnIndex + 1 < config.columnWidths.length) 
           ? config.columnWidths[note.endColumnIndex + 1] * cellWidth 
-          : config.columnWidths[note.endColumnIndex] * cellWidth; // Use current column width if out of bounds
+          : config.columnWidths[note.endColumnIndex] * cellWidth;
 
         const totalWidth = columnWidth + nextColumnWidth;
-        const radius = (totalWidth / 2) * 0.9; // 0.9 to provide some padding
+        const radius = (totalWidth / 2) * 0.9;
 
-        // Center the circle across two columns
         const centerX = xStart + (totalWidth) / 2;
 
         ctx.beginPath();
         ctx.arc(centerX, y, radius, 0, 2 * Math.PI);
-        
-        // Set stroke properties
-        ctx.strokeStyle = note.color; // Use note color for the ring
-        ctx.lineWidth = 6; // Thicker line for better visibility
-        ctx.setLineDash([]); // Solid line
+
+        ctx.strokeStyle = note.color;
+        ctx.lineWidth = 6;
+        ctx.setLineDash([]);
 
         ctx.stroke();
       }
 
-
-
-
+      /* Corrected redrawNotesAndTails Function */
       function redrawNotesAndTails() {
         placedNotes.forEach(note => {
+          const noteRowIndex = note.row - gridPosition;
+          if (noteRowIndex < 0 || noteRowIndex >= config.logicRows) {
+            // Skip notes not in the current grid view
+            return;
+          }
           if (note.startColumnIndex === note.endColumnIndex) {
             // Single note without a tail
             drawNoteOnCanvas(note);
@@ -1095,8 +1305,7 @@
         });
       }
 
-
-
+      /* Corrected drawNoteWithTail Function */
       function drawNoteWithTail(note) {
         // Draw the note circle
         drawNoteOnCanvas(note);
@@ -1104,7 +1313,9 @@
         // Calculate the start and end positions for the tail
         const startX = getColumnX(note.startColumnIndex) + (config.columnWidths[note.startColumnIndex] * cellWidth) / 2;
         const endX = getColumnX(note.endColumnIndex) + (config.columnWidths[note.endColumnIndex] * cellWidth) / 2;
-        const y = getRowY(note.row);
+
+        const noteRowIndex = note.row - gridPosition;
+        const y = getRowY(noteRowIndex);
 
         // Draw the tail as a line from the center of the start cell to the end cell
         ctx.beginPath();
@@ -1144,115 +1355,31 @@
       });
     });
 
-    /* Canvas MouseDown Event to Start Dragging */
-    canvas.addEventListener('mousedown', function(event) {
-      if (selectedNoteColor) {
-        console.log('Canvas mousedown event detected');
+      /* Prevent Default Context Menu on Canvas */
+      canvas.addEventListener('contextmenu', function(event) {
+        event.preventDefault();
+      });
+
+
+      /* Canvas MouseDown Event to Handle Placing and Erasing */
+      canvas.addEventListener('mousedown', function(event) {
+        // Prevent default context menu for right-click
+        if (event.button === 2) {
+          event.preventDefault();
+        }
 
         // Get mouse position relative to the canvas
         const rect = canvas.getBoundingClientRect();
         const x = event.clientX - rect.left;
         const y = event.clientY - rect.top;
 
-        // Determine the column index based on the x-coordinate
-        let columnIndex = getColumnIndex(x);
-
-        // Adjust for legend columns (assuming legends occupy first 2 columns)
-        if (columnIndex < 2 || columnIndex >= config.columnWidths.length - 2) {
-          alert('Cannot place note outside the main grid!');
-          return;
-        }
-
-        // Snap to the nearest column based on the mouse position
-        const columnX = getColumnX(Math.floor(columnIndex));
-        const nextColumnX = getColumnX(Math.floor(columnIndex) + 1);
-        const columnMidpoint = (columnX + nextColumnX) / 2;
-        if (x > columnMidpoint) {
-          columnIndex = Math.ceil(columnIndex);
-        } else {
-          columnIndex = Math.floor(columnIndex);
-        }
-
-        // Determine the row index based on the y-coordinate
-        const row = Math.min(config.logicRows - 1, Math.floor((y / canvas.height) * config.logicRows));
-
-        if (row < 0 || row >= config.logicRows) {
-          alert('Cannot place note outside the grid!');
-          return;
-        }
-
-        // Create a new note object
-        const newNote = {
-          row: row,
-          startColumnIndex: columnIndex,
-          endColumnIndex: columnIndex, // Initially, no tail
-          color: selectedNoteColor
-        };
-
-        // Add the new note to the placedNotes array
-        placedNotes.push(newNote);
-        console.log('Placed Notes:', placedNotes);
-
-        // Set dragging state to allow tail creation
-        isDragging = true;
-        currentDraggedNote = newNote;
-
-        // Prevent default behaviors like text selection
-        event.preventDefault();
-
-        // Redraw the grid to show the new note
-        drawGrid();
-      }
-    });
-
-
-    /* Canvas Mouse Events for Hover Highlighting and Dragging */
-    canvas.addEventListener('mousemove', function(event) {
-      const rect = canvas.getBoundingClientRect();
-      const x = event.clientX - rect.left;
-      const y = event.clientY - rect.top;
-
-      // Handle Hover Highlighting
-      if (selectedNoteColor && !isDragging) { // Only highlight when not dragging
+        // Determine the column and row index
         let columnIndex = getColumnIndex(x);
 
         // Adjust for legend columns
         if (columnIndex < 2 || columnIndex >= config.columnWidths.length - 2) {
-          highlightedCell = null; // Do not highlight outside main grid
-        } else {
-          // Snap to nearest column
-          const columnX = getColumnX(Math.floor(columnIndex));
-          const nextColumnX = getColumnX(Math.floor(columnIndex) + 1);
-          const columnMidpoint = (columnX + nextColumnX) / 2;
-          if (x > columnMidpoint) {
-            columnIndex = Math.ceil(columnIndex);
-          } else {
-            columnIndex = Math.floor(columnIndex);
-          }
-
-          // Get logic row index
-          const row = Math.min(config.logicRows - 1, Math.floor((y / canvas.height) * config.logicRows));
-
-          if (row < 0 || row >= config.logicRows) {
-            highlightedCell = null; // Do not highlight outside grid
-          } else {
-            highlightedCell = { columnIndex, rowIndex: row };
-          }
-        }
-        drawGrid();
-      }
-
-      // Handle Dragging
-      if (isDragging && currentDraggedNote) {
-        let columnIndex = getColumnIndex(x);
-
-        // Adjust for legend columns
-        if (columnIndex < 2) {
-          columnIndex = 2; // Clamp to the first main grid column
-        }
-        const mainGridEnd = isMobile ? config.columnWidths.length : config.columnWidths.length - 2;
-        if (columnIndex >= mainGridEnd) {
-          columnIndex = mainGridEnd - 1; // Clamp to the last main grid column
+          // Do nothing if outside the main grid
+          return;
         }
 
         // Snap to nearest column
@@ -1265,46 +1392,198 @@
           columnIndex = Math.floor(columnIndex);
         }
 
-        // Ensure the tail does not go to the left of the start column
-        if (columnIndex < currentDraggedNote.startColumnIndex) {
-          columnIndex = currentDraggedNote.startColumnIndex;
+        // Get logic row index
+        const rowIndex = Math.floor((y / canvas.height) * config.logicRows);
+        if (rowIndex < 0 || rowIndex >= config.logicRows) {
+          return;
+        }
+        const row = gridPosition + rowIndex; // Absolute row index
+        const rowInfo = rowData[rowIndex];   // Get data from current grid view
+
+        if (event.button === 0 && selectedNoteColor) {
+          // **Left-click: Place Note**
+          // Create a new note object
+          const newNote = {
+            row: row,
+            startColumnIndex: columnIndex,
+            endColumnIndex: columnIndex, // Initially, no tail
+            color: selectedNoteColor
+          };
+
+          // Add the new note to the placedNotes array
+          placedNotes.push(newNote);
+
+          // Set dragging state to allow tail creation
+          isDragging = true;
+          currentDraggedNote = newNote;
+
+          // Prevent default behaviors like text selection
+          event.preventDefault();
+
+          // Redraw the grid to show the new note
+          drawGrid();
+        } else if (event.button === 2) {
+          // **Right-click: Start Erasing Mode**
+          isErasing = true;
+
+          // Store the current position
+          eraseHighlightedCell = { columnIndex, rowIndex };
+
+          // Erase any note at this position
+          eraseNoteAtPosition(columnIndex, row);
+
+          // Highlight the eraser icon
+          eraserTool.classList.add('selected');
+
+          // Redraw the grid to reflect changes
+          drawGrid();
+        }
+      });
+
+
+
+
+
+      /* Canvas MouseMove Event */
+      canvas.addEventListener('mousemove', function(event) {
+        // Get mouse position relative to the canvas
+        const rect = canvas.getBoundingClientRect();
+        const x = event.clientX - rect.left;
+        const y = event.clientY - rect.top;
+
+        // Determine the column and row index
+        let columnIndex = getColumnIndex(x);
+
+
+        // Adjust for legend columns
+        if (columnIndex < 2 || columnIndex >= config.columnWidths.length - 2) {
+          highlightedCell = null;
+          eraseHighlightedCell = null;
+          drawGrid();
+          return;
         }
 
-        // Update the endColumnIndex of the current dragged note
-        currentDraggedNote.endColumnIndex = columnIndex;
+        // Snap to nearest column
+        const columnX = getColumnX(Math.floor(columnIndex));
+        const nextColumnX = getColumnX(Math.floor(columnIndex) + 1);
+        const columnMidpoint = (columnX + nextColumnX) / 2;
+        if (x > columnMidpoint) {
+          columnIndex = Math.ceil(columnIndex);
+        } else {
+          columnIndex = Math.floor(columnIndex);
+        }
 
-        // Redraw the grid to show the updated tail
+        // Get logic row index
+        const row = Math.min(config.logicRows - 1, Math.floor((y / canvas.height) * config.logicRows));
+
+        if (row < 0 || row >= config.logicRows) {
+          highlightedCell = null;
+          eraseHighlightedCell = null;
+          drawGrid();
+          return;
+        }
+
+        if (isErasing) {
+          // **Erasing Mode: Erase as you drag**
+          eraseHighlightedCell = { columnIndex, rowIndex: row };
+
+          // Erase any note at this position
+          eraseNoteAtPosition(columnIndex, row);
+
+          // Redraw the grid to reflect changes
+          drawGrid();
+        } else if (selectedNoteColor && !isDragging) {
+          // **Hover Highlighting for Placing Notes**
+          highlightedCell = { columnIndex, rowIndex: row };
+          drawGrid();
+        } else if (isDragging && currentDraggedNote) {
+          // **Dragging to Create Note Tail**
+          // Existing code for dragging notes...
+          let newColumnIndex = columnIndex;
+
+          // Adjust for legend columns
+          if (newColumnIndex < 2) {
+            newColumnIndex = 2; // Clamp to the first main grid column
+          }
+          const mainGridEnd = isMobile ? config.columnWidths.length : config.columnWidths.length - 2;
+          if (newColumnIndex >= mainGridEnd) {
+            newColumnIndex = mainGridEnd - 1; // Clamp to the last main grid column
+          }
+
+          // Ensure the tail does not go to the left of the start column
+          if (newColumnIndex < currentDraggedNote.startColumnIndex) {
+            newColumnIndex = currentDraggedNote.startColumnIndex;
+          }
+
+          // Update the endColumnIndex of the current dragged note
+          currentDraggedNote.endColumnIndex = newColumnIndex;
+
+          // Redraw the grid to show the updated tail
+          drawGrid();
+        }
+      });
+
+
+    /* MouseUp Event */
+    window.addEventListener('mouseup', function(event) {
+      if (event.button === 0 && isDragging && currentDraggedNote) {
+        // **Left button released: Finalize the note placement**
+        isDragging = false;
+        currentDraggedNote = null;
+        drawGrid();
+      } else if (event.button === 2 && isErasing) {
+        // **Right button released: End erasing mode**
+        isErasing = false;
+        eraseHighlightedCell = null;
+
+        // Remove eraser icon highlight
+        eraserTool.classList.remove('selected');
+
         drawGrid();
       }
     });
 
 
-      /* Canvas MouseUp Event to Finalize Tail */
-      canvas.addEventListener('mouseup', function(event) {
-        if (isDragging && currentDraggedNote) {
-          // Finalize the tail
-          // (Already updated in mousemove)
-          
-          // Reset dragging state
-          isDragging = false;
-          currentDraggedNote = null;
-          
-          // Redraw to ensure final state
-          drawGrid();
-        }
-      });
 
-      /* Canvas MouseLeave Event to Cancel Dragging if Mouse Leaves Canvas */
-      canvas.addEventListener('mouseleave', function(event) {
-        if (isDragging && currentDraggedNote) {
-          // Finalize the tail as per current state
-          isDragging = false;
-          currentDraggedNote = null;
-          
-          // Redraw to ensure final state
-          drawGrid();
+    /* Canvas MouseLeave Event */
+    canvas.addEventListener('mouseleave', function(event) {
+      if (isDragging && currentDraggedNote) {
+        // **Stop dragging note tail**
+        isDragging = false;
+        currentDraggedNote = null;
+        drawGrid();
+      }
+      if (isErasing) {
+        // **End erasing mode**
+        isErasing = false;
+        eraseHighlightedCell = null;
+        eraserTool.classList.remove('selected');
+        drawGrid();
+      }
+    });
+
+      /* Function to Erase Note at a Given Position and Right-Adjacent Cell */
+      function eraseNoteAtPosition(columnIndex, rowIndex) {
+        const cellsToErase = [{ columnIndex, rowIndex }];
+
+        // Check if the right-adjacent cell exists within the main grid
+        const isDesktop = !isMobile;
+        const mainGridEnd = isDesktop ? config.columnWidths.length - 2 : config.columnWidths.length;
+
+        if (columnIndex + 1 < mainGridEnd) {
+          cellsToErase.push({ columnIndex: columnIndex + 1, rowIndex });
         }
-      });
+
+        cellsToErase.forEach(cell => {
+          const noteIndex = placedNotes.findIndex(n => n.row === cell.rowIndex && n.startColumnIndex <= cell.columnIndex && n.endColumnIndex >= cell.columnIndex);
+          if (noteIndex !== -1) {
+            placedNotes.splice(noteIndex, 1);
+          }
+        });
+      }
+
+
+
 
       /* Click Outside the Canvas to Unlock */
       document.addEventListener('click', function(event) {
@@ -1365,8 +1644,10 @@
 
         const startTime = playbackStartTime + unitsFromStart * unitDuration;
 
-        const rowInfo = config.rowData[note.row];
+        const noteRowIndex = note.row - gridPosition;
+        const rowInfo = rowData[noteRowIndex];
         const frequency = rowInfo.frequency;
+
 
         if (frequency) {
           // Calculate the duration based on the tail's length
@@ -1506,6 +1787,92 @@
         drawGrid(); // Redraw the grid without the playhead
       }
 
+      /* Export Functionality */
+        exportButton.addEventListener('click', exportNotes);
+
+        function exportNotes() {
+          // Convert placedNotes array to CSV-like data
+          const data = placedNotes.map(note => {
+            return `${note.row},${note.startColumnIndex},${note.endColumnIndex},${note.color}`;
+          }).join('\n');
+
+          // Create a Blob from the data
+          const blob = new Blob([data], { type: 'text/plain' });
+
+          // Create a link to download the Blob as a file
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = 'notation.txt';
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+        }
+
+        /* Import Functionality */
+          importButton.addEventListener('click', importNotes);
+
+          function importNotes() {
+            // Create an input element to select the file
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.txt';
+            input.onchange = function(event) {
+              const file = event.target.files[0];
+              if (!file) {
+                return;
+              }
+              const reader = new FileReader();
+              reader.onload = function(e) {
+                const content = e.target.result;
+                parseImportedNotes(content);
+              };
+              reader.readAsText(file);
+            };
+            input.click();
+          }
+
+          function parseImportedNotes(data) {
+            // Split data into lines
+            const lines = data.trim().split('\n');
+            const importedNotes = [];
+
+            lines.forEach(line => {
+              const [rowStr, startColStr, endColStr, color] = line.split(',');
+              const row = parseInt(rowStr, 10);
+              const startColumnIndex = parseInt(startColStr, 10);
+              const endColumnIndex = parseInt(endColStr, 10);
+
+              // Validate the parsed data
+              if (
+                isNaN(row) || isNaN(startColumnIndex) || isNaN(endColumnIndex) ||
+                row < 0 || row >= config.logicRows ||
+                startColumnIndex < 0 || startColumnIndex >= config.columnWidths.length ||
+                endColumnIndex < startColumnIndex || endColumnIndex >= config.columnWidths.length
+              ) {
+                console.error('Invalid note data:', line);
+                return;
+              }
+
+              // Create the note object
+              const note = {
+                row,
+                startColumnIndex,
+                endColumnIndex,
+                color: color || getComputedStyle(document.documentElement).getPropertyValue('--note-default-color')
+              };
+
+              importedNotes.push(note);
+            });
+
+            // Replace the current placedNotes with importedNotes
+            placedNotes.length = 0; // Clear the array
+            placedNotes.push(...importedNotes);
+
+            // Redraw the grid
+            drawGrid();
+          }
 
 
       /* Clear Functionality */
