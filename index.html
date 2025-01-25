@@ -3,14 +3,37 @@
 <head>
   <meta charset="UTF-8">
   <title>Student Notation Web Applet</title>
-  <!-- Google Fonts for Zodeka One -->
-  <link href="https://fonts.googleapis.com/css2?family=Zodeka+One&display=swap" rel="stylesheet">
+  
+  <!-- Main stylesheet -->
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
+
+  <!-- Navigation Bar -->
+  <nav>
+    <div class="nav-container">
+      <!-- Left-aligned brand (two lines) -->
+      <div class="brand">
+        <p class="small-text">Quinn Fleming's</p>
+        <h1>Music Learning Tools</h1>
+      </div>
+
+      <!-- Centered links -->
+      <ul>
+        <li><a href="https://iambored456.github.io/DiatonicCompass/">DiatonicCompass</a></li>
+        <li><a href="https://iambored456.github.io/Student-Notation/" class="active">Student-Notation</a></li>
+        <li><a href="https://iambored456.github.io/PitchDetect/">PitchDetect</a></li>
+      </ul>
+
+      <!-- Right column is empty for now (can be used for future items) -->
+      <div></div>
+    </div>
+  </nav>
+
+  <!-- Main App Container -->
   <div id="app-container">
 
-    <!-- Toolbar (reorganized) -->
+    <!-- Toolbar -->
     <div id="toolbar">
 
       <!-- Title Section -->
@@ -24,6 +47,7 @@
 
       <!-- Waveform + Sliders + ADSR Section -->
       <div id="waveform-sliders-adsr-section">
+
         <div id="waveform-section">
           <div id="preset-buttons">
             <button class="preset-button" id="preset-sine">Sine</button>
@@ -94,6 +118,23 @@
             <input type="range" id="release-slider" min="0" max="2" value="0.3" step="0.01">
           </div>
         </div>
+        <!-- ADSR Diagram Container -->
+        <div id="adsr-diagram-container">
+          <svg id="adsr-svg" width="400" height="150" aria-label="ADSR Diagram">
+            <!-- We'll draw three line segments: Attack -> Decay/Sustain -> Release -->
+            <path id="adsr-path" class="adsr-line" d="M0,130 L60,20 L100,60 L180,130" />
+
+            <!-- Attack Node -->
+            <circle id="attack-node" class="adsr-node" cx="60" cy="20" r="5" />
+
+            <!-- Decay/Sustain Node -->
+            <circle id="decay-sustain-node" class="adsr-node" cx="100" cy="60" r="5" />
+
+            <!-- Release Node -->
+            <circle id="release-node" class="adsr-node" cx="180" cy="130" r="5" />
+          </svg>
+        </div>
+
       </div>
 
       <!-- Notes Container and Eraser -->
@@ -112,10 +153,12 @@
 
     </div>
 
+    <!-- Notation Grid -->
     <div id="grid-container" aria-label="Notation Grid">
       <canvas id="notation-grid" role="img" aria-label="Musical Notation Grid" tabindex="0"></canvas>
     </div>
 
+    <!-- Playback and Control Buttons -->
     <div id="controls" aria-label="Control Buttons">
       <div id="volume-container">
         <div class="volume-labels">
@@ -144,6 +187,106 @@
       </div>
     </div>
   </div>
-  <script src="script.js"></script>
+
+  <!-- GLOBAL VARIABLES + DATA -->
+  <script>
+    // Array that holds the placed notes on the grid
+    window.placedNotes = [];
+
+    // Master list of pitches and frequencies
+    window.fullRowData = [
+      { pitch: 'C8', frequency: 4186.01, column: 'A' },
+      { pitch: 'B7', frequency: 3951.07, column: 'B' },
+      { pitch: 'B♭/A♯7', frequency: 3729.31, column: 'A' },
+      { pitch: 'A7', frequency: 3520.00, column: 'B' },
+      { pitch: 'A♭/G♯7', frequency: 3322.44, column: 'A' },
+      { pitch: 'G7', frequency: 3135.96, column: 'B' },
+      { pitch: 'G♭/F♯7', frequency: 2959.96, column: 'A' },
+      { pitch: 'F7', frequency: 2793.83, column: 'B' },
+      { pitch: 'E7', frequency: 2637.02, column: 'A' },
+      { pitch: 'E♭/D♯7', frequency: 2489.02, column: 'B' },
+      { pitch: 'D7', frequency: 2349.32, column: 'A' },
+      { pitch: 'D♭/C♯7', frequency: 2217.46, column: 'B' },
+      { pitch: 'C7', frequency: 2093.00, column: 'A' },
+      { pitch: 'B6', frequency: 1975.53, column: 'B' },
+      { pitch: 'B♭/A♯6', frequency: 1864.66, column: 'A' },
+      { pitch: 'A6', frequency: 1760.00, column: 'B' },
+      { pitch: 'A♭/G♯6', frequency: 1661.22, column: 'A' },
+      { pitch: 'G6', frequency: 1567.94, column: 'B' },
+      { pitch: 'G♭/F♯6', frequency: 1479.98, column: 'A' },
+      { pitch: 'F6', frequency: 1396.91, column: 'B' },
+      { pitch: 'E6', frequency: 1318.51, column: 'A' },
+      { pitch: 'E♭/D♯6', frequency: 1244.51, column: 'B' },
+      { pitch: 'D6', frequency: 1174.66, column: 'A' },
+      { pitch: 'D♭/C♯6', frequency: 1108.73, column: 'B' },
+      { pitch: 'C6', frequency: 1046.50, column: 'A' },
+      { pitch: 'B5', frequency: 987.77, column: 'B' },
+      { pitch: 'B♭/A♯5', frequency: 932.33, column: 'A' },
+      { pitch: 'A5', frequency: 880.00, column: 'B' },
+      { pitch: 'A♭/G♯5', frequency: 830.61, column: 'A' },
+      { pitch: 'G5', frequency: 783.99, column: 'B' },
+      { pitch: 'G♭/F♯5', frequency: 739.99, column: 'A' },
+      { pitch: 'F5', frequency: 698.46, column: 'B' },
+      { pitch: 'E5', frequency: 659.25, column: 'A' },
+      { pitch: 'E♭/D♯5', frequency: 622.25, column: 'B' },
+      { pitch: 'D5', frequency: 587.33, column: 'A' },
+      { pitch: 'D♭/C♯5', frequency: 554.37, column: 'B' },
+      { pitch: 'C5', frequency: 523.25, column: 'A' },
+      { pitch: 'B4', frequency: 493.88, column: 'B' },
+      { pitch: 'B♭/A♯4', frequency: 466.16, column: 'A' },
+      { pitch: 'A4', frequency: 440.00, column: 'B' },
+      { pitch: 'A♭/G♯4', frequency: 415.30, column: 'A' },
+      { pitch: 'G4', frequency: 392.00, column: 'B' },
+      { pitch: 'G♭/F♯4', frequency: 369.99, column: 'A' },
+      { pitch: 'F4', frequency: 349.23, column: 'B' },
+      { pitch: 'E4', frequency: 329.63, column: 'A' },
+      { pitch: 'E♭/D♯4', frequency: 311.13, column: 'B' },
+      { pitch: 'D4', frequency: 293.66, column: 'A' },
+      { pitch: 'D♭/C♯4', frequency: 277.18, column: 'B' },
+      { pitch: 'C4', frequency: 261.63, column: 'A' },
+      { pitch: 'B3', frequency: 246.94, column: 'B' },
+      { pitch: 'B♭/A♯3', frequency: 233.08, column: 'A' },
+      { pitch: 'A3', frequency: 220.00, column: 'B' },
+      { pitch: 'A♭/G♯3', frequency: 207.65, column: 'A' },
+      { pitch: 'G3', frequency: 196.00, column: 'B' },
+      { pitch: 'G♭/F♯3', frequency: 185.00, column: 'A' },
+      { pitch: 'F3', frequency: 174.61, column: 'B' },
+      { pitch: 'E3', frequency: 164.81, column: 'A' },
+      { pitch: 'E♭/D♯3', frequency: 155.56, column: 'B' },
+      { pitch: 'D3', frequency: 146.83, column: 'A' },
+      { pitch: 'D♭/C♯3', frequency: 138.59, column: 'B' },
+      { pitch: 'C3', frequency: 130.81, column: 'A' },
+      { pitch: 'B2', frequency: 123.47, column: 'B' },
+      { pitch: 'B♭/A♯2', frequency: 116.54, column: 'A' },
+      { pitch: 'A2', frequency: 110.00, column: 'B' },
+      { pitch: 'A♭/G♯2', frequency: 103.83, column: 'A' },
+      { pitch: 'G2', frequency: 98.00, column: 'B' },
+      { pitch: 'G♭/F♯2', frequency: 92.50, column: 'A' },
+      { pitch: 'F2', frequency: 87.31, column: 'B' },
+      { pitch: 'E2', frequency: 82.41, column: 'A' },
+      { pitch: 'E♭/D♯2', frequency: 77.78, column: 'B' },
+      { pitch: 'D2', frequency: 73.42, column: 'A' },
+      { pitch: 'D♭/C♯2', frequency: 69.30, column: 'B' },
+      { pitch: 'C2', frequency: 65.41, column: 'A' },
+      { pitch: 'B1', frequency: 61.74, column: 'B' },
+      { pitch: 'B♭/A♯1', frequency: 58.27, column: 'A' },
+      { pitch: 'A1', frequency: 55.00, column: 'B' },
+      { pitch: 'A♭/G♯1', frequency: 51.91, column: 'A' },
+      { pitch: 'G1', frequency: 49.00, column: 'B' },
+      { pitch: 'G♭/F♯1', frequency: 46.25, column: 'A' },
+      { pitch: 'F1', frequency: 43.65, column: 'B' },
+      { pitch: 'E1', frequency: 41.20, column: 'A' },
+      { pitch: 'E♭/D♯1', frequency: 38.89, column: 'B' },
+      { pitch: 'D1', frequency: 36.71, column: 'A' },
+      { pitch: 'D♭/C♯1', frequency: 34.65, column: 'B' },
+      { pitch: 'C1', frequency: 32.70, column: 'A' }
+    ];
+  </script>
+
+  <!-- Your modular scripts -->
+  <script src="StudentToolbar.js"></script>
+  <script src="StudentGrid.js"></script>
+  <script src="AudioPlayback.js"></script>
+  <script src="ADSRdiagram.js"></script>
 </body>
 </html>
