@@ -9,7 +9,7 @@
 </head>
 <body>
 
-  <!-- Navigation Bar -->
+  <!-- Navigation Bar (purely inserted; nothing else changed) -->
   <nav>
     <div class="nav-container">
       <!-- Left-aligned brand (two lines) -->
@@ -30,7 +30,6 @@
     </div>
   </nav>
 
-  <!-- Main App Container -->
   <div id="app-container">
 
     <!-- Toolbar -->
@@ -188,12 +187,16 @@
     </div>
   </div>
 
-  <!-- GLOBAL VARIABLES + DATA -->
+  <!-- 
+      GLOBAL VARIABLES + DATA
+      We define placedNotes for storing user-placed notes
+      and fullRowData for pitch/frequency references.
+  -->
   <script>
     // Array that holds the placed notes on the grid
     window.placedNotes = [];
 
-    // Master list of pitches and frequencies
+    // Master list of pitches and frequencies, as in your original code
     window.fullRowData = [
       { pitch: 'C8', frequency: 4186.01, column: 'A' },
       { pitch: 'B7', frequency: 3951.07, column: 'B' },
