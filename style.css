@@ -58,14 +58,14 @@ body, html {
 
 /* Toolbar */
 #toolbar {
-  display: flex;
-  flex-direction: row;
-  align-items: flex-start;
-  justify-content: flex-start;
-  flex-wrap: nowrap;
-  padding: 10px;
-  background-color: var(--background-color);
-  gap: 20px;
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    justify-content: flex-start;
+    flex-wrap: nowrap;
+    padding: 10px;
+    background-color: var(--background-color);
+    gap: 20px;
 }
 
 /* Title Section */
@@ -85,7 +85,7 @@ body, html {
 /* Waveform + Sliders + ADSR Section */
 #waveform-sliders-adsr-section {
     display: flex;
-    flex-direction: row; /* Changed to row to align children side by side */
+    flex-direction: row;
     align-items: flex-start;
     gap: 20px; /* Space between preset buttons, harmonic sliders, and ADSR */
 }
@@ -139,7 +139,6 @@ body, html {
     background: transparent;
     border-radius: 5px;
 }
-
 .harmonic-slider::-moz-range-track {
     width: 100%;
     height: var(--slider-height);
@@ -368,7 +367,7 @@ body, html {
     color: var(--volume-label-color);
 }
 
-/* Slider Styles */
+/* Slider Styles (Tempo/Volume) */
 #tempo-slider,
 #volume-slider {
     -webkit-appearance: none;
@@ -382,7 +381,8 @@ body, html {
     padding: 0;
     position: relative;
     z-index: 2;
-    background-image: linear-gradient(to right,
+    background-image: linear-gradient(
+      to right,
       transparent 25%,
       var(--slider-notch-color) 25%,
       var(--slider-notch-color) 26%,
@@ -395,13 +395,14 @@ body, html {
       var(--slider-notch-color) 75%,
       var(--slider-notch-color) 76%,
       transparent 76%,
-      transparent 100%);
+      transparent 100%
+    );
     background-size: 100% var(--slider-height);
     background-repeat: no-repeat;
     margin-top: var(--slider-margin-top);
 }
 
-/* Customized Slider Thumbs */
+/* Customized Slider Thumbs for Tempo/Volume */
 #tempo-slider::-webkit-slider-thumb,
 #volume-slider::-webkit-slider-thumb {
     -webkit-appearance: none;
@@ -417,7 +418,6 @@ body, html {
     position: relative;
     z-index: 3;
 }
-
 #tempo-slider::-moz-range-thumb,
 #volume-slider::-moz-range-thumb {
     width: var(--slider-thumb-size);
@@ -439,13 +439,15 @@ body, html {
     text-align: center;
 }
 
-/* Media Queries for Mobile Responsiveness */
+/* Responsive Layout for Narrow Screens */
 @media (max-width: 600px) {
+    /* Toolbar collapses into column */
     #toolbar {
       flex-direction: column;
       align-items: center;
     }
 
+    /* Controls also stack */
     #controls {
       flex-direction: column;
       align-items: center;
@@ -500,4 +502,88 @@ body, html {
     #adsr-container input[type="range"] {
       width: 150px;
     }
+
+    #adsr-diagram-container {
+        margin-top: 1em;
+      }
+      .adsr-line {
+        stroke: #0bb;
+        stroke-width: 2;
+        fill: none;
+      }
+      .adsr-node {
+        fill: #0bb;
+        cursor: pointer;
+      }
+      .adsr-node:hover {
+        fill: #f60;
+      }
+      
 }
+
+/* ================================
+   NAVIGATION BAR STYLES
+=============================== */
+
+/* Make the nav bar black and full width */
+nav {
+    background-color: #000; /* Black */
+    width: 100%;
+    padding: 10px 0;        /* Top/bottom spacing */
+    margin: 0;
+  }
+  
+  /* Use a grid to place items: brand (left), links (center), empty (right) */
+  .nav-container {
+    display: grid;
+    grid-template-columns: auto 1fr auto; /* brand | links | (empty) */
+    align-items: center;
+    max-width: 1200px;       /* Adjust as needed */
+    margin: 0 auto;          /* Center the nav-container horizontally */
+    padding: 0 15px;         /* Side padding if desired */
+  }
+  
+  /* BRAND (two-line text) */
+  .brand {
+    display: flex;
+    flex-direction: column;
+    color: #fff;
+  }
+  .brand .small-text {
+    font-size: 1rem;
+    margin: 0;
+    color: #ccc;  /* Slightly lighter gray for smaller text */
+    font-style: italic;
+  }
+  .brand h1 {
+    margin: 0;
+    font-size: 1.4rem;
+    color: #fff;
+  }
+  
+  /* NAV LINKS */
+  .nav-container ul {
+    list-style: none;
+    display: flex;
+    gap: 20px;
+    justify-content: center; /* Center horizontally */
+    margin: 0;
+    padding: 0;
+  }
+  .nav-container ul li a {
+    color: #fff;           /* White text */
+    text-decoration: none; /* No underline by default */
+    font-weight: bold;
+    font-size: 1rem;
+  }
+  
+  /* Active Link Styling */
+  .nav-container ul li a.active {
+    text-decoration: underline; /* Underline the active link */
+  }
+  
+  /* (Optional) Smooth transition for hover/active states */
+  .nav-container ul li a.active,
+  .nav-container ul li a:hover {
+    transition: text-decoration 0.3s, color 0.3s;
+  }
