@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Student Notation Web Applet</title>
+    <script type="module" crossorigin src="/Student-Notation/assets/index-qJ432taE.js"></script>
+    <link rel="stylesheet" crossorigin href="/Student-Notation/assets/index-DS1SNPF7.css">
+  </head>
+  <body>
+    <div id="app-container">
+      <!-- =======================================================
+           Top Toolbar
+           ======================================================= -->
+      <div id="top-toolbar">
+        <!-- Container 1: Export & Import -->
+        <div class="top-toolbar-container export-import-container">
+          <div id="export-import-buttons">
+            <button class="toolkit-button" id="export-button">Export</button>
+            <button class="toolkit-button" id="import-button">Import</button>
+          </div>
+        </div>
+
+        <!-- Container 2: Note Bank & Tonicization -->
+        <div class="top-toolbar-container note-tonic-container">
+          <!-- Subcontainer: Note Bank -->
+          <div class="sub-container note-bank-container">
+            <div class="note circle-note" data-color="#000000" data-type="circle" style="background-color: #000000;" tabindex="0" aria-label="Black Circle Note"></div>
+            <div class="note oval-note" data-color="#000000" data-type="oval" style="background-color: #000000;" tabindex="0" aria-label="Black Oval Note"></div>
+            <div class="note circle-note" data-color="#ff0000" data-type="circle" style="background-color: #ff0000;" tabindex="0" aria-label="Red Circle Note"></div>
+            <div class="note oval-note" data-color="#ff0000" data-type="oval" style="background-color: #ff0000;" tabindex="0" aria-label="Red Oval Note"></div>
+            <div class="note circle-note" data-color="#0000ff" data-type="circle" style="background-color: #0000ff;" tabindex="0" aria-label="Blue Circle Note"></div>
+            <div class="note oval-note" data-color="#0000ff" data-type="oval" style="background-color: #0000ff;" tabindex="0" aria-label="Blue Oval Note"></div>
+            <div class="note circle-note" data-color="#00ff00" data-type="circle" style="background-color: #00ff00;" tabindex="0" aria-label="Green Circle Note"></div>
+            <div class="note oval-note" data-color="#00ff00" data-type="oval" style="background-color: #00ff00;" tabindex="0" aria-label="Green Oval Note"></div>
+            <div class="eraser" id="eraser-tool" tabindex="0" aria-label="Eraser Tool">🗙</div>
+          </div>
+          <!-- Subcontainer: Tonicization Buttons -->
+          <div class="sub-container tonicization-container">
+            <button class="tonicization-button" data-tonic="1" aria-label="Tonicization 1">⓵</button>
+            <button class="tonicization-button" data-tonic="2" aria-label="Tonicization 2">⓶</button>
+            <button class="tonicization-button" data-tonic="3" aria-label="Tonicization 3">⓷</button>
+            <button class="tonicization-button" data-tonic="4" aria-label="Tonicization 4">⓸</button>
+            <button class="tonicization-button" data-tonic="5" aria-label="Tonicization 5">⓹</button>
+            <button class="tonicization-button" data-tonic="6" aria-label="Tonicization 6">⓺</button>
+            <button class="tonicization-button" data-tonic="7" aria-label="Tonicization 7">⓻</button>
+          </div>
+        </div>
+
+        <!-- Container 3: Waveform Presets -->
+        <div class="top-toolbar-container preset-container">
+            <div class="sub-container preset-buttons-container">
+              <div id="preset-buttons">
+                <button class="preset-button" id="preset-sine">Sine</button>
+                <button class="preset-button" id="preset-triangle">Triangle</button>
+                <button class="preset-button" id="preset-square">Square</button>
+                <button class="preset-button" id="preset-sawtooth">Sawtooth</button>
+              </div>
+            </div>
+        </div>
+
+        <!-- Container 4: Harmonic Multislider -->
+        <div class="top-toolbar-container multislider-container">
+          <div class="buffer-container">
+            <div id="harmonic-multislider"></div>
+          </div>
+        </div>
+
+        <!-- Container 5: ADSR Visualization -->
+        <div class="top-toolbar-container adsr-container">
+          <div class="buffer-container">
+            <div id="adsr-envelope"></div>
+          </div>
+        </div>
+
+        <!-- Container 6: Empty -->
+        <div class="top-toolbar-container empty-container">
+        </div>
+      </div>
+      <!-- End Top Toolbar -->
+
+      <!-- =======================================================
+           Middle Section
+           ======================================================= -->
+      <div id="middle-section">
+        <div id="grid-container-wrapper">
+          <div id="time-signature-display"></div>
+          <div id="grid-controls-container">
+            <div id="beat-line-controls"></div>
+          </div>
+          <!-- PITCH GRID CONTAINER -->
+          <div id="pitch-grid-container">
+            <div id="grid-container">
+              <canvas id="notation-grid"></canvas>
+              <canvas id="playhead-canvas"></canvas>
+            </div>
+          </div>
+          <!-- DRUM GRID CONTAINER -->
+          <div id="drum-grid-container">
+            <canvas id="drum-grid"></canvas>
+          </div>
+        </div>
+      </div>
+      <!-- End Middle Section -->
+
+      <!-- =======================================================
+           Bottom Toolbar
+           ======================================================= -->
+     <div id="bottom-toolbar">
+        <div class="bottom-toolbar-container zoom-container">
+          <div id="grid-shift-resize-container">
+            <button class="toolkit-button" id="fit-to-width" aria-label="Fit to Width">↔🔍</button>
+            <button class="toolkit-button" id="fit-to-height" aria-label="Fit to Height">↕🔍</button>
+            <button class="toolkit-button" id="grid-expand-button" aria-label="Expand Grid">◀🔍+</button>
+            <button class="toolkit-button" id="grid-shrink-button" aria-label="Shrink Grid">🔍- ▶</button>
+          </div>
+        </div>
+    
+        <div class="bottom-toolbar-container arrowkey-container">
+          <div id="shift-grid-buttons">
+            <button class="toolkit-button" id="shift-up-button" aria-label="Shift Grid Up">▲</button>
+            <button class="toolkit-button" id="shift-left-button" aria-label="Shift Grid Left">◄</button>
+            <button class="toolkit-button" id="shift-down-button" aria-label="Shift Grid Down">▼</button>
+            <button class="toolkit-button" id="shift-right-button" aria-label="Shift Grid Right">►</button>
+          </div>
+        </div>
+    
+        <div class="bottom-toolbar-container volume-container">
+          <div id="volume-container">
+            <input type="range" id="volume-slider" min="0" max="100" value="75" step="1" aria-label="Volume Slider" />
+            <div class="slider-label">Volume</div>
+          </div>
+        </div>
+    
+        <div class="bottom-toolbar-container play-controls-container">
+          <button class="toolkit-button" id="play-button" aria-label="Play Music">⏵</button>
+          <button class="toolkit-button" id="stop-button" aria-label="Stop Music">⏹</button>
+          <button class="toolkit-button" id="clear-button" aria-label="Clear Notes">Clear</button>
+        </div>
+    
+        <div class="bottom-toolbar-container tempo-container">
+          <div id="tempo-container">
+            <input type="range" id="tempo-slider" min="60" max="180" value="120" step="1" aria-label="Tempo Slider" />
+            <div class="slider-label">Tempo</div>
+          </div>
+        </div>
+    
+        <div class="bottom-toolbar-container macrobeat-container">
+          <div id="macrobeat-adjust-container">
+            <button class="toolkit-button" id="macrobeat-decrease" aria-label="Decrease Macrobeat">–</button>
+            <button class="toolkit-button" id="macrobeat-increase" aria-label="Increase Macrobeat">+</button>
+            <button class="toolkit-button" id="loop-button" aria-label="Loop Playback">🔁</button>
+          </div>
+        </div>
+    </div>
+    
+    </div>
+
+    <!-- The only script needed. It will import everything else. -->
+  </body>
+</html>
