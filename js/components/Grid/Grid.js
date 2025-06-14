@@ -93,7 +93,10 @@ function drawHorizontalLines() {
 }
 
 function drawVerticalLines() {
-    const ctx = window.pitchGridCtx;
+    const pitchCtx = window.pitchGridCtx;
+    const drumCtx = window.drumGridCtx;
+    if (!pitchCtx || !drumCtx) return;
+
     const totalColumns = store.state.columnWidths.length;
     let macrobeatBoundaries = [];
     let cum = 2;
@@ -107,26 +110,43 @@ function drawVerticalLines() {
         let isBoundary = i === 2 || i === totalColumns - 2;
         let isMacrobeatEnd = macrobeatBoundaries.includes(i);
 
+        let style;
         if (isBoundary) {
-            ctx.lineWidth = 2;
-            ctx.strokeStyle = '#000';
-            ctx.setLineDash([]);
+            style = { lineWidth: 2, strokeStyle: '#000', dash: [] };
         } else if (isMacrobeatEnd) {
             const mbIndex = macrobeatBoundaries.indexOf(i);
-            ctx.lineWidth = 1;
-            ctx.strokeStyle = '#000';
-            ctx.setLineDash(store.state.macrobeatBoundaryStyles[mbIndex] ? [] : [4, 2]);
+            style = { 
+                lineWidth: 1, 
+                strokeStyle: '#000', 
+                dash: store.state.macrobeatBoundaryStyles[mbIndex] ? [] : [4, 2] 
+            };
         } else {
             continue; // Skip non-boundary vertical lines for clarity
         }
         
-        ctx.beginPath();
-        ctx.moveTo(x, 0);
-        ctx.lineTo(x, ctx.canvas.height);
-        ctx.stroke();
+        // Draw on pitch grid
+        pitchCtx.beginPath();
+        pitchCtx.moveTo(x, 0);
+        pitchCtx.lineTo(x, pitchCtx.canvas.height);
+        pitchCtx.lineWidth = style.lineWidth;
+        pitchCtx.strokeStyle = style.strokeStyle;
+        pitchCtx.setLineDash(style.dash);
+        pitchCtx.stroke();
+
+        // Draw on drum grid
+        drumCtx.beginPath();
+        drumCtx.moveTo(x, 0);
+        drumCtx.lineTo(x, drumCtx.canvas.height);
+        drumCtx.lineWidth = style.lineWidth;
+        drumCtx.strokeStyle = style.strokeStyle;
+        drumCtx.setLineDash(style.dash);
+        drumCtx.stroke();
     }
-    ctx.setLineDash([]); // Reset line dash
+    
+    pitchCtx.setLineDash([]); // Reset line dash for pitch
+    drumCtx.setLineDash([]); // Reset line dash for drum
 }
+
 
 function drawNoteOnCanvas(note, localRowIndex) {
     const ctx = window.pitchGridCtx;

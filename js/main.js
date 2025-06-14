@@ -36,15 +36,18 @@ document.addEventListener("DOMContentLoaded", () => {
     
     console.log("Main.js: Setting up state subscriptions.");
     store.on('notesChanged', () => {
-        Grid.render();
         DrumGrid.render();
+        Grid.render();
     });
     
-    store.on('gridChanged', Grid.render);
+    store.on('gridChanged', () => {
+        DrumGrid.render();
+        Grid.render();
+    });
 
     store.on('gridResized', () => {
-        Grid.render();
         DrumGrid.render();
+        Grid.render();
         Toolbar.renderRhythmUI();
     });
 
@@ -54,8 +57,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
     console.log("Main.js: Performing initial render.");
     Toolbar.renderRhythmUI();
-    Grid.render();
     DrumGrid.render();
+    Grid.render();
     
     console.log("Main.js: Application initialization complete.");
 });

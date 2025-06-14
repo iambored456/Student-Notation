@@ -1,5 +1,8 @@
 node_modules/
-package-lock.json
 fonts/
-js/
+.git/
 docs/
+
+package-lock.json
+.gitignore
+vite.config.js
