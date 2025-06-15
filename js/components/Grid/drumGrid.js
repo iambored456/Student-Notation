@@ -1,14 +1,14 @@
 // js/components/Grid/drumGrid.js
 import store from '../../state/store.js';
 import ConfigService from '../../services/configService.js';
+import CanvasContextService from '../../services/canvasContextService.js';
 
 console.log("DrumGridComponent: Module loaded.");
 
-// Helper function to draw a specific drum shape.
 function drawDrumShape(ctx, drumRow, x, y, width, height) {
     const cx = x + width / 2;
     const cy = y + height / 2;
-    const size = Math.min(width, height) * 0.4; // Slightly smaller for better spacing
+    const size = Math.min(width, height) * 0.4;
     ctx.beginPath();
 
     if (drumRow === 0) { // High: Triangle
@@ -32,9 +32,45 @@ function drawDrumShape(ctx, drumRow, x, y, width, height) {
     ctx.fill();
 }
 
+function drawVerticalGridLines(ctx) {
+    const totalColumns = store.state.columnWidths.length;
+    let macrobeatBoundaries = [];
+    let cum = 2;
+    store.state.macrobeatGroupings.forEach(group => {
+        cum += group;
+        macrobeatBoundaries.push(cum);
+    });
+
+    for (let i = 0; i <= totalColumns; i++) {
+        const x = ConfigService.getColumnX(i);
+        let isBoundary = i === 2 || i === totalColumns - 2;
+        let isMacrobeatEnd = macrobeatBoundaries.includes(i);
+        let style;
+
+        if (isBoundary) {
+            style = { lineWidth: 2, strokeStyle: '#000', dash: [] };
+        } else if (isMacrobeatEnd) {
+            const mbIndex = macrobeatBoundaries.indexOf(i);
+            const boundaryStyle = store.state.macrobeatBoundaryStyles[mbIndex];
+            if (boundaryStyle === 'anacrusis') continue;
+            style = { lineWidth: 1, strokeStyle: '#000', dash: boundaryStyle === 'solid' ? [] : [4, 2] };
+        } else {
+            continue;
+        }
+        
+        ctx.beginPath();
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, ctx.canvas.height);
+        ctx.lineWidth = style.lineWidth;
+        ctx.strokeStyle = style.strokeStyle;
+        ctx.setLineDash(style.dash);
+        ctx.stroke();
+    }
+    ctx.setLineDash([]);
+}
 
 function renderDrumGrid() {
-    const ctx = window.drumGridCtx;
+    const ctx = CanvasContextService.getDrumContext();
     if (!ctx || !ctx.canvas) {
         console.error("DrumGridComponent: Drum grid context not available for rendering.");
         return;
@@ -45,19 +81,17 @@ function renderDrumGrid() {
     const pitchRowHeight = 0.5 * store.state.cellHeight;
     const totalColumns = store.state.columnWidths.length;
 
-    // Draw Y-axis labels (H, M, L)
     const drumLabels = ['H', 'M', 'L'];
     ctx.font = `${Math.floor(pitchRowHeight * 0.7)}px sans-serif`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillStyle = '#333';
-    const labelX = ConfigService.getColumnX(1); // Align with the second legend column
+    const labelX = ConfigService.getColumnX(1);
     drumLabels.forEach((label, i) => {
         ctx.fillText(label, labelX, i * pitchRowHeight + pitchRowHeight / 2);
     });
     
-    // Draw horizontal and vertical grid lines
-    for (let i = 0; i < 4; i++) { // 3 rows need 4 lines
+    for (let i = 0; i < 4; i++) {
         const y = i * pitchRowHeight;
         ctx.beginPath();
         ctx.moveTo(0, y);
@@ -67,7 +101,8 @@ function renderDrumGrid() {
         ctx.stroke();
     }
 
-    // Draw main grid content
+    drawVerticalGridLines(ctx);
+
     for (let col = 2; col < totalColumns - 2; col++) {
         const x = ConfigService.getColumnX(col);
         const cellWidth = store.state.columnWidths[col] * store.state.cellWidth;
@@ -84,7 +119,6 @@ function renderDrumGrid() {
                 ctx.fillStyle = '#000';
                 drawDrumShape(ctx, row, x, y, cellWidth, pitchRowHeight);
             } else {
-                // Optional: Draw a placeholder dot
                 ctx.fillStyle = '#ddd';
                 ctx.beginPath();
                 ctx.arc(x + cellWidth / 2, y + pitchRowHeight / 2, 2, 0, Math.PI * 2);
@@ -98,7 +132,8 @@ const DrumGrid = {
     render() {
         console.log("DrumGridComponent: Render triggered.");
         renderDrumGrid();
-    }
+    },
+    drawDrumShape
 };
 
 export default DrumGrid;

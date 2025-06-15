@@ -29,7 +29,8 @@ class CustomEnvelope {
         this.container = document.querySelector(options.container);
         this.width = options.width || 400;
         this.height = options.height || 150;
-        this.totalTime = 8.5; // Fixed time span for the envelope view
+        // FIX: Halve the total time to make the envelope appear larger/zoomed in.
+        this.totalTime = 4.25; // Fixed time span for the envelope view (was 8.5)
 
         // Initialize state from the central store
         this.attack = store.state.adsr.attack;
@@ -283,4 +284,4 @@ export function initADSR() {
     
     console.log("CustomEnvelope: Initialized.");
     return envelopeInstance; // Return instance for synthEngine to use
-}
+}   

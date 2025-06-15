@@ -17,7 +17,7 @@ function getMicrobeatDuration() {
 }
 
 function getPitchForNote(note) {
-    const rowData = store.state.fullRowData;
+    const rowData = store.state.fullRowData; 
     if (rowData && rowData[note.row]) {
         // Normalize pitch to ensure compatibility with Tone.js
         const pitch = rowData[note.row].toneNote;
@@ -95,19 +95,17 @@ function animatePlayhead() {
     playheadAnimationFrame = requestAnimationFrame(draw);
 }
 
+
 const TransportService = {
     init() {
-        // Initialize drum players
         drumPlayers = new Tone.Players({
             H: 'https://tonejs.github.io/audio/drum-samples/CR78/hihat.mp3',
             M: 'https://tonejs.github.io/audio/drum-samples/CR78/snare.mp3',
             L: 'https://tonejs.github.io/audio/drum-samples/CR78/kick.mp3'
         }).toDestination();
         
-        // Make drumPlayers accessible for gridEvents to use for click feedback
         window.transportService = { drumPlayers };
 
-        // Listen for changes that require re-scheduling or transport updates
         store.on('notesChanged', () => this.handleStateChange());
         store.on('rhythmChanged', () => this.handleStateChange());
         store.on('tempoChanged', newTempo => Tone.Transport.bpm.value = newTempo * 2);
@@ -130,13 +128,27 @@ const TransportService = {
             const totalColumns = store.state.columnWidths.length;
             const loopEndTime = (totalColumns - 4) * microbeatDuration; 
 
-            Tone.Transport.loopStart = 0;
+            let anacrusisMicrobeats = 0;
+            for(let i = 0; i < store.state.macrobeatBoundaryStyles.length; i++) {
+                if (store.state.macrobeatBoundaryStyles[i] === 'anacrusis') {
+                    anacrusisMicrobeats += store.state.macrobeatGroupings[i];
+                } else {
+                    break;
+                }
+            }
+            const anacrusisOffset = anacrusisMicrobeats * microbeatDuration;
+            console.log(`TransportService: Anacrusis offset is ${anacrusisOffset} seconds.`);
+
+            Tone.Transport.loopStart = anacrusisOffset;
             Tone.Transport.loopEnd = loopEndTime;
             Tone.Transport.loop = store.state.isLooping;
             Tone.Transport.bpm.value = store.state.tempo * 2;
 
             scheduleNotes();
-            Tone.Transport.start();
+            
+            // FIX: Always start the transport from time 0 to include the anacrusis.
+            Tone.Transport.start(Tone.now(), 0); 
+            
             animatePlayhead();
         });
     },

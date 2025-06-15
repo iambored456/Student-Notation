@@ -1,24 +1,19 @@
 // js/components/Grid/Grid.js
 import store from '../../state/store.js';
 import ConfigService from '../../services/configService.js';
+import CanvasContextService from '../../services/canvasContextService.js';
 
 console.log("GridComponent: Module loaded.");
 
-function getVisibleRowData() {
-    return store.state.fullRowData.slice(
-        store.state.gridPosition, 
-        store.state.gridPosition + store.state.logicRows
-    );
-}
-
-function getRowY(localRowIndex) {
-    return localRowIndex * 0.5 * store.state.cellHeight;
+function getRowY(rowIndex) {
+    // Returns the center of a full logical row (2 visual rows high)
+    return rowIndex * 0.5 * store.state.cellHeight;
 }
 
 function drawLegends() {
-    const ctx = window.pitchGridCtx;
-    const visibleRowData = getVisibleRowData();
-
+    const ctx = CanvasContextService.getPitchContext();
+    if (!ctx) return;
+    
     function drawLegendColumn(startCol, columnsOrder) {
         const xStart = ConfigService.getColumnX(startCol);
         const colWidthsPx = store.state.columnWidths.slice(startCol, startCol + 2).map(w => w * store.state.cellWidth);
@@ -26,9 +21,10 @@ function drawLegends() {
 
         columnsOrder.forEach((colLabel, colIndex) => {
             const colWidth = colWidthsPx[colIndex];
-            visibleRowData.forEach((row, rowIndex) => {
+            store.state.fullRowData.forEach((row, rowIndex) => {
                 if (row.column === colLabel) {
                     const y = getRowY(rowIndex);
+                    
                     ctx.fillStyle = row.hex || '#fff'; 
                     ctx.fillRect(cumulativeX, y - store.state.cellHeight / 2, colWidth, store.state.cellHeight);
                     
@@ -55,47 +51,56 @@ function getPitchClass(pitchWithOctave) {
 }
 
 function getLineStyleFromPitchClass(pc) {
-    // This logic is directly from your original drawGrid.js
     switch (pc) {
         case 'C': return { lineWidth: 3, dash: [], color: '#000' };
         case 'E': return { lineWidth: 1, dash: [5, 5], color: '#000' };
-        case 'G': return { lineWidth: 1, dash: [], color: 'rgba(128,128,128,0.5)' };
+        case 'G': return { lineWidth: 1, dash: [], color: 'rgba(128,128,128,0.5)' }; // This color will be used for the fill
         case 'D♭/C♯':
         case 'E♭/D♯':
         case 'F':
         case 'A':
-        case 'B': return null; // These rows have no lines in the main grid area
+        case 'B': return null;
         default: return { lineWidth: 1, dash: [], color: '#000' };
     }
 }
 
 function drawHorizontalLines() {
-    const ctx = window.pitchGridCtx;
-    const visibleRowData = getVisibleRowData();
+    const ctx = CanvasContextService.getPitchContext();
+    if (!ctx) return;
     const totalColumns = store.state.columnWidths.length;
 
-    visibleRowData.forEach((row, rowIndex) => {
+    const startX = ConfigService.getColumnX(2);
+    const endX = ConfigService.getColumnX(totalColumns - 2);
+    const gridWidth = endX - startX;
+
+    store.state.fullRowData.forEach((row, rowIndex) => {
         const y = getRowY(rowIndex);
         const pitchClass = getPitchClass(row.pitch);
         const style = getLineStyleFromPitchClass(pitchClass);
 
-        if (style) {
+        if (!style) return;
+
+        if (pitchClass === 'G') {
+            const visualRowHeight = store.state.cellHeight * 1;
+            const topY = y - (visualRowHeight / 2);
+            ctx.fillStyle = style.color;
+            ctx.fillRect(startX, topY, gridWidth, visualRowHeight);
+        } else {
             ctx.beginPath();
-            ctx.moveTo(ConfigService.getColumnX(2), y);
-            ctx.lineTo(ConfigService.getColumnX(totalColumns - 2), y);
+            ctx.moveTo(startX, y);
+            ctx.lineTo(endX, y);
             ctx.lineWidth = style.lineWidth;
             ctx.strokeStyle = style.color;
             ctx.setLineDash(style.dash);
             ctx.stroke();
-            ctx.setLineDash([]); // Reset for other lines
+            ctx.setLineDash([]);
         }
     });
 }
 
 function drawVerticalLines() {
-    const pitchCtx = window.pitchGridCtx;
-    const drumCtx = window.drumGridCtx;
-    if (!pitchCtx || !drumCtx) return;
+    const pitchCtx = CanvasContextService.getPitchContext();
+    if (!pitchCtx) return;
 
     const totalColumns = store.state.columnWidths.length;
     let macrobeatBoundaries = [];
@@ -115,16 +120,13 @@ function drawVerticalLines() {
             style = { lineWidth: 2, strokeStyle: '#000', dash: [] };
         } else if (isMacrobeatEnd) {
             const mbIndex = macrobeatBoundaries.indexOf(i);
-            style = { 
-                lineWidth: 1, 
-                strokeStyle: '#000', 
-                dash: store.state.macrobeatBoundaryStyles[mbIndex] ? [] : [4, 2] 
-            };
+            const boundaryStyle = store.state.macrobeatBoundaryStyles[mbIndex];
+            if (boundaryStyle === 'anacrusis') continue;
+            style = { lineWidth: 1, strokeStyle: '#000', dash: boundaryStyle === 'solid' ? [] : [4, 2] };
         } else {
-            continue; // Skip non-boundary vertical lines for clarity
+            continue;
         }
         
-        // Draw on pitch grid
         pitchCtx.beginPath();
         pitchCtx.moveTo(x, 0);
         pitchCtx.lineTo(x, pitchCtx.canvas.height);
@@ -132,34 +134,24 @@ function drawVerticalLines() {
         pitchCtx.strokeStyle = style.strokeStyle;
         pitchCtx.setLineDash(style.dash);
         pitchCtx.stroke();
-
-        // Draw on drum grid
-        drumCtx.beginPath();
-        drumCtx.moveTo(x, 0);
-        drumCtx.lineTo(x, drumCtx.canvas.height);
-        drumCtx.lineWidth = style.lineWidth;
-        drumCtx.strokeStyle = style.strokeStyle;
-        drumCtx.setLineDash(style.dash);
-        drumCtx.stroke();
     }
     
-    pitchCtx.setLineDash([]); // Reset line dash for pitch
-    drumCtx.setLineDash([]); // Reset line dash for drum
+    pitchCtx.setLineDash([]);
 }
 
-
-function drawNoteOnCanvas(note, localRowIndex) {
-    const ctx = window.pitchGridCtx;
-    const y = getRowY(localRowIndex);
+function drawTwoColumnOvalNote(note, rowIndex, providedCtx = null) {
+    const ctx = providedCtx || CanvasContextService.getPitchContext();
+    if (!ctx) return;
+    const y = getRowY(rowIndex);
     const xStart = ConfigService.getColumnX(note.startColumnIndex);
-    const width = ConfigService.getColumnX(note.endColumnIndex + 1) - xStart;
-    
-    const centerX = xStart + (ConfigService.getColumnX(note.startColumnIndex + 1) - xStart) / 2;
-    const radius = store.state.cellHeight * 0.45;
+    const cellWidth = store.state.cellWidth;
+    const cellHeight = store.state.cellHeight;
+    const STROKE_WIDTH = 4;
+    const centerX = xStart + cellWidth;
 
-    // Draw tail if it exists
     if (note.endColumnIndex > note.startColumnIndex) {
-        const endX = ConfigService.getColumnX(note.endColumnIndex) + (store.state.columnWidths[note.endColumnIndex] * store.state.cellWidth) / 2;
+        // FIX: Calculate the tail's end point to be the right edge of the final cell.
+        const endX = ConfigService.getColumnX(note.endColumnIndex + 1);
         ctx.beginPath();
         ctx.moveTo(centerX, y);
         ctx.lineTo(endX, y);
@@ -168,54 +160,50 @@ function drawNoteOnCanvas(note, localRowIndex) {
         ctx.stroke();
     }
 
-    // Draw note head
+    const rx = cellWidth - (STROKE_WIDTH / 2);
+    const ry = (cellHeight / 2) - (STROKE_WIDTH / 2);
+
     ctx.beginPath();
-    ctx.arc(centerX, y, radius, 0, 2 * Math.PI);
+    ctx.ellipse(centerX, y, rx, ry, 0, 0, 2 * Math.PI);
     ctx.strokeStyle = note.color;
-    ctx.lineWidth = 6;
-    ctx.fillStyle = 'white'; // Fill to obscure grid lines underneath
-    ctx.fill();
+    ctx.lineWidth = STROKE_WIDTH;
     ctx.stroke();
 }
 
-function drawOvalNote(note, localRowIndex) {
-    const ctx = window.pitchGridCtx;
-    const y = getRowY(localRowIndex);
+function drawSingleColumnOvalNote(note, rowIndex, providedCtx = null) {
+    const ctx = providedCtx || CanvasContextService.getPitchContext();
+    if (!ctx) return;
+    const y = getRowY(rowIndex);
     const x = ConfigService.getColumnX(note.startColumnIndex);
     const cellWidth = store.state.columnWidths[note.startColumnIndex] * store.state.cellWidth;
-    
+    const cellHeight = store.state.cellHeight;
+    const STROKE_WIDTH = 4;
     const cx = x + cellWidth / 2;
-    const rx = cellWidth * 0.45;
-    const ry = store.state.cellHeight * 0.45;
+    const rx = (cellWidth / 2) - (STROKE_WIDTH / 2);
+    const ry = (cellHeight / 2) - (STROKE_WIDTH / 2);
 
     ctx.beginPath();
     ctx.ellipse(cx, y, rx, ry, 0, 0, 2 * Math.PI);
     ctx.strokeStyle = note.color;
-    ctx.lineWidth = 6;
-    ctx.fillStyle = 'white';
-    ctx.fill();
+    ctx.lineWidth = STROKE_WIDTH;
     ctx.stroke();
 }
 
 function renderPitchGrid() {
-    const ctx = window.pitchGridCtx;
+    const ctx = CanvasContextService.getPitchContext();
     if (!ctx || !ctx.canvas) return;
     
     ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-
     drawHorizontalLines();
     drawVerticalLines();
     drawLegends();
     
     store.state.placedNotes.forEach(note => {
         if (note.isDrum) return;
-        const localRowIndex = note.row - store.state.gridPosition;
-        if (localRowIndex >= 0 && localRowIndex < store.state.logicRows) {
-            if (note.shape === 'oval') {
-                drawOvalNote(note, localRowIndex);
-            } else { // 'circle' and others
-                drawNoteOnCanvas(note, localRowIndex);
-            }
+        if (note.shape === 'oval') {
+            drawSingleColumnOvalNote(note, note.row);
+        } else {
+            drawTwoColumnOvalNote(note, note.row);
         }
     });
 }
@@ -224,7 +212,9 @@ const Grid = {
     render() {
         console.log("GridComponent: Render triggered.");
         renderPitchGrid();
-    }
+    },
+    drawTwoColumnOvalNote,
+    drawSingleColumnOvalNote
 };
 
 export default Grid;

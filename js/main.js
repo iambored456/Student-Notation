@@ -1,12 +1,15 @@
+// js/main.js
 import * as Tone from 'tone';
 import store from './state/store.js';
 import { fullRowData } from './state/pitchData.js';
 
 // Services
 import ConfigService from './services/configService.js';
+import CanvasContextService from './services/canvasContextService.js';
 import SynthEngine from './services/synthEngine.js';
 import TransportService from './services/transportService.js';
 import { initSpacebarHandler } from './services/spacebarHandler.js';
+import { initGridScrollHandler } from './services/gridScrollHandler.js';
 
 // Components
 import Toolbar from './components/Toolbar/Toolbar.js';
@@ -23,13 +26,16 @@ document.addEventListener("DOMContentLoaded", () => {
 
     store.state.fullRowData = fullRowData;
 
-    ConfigService.init();
+    const contexts = ConfigService.init();
+    CanvasContextService.setContexts(contexts);
+    
     SynthEngine.init();
     TransportService.init();
     
     Toolbar.init();
     initGridEvents();
     initSpacebarHandler();
+    initGridScrollHandler();
     const adsrEnv = initADSR();
     SynthEngine.setCustomEnvelope(adsrEnv);
     initHarmonicMultislider();
@@ -51,14 +57,25 @@ document.addEventListener("DOMContentLoaded", () => {
         Toolbar.renderRhythmUI();
     });
 
+    // This event handles structural rhythm changes that REQUIRE a resize.
     store.on('rhythmChanged', () => {
-        // ConfigService automatically resizes, which triggers gridResized event
+        Toolbar.renderRhythmUI();
+    });
+
+    // FIX: Add a new listener for style-only changes that only require a redraw.
+    store.on('rhythmStyleChanged', () => {
+        console.log("[EVENT] rhythmStyleChanged detected. Re-rendering grids and UI.");
+        DrumGrid.render();
+        Grid.render();
+        Toolbar.renderRhythmUI();
     });
 
     console.log("Main.js: Performing initial render.");
     Toolbar.renderRhythmUI();
     DrumGrid.render();
     Grid.render();
+    
+    store.setSelectedTool('circle', '#000000');
     
     console.log("Main.js: Application initialization complete.");
 });

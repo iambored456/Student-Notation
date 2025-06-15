@@ -23,14 +23,11 @@
         <div class="top-toolbar-container note-tonic-container">
           <!-- Subcontainer: Note Bank -->
           <div class="sub-container note-bank-container">
-            <div class="note circle-note" data-color="#000000" data-type="circle" style="background-color: #000000;" tabindex="0" aria-label="Black Circle Note"></div>
-            <div class="note oval-note" data-color="#000000" data-type="oval" style="background-color: #000000;" tabindex="0" aria-label="Black Oval Note"></div>
-            <div class="note circle-note" data-color="#ff0000" data-type="circle" style="background-color: #ff0000;" tabindex="0" aria-label="Red Circle Note"></div>
-            <div class="note oval-note" data-color="#ff0000" data-type="oval" style="background-color: #ff0000;" tabindex="0" aria-label="Red Oval Note"></div>
-            <div class="note circle-note" data-color="#0000ff" data-type="circle" style="background-color: #0000ff;" tabindex="0" aria-label="Blue Circle Note"></div>
-            <div class="note oval-note" data-color="#0000ff" data-type="oval" style="background-color: #0000ff;" tabindex="0" aria-label="Blue Oval Note"></div>
-            <div class="note circle-note" data-color="#00ff00" data-type="circle" style="background-color: #00ff00;" tabindex="0" aria-label="Green Circle Note"></div>
-            <div class="note oval-note" data-color="#00ff00" data-type="oval" style="background-color: #00ff00;" tabindex="0" aria-label="Green Oval Note"></div>
+            <!-- REFACTORED: Note divs are now generated from this template -->
+            <template id="note-template">
+              <div class="note" tabindex="0"></div>
+            </template>
+            <!-- Eraser tool remains -->
             <div class="eraser" id="eraser-tool" tabindex="0" aria-label="Eraser Tool">🗙</div>
           </div>
           <!-- Subcontainer: Tonicization Buttons -->
@@ -53,6 +50,10 @@
                 <button class="preset-button" id="preset-triangle">Triangle</button>
                 <button class="preset-button" id="preset-square">Square</button>
                 <button class="preset-button" id="preset-sawtooth">Sawtooth</button>
+                <button class="preset-button" id="preset-piano">Piano</button>
+                <button class="preset-button" id="preset-strings">Strings</button>
+                <button class="preset-button" id="preset-woodwind">Woodwind</button>
+                <button class="preset-button" id="preset-marimba">Marimba</button>
               </div>
             </div>
         </div>
@@ -60,7 +61,8 @@
         <!-- Container 4: Harmonic Multislider -->
         <div class="top-toolbar-container multislider-container">
           <div class="buffer-container">
-            <div id="harmonic-multislider"></div>
+            <!-- REPLACED: Div replaced with a canvas for the bipolar editor -->
+            <canvas id="harmonic-multislider-canvas"></canvas>
           </div>
         </div>
 
@@ -86,18 +88,28 @@
           <div id="grid-controls-container">
             <div id="beat-line-controls"></div>
           </div>
-          <!-- PITCH GRID CONTAINER -->
+          <!-- VIEWPORT CONTAINER -->
           <div id="pitch-grid-container">
+            <!-- SCROLLABLE CONTAINER -->
             <div id="grid-container">
-              <canvas id="notation-grid"></canvas>
-              <canvas id="playhead-canvas"></canvas>
+              
+              <!-- WRAPPER FOR PITCH CANVASES -->
+              <div id="pitch-canvas-wrapper">
+                <canvas id="notation-grid"></canvas>
+                <canvas id="playhead-canvas"></canvas>
+                <canvas id="hover-canvas"></canvas>
+              </div>
+
             </div>
           </div>
-          <!-- DRUM GRID CONTAINER -->
-          <div id="drum-grid-container">
-            <canvas id="drum-grid"></canvas>
-          </div>
         </div>
+        
+        <!-- WRAPPER FOR DRUM CANVAS (MOVED HERE) -->
+        <div id="drum-grid-wrapper">
+            <canvas id="drum-grid"></canvas>
+            <canvas id="drum-hover-canvas"></canvas>
+        </div>
+
       </div>
       <!-- End Middle Section -->
 
@@ -133,12 +145,28 @@
         <div class="bottom-toolbar-container play-controls-container">
           <button class="toolkit-button" id="play-button" aria-label="Play Music">⏵</button>
           <button class="toolkit-button" id="stop-button" aria-label="Stop Music">⏹</button>
+          <button class="toolkit-button" id="undo-button" aria-label="Undo">Undo</button>
+          <button class="toolkit-button" id="redo-button" aria-label="Redo">Redo</button>
           <button class="toolkit-button" id="clear-button" aria-label="Clear Notes">Clear</button>
         </div>
     
         <div class="bottom-toolbar-container tempo-container">
           <div id="tempo-container">
-            <input type="range" id="tempo-slider" min="60" max="180" value="120" step="1" aria-label="Tempo Slider" />
+            <div id="tempo-display-container">
+                <div class="tempo-input-group">
+                    <span class="tempo-label">♪</span>
+                    <input type="number" id="eighth-note-tempo" class="tempo-input">
+                </div>
+                <div class="tempo-input-group">
+                    <span class="tempo-label">♩</span>
+                    <input type="number" id="quarter-note-tempo" class="tempo-input">
+                </div>
+                <div class="tempo-input-group">
+                    <span class="tempo-label">♩.</span>
+                    <input type="number" id="dotted-quarter-tempo" class="tempo-input">
+                </div>
+            </div>
+            <input type="range" id="tempo-slider" min="30" max="240" value="90" step="1" aria-label="Tempo Slider" />
             <div class="slider-label">Tempo</div>
           </div>
         </div>

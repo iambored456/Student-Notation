@@ -5,30 +5,28 @@ console.log("ConfigService: Module loaded.");
 
 let resizeTimeout;
 const DEBOUNCE_DELAY = 50;
+const MIN_VISUAL_ROWS = 5;
 
-// Grid DOM Elements
-let gridContainer, canvas, ctx, drumCanvas, drumCtx, playheadCanvas;
+let gridContainer, canvas, ctx, drumCanvas, drumCtx, playheadCanvas, hoverCanvas, drumHoverCanvas, pitchCanvasWrapper;
 
 function initDOMElements() {
     gridContainer = document.getElementById('grid-container');
+    pitchCanvasWrapper = document.getElementById('pitch-canvas-wrapper');
     canvas = document.getElementById('notation-grid');
     drumCanvas = document.getElementById('drum-grid');
     playheadCanvas = document.getElementById('playhead-canvas');
+    hoverCanvas = document.getElementById('hover-canvas');
+    drumHoverCanvas = document.getElementById('drum-hover-canvas');
     
-    if (!canvas || !drumCanvas || !playheadCanvas) {
-        console.error("ConfigService: A required canvas element was not found in the DOM.");
-        return;
+    if (!canvas || !drumCanvas || !playheadCanvas || !hoverCanvas || !drumHoverCanvas || !pitchCanvasWrapper) {
+        console.error("ConfigService: A required canvas or wrapper element was not found in the DOM.");
+        return { ctx: null, drumCtx: null };
     }
     ctx = canvas.getContext('2d');
     drumCtx = drumCanvas.getContext('2d');
     
-    // Storing contexts on the window object is a simple way to make them globally 
-    // accessible to the dedicated drawing modules (Grid.js, drumGrid.js) without
-    // needing to pass them as arguments through multiple layers.
-    window.pitchGridCtx = ctx;
-    window.drumGridCtx = drumCtx;
-    
     console.log("ConfigService: DOM elements and drawing contexts initialized.");
+    return { ctx, drumCtx };
 }
 
 function recalcGridColumns() {
@@ -37,77 +35,84 @@ function recalcGridColumns() {
     console.log("ConfigService: Recalculated column widths based on macrobeat groupings.");
 }
 
-function performResize() {
-    console.log("ConfigService: Performing resize calculations.");
-    const container = document.getElementById('grid-container-wrapper');
-    if (!container) return;
-
-    const containerHeight = container.offsetHeight;
+function applyDimensions() {
+    console.log("ConfigService: Applying stored dimensions to canvas elements.");
+    const { cellWidth, cellHeight, columnWidths } = store.state;
     
-    const cellHeight = containerHeight / store.state.visualRows;
-    const cellWidth = cellHeight / 2;
-    
-    // Update the store with the new calculated dimensions
-    store.state.cellWidth = cellWidth;
-    store.state.cellHeight = cellHeight;
-    
-    const totalWidthUnits = store.state.columnWidths.reduce((sum, w) => sum + w, 0);
+    const totalWidthUnits = columnWidths.reduce((sum, w) => sum + w, 0);
     const canvasWidth = cellWidth * totalWidthUnits;
-    const canvasHeight = cellHeight * store.state.visualRows;
+
+    const totalLogicRows = store.state.fullRowData.length;
+    const totalVisualRows = totalLogicRows / 2;
+    const canvasHeight = cellHeight * totalVisualRows;
     
-    // Update pitch grid and playhead canvas
     canvas.width = canvasWidth;
     canvas.height = canvasHeight;
     playheadCanvas.width = canvasWidth;
     playheadCanvas.height = canvasHeight;
+    hoverCanvas.width = canvasWidth;
+    hoverCanvas.height = canvasHeight;
+
+    pitchCanvasWrapper.style.height = `${canvasHeight}px`;
+    
+    const pitchRowHeight = 0.5 * cellHeight;
+    const drumCanvasHeight = 3 * pitchRowHeight;
+    drumCanvas.width = canvasWidth;
+    drumCanvas.height = drumCanvasHeight;
+    drumHoverCanvas.width = canvasWidth;
+    drumHoverCanvas.height = drumCanvasHeight;
+    
     gridContainer.style.width = `${canvasWidth}px`;
     
-    // Update drum grid canvas
-    const pitchRowHeight = 0.5 * store.state.cellHeight;
-    drumCanvas.width = canvasWidth;
-    drumCanvas.height = 3 * pitchRowHeight;
-    
-    // Notify all components that the grid has been resized so they can redraw themselves.
     store.emit('gridResized');
 }
 
-// Debounced resize for window events
+function calculateAndApplyHeightBasedDimensions() {
+    console.log("ConfigService: Calculating height-based dimensions.");
+    const container = document.getElementById('grid-container-wrapper');
+    if (!container) return;
+
+    const containerHeight = container.offsetHeight;
+    const cellHeight = containerHeight / store.state.visualRows;
+    const cellWidth = cellHeight / 2;
+    
+    store.state.cellWidth = cellWidth;
+    store.state.cellHeight = cellHeight;
+
+    applyDimensions();
+}
+
 function resizeCanvas() {
     clearTimeout(resizeTimeout);
-    resizeTimeout = setTimeout(performResize, DEBOUNCE_DELAY);
+    resizeTimeout = setTimeout(calculateAndApplyHeightBasedDimensions, DEBOUNCE_DELAY);
 }
 
-// Immediate resize for UI button clicks
 function immediateResizeCanvas() {
     clearTimeout(resizeTimeout);
-    performResize();
+    calculateAndApplyHeightBasedDimensions();
 }
 
-// Public API for the service
 const ConfigService = {
     init() {
-        initDOMElements();
+        const contexts = initDOMElements();
         recalcGridColumns();
         immediateResizeCanvas();
 
         window.addEventListener('resize', resizeCanvas);
         window.addEventListener('orientationchange', resizeCanvas);
 
-        // Listen for rhythm changes to recalc columns and resize
         store.on('rhythmChanged', () => {
-            console.log("ConfigService: Detected rhythmChanged event, recalculating columns and resizing.");
             recalcGridColumns();
             immediateResizeCanvas();
         });
+        
         console.log("ConfigService: Initialized and event listeners attached.");
+        return contexts;
     },
 
-    // A helper function to get the X coordinate of any column index.
-    // This is used by drawing and event listening modules.
     getColumnX(index) {
         let x = 0;
         for (let i = 0; i < index; i++) {
-            // Ensure columnWidths is not empty to prevent errors on initial load
             const widthMultiplier = store.state.columnWidths[i] || 0;
             x += widthMultiplier * store.state.cellWidth;
         }
@@ -121,34 +126,42 @@ const ConfigService = {
       
       const containerWidth = container.offsetWidth;
       const totalWidthUnits = store.state.columnWidths.reduce((sum, w) => sum + w, 0);
+      const cellWidth = containerWidth / totalWidthUnits;
+      const cellHeight = cellWidth * 2;
       
-      store.state.cellWidth = containerWidth / totalWidthUnits;
-      store.state.cellHeight = store.state.cellWidth * 2;
+      const containerHeight = container.offsetHeight;
+      const maxVisualRows = Math.floor(store.state.fullRowData.length / 2);
+      let newVisualRows = Math.floor(containerHeight / cellHeight);
       
-      immediateResizeCanvas();
+      newVisualRows = Math.max(MIN_VISUAL_ROWS, Math.min(newVisualRows, maxVisualRows));
+      
+      store.state.cellWidth = cellWidth;
+      store.state.cellHeight = cellHeight;
+      store.state.visualRows = newVisualRows;
+      
+      store.state.logicRows = newVisualRows * 2;
+      
+      if (store.state.gridPosition + store.state.logicRows > store.state.fullRowData.length) {
+          store.state.gridPosition = store.state.fullRowData.length - store.state.logicRows;
+      }
+
+      applyDimensions();
     },
 
     fitToHeight() {
       console.log("ConfigService: Action -> fitToHeight");
-      const container = document.getElementById('grid-container-wrapper');
-      if (!container) return;
+      const numLogicRows = store.state.fullRowData.length;
+      const numVisualRows = numLogicRows / 2;
       
-      const containerHeight = container.offsetHeight;
-      const numRows = store.state.fullRowData.length;
-      
-      store.state.cellHeight = containerHeight / numRows;
-      store.state.cellWidth = store.state.cellHeight / 2;
-      
-      store.state.visualRows = numRows;
-      store.state.logicRows = numRows;
+      store.state.logicRows = numLogicRows;
+      store.state.visualRows = numVisualRows;
       store.state.gridPosition = 0;
       
       immediateResizeCanvas();
     },
     
     zoomIn() {
-        const minVisualRows = 5;
-        if (store.state.visualRows > minVisualRows) {
+        if (store.state.visualRows > MIN_VISUAL_ROWS) {
             store.state.visualRows--;
             store.state.logicRows = store.state.visualRows * 2;
             immediateResizeCanvas();

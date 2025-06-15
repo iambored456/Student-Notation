@@ -4,27 +4,53 @@ import ConfigService from '../../services/configService.js';
 
 console.log("TimeSignatureDisplay: Module loaded.");
 
-// This module is now purely for rendering. The state is in the store.
-
 function computeTimeSignatureSegments() {
     const segments = [];
-    let segmentTotal = 0;
-    let currentGridColumn = 2; // Start after legend
-    
-    store.state.macrobeatGroupings.forEach((value, index) => {
-        segmentTotal += value;
-        currentGridColumn += value;
+    let segmentMicrobeatTotal = 0;
+    let startColumn = 2; // Start after legend
+    let isAnacrusisSegment = true;
+    // FIX: Add a flag to track if a segment contains a 3-based macrobeat.
+    let containsThreeGrouping = false; 
 
-        // End a segment if the boundary style is solid or it's the last one
-        if (store.state.macrobeatBoundaryStyles[index] === true || index === store.state.macrobeatGroupings.length - 1) {
-            const segmentStartX = ConfigService.getColumnX(currentGridColumn - segmentTotal);
-            const segmentEndX = ConfigService.getColumnX(currentGridColumn);
+    store.state.macrobeatGroupings.forEach((groupValue, index) => {
+        segmentMicrobeatTotal += groupValue;
+
+        // If this macrobeat is 3, set the flag for the current segment.
+        if (groupValue === 3) {
+            containsThreeGrouping = true;
+        }
+
+        const isLastBeat = (index === store.state.macrobeatGroupings.length - 1);
+        const isSolidBoundary = (store.state.macrobeatBoundaryStyles[index] === 'solid');
+
+        if (isSolidBoundary || isLastBeat) {
+            const segmentStartX = ConfigService.getColumnX(startColumn);
+            const segmentEndX = ConfigService.getColumnX(startColumn + segmentMicrobeatTotal);
             
+            let label;
+            // FIX: Use the new flag to determine the time signature style.
+            if (containsThreeGrouping) {
+                // If there was a 3, use an 8th-note denominator.
+                label = `${segmentMicrobeatTotal}/8`;
+            } else {
+                // Otherwise, use a 4th-note denominator.
+                label = `${segmentMicrobeatTotal / 2}/4`;
+            }
+
             segments.push({
-                label: `${segmentTotal/2}/4`, // Simplified label for now
+                label: label,
                 centerX: (segmentStartX + segmentEndX) / 2,
+                isAnacrusis: isAnacrusisSegment,
             });
-            segmentTotal = 0; // Reset for next segment
+            
+            // Reset for the next segment
+            startColumn += segmentMicrobeatTotal;
+            segmentMicrobeatTotal = 0; 
+            containsThreeGrouping = false; // Reset the flag
+
+            if (isSolidBoundary) {
+                isAnacrusisSegment = false; 
+            }
         }
     });
     return segments;
@@ -47,6 +73,9 @@ export function renderTimeSignatureDisplay() {
     segments.forEach(segment => {
         const labelElem = document.createElement('div');
         labelElem.className = 'time-signature-label';
+        if (segment.isAnacrusis) {
+            labelElem.classList.add('anacrusis-label');
+        }
         labelElem.textContent = segment.label;
         labelElem.style.position = 'absolute';
         labelElem.style.left = `${offsetLeft + segment.centerX}px`;
