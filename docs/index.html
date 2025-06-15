@@ -3,8 +3,8 @@
   <head>
     <meta charset="UTF-8" />
     <title>Student Notation Web Applet</title>
-    <script type="module" crossorigin src="/Student-Notation/assets/index-rSQTP-OZ.js"></script>
-    <link rel="stylesheet" crossorigin href="/Student-Notation/assets/index-DLJ5JUwB.css">
+    <script type="module" crossorigin src="/Student-Notation/assets/index-JKoHsEbF.js"></script>
+    <link rel="stylesheet" crossorigin href="/Student-Notation/assets/index-vGenHMZC.css">
   </head>
   <body>
     <div id="app-container">
@@ -69,8 +69,28 @@
 
         <!-- Container 5: ADSR Visualization -->
         <div class="top-toolbar-container adsr-container">
-          <div class="buffer-container">
-            <div id="adsr-envelope"></div>
+          <div class="adsr-main-panel">
+            <div class="adsr-graph-wrapper">
+              <div id="adsr-envelope"></div>
+            </div>
+            <div class="sustain-slider-wrapper">
+              <label for="sustain-slider">S</label>
+              <input type="range" id="sustain-slider" class="vertical-slider" min="0" max="1" value="0.8" step="0.01">
+            </div>
+          </div>
+          <div class="adsr-time-sliders">
+            <div class="adsr-slider-group">
+                <label for="attack-slider">A</label>
+                <input type="range" id="attack-slider" min="0.001" max="2" value="0.1" step="0.001">
+            </div>
+            <div class="adsr-slider-group">
+                <label for="decay-slider">D</label>
+                <input type="range" id="decay-slider" min="0" max="2" value="0.2" step="0.01">
+            </div>
+            <div class="adsr-slider-group">
+                <label for="release-slider">R</label>
+                <input type="range" id="release-slider" min="0.01" max="4" value="0.3" step="0.01">
+            </div>
           </div>
         </div>
 

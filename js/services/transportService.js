@@ -7,7 +7,6 @@ import SynthEngine from './synthEngine.js';
 console.log("TransportService: Module loaded.");
 
 let playheadAnimationFrame;
-// In-memory representation of drum players for scheduling
 let drumPlayers; 
 
 function getMicrobeatDuration() {
@@ -19,7 +18,6 @@ function getMicrobeatDuration() {
 function getPitchForNote(note) {
     const rowData = store.state.fullRowData; 
     if (rowData && rowData[note.row]) {
-        // Normalize pitch to ensure compatibility with Tone.js
         const pitch = rowData[note.row].toneNote;
         return pitch.replace('♭', 'b').replace('♯', '#');
     }
@@ -28,11 +26,11 @@ function getPitchForNote(note) {
 }
 
 function scheduleNotes() {
-    Tone.Transport.cancel(); // Clear any previous events
+    Tone.Transport.cancel();
     const microbeatDuration = getMicrobeatDuration();
 
     store.state.placedNotes.forEach(note => {
-        if (note.shape === "tonicization") return; // Skip tonicization markers
+        if (note.shape === "tonicization") return;
 
         const startTime = (note.startColumnIndex - 2) * microbeatDuration;
 
@@ -107,7 +105,8 @@ const TransportService = {
         window.transportService = { drumPlayers };
 
         store.on('notesChanged', () => this.handleStateChange());
-        store.on('rhythmChanged', () => this.handleStateChange());
+        store.on('gridResized', () => this.handleStateChange()); 
+        
         store.on('tempoChanged', newTempo => Tone.Transport.bpm.value = newTempo * 2);
         store.on('loopingChanged', isLooping => Tone.Transport.loop = isLooping);
 
@@ -146,7 +145,6 @@ const TransportService = {
 
             scheduleNotes();
             
-            // FIX: Always start the transport from time 0 to include the anacrusis.
             Tone.Transport.start(Tone.now(), 0); 
             
             animatePlayhead();

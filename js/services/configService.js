@@ -32,11 +32,11 @@ function initDOMElements() {
 function recalcGridColumns() {
     const mainGrid = store.state.macrobeatGroupings.flatMap(mb => Array(mb).fill(1));
     store.state.columnWidths = [3, 3, ...mainGrid, 3, 3];
-    console.log("ConfigService: Recalculated column widths based on macrobeat groupings.");
+    console.log("[CONFIG] Recalculated column widths. New total columns:", store.state.columnWidths.length);
 }
 
 function applyDimensions() {
-    console.log("ConfigService: Applying stored dimensions to canvas elements.");
+    console.log("[CONFIG] Applying stored dimensions to all canvas elements.");
     const { cellWidth, cellHeight, columnWidths } = store.state;
     
     const totalWidthUnits = columnWidths.reduce((sum, w) => sum + w, 0);
@@ -68,7 +68,7 @@ function applyDimensions() {
 }
 
 function calculateAndApplyHeightBasedDimensions() {
-    console.log("ConfigService: Calculating height-based dimensions.");
+    console.log("[CONFIG] Calculating height-based dimensions.");
     const container = document.getElementById('grid-container-wrapper');
     if (!container) return;
 
@@ -84,10 +84,11 @@ function calculateAndApplyHeightBasedDimensions() {
 
 function resizeCanvas() {
     clearTimeout(resizeTimeout);
-    resizeTimeout = setTimeout(calculateAndApplyHeightBasedDimensions, DEBOUNCE_DELAY);
+    resizeTimeout = setTimeout(calculateAndApplyHeightBasedDimensions, 50);
 }
 
 function immediateResizeCanvas() {
+    console.log("[CONFIG] Immediate resize requested.");
     clearTimeout(resizeTimeout);
     calculateAndApplyHeightBasedDimensions();
 }
@@ -102,6 +103,7 @@ const ConfigService = {
         window.addEventListener('orientationchange', resizeCanvas);
 
         store.on('rhythmChanged', () => {
+            console.log("[EVENT] `rhythmChanged` detected. Triggering full resize.");
             recalcGridColumns();
             immediateResizeCanvas();
         });

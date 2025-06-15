@@ -34,30 +34,32 @@ export function renderRhythmUI() {
         groupingBtn.addEventListener('click', () => store.toggleMacrobeatGrouping(index));
         container.appendChild(groupingBtn);
 
-        // Boundary Style Button (Solid/Dashed/Anacrusis)
-        const boundaryBtn = document.createElement('button');
-        const style = store.state.macrobeatBoundaryStyles[index];
-        
-        switch (style) {
-            case 'solid':
-                boundaryBtn.textContent = '●';
-                break;
-            case 'anacrusis':
-                // FIX: The special case for index 2 is no longer possible, so it's removed.
-                boundaryBtn.textContent = 'x';
-                break;
-            default: // 'dashed'
-                boundaryBtn.textContent = '○';
-                break;
-        }
+        // FIX: Only create a boundary style button if it's NOT the last one.
+        if (index < store.state.macrobeatGroupings.length - 1) {
+            // Boundary Style Button (Solid/Dashed/Anacrusis)
+            const boundaryBtn = document.createElement('button');
+            const style = store.state.macrobeatBoundaryStyles[index];
+            
+            switch (style) {
+                case 'solid':
+                    boundaryBtn.textContent = '●';
+                    break;
+                case 'anacrusis':
+                    boundaryBtn.textContent = 'x';
+                    break;
+                default: // 'dashed'
+                    boundaryBtn.textContent = '○';
+                    break;
+            }
 
-        boundaryBtn.className = 'rhythm-ui-button';
-        boundaryBtn.style.position = 'absolute';
-        boundaryBtn.style.left = `${offsetLeft + endX}px`;
-        boundaryBtn.style.top = '22px';
-        boundaryBtn.style.transform = 'translateX(-50%)';
-        boundaryBtn.addEventListener('click', () => store.cycleMacrobeatBoundaryStyle(index));
-        container.appendChild(boundaryBtn);
+            boundaryBtn.className = 'rhythm-ui-button';
+            boundaryBtn.style.position = 'absolute';
+            boundaryBtn.style.left = `${offsetLeft + endX}px`;
+            boundaryBtn.style.top = '22px';
+            boundaryBtn.style.transform = 'translateX(-50%)'; // Center on the line
+            boundaryBtn.addEventListener('click', () => store.cycleMacrobeatBoundaryStyle(index));
+            container.appendChild(boundaryBtn);
+        }
 
         currentColumn += group;
     });

@@ -14,6 +14,8 @@ let pitchHoverCanvas, pitchHoverCtx;
 let drumHoverCanvas, drumHoverCtx;
 let previousTool = null;
 
+// --- Helper Functions ---
+
 function getColumnIndex(x) {
     let cumulative = 0;
     for (let i = 0; i < store.state.columnWidths.length; i++) {
@@ -33,6 +35,8 @@ function getRowIndex(y) {
     return Math.floor((y + visualRowHeight / 2) / visualRowHeight);
 }
 
+// --- Drawing on Pitch Hover Canvas ---
+
 function drawPitchHoverHighlight(colIndex, rowIndex, color) {
     if (!pitchHoverCtx) return;
     console.log(`[PITCH HOVER] Drawing highlight for col ${colIndex}, row ${rowIndex}`);
@@ -51,6 +55,7 @@ function drawPitchHoverHighlight(colIndex, rowIndex, color) {
     pitchHoverCtx.fillRect(x, y, highlightWidth, cellHeight);
 }
 
+
 function drawGhostPitchNote(colIndex, rowIndex) {
     if (!pitchHoverCtx) return;
     const { type, color } = store.state.selectedTool;
@@ -64,6 +69,8 @@ function drawGhostPitchNote(colIndex, rowIndex) {
     }
     pitchHoverCtx.globalAlpha = 1.0;
 }
+
+// --- Drawing on Drum Hover Canvas ---
 
 function getDrumRowIndex(y) {
     const pitchRowHeight = 0.5 * store.state.cellHeight;
@@ -93,6 +100,8 @@ function drawGhostDrumNote(colIndex, rowIndex) {
     DrumGrid.drawDrumShape(drumHoverCtx, rowIndex, x, y, cellWidth, pitchRowHeight);
     drumHoverCtx.globalAlpha = 1.0;
 }
+
+// --- Event Handlers ---
 
 function handlePitchGridMouseDown(e) {
     const rect = e.target.getBoundingClientRect();
@@ -136,8 +145,16 @@ function handlePitchGridMouseMove(e) {
     const y = e.clientY - rect.top;
     const colIndex = getColumnIndex(x);
     const rowIndex = getRowIndex(y);
+
     if (!pitchHoverCtx || !pitchHoverCanvas) return;
     pitchHoverCtx.clearRect(0, 0, pitchHoverCanvas.width, pitchHoverCanvas.height);
+
+    // FIX: Add a guard clause to prevent drawing on invalid grid cells.
+    if (colIndex < 2 || colIndex >= store.state.columnWidths.length - 2 || getPitchForRow(rowIndex) === null) {
+        console.log(`[HOVER] Invalid hover position. Col: ${colIndex}, Row: ${rowIndex}. Aborting draw.`);
+        return;
+    }
+
     if (isRightClickActive) {
         store.eraseNoteAt(colIndex, rowIndex);
         drawPitchHoverHighlight(colIndex, rowIndex, 'rgba(255, 0, 0, 0.3)');
@@ -145,6 +162,7 @@ function handlePitchGridMouseMove(e) {
         drawPitchHoverHighlight(colIndex, rowIndex, 'rgba(255, 255, 0, 0.3)');
         drawGhostPitchNote(colIndex, rowIndex);
     }
+    
     if (isDragging && currentDraggedNote) {
         const startIndex = currentDraggedNote.startColumnIndex;
         let newEndIndex;
@@ -162,6 +180,7 @@ function handlePitchGridMouseMove(e) {
 
 function handlePitchGridMouseLeave() {
     if (pitchHoverCtx) {
+        console.log("[PITCH HOVER] Mouse left grid, clearing hover canvas.");
         pitchHoverCtx.clearRect(0, 0, pitchHoverCanvas.width, pitchHoverCanvas.height);
     }
 }
@@ -189,6 +208,7 @@ function handleDrumGridMouseMove(e) {
 
 function handleDrumGridMouseLeave() {
     if (drumHoverCtx) {
+        console.log("[DRUM HOVER] Mouse left drum grid, clearing hover canvas.");
         drumHoverCtx.clearRect(0, 0, drumHoverCanvas.width, drumHoverCanvas.height);
     }
 }

@@ -27,16 +27,24 @@ function getPitchClass(noteId) {
 class CustomEnvelope {
     constructor(options) {
         this.container = document.querySelector(options.container);
-        this.width = options.width || 400;
-        this.height = options.height || 150;
-        // FIX: Halve the total time to make the envelope appear larger/zoomed in.
-        this.totalTime = 4.25; // Fixed time span for the envelope view (was 8.5)
+        
+        // Use the container's actual size.
+        this.width = this.container.clientWidth;
+        this.height = this.container.clientHeight;
+        this.totalTime = 4.25;
 
-        // Initialize state from the central store
-        this.attack = store.state.adsr.attack;
-        this.decay = store.state.adsr.decay;
-        this.sustain = store.state.adsr.sustain;
-        this.release = store.state.adsr.release;
+        // Get slider elements
+        this.attackSlider = document.getElementById('attack-slider');
+        this.decaySlider = document.getElementById('decay-slider');
+        this.sustainSlider = document.getElementById('sustain-slider');
+        this.releaseSlider = document.getElementById('release-slider');
+
+        // Initialize state from the central store (read-only at constructor time)
+        const initialState = store.state.adsr;
+        this.attack = initialState.attack;
+        this.decay = initialState.decay;
+        this.sustain = initialState.sustain;
+        this.release = initialState.release;
         this.tempo = store.state.tempo;
         this.isPaused = store.state.isPaused;
 
@@ -44,9 +52,24 @@ class CustomEnvelope {
         
         this.createSVGLayers();
         this.drawGridlines();
-        this.updateEnvelopeDrawing();
-        this.initInteraction();
+
+        // Perform initial setup from store and wire up all interactions
+        this.updateFromStore(store.state.adsr);
+        this.initSVGInteraction();
+        this.initSliderInteraction();
         this.listenForStoreChanges();
+    }
+
+    updateFromStore(adsr) {
+        // Update internal state
+        this.attack = adsr.attack;
+        this.decay = adsr.decay;
+        this.sustain = adsr.sustain;
+        this.release = adsr.release;
+
+        // Update all UI elements
+        this.updateEnvelopeDrawing();
+        this.updateSliders();
     }
 
     listenForStoreChanges() {
@@ -60,15 +83,21 @@ class CustomEnvelope {
                 this.clearPlayheads();
             }
         });
+        store.on('adsrChanged', (newADSR) => {
+            this.updateFromStore(newADSR);
+        });
     }
 
     createSVGLayers() {
         this.svgContainer = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-        this.svgContainer.setAttribute("width", this.width);
-        this.svgContainer.setAttribute("height", this.height);
-        this.svgContainer.style.backgroundColor = "#fff";
-        this.svgContainer.style.border = "1px solid #ccc";
-        this.svgContainer.style.borderRadius = "4px";
+        // These are now set via CSS, but we set them here as a fallback.
+        this.svgContainer.setAttribute("width", "100%");
+        this.svgContainer.setAttribute("height", "100%");
+        // viewBox allows the SVG to scale responsively within its container.
+        this.svgContainer.setAttribute("viewBox", `0 0 ${this.width} ${this.height}`);
+        this.svgContainer.setAttribute("preserveAspectRatio", "none");
+
+        // Removed inline styles, as they are now in style.css
 
         this.gridLayer = document.createElementNS("http://www.w3.org/2000/svg", "g");
         this.envelopeLayer = document.createElementNS("http://www.w3.org/2000/svg", "g");
@@ -111,6 +140,18 @@ class CustomEnvelope {
         return [p1, p2, p3, p4, p5];
     }
 
+    updateSliders() {
+        if (!this.attackSlider) return; // Guard against missing elements
+        this.attackSlider.value = this.attack;
+        this.decaySlider.value = this.decay;
+        this.sustainSlider.value = this.sustain;
+        this.releaseSlider.value = this.release;
+
+        // NEW: Update the custom property for the sustain slider's progress fill
+        const sustainPercent = this.sustain * 100;
+        this.sustainSlider.style.setProperty('--sustain-progress', `${sustainPercent}%`);
+    }
+
     updateEnvelopeDrawing() {
         while (this.envelopeLayer.firstChild) {
             this.envelopeLayer.removeChild(this.envelopeLayer.firstChild);
@@ -144,14 +185,27 @@ class CustomEnvelope {
         }
     }
 
-    initInteraction() {
-        let currentDrag = null;
-        const onUpdate = () => {
-            this.updateEnvelopeDrawing();
-            const newADSR = { attack: this.attack, decay: this.decay, sustain: this.sustain, release: this.release };
-            store.state.adsr = newADSR;
-            store.emit('adsrChanged', newADSR);
+    initSliderInteraction() {
+        if (!this.attackSlider) return;
+
+        const onSliderInput = () => {
+            const newADSR = {
+                attack: parseFloat(this.attackSlider.value),
+                decay: parseFloat(this.decaySlider.value),
+                sustain: parseFloat(this.sustainSlider.value),
+                release: parseFloat(this.releaseSlider.value),
+            };
+            store.setADSR(newADSR);
         };
+
+        this.attackSlider.addEventListener('input', onSliderInput);
+        this.decaySlider.addEventListener('input', onSliderInput);
+        this.sustainSlider.addEventListener('input', onSliderInput);
+        this.releaseSlider.addEventListener('input', onSliderInput);
+    }
+
+    initSVGInteraction() {
+        let currentDrag = null;
 
         this.svgContainer.addEventListener("mousedown", (e) => {
             if (e.target.tagName.toLowerCase() === "circle") {
@@ -164,15 +218,18 @@ class CustomEnvelope {
             const pt = this.getSVGPoint(e);
             const index = parseInt(currentDrag.dataset.index);
 
+            // Create a new object with the current values to modify and emit
+            const newADSR = { ...store.state.adsr };
+
             if (index === 1) { // Attack
-                this.attack = Math.max(0, (pt.x / this.width) * this.totalTime);
+                newADSR.attack = Math.max(0.001, (pt.x / this.width) * this.totalTime);
             } else if (index === 2) { // Decay/Sustain
-                this.decay = Math.max(0, ((pt.x / this.width) * this.totalTime) - this.attack);
-                this.sustain = Math.max(0, Math.min(1, 1 - pt.y / this.height));
+                newADSR.decay = Math.max(0, ((pt.x / this.width) * this.totalTime) - newADSR.attack);
+                newADSR.sustain = Math.max(0, Math.min(1, 1 - pt.y / this.height));
             } else if (index === 3) { // Release
-                this.release = Math.max(0, ((pt.x / this.width) * this.totalTime) - this.attack - this.decay);
+                newADSR.release = Math.max(0.01, ((pt.x / this.width) * this.totalTime) - newADSR.attack - newADSR.decay);
             }
-            onUpdate();
+            store.setADSR(newADSR);
         });
         
         window.addEventListener("mouseup", () => {
@@ -276,12 +333,11 @@ export function initADSR() {
         return null;
     }
     
+    // The constructor now handles sizing and everything else
     const envelopeInstance = new CustomEnvelope({
-        container: '#adsr-envelope',
-        width: adsrElem.clientWidth,
-        height: adsrElem.clientHeight
+        container: '#adsr-envelope'
     });
     
     console.log("CustomEnvelope: Initialized.");
     return envelopeInstance; // Return instance for synthEngine to use
-}   
+}

@@ -2,14 +2,16 @@
 
 console.log("Store: Module loaded");
 
+// A simple reactive store using a publish/subscribe pattern.
 const _subscribers = {};
 
 const store = {
     // --- STATE ---
+    // The single source of truth for the application.
     state: {
         placedNotes: [],
-        history: [[]], // Initialize with an empty state
-        historyIndex: 0, // Track our position in history
+        history: [[]],
+        historyIndex: 0,
         macrobeatGroupings: Array(19).fill(2),
         macrobeatBoundaryStyles: [
             'anacrusis', 'anacrusis', 'solid',
@@ -74,7 +76,7 @@ const store = {
         }
     },
 
-    // --- ACTIONS / MUTATIONS (now with history recording) ---
+    // --- ACTIONS / MUTATIONS ---
     addNote(note) {
         this.state.placedNotes.push(note);
         this.emit('notesChanged');
@@ -190,6 +192,7 @@ const store = {
                 else break;
             }
         }
+        // FIX: Emit a specific event for style changes only.
         this.emit('rhythmStyleChanged');
     },
 
@@ -205,6 +208,11 @@ const store = {
             this.state.macrobeatBoundaryStyles.pop();
             this.emit('rhythmChanged');
         }
+    },
+
+    setADSR(newADSR) {
+        this.state.adsr = newADSR;
+        this.emit('adsrChanged', newADSR);
     },
 
     setActivePreset(presetName) {

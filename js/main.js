@@ -42,29 +42,26 @@ document.addEventListener("DOMContentLoaded", () => {
     
     console.log("Main.js: Setting up state subscriptions.");
     store.on('notesChanged', () => {
+        console.log("[EVENT] `notesChanged` detected. Re-rendering grids.");
         DrumGrid.render();
         Grid.render();
     });
     
     store.on('gridChanged', () => {
+        console.log("[EVENT] `gridChanged` detected. Re-rendering grids.");
         DrumGrid.render();
         Grid.render();
     });
 
     store.on('gridResized', () => {
+        console.log("[EVENT] `gridResized` detected. Re-rendering grids and rhythm UI.");
         DrumGrid.render();
         Grid.render();
         Toolbar.renderRhythmUI();
     });
 
-    // This event handles structural rhythm changes that REQUIRE a resize.
-    store.on('rhythmChanged', () => {
-        Toolbar.renderRhythmUI();
-    });
-
-    // FIX: Add a new listener for style-only changes that only require a redraw.
     store.on('rhythmStyleChanged', () => {
-        console.log("[EVENT] rhythmStyleChanged detected. Re-rendering grids and UI.");
+        console.log("[EVENT] `rhythmStyleChanged` detected. Re-rendering grids and rhythm UI.");
         DrumGrid.render();
         Grid.render();
         Toolbar.renderRhythmUI();

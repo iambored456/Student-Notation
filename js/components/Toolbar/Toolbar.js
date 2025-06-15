@@ -243,54 +243,46 @@ function initAudioControls() {
     updateTempoDisplays(store.state.tempo);
 
     document.getElementById('preset-sine').addEventListener('click', () => {
-        store.state.adsr = { attack: 0.1, decay: 0.2, sustain: 0.8, release: 0.3 };
-        store.emit('adsrChanged', store.state.adsr);
+        store.setADSR({ attack: 0.1, decay: 0.2, sustain: 0.8, release: 0.3 });
         store.setHarmonicCoefficients(generateSineCoeffs());
         store.setActivePreset('sine');
     });
     document.getElementById('preset-triangle').addEventListener('click', () => {
-        store.state.adsr = { attack: 0.1, decay: 0.2, sustain: 0.8, release: 0.3 };
-        store.emit('adsrChanged', store.state.adsr);
+        store.setADSR({ attack: 0.1, decay: 0.2, sustain: 0.8, release: 0.3 });
         store.setHarmonicCoefficients(generateTriangleCoeffs());
         store.setActivePreset('triangle');
     });
     document.getElementById('preset-square').addEventListener('click', () => {
-        store.state.adsr = { attack: 0.1, decay: 0.2, sustain: 0.8, release: 0.3 };
-        store.emit('adsrChanged', store.state.adsr);
+        store.setADSR({ attack: 0.1, decay: 0.2, sustain: 0.8, release: 0.3 });
         store.setHarmonicCoefficients(generateSquareCoeffs());
         store.setActivePreset('square');
     });
     document.getElementById('preset-sawtooth').addEventListener('click', () => {
-        store.state.adsr = { attack: 0.1, decay: 0.2, sustain: 0.8, release: 0.3 };
-        store.emit('adsrChanged', store.state.adsr);
+        store.setADSR({ attack: 0.1, decay: 0.2, sustain: 0.8, release: 0.3 });
         store.setHarmonicCoefficients(generateSawtoothCoeffs());
         store.setActivePreset('sawtooth');
     });
     document.getElementById('preset-piano').addEventListener('click', () => {
         const preset = generatePianoPreset();
-        store.state.adsr = preset.adsr;
-        store.emit('adsrChanged', preset.adsr);
+        store.setADSR(preset.adsr);
         store.setHarmonicCoefficients(preset.coeffs);
         store.setActivePreset(preset.name);
     });
     document.getElementById('preset-strings').addEventListener('click', () => {
         const preset = generateStringsPreset();
-        store.state.adsr = preset.adsr;
-        store.emit('adsrChanged', preset.adsr);
+        store.setADSR(preset.adsr);
         store.setHarmonicCoefficients(preset.coeffs);
         store.setActivePreset(preset.name);
     });
     document.getElementById('preset-woodwind').addEventListener('click', () => {
         const preset = generateWoodwindPreset();
-        store.state.adsr = preset.adsr;
-        store.emit('adsrChanged', preset.adsr);
+        store.setADSR(preset.adsr);
         store.setHarmonicCoefficients(preset.coeffs);
         store.setActivePreset(preset.name);
     });
     document.getElementById('preset-marimba').addEventListener('click', () => {
         const preset = generateMarimbaPreset();
-        store.state.adsr = preset.adsr;
-        store.emit('adsrChanged', preset.adsr);
+        store.setADSR(preset.adsr);
         store.setHarmonicCoefficients(preset.coeffs);
         store.setActivePreset(preset.name);
     });
