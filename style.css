@@ -295,8 +295,7 @@ input[type="range"]::-moz-range-thumb {
 /* --- Grid UI Overlays --- */
 #grid-controls-container {
   position: relative;
-  /* FIX: Increased height to make space for separated buttons */
-  height: 45px;
+  height: 30px;
   margin-bottom: 5px;
 }
 
@@ -427,6 +426,3 @@ input[type="range"]::-moz-range-thumb {
   margin: 0;
 }
 
-.tempo-input[type=number] {
-  -moz-appearance: textfield;
-}
