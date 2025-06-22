@@ -1,0 +1,392 @@
+/* ==========================================================================
+   COMPONENT-SPECIFIC STYLES
+   ========================================================================= */
+
+/* --- Note Tools --- */
+.note-tools-container {
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+#note-bank-container {
+  display: flex;
+  flex-direction: column; 
+  align-items: center;
+  justify-content: center;
+  gap: 8px; 
+}
+.note-bank-row {
+    display: flex;
+    flex-direction: row; 
+    gap: 8px; 
+}
+/* NEW: Styling for the container of a circle and oval */
+.note-pair {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 4px;
+  padding: 3px;
+  border-radius: var(--border-radius-md);
+  border: 2px solid transparent; /* For selection highlight */
+}
+.note {
+  width: var(--note-size);
+  height: var(--note-size);
+  margin: 0;
+  cursor: pointer;
+  border-radius: 50%;
+  transition: all 0.2s;
+  background-color: transparent;
+  border: 4px solid var(--note-color, #000);
+}
+.note:hover {
+  transform: scale(1.1);
+}
+/* NEW: Make the oval note narrower */
+.oval-note {
+    width: calc(var(--note-size) * 0.7);
+}
+
+
+/* --- Tonic Sign Tools --- */
+.tonic-sign-container {
+    display: flex;
+    flex-direction: row; 
+    flex-wrap: wrap; 
+    gap: 5px;
+    align-items: center;
+    justify-content: center;
+}
+.tonic-sign-button {
+    padding: 4px;
+    font-size: 12px;
+    width: 28px;
+    height: 28px;
+    line-height: 1;
+    border-radius: var(--border-radius-md);
+}
+
+/* --- Preset & Grid Buttons --- */
+#preset-buttons {
+  display: flex;
+  flex-direction: row;
+  gap: 8px;
+  width: 100%;
+  height: 100%;
+}
+.preset-column {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.preset-button { 
+  width: 100%; 
+  flex: 1;
+  padding: 4px;
+}
+#export-import-buttons,
+#macrobeat-adjust-container {
+  display: flex;
+  flex-direction: row;
+  gap: 5px;
+}
+
+/* --- Play Controls --- */
+#play-button-group {
+    display: flex;
+    flex-direction: row;
+    gap: 5px;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+}
+
+
+/* --- Sliders (Volume, Tempo) --- */
+input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 8px;
+  border-radius: var(--border-radius-sm);
+  background: var(--c-gridline);
+  outline: none;
+  margin: 10px 0 0 0;
+}
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--c-accent);
+  border: 2px solid var(--c-surface);
+  box-shadow: var(--box-shadow-sm);
+  cursor: pointer;
+}
+input[type="range"]::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--c-accent);
+  border: 2px solid var(--c-surface);
+  box-shadow: var(--box-shadow-sm);
+  cursor: pointer;
+}
+
+.slider-label {
+  margin-top: 8px;
+  font-size: 14px;
+  color: var(--c-text-muted);
+  text-align: center;
+  user-select: none;
+}
+
+/* --- Grid Nav Keypad --- */
+#grid-nav-keypad {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: auto auto;
+  gap: 5px;
+  width: 100%;
+  justify-items: center;
+}
+#grid-scroll-up     { grid-area: 1 / 2 / 2 / 3; }
+#grid-zoom-in       { grid-area: 2 / 1 / 3 / 2; }
+#grid-scroll-down   { grid-area: 2 / 2 / 3 / 3; }
+#grid-zoom-out      { grid-area: 2 / 3 / 3 / 4; }
+
+
+/* --- Grid UI Overlays --- */
+#grid-controls-container {
+  position: relative;
+  height: 30px;
+  margin-bottom: 5px;
+}
+#time-signature-display {
+  height: 20px;
+  width: 100%;
+  position: relative;
+}
+.rhythm-ui-button {
+  background-color: rgba(255, 255, 255, 0.8);
+  color: var(--c-text);
+  border: 1px solid var(--c-border);
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  font-size: 12px;
+  line-height: 18px;
+  text-align: center;
+  z-index: 10;
+  position: absolute;
+  transform: translateX(-50%);
+}
+.rhythm-ui-button:hover { background-color: var(--c-surface); border-color: var(--c-text); }
+.time-signature-label {
+  background: var(--c-bg);
+  padding: 2px 8px;
+  border-radius: var(--border-radius-sm);
+  font-weight: bold;
+  font-size: 14px;
+  color: var(--c-text-muted);
+  user-select: none;
+  position: absolute;
+  transform: translateX(-50%);
+}
+.time-signature-label.anacrusis-label { color: var(--c-border); }
+
+/* --- UI States (Selected, Active, etc.) --- */
+.note.selected {
+  background-color: var(--note-color, #000);
+}
+/* NEW: Style for the selected color pair */
+.note-pair.selected {
+  border-color: var(--c-accent) !important;
+  box-shadow: 0 0 8px var(--c-accent);
+}
+.tonic-sign-button.selected,
+.preset-button.selected {
+  border: 2px solid var(--c-accent) !important;
+  box-shadow: 0 0 5px var(--c-accent);
+}
+#loop-button.active {
+  background-color: var(--c-accent-hover);
+  border-color: var(--c-accent);
+}
+#play-button.active {
+  color: #28a745; 
+}
+
+
+/* --- ADSR Container --- */
+.adsr-container {
+    flex-direction: column;
+    justify-content: flex-start;
+}
+.adsr-main-panel {
+    display: flex;
+    flex-direction: row;
+    width: 100%;
+    flex-grow: 1;
+    gap: 10px;
+    min-height: 0;
+}
+.adsr-graph-wrapper {
+    flex-grow: 1;
+    position: relative;
+    border: 1px solid var(--c-border);
+    border-radius: var(--border-radius-sm);
+}
+#adsr-envelope {
+    width: 100%;
+    height: 100%;
+}
+#adsr-envelope svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+    background-color: transparent;
+}
+.sustain-slider-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 5px;
+    width: 20px;
+}
+#sustain-slider-track {
+    position: relative;
+    width: 8px;
+    height: 100%;
+    background-color: var(--c-gridline);
+    border-radius: var(--border-radius-sm);
+}
+#sustain-slider-track::before {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: var(--sustain-progress, 0%);
+    background-color: var(--c-accent);
+    border-radius: var(--border-radius-sm);
+}
+#sustain-slider-thumb {
+    position: absolute;
+    left: 50%;
+    transform: translate(-50%, 50%);
+    width: 20px;
+    height: 20px;
+    background-color: var(--c-accent);
+    border-radius: 50%;
+    border: 2px solid var(--c-surface);
+    box-shadow: var(--box-shadow-sm);
+    cursor: grab;
+    color: var(--c-surface);
+    font-size: 12px;
+    font-weight: bold;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    user-select: none;
+}
+#sustain-slider-thumb:active {
+    cursor: grabbing;
+    background-color: var(--c-accent-hover);
+    transform: translate(-50%, 50%) scale(1.1);
+}
+#multi-thumb-slider-container {
+    position: relative;
+    width: calc(100% - 30px);
+    height: 8px;
+    border-radius: var(--border-radius-sm);
+    margin-top: 12px;
+    align-self: flex-start;
+    background: linear-gradient(
+      to right, 
+      var(--c-accent) var(--adr-progress, 0%), 
+      var(--c-gridline) var(--adr-progress, 0%)
+    );
+}
+.time-slider-thumb {
+    position: absolute;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: 20px;
+    height: 20px;
+    background-color: var(--c-accent);
+    border-radius: 50%;
+    border: 2px solid var(--c-surface);
+    box-shadow: var(--box-shadow-sm);
+    cursor: grab;
+    color: var(--c-surface);
+    font-size: 12px;
+    font-weight: bold;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    user-select: none;
+}
+.time-slider-thumb:active {
+    cursor: grabbing;
+    background-color: var(--c-accent-hover);
+    transform: translate(-50%, -50%) scale(1.1);
+}
+
+/* --- Multislider --- */
+.multislider-container {
+  border-radius: var(--border-radius-md);
+}
+.multislider-container .buffer-container {
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  margin: 0;
+  box-sizing: border-box;
+}
+
+#harmonic-multislider-canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* --- Tempo Input --- */
+#tempo-display-container {
+    display: flex;
+    justify-content: space-around;
+    width: 100%;
+    margin-bottom: 5px;
+    color: var(--c-text);
+}
+.tempo-input-group {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+.tempo-label {
+    font-size: 18px;
+    user-select: none;
+    color: var(--c-text-muted);
+}
+.tempo-input {
+    width: 45px;
+    background-color: var(--c-bg);
+    color: var(--c-text);
+    border: 1px solid var(--c-border);
+    border-radius: var(--border-radius-sm);
+    text-align: center;
+    font-family: var(--main-font);
+    font-size: 14px;
+}
+.tempo-input::-webkit-outer-spin-button,
+.tempo-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}

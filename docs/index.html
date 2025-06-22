@@ -2,9 +2,9 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <title>Student Notation Web Applet</title>
-    <script type="module" crossorigin src="/Student-Notation/assets/index-JKoHsEbF.js"></script>
-    <link rel="stylesheet" crossorigin href="/Student-Notation/assets/index-vGenHMZC.css">
+    <title>Student Notation Web Applet</title> 
+    <script type="module" crossorigin src="/Student-Notation/assets/index-CJg6puNH.js"></script>
+    <link rel="stylesheet" crossorigin href="/Student-Notation/assets/index-CYNqCQhp.css">
   </head>
   <body>
     <div id="app-container">
@@ -20,82 +20,86 @@
           </div>
         </div>
 
-        <!-- Container 2: Note Bank & Tonicization -->
-        <div class="top-toolbar-container note-tonic-container">
-          <!-- Subcontainer: Note Bank -->
-          <div class="sub-container note-bank-container">
-            <!-- REFACTORED: Note divs are now generated from this template -->
-            <template id="note-template">
-              <div class="note" tabindex="0"></div>
-            </template>
-            <!-- Eraser tool remains -->
-            <div class="eraser" id="eraser-tool" tabindex="0" aria-label="Eraser Tool">🗙</div>
-          </div>
-          <!-- Subcontainer: Tonicization Buttons -->
-          <div class="sub-container tonicization-container">
-            <button class="tonicization-button" data-tonic="1" aria-label="Tonicization 1">⓵</button>
-            <button class="tonicization-button" data-tonic="2" aria-label="Tonicization 2">⓶</button>
-            <button class="tonicization-button" data-tonic="3" aria-label="Tonicization 3">⓷</button>
-            <button class="tonicization-button" data-tonic="4" aria-label="Tonicization 4">⓸</button>
-            <button class="tonicization-button" data-tonic="5" aria-label="Tonicization 5">⓹</button>
-            <button class="tonicization-button" data-tonic="6" aria-label="Tonicization 6">⓺</button>
-            <button class="tonicization-button" data-tonic="7" aria-label="Tonicization 7">⓻</button>
-          </div>
+        <!-- Container 2: Note Tools -->
+        <div class="top-toolbar-container note-tools-container">
+            <!-- UPDATED: Re-introducing note-pair for the 2x2 layout -->
+            <div id="note-bank-container">
+                <div class="note-bank-row">
+                    <div class="note-pair" data-color="#0000ff">
+                        <div class="note circle-note" data-type="circle" aria-label="Blue Circle Note" tabindex="0"></div>
+                        <div class="note oval-note"   data-type="oval"   aria-label="Blue Oval Note"   tabindex="0"></div>
+                    </div>
+                    <div class="note-pair" data-color="#000000">
+                        <div class="note circle-note" data-type="circle" aria-label="Black Circle Note" tabindex="0"></div>
+                        <div class="note oval-note"   data-type="oval"   aria-label="Black Oval Note"   tabindex="0"></div>
+                    </div>
+                </div>
+                <div class="note-bank-row">
+                    <div class="note-pair" data-color="#ff0000">
+                        <div class="note circle-note" data-type="circle" aria-label="Red Circle Note" tabindex="0"></div>
+                        <div class="note oval-note"   data-type="oval"   aria-label="Red Oval Note"   tabindex="0"></div>
+                    </div>
+                    <div class="note-pair" data-color="#00ff00">
+                        <div class="note circle-note" data-type="circle" aria-label="Green Circle Note" tabindex="0"></div>
+                        <div class="note oval-note"   data-type="oval"   aria-label="Green Oval Note"   tabindex="0"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Container 3: Tonic Sign Tools -->
+        <div class="top-toolbar-container tonic-sign-container">
+            <button class="tonic-sign-button" data-tonic="1" aria-label="Tonicization 1">⓵</button>
+            <button class="tonic-sign-button" data-tonic="2" aria-label="Tonicization 2">⓶</button>
+            <button class="tonic-sign-button" data-tonic="3" aria-label="Tonicization 3">⓷</button>
+            <button class="tonic-sign-button" data-tonic="4" aria-label="Tonicization 4">⓸</button>
+            <button class="tonic-sign-button" data-tonic="5" aria-label="Tonicization 5">⓹</button>
+            <button class="tonic-sign-button" data-tonic="6" aria-label="Tonicization 6">⓺</button>
+            <button class="tonic-sign-button" data-tonic="7" aria-label="Tonicization 7">⓻</button>
         </div>
 
-        <!-- Container 3: Waveform Presets -->
+        <!-- Container 4: Waveform Presets -->
         <div class="top-toolbar-container preset-container">
-            <div class="sub-container preset-buttons-container">
-              <div id="preset-buttons">
-                <button class="preset-button" id="preset-sine">Sine</button>
-                <button class="preset-button" id="preset-triangle">Triangle</button>
-                <button class="preset-button" id="preset-square">Square</button>
-                <button class="preset-button" id="preset-sawtooth">Sawtooth</button>
-                <button class="preset-button" id="preset-piano">Piano</button>
-                <button class="preset-button" id="preset-strings">Strings</button>
-                <button class="preset-button" id="preset-woodwind">Woodwind</button>
-                <button class="preset-button" id="preset-marimba">Marimba</button>
+            <div id="preset-buttons">
+              <div id="preset-column-1" class="preset-column">
+                  <button class="preset-button" id="preset-sine">Sine</button>
+                  <button class="preset-button" id="preset-triangle">Triangle</button>
+                  <button class="preset-button" id="preset-square">Square</button>
+                  <button class="preset-button" id="preset-sawtooth">Sawtooth</button>
+              </div>
+              <div id="preset-column-2" class="preset-column">
+                  <button class="preset-button" id="preset-piano">Piano</button>
+                  <button class="preset-button" id="preset-strings">Strings</button>
+                  <button class="preset-button" id="preset-woodwind">Woodwind</button>
+                  <button class="preset-button" id="preset-marimba">Marimba</button>
               </div>
             </div>
         </div>
 
-        <!-- Container 4: Harmonic Multislider -->
+        <!-- Container 5: Harmonic Multislider -->
         <div class="top-toolbar-container multislider-container">
           <div class="buffer-container">
-            <!-- REPLACED: Div replaced with a canvas for the bipolar editor -->
             <canvas id="harmonic-multislider-canvas"></canvas>
           </div>
         </div>
 
-        <!-- Container 5: ADSR Visualization -->
+        <!-- Container 6: ADSR Visualization -->
         <div class="top-toolbar-container adsr-container">
           <div class="adsr-main-panel">
             <div class="adsr-graph-wrapper">
               <div id="adsr-envelope"></div>
             </div>
             <div class="sustain-slider-wrapper">
-              <label for="sustain-slider">S</label>
-              <input type="range" id="sustain-slider" class="vertical-slider" min="0" max="1" value="0.8" step="0.01">
+              <div id="sustain-slider-track">
+                <div id="sustain-slider-thumb" tabindex="0">S</div>
+              </div>
             </div>
           </div>
-          <div class="adsr-time-sliders">
-            <div class="adsr-slider-group">
-                <label for="attack-slider">A</label>
-                <input type="range" id="attack-slider" min="0.001" max="2" value="0.1" step="0.001">
-            </div>
-            <div class="adsr-slider-group">
-                <label for="decay-slider">D</label>
-                <input type="range" id="decay-slider" min="0" max="2" value="0.2" step="0.01">
-            </div>
-            <div class="adsr-slider-group">
-                <label for="release-slider">R</label>
-                <input type="range" id="release-slider" min="0.01" max="4" value="0.3" step="0.01">
-            </div>
+          <div id="multi-thumb-slider-container">
+            <div class="time-slider-thumb" id="thumb-a" tabindex="0">A</div>
+            <div class="time-slider-thumb" id="thumb-d" tabindex="0">D</div>
+            <div class="time-slider-thumb" id="thumb-r" tabindex="0">R</div>
           </div>
-        </div>
-
-        <!-- Container 6: Empty -->
-        <div class="top-toolbar-container empty-container">
         </div>
       </div>
       <!-- End Top Toolbar -->
@@ -109,23 +113,17 @@
           <div id="grid-controls-container">
             <div id="beat-line-controls"></div>
           </div>
-          <!-- VIEWPORT CONTAINER -->
           <div id="pitch-grid-container">
-            <!-- SCROLLABLE CONTAINER -->
             <div id="grid-container">
-              
-              <!-- WRAPPER FOR PITCH CANVASES -->
               <div id="pitch-canvas-wrapper">
                 <canvas id="notation-grid"></canvas>
                 <canvas id="playhead-canvas"></canvas>
                 <canvas id="hover-canvas"></canvas>
               </div>
-
             </div>
           </div>
         </div>
         
-        <!-- WRAPPER FOR DRUM CANVAS (MOVED HERE) -->
         <div id="drum-grid-wrapper">
             <canvas id="drum-grid"></canvas>
             <canvas id="drum-hover-canvas"></canvas>
@@ -138,21 +136,12 @@
            Bottom Toolbar
            ======================================================= -->
      <div id="bottom-toolbar">
-        <div class="bottom-toolbar-container zoom-container">
-          <div id="grid-shift-resize-container">
-            <button class="toolkit-button" id="fit-to-width" aria-label="Fit to Width">↔🔍</button>
-            <button class="toolkit-button" id="fit-to-height" aria-label="Fit to Height">↕🔍</button>
-            <button class="toolkit-button" id="grid-expand-button" aria-label="Expand Grid">◀🔍+</button>
-            <button class="toolkit-button" id="grid-shrink-button" aria-label="Shrink Grid">🔍- ▶</button>
-          </div>
-        </div>
-    
-        <div class="bottom-toolbar-container arrowkey-container">
-          <div id="shift-grid-buttons">
-            <button class="toolkit-button" id="shift-up-button" aria-label="Shift Grid Up">▲</button>
-            <button class="toolkit-button" id="shift-left-button" aria-label="Shift Grid Left">◄</button>
-            <button class="toolkit-button" id="shift-down-button" aria-label="Shift Grid Down">▼</button>
-            <button class="toolkit-button" id="shift-right-button" aria-label="Shift Grid Right">►</button>
+        <div class="bottom-toolbar-container grid-nav-container">
+          <div id="grid-nav-keypad">
+            <button class="toolkit-button" id="grid-scroll-up" aria-label="Scroll Grid Up">▲</button>
+            <button class="toolkit-button" id="grid-zoom-in" aria-label="Zoom In">◀🔍+</button>
+            <button class="toolkit-button" id="grid-scroll-down" aria-label="Scroll Grid Down">▼</button>
+            <button class="toolkit-button" id="grid-zoom-out" aria-label="Zoom Out">🔍-▶</button>
           </div>
         </div>
     
@@ -164,11 +153,13 @@
         </div>
     
         <div class="bottom-toolbar-container play-controls-container">
-          <button class="toolkit-button" id="play-button" aria-label="Play Music">⏵</button>
-          <button class="toolkit-button" id="stop-button" aria-label="Stop Music">⏹</button>
-          <button class="toolkit-button" id="undo-button" aria-label="Undo">Undo</button>
-          <button class="toolkit-button" id="redo-button" aria-label="Redo">Redo</button>
-          <button class="toolkit-button" id="clear-button" aria-label="Clear Notes">Clear</button>
+          <div id="play-button-group">
+            <button class="toolkit-button" id="play-button" aria-label="Play Music">⏵</button>
+            <button class="toolkit-button" id="stop-button" aria-label="Stop Music">⏹</button>
+            <button class="toolkit-button" id="undo-button" aria-label="Undo">Undo</button>
+            <button class="toolkit-button" id="redo-button" aria-label="Redo">Redo</button>
+            <button class="toolkit-button" id="clear-button" aria-label="Clear Notes">Clear</button>
+          </div>
         </div>
     
         <div class="bottom-toolbar-container tempo-container">
@@ -202,7 +193,6 @@
     </div>
     
     </div>
-
-    <!-- The only script needed. It will import everything else. -->
+
   </body>
 </html>

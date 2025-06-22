@@ -9,23 +9,23 @@ let synth, volumeControl, customEnv;
 const SynthEngine = {
     init() {
         volumeControl = new Tone.Volume(-15).toDestination();
-        // The synth is now always a PolySynth with a custom oscillator.
         synth = new Tone.PolySynth({
             polyphony: 8,
             options: {
                 oscillator: {
                     type: 'custom' 
                 },
-                // The envelope and partials will be set by the presets.
             }
         }).connect(volumeControl);
 
-        // Set the initial sound based on the store's default state.
         this.updateWaveformAndEnvelope(store.state.harmonicCoefficients, store.state.adsr);
 
-        // Listen for state changes from the UI components.
+        // Listen for audio parameter changes from the UI components
         store.on('adsrChanged', (newADSR) => this.updateWaveformAndEnvelope(store.state.harmonicCoefficients, newADSR));
         store.on('harmonicCoefficientsChanged', (coeffs) => this.updateWaveformAndEnvelope(coeffs, store.state.adsr));
+        
+        // FIX: Subscribe to the volumeChanged event to update the synth's volume
+        store.on('volumeChanged', (dB) => this.setVolume(dB));
         
         console.log("SynthEngine: Initialized with a unified custom PolySynth.");
         window.synthEngine = this;
@@ -38,7 +38,6 @@ const SynthEngine = {
         
         const partials = Array.from(coeffs).slice(1);
     
-        // Use the public `set` method to update all voices in the PolySynth.
         synth.set({
             oscillator: {
                 type: "custom",
@@ -80,4 +79,4 @@ const SynthEngine = {
     }
 };
 
-export default SynthEngine;
+export default SynthEngine; 

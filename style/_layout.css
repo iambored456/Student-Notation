@@ -1,0 +1,138 @@
+/* ==========================================================================
+   MAIN APPLICATION LAYOUT
+   ========================================================================= */
+#app-container {
+  display: flex;
+  flex-direction: column;
+  flex: 1; /* Allow the app container to fill the body */
+  min-height: 0;
+  padding: var(--app-padding);
+  gap: var(--app-padding);
+}
+
+#top-toolbar, #bottom-toolbar {
+  display: flex;
+  gap: 10px;
+  padding: 8px;
+  border: 1px solid var(--c-border);
+  border-radius: var(--border-radius-md);
+  background-color: var(--c-surface);
+  box-shadow: var(--box-shadow-sm);
+  overflow: visible;
+  flex-shrink: 0; /* Prevent toolbars from shrinking */
+}
+
+#top-toolbar    { height: 22vh; }
+#middle-section { 
+  flex: 1; /* This is the stretchy part */
+  display: flex; 
+  flex-direction: column; 
+  gap: 5px; 
+  min-height: 0; /* Important fix for flexbox children */
+}
+#bottom-toolbar { height: 10vh; }
+
+
+/* ==========================================================================
+   TOOLBAR CONTAINERS
+   ========================================================================= */
+
+.top-toolbar-container, .bottom-toolbar-container {
+  flex: 1;
+  border: 1px solid var(--c-border);
+  border-radius: var(--border-radius-md);
+  padding: 5px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.bottom-toolbar-container {
+  border: none;
+  padding: 0;
+}
+
+/* Flex sizing for top toolbar containers */
+.export-import-container { flex: 0 0 10%; }
+.note-tools-container    { flex: 0 0 15%; }
+.tonic-sign-container    { flex: 0 0 15%; } /* UPDATED: Renamed and adjusted flex size */
+.preset-container        { flex: 0 0 18%; }
+.multislider-container   { flex: 1 1 20%; } /* Adjusted */
+.adsr-container          { flex: 1 1 22%; } /* Adjusted */
+
+/* Flex Sizing for bottom toolbar containers */
+.grid-nav-container         { flex: 0 0 12%; }
+.volume-container           { flex: 0 0 20%; }
+.play-controls-container    { flex: 0 0 30%; }
+.tempo-container            { flex: 0 0 23%; }
+.macrobeat-container        { flex: 0 0 15%; }
+
+/* ==========================================================================
+   GRID & CANVAS STYLES
+   ========================================================================= */
+#grid-container-wrapper {
+  display: flex;
+  flex-direction: column;
+  flex: 1; /* Allow it to take up the space in the middle section */
+  min-height: 0; /* Flexbox fix */
+  overflow-x: auto;
+  overflow-y: hidden;
+  border: 1px solid var(--c-border);
+  border-radius: var(--border-radius-md);
+  position: relative;
+  background-color: var(--c-surface);
+}
+
+#pitch-grid-container {
+  position: relative;
+  width: 100%;
+  flex: 1;
+  overflow: hidden;
+}
+
+#grid-container {
+  position: relative;
+  width: 100%;
+}
+
+#pitch-canvas-wrapper {
+  position: relative;
+  width: 100%;
+  background-color: transparent;
+  border: none;
+}
+
+#notation-grid, #playhead-canvas, #hover-canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: block;
+}
+
+#playhead-canvas, #hover-canvas, #drum-hover-canvas {
+  pointer-events: none;
+}
+
+#drum-grid-wrapper {
+  min-height: 90px; /* Ensure it has a minimum height */
+  flex-shrink: 0;   /* Prevent it from shrinking */
+  overflow-x: auto;
+  overflow-y: hidden;
+  position: relative;
+}
+
+#drum-grid {
+  display: block;
+  border: 1px solid var(--c-border);
+  border-radius: var(--border-radius-md);
+  background-color: var(--c-surface);
+}
+
+#drum-hover-canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  background-color: transparent;
+  border: none;
+}

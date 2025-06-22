@@ -1,0 +1,30 @@
+/* ==========================================================================
+   CSS VARIABLES (DESIGN SYSTEM)
+   ========================================================================= */
+:root {
+  /* Color Palette */
+  --c-bg: #f8f9fa;            /* A very light, soft gray for the main background */
+  --c-surface: #ffffff;       /* Pure white for canvases and primary panels */
+  --c-text: #212529;          /* A dark, soft black for text. Easier on the eyes than #000 */
+  --c-text-muted: #6c757d;    /* A muted gray for secondary text/labels */
+  --c-border: #dee2e6;        /* A light, soft border color */
+  --c-gridline: #e9ecef;      /* An even lighter gray for grid lines */
+  --c-accent: #4A90E2;        /* A friendly, vibrant blue, our primary action color */
+  --c-accent-hover: #357ABD;  /* A darker shade for hover states */
+  --c-danger: #dc3545;        /* Red for destructive actions like 'clear' or 'eraser' */
+  --c-warning: #ffc107;      /* A warm yellow for selection highlights */
+
+  /* Spacing & Sizing */
+  --app-padding: 12px;
+  --note-size: 28px;
+  --note-margin: 4px;
+
+  /* Borders & Shadows */
+  --border-radius-sm: 4px;
+  --border-radius-md: 8px;
+  --box-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --box-shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
+
+  /* Font */
+  --main-font: 'Atkinson Hyperlegible', Arial, sans-serif;
+}

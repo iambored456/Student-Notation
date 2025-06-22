@@ -5,6 +5,26 @@ import CanvasContextService from '../../services/canvasContextService.js';
 
 console.log("DrumGridComponent: Module loaded.");
 
+// --- Private State ---
+let drumHoverCtx;
+let isRightClickActive = false;
+
+// --- Helper Functions ---
+function getColumnIndex(x) {
+    let cumulative = 0;
+    for (let i = 0; i < store.state.columnWidths.length; i++) {
+        cumulative += store.state.columnWidths[i] * store.state.cellWidth;
+        if (x < cumulative) return i;
+    }
+    return store.state.columnWidths.length - 1;
+}
+
+function getDrumRowIndex(y) {
+    const pitchRowHeight = 0.5 * store.state.cellHeight;
+    return Math.floor(y / pitchRowHeight);
+}
+
+// --- Drawing Functions ---
 function drawDrumShape(ctx, drumRow, x, y, width, height) {
     const cx = x + width / 2;
     const cy = y + height / 2;
@@ -48,12 +68,12 @@ function drawVerticalGridLines(ctx) {
         let style;
 
         if (isBoundary) {
-            style = { lineWidth: 2, strokeStyle: '#000', dash: [] };
+            style = { lineWidth: 2, strokeStyle: '#dee2e6', dash: [] };
         } else if (isMacrobeatEnd) {
             const mbIndex = macrobeatBoundaries.indexOf(i);
             const boundaryStyle = store.state.macrobeatBoundaryStyles[mbIndex];
             if (boundaryStyle === 'anacrusis') continue;
-            style = { lineWidth: 1, strokeStyle: '#000', dash: boundaryStyle === 'solid' ? [] : [4, 2] };
+            style = { lineWidth: 1, strokeStyle: '#dee2e6', dash: boundaryStyle === 'solid' ? [] : [4, 2] };
         } else {
             continue;
         }
@@ -82,10 +102,11 @@ function renderDrumGrid() {
     const totalColumns = store.state.columnWidths.length;
 
     const drumLabels = ['H', 'M', 'L'];
-    ctx.font = `${Math.floor(pitchRowHeight * 0.7)}px sans-serif`;
+    // FIX: Use the 'Atkinson Hyperlegible' font for consistency.
+    ctx.font = `${Math.floor(pitchRowHeight * 0.7)}px 'Atkinson Hyperlegible', sans-serif`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillStyle = '#333';
+    ctx.fillStyle = '#6c757d';
     const labelX = ConfigService.getColumnX(1);
     drumLabels.forEach((label, i) => {
         ctx.fillText(label, labelX, i * pitchRowHeight + pitchRowHeight / 2);
@@ -96,8 +117,8 @@ function renderDrumGrid() {
         ctx.beginPath();
         ctx.moveTo(0, y);
         ctx.lineTo(ctx.canvas.width, y);
-        ctx.strokeStyle = '#ccc';
-        ctx.lineWidth = 0.5;
+        ctx.strokeStyle = '#e9ecef';
+        ctx.lineWidth = 1;
         ctx.stroke();
     }
 
@@ -116,10 +137,10 @@ function renderDrumGrid() {
             );
 
             if (drumHit) {
-                ctx.fillStyle = '#000';
+                ctx.fillStyle = '#212529';
                 drawDrumShape(ctx, row, x, y, cellWidth, pitchRowHeight);
             } else {
-                ctx.fillStyle = '#ddd';
+                ctx.fillStyle = '#e9ecef';
                 ctx.beginPath();
                 ctx.arc(x + cellWidth / 2, y + pitchRowHeight / 2, 2, 0, Math.PI * 2);
                 ctx.fill();
@@ -128,11 +149,132 @@ function renderDrumGrid() {
     }
 }
 
+// --- Hover Logic ---
+function drawHoverHighlight(colIndex, rowIndex, color) {
+    if (!drumHoverCtx) return;
+    const x = ConfigService.getColumnX(colIndex);
+    const pitchRowHeight = 0.5 * store.state.cellHeight;
+    const y = rowIndex * pitchRowHeight;
+    const cellWidth = store.state.columnWidths[colIndex] * store.state.cellWidth;
+    drumHoverCtx.fillStyle = color;
+    drumHoverCtx.fillRect(x, y, cellWidth, pitchRowHeight);
+}
+
+function drawGhostNote(colIndex, rowIndex) {
+    if (!drumHoverCtx) return;
+    const x = ConfigService.getColumnX(colIndex);
+    const pitchRowHeight = 0.5 * store.state.cellHeight;
+    const y = rowIndex * pitchRowHeight;
+    const cellWidth = store.state.columnWidths[colIndex] * store.state.cellWidth;
+    drumHoverCtx.globalAlpha = 0.4;
+    drumHoverCtx.fillStyle = '#212529';
+    drawDrumShape(drumHoverCtx, rowIndex, x, y, cellWidth, pitchRowHeight);
+    drumHoverCtx.globalAlpha = 1.0;
+}
+
+// --- Event Handlers ---
+function handleMouseMove(e) {
+    const rect = e.target.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    const colIndex = getColumnIndex(x);
+    const rowIndex = getDrumRowIndex(y);
+
+    if (!drumHoverCtx || colIndex < 2 || colIndex >= store.state.columnWidths.length - 2 || rowIndex < 0 || rowIndex > 2) {
+        handleMouseLeave();
+        return;
+    }
+
+    drumHoverCtx.clearRect(0, 0, drumHoverCtx.canvas.width, drumHoverCtx.canvas.height);
+    const drumTrack = ['H', 'M', 'L'][rowIndex];
+    
+    if (isRightClickActive) {
+        store.eraseDrumNoteAt(colIndex, drumTrack);
+        drawHoverHighlight(colIndex, rowIndex, 'rgba(220, 53, 69, 0.3)');
+    } else {
+        drawHoverHighlight(colIndex, rowIndex, 'rgba(74, 144, 226, 0.2)');
+        drawGhostNote(colIndex, rowIndex);
+    }
+}
+
+function handleMouseLeave() {
+    if (drumHoverCtx) {
+        drumHoverCtx.clearRect(0, 0, drumHoverCtx.canvas.width, drumHoverCtx.canvas.height);
+    }
+}
+
+function handleMouseDown(e) {
+    e.preventDefault();
+    const rect = e.target.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    const colIndex = getColumnIndex(x);
+    if (colIndex < 2 || colIndex >= store.state.columnWidths.length - 2) return;
+    
+    const drumRow = getDrumRowIndex(y);
+    if (drumRow < 0 || drumRow > 2) return;
+    
+    const drumTrack = ['H', 'M', 'L'][drumRow];
+
+    if (e.button === 2) { // Right-click for erasing
+        isRightClickActive = true;
+        store.eraseDrumNoteAt(colIndex, drumTrack);
+        drumHoverCtx.clearRect(0, 0, drumHoverCtx.canvas.width, drumHoverCtx.canvas.height);
+        drawHoverHighlight(colIndex, drumRow, 'rgba(220, 53, 69, 0.3)');
+        return;
+    }
+
+    if (e.button === 0) { // Left-click for placing/toggling
+        const drumHit = { 
+            isDrum: true, 
+            drumTrack: drumTrack, 
+            startColumnIndex: colIndex, 
+            endColumnIndex: colIndex, 
+            color: '#000', 
+            shape: drumTrack === 'H' ? 'triangle' : drumTrack === 'M' ? 'square' : 'pentagon' 
+        };
+        store.toggleDrumNote(drumHit);
+        
+        // Directly trigger sound for immediate feedback
+        if (window.transportService && window.transportService.drumPlayers) {
+            window.transportService.drumPlayers.player(drumTrack).start();
+        }
+    }
+}
+
+function handleGlobalMouseUp() {
+    isRightClickActive = false;
+    handleMouseLeave();
+}
+
+// --- Public Interface ---
 const DrumGrid = {
+    init() {
+        const drumCanvas = document.getElementById('drum-grid');
+        const hoverCanvas = document.getElementById('drum-hover-canvas');
+
+        if (!drumCanvas || !hoverCanvas) {
+            console.error("DrumGridComponent: Could not find required canvas elements for initialization.");
+            return;
+        }
+        drumHoverCtx = hoverCanvas.getContext('2d');
+
+        drumCanvas.addEventListener('mousedown', handleMouseDown);
+        drumCanvas.addEventListener('mousemove', handleMouseMove);
+        drumCanvas.addEventListener('mouseleave', handleMouseLeave);
+        drumCanvas.addEventListener('contextmenu', e => e.preventDefault());
+        
+        // Listen for global mouseup to cancel right-click dragging
+        window.addEventListener('mouseup', handleGlobalMouseUp);
+
+        console.log("DrumGridComponent: Initialized and event listeners attached.");
+    },
+    
     render() {
         console.log("DrumGridComponent: Render triggered.");
         renderDrumGrid();
     },
+    // Expose for external use if needed, e.g., by a tutorial component
     drawDrumShape
 };
 

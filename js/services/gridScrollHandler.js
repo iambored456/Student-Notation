@@ -36,7 +36,6 @@ function animate() {
         animationFrameId = requestAnimationFrame(animate);
     }
     
-    // Apply the visual transformation to the single container
     scrollableContainer.style.transform = `translateY(${currentY}px)`;
 }
 
@@ -67,16 +66,12 @@ function syncToStore() {
     currentY = targetY;
 
     if (scrollableContainer) {
-       // Ensure the scrollable container's position matches the state
        scrollableContainer.style.transform = `translateY(${currentY}px)`;
     }
 }
 
-// THE FIX IS HERE: Added the 'export' keyword
 export function initGridScrollHandler() {
-    // The element we move is #grid-container
     scrollableContainer = document.getElementById('grid-container');
-    // But the element that gets the wheel events is the outer wrapper
     const gridWrapper = document.getElementById('grid-container-wrapper');
 
     if (!scrollableContainer || !gridWrapper) {
@@ -86,8 +81,8 @@ export function initGridScrollHandler() {
 
     gridWrapper.addEventListener('wheel', handleWheel, { passive: false });
     
-    store.on('gridChanged', syncToStore);
-    store.on('gridResized', syncToStore);
+    // This listener correctly syncs the scroll position after any layout change.
+    store.on('layoutConfigChanged', syncToStore);
     
     syncToStore();
     console.log("GridScrollHandler: Initialized.");

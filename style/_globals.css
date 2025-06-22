@@ -1,0 +1,48 @@
+/* ==========================================================================
+   FONT DEFINITION & GLOBAL STYLES
+   ========================================================================= */
+@font-face {
+  font-family: 'Atkinson Hyperlegible';
+  src: url('../fonts/AtkinsonHyperlegibleNext-Regular.otf') format('opentype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  width: 100%;
+  overflow: hidden; /* Prevent body-level scrolling */
+  font-family: var(--main-font);
+  background-color: var(--c-bg);
+  color: var(--c-text);
+  display: flex; /* UPDATED: Use flexbox for the root layout */
+}
+
+button {
+  background-color: var(--c-accent);
+  color: var(--c-surface);
+  border: none;
+  border-radius: var(--border-radius-md);
+  padding: 8px 12px;
+  font-family: var(--main-font);
+  font-size: 14px;
+  cursor: pointer;
+  transition: background-color 0.2s, opacity 0.2s;
+}
+
+button:hover, button:focus {
+  background-color: var(--c-accent-hover);
+  outline: none;
+}
+
+button:disabled {
+  background-color: var(--c-border);
+  opacity: 0.7;
+  cursor: not-allowed;
+}

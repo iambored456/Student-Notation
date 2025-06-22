@@ -55,32 +55,35 @@ const store = {
     undo() {
         if (this.state.historyIndex > 0) {
             this.state.historyIndex--;
-            console.log(`[HISTORY] Undo to index ${this.state.historyIndex}`);
             this.state.placedNotes = JSON.parse(JSON.stringify(this.state.history[this.state.historyIndex]));
             this.emit('notesChanged');
             this.emit('historyChanged');
-        } else {
-            console.log("[HISTORY] Nothing to undo.");
         }
     },
 
     redo() {
         if (this.state.historyIndex < this.state.history.length - 1) {
             this.state.historyIndex++;
-            console.log(`[HISTORY] Redo to index ${this.state.historyIndex}`);
             this.state.placedNotes = JSON.parse(JSON.stringify(this.state.history[this.state.historyIndex]));
             this.emit('notesChanged');
             this.emit('historyChanged');
-        } else {
-            console.log("[HISTORY] Nothing to redo.");
         }
     },
 
     // --- ACTIONS / MUTATIONS ---
     addNote(note) {
+        const existingNoteIndex = this.state.placedNotes.findIndex(n => 
+            !n.isDrum && 
+            n.row === note.row && 
+            n.startColumnIndex === note.startColumnIndex &&
+            n.shape === note.shape
+        );
+        if (existingNoteIndex !== -1) return;
         this.state.placedNotes.push(note);
         this.emit('notesChanged');
-        this.recordState();
+        if (note.shape !== 'circle') {
+             this.recordState();
+        }
     },
 
     updateNoteTail(note, newEndColumn) {
@@ -134,6 +137,14 @@ const store = {
         this.emit('notesChanged');
         this.recordState();
     },
+
+    // NEW: A single action to apply a full preset object
+    applyPreset(preset) {
+        if (!preset) return;
+        this.setADSR(preset.adsr);
+        this.setHarmonicCoefficients(preset.coeffs);
+        this.setActivePreset(preset.name);
+    },
     
     setSelectedTool(type, color = null, tonicNumber = null) {
         this.state.selectedTool = { type, color, tonicNumber };
@@ -158,8 +169,11 @@ const store = {
 
     setGridPosition(newPosition) {
         const maxPosition = this.state.fullRowData.length - this.state.logicRows;
-        this.state.gridPosition = Math.max(0, Math.min(newPosition, maxPosition));
-        this.emit('gridChanged');
+        const clampedPosition = Math.max(0, Math.min(newPosition, maxPosition));
+        if (this.state.gridPosition !== clampedPosition) {
+            this.state.gridPosition = clampedPosition;
+            this.emit('layoutConfigChanged');
+        }
     },
     
     shiftGridUp() {
@@ -172,7 +186,7 @@ const store = {
     
     toggleMacrobeatGrouping(index) {
         this.state.macrobeatGroupings[index] = this.state.macrobeatGroupings[index] === 2 ? 3 : 2;
-        this.emit('rhythmChanged');
+        this.emit('rhythmStructureChanged'); 
     },
 
     cycleMacrobeatBoundaryStyle(index) {
@@ -192,21 +206,20 @@ const store = {
                 else break;
             }
         }
-        // FIX: Emit a specific event for style changes only.
-        this.emit('rhythmStyleChanged');
+        this.emit('layoutConfigChanged');
     },
 
     increaseMacrobeatCount() {
         this.state.macrobeatGroupings.push(2);
         this.state.macrobeatBoundaryStyles.push('dashed');
-        this.emit('rhythmChanged');
+        this.emit('rhythmStructureChanged');
     },
 
     decreaseMacrobeatCount() {
         if (this.state.macrobeatGroupings.length > 1) {
             this.state.macrobeatGroupings.pop();
             this.state.macrobeatBoundaryStyles.pop();
-            this.emit('rhythmChanged');
+            this.emit('rhythmStructureChanged');
         }
     },
 
@@ -218,13 +231,10 @@ const store = {
     setActivePreset(presetName) {
         this.state.activePreset = presetName;
         this.emit('presetChanged', presetName);
-        console.log(`[STORE] Active preset changed to: ${presetName}`);
     },
 
     setHarmonicCoefficients(coeffs) {
-        console.log(`[STORE] setHarmonicCoefficients called. Incoming max value: ${Math.max(...coeffs)}`);
         this.state.harmonicCoefficients = coeffs;
-        console.log(`[STORE] State updated. New max value in store: ${Math.max(...this.state.harmonicCoefficients)}`);
         this.emit('harmonicCoefficientsChanged', coeffs);
     },
     

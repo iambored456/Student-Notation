@@ -5,76 +5,9 @@ import TransportService from '../../services/transportService.js';
 import { renderRhythmUI } from './rhythmUI.js';
 import { renderTimeSignatureDisplay } from './timeSignatureDisplay.js';
 import { initNoteBank } from './noteBank.js';
+import { PRESETS } from '../../services/presetData.js';
 
 console.log("ToolbarComponent: Module loaded.");
-
-const BINS = 32; 
-
-function generateSineCoeffs() {
-    const coeffs = new Float32Array(BINS).fill(0);
-    coeffs[1] = 1;
-    return coeffs;
-}
-
-function generateSquareCoeffs() {
-    const coeffs = new Float32Array(BINS).fill(0);
-    for (let n = 1; n < BINS; n += 2) {
-        coeffs[n] = 1 / n;
-    }
-    return coeffs;
-}
-
-function generateTriangleCoeffs() {
-    const coeffs = new Float32Array(BINS).fill(0);
-    for (let n = 1; n < BINS; n += 2) {
-        coeffs[n] = (1 / (n * n)) * ((n - 1) / 2 % 2 === 0 ? 1 : -1);
-    }
-    return coeffs;
-}
-
-function generateSawtoothCoeffs() {
-    const coeffs = new Float32Array(BINS).fill(0);
-    for (let n = 1; n < BINS; n++) {
-        coeffs[n] = 1 / n;
-    }
-    return coeffs;
-}
-
-function generatePianoPreset() {
-    const coeffs = new Float32Array(BINS).fill(0);
-    for (let n = 1; n < 20; n++) {
-        coeffs[n] = (1 / (n * n)) * Math.pow(0.85, n);
-    }
-    const adsr = { attack: 0.01, decay: 0.8, sustain: 0.1, release: 1.0 };
-    return { coeffs, adsr, name: 'piano' };
-}
-
-function generateStringsPreset() {
-    const coeffs = new Float32Array(BINS).fill(0);
-    for (let n = 1; n < 25; n++) {
-        coeffs[n] = 1 / n;
-    }
-    const adsr = { attack: 0.4, decay: 0.1, sustain: 0.9, release: 0.5 };
-    return { coeffs, adsr, name: 'strings' };
-}
-
-function generateWoodwindPreset() {
-    const coeffs = new Float32Array(BINS).fill(0);
-    for (let n = 1; n < BINS; n += 2) {
-        coeffs[n] = 1 / n;
-    }
-    const adsr = { attack: 0.1, decay: 0.2, sustain: 0.8, release: 0.3 };
-    return { coeffs, adsr, name: 'woodwind' };
-}
-
-function generateMarimbaPreset() {
-    const coeffs = new Float32Array(BINS).fill(0);
-    coeffs[1] = 1;
-    coeffs[4] = 0.5;
-    coeffs[9] = 0.2;
-    const adsr = { attack: 0.01, decay: 1.2, sustain: 0, release: 1.2 };
-    return { coeffs, adsr, name: 'marimba' };
-}
 
 function initImportExport() {
     document.getElementById('export-button').addEventListener('click', () => {
@@ -123,10 +56,7 @@ function initImportExport() {
 }
 
 function initToolSelectors() {
-    const eraserTool = document.getElementById('eraser-tool');
-    const tonicButtons = document.querySelectorAll('.tonicization-container .tonicization-button');
-
-    eraserTool.addEventListener('click', () => store.setSelectedTool('eraser'));
+    const tonicButtons = document.querySelectorAll('.tonic-sign-container .tonic-sign-button');
 
     tonicButtons.forEach(btn => {
         btn.addEventListener('click', () => {
@@ -136,14 +66,19 @@ function initToolSelectors() {
     });
     
     store.on('toolChanged', (selectedTool) => {
-        document.querySelectorAll('.note, .eraser, .tonicization-button').forEach(el => el.classList.remove('selected', 'active-eraser'));
-
-        if (selectedTool.type === 'eraser') {
-            eraserTool.classList.add('active-eraser');
-        } else if (selectedTool.type === 'tonicization') {
-            document.querySelector(`.tonicization-button[data-tonic='${selectedTool.tonicNumber}']`)?.classList.add('selected');
+        document.querySelectorAll('.note, .note-pair, .tonic-sign-button').forEach(el => el.classList.remove('selected'));
+        
+        if (selectedTool.type === 'tonicization') {
+            document.querySelector(`.tonic-sign-button[data-tonic='${selectedTool.tonicNumber}']`)?.classList.add('selected');
         } else {
-            document.querySelector(`.note[data-type='${selectedTool.type}'][data-color='${selectedTool.color}']`)?.classList.add('selected');
+            const targetPair = document.querySelector(`.note-pair[data-color='${selectedTool.color}']`);
+            if (targetPair) {
+                const targetNote = targetPair.querySelector(`.note[data-type='${selectedTool.type}']`);
+                if (targetNote) {
+                    targetNote.classList.add('selected');
+                    targetPair.classList.add('selected');
+                }
+            }
         }
     });
 }
@@ -185,7 +120,6 @@ function initPlaybackControls() {
     const updateHistoryButtons = () => {
         undoBtn.disabled = store.state.historyIndex <= 0;
         redoBtn.disabled = store.state.historyIndex >= store.state.history.length - 1;
-        console.log(`[UI] History buttons updated. Undo enabled: ${!undoBtn.disabled}, Redo enabled: ${!redoBtn.disabled}`);
     };
 
     store.on('historyChanged', updateHistoryButtons);
@@ -193,19 +127,25 @@ function initPlaybackControls() {
 }
 
 function initAudioControls() {
-    document.getElementById('volume-slider').addEventListener('input', function() {
-        const dB = (parseInt(this.value, 10) / 100) * 40 - 40;
+    const volumeSlider = document.getElementById('volume-slider');
+    const tempoSlider = document.getElementById('tempo-slider');
+
+    // Volume Slider Logic
+    volumeSlider.addEventListener('input', function() {
+        const value = parseInt(this.value, 10);
+        const dB = (value === 0) ? -Infinity : (value / 100) * 50 - 50;
         store.emit('volumeChanged', dB);
     });
+    volumeSlider.addEventListener('mouseup', function() { this.blur(); });
+    volumeSlider.dispatchEvent(new Event('input'));
 
-    const tempoSlider = document.getElementById('tempo-slider');
+    // Tempo Slider Logic
     const eighthNoteInput = document.getElementById('eighth-note-tempo');
     const quarterNoteInput = document.getElementById('quarter-note-tempo');
     const dottedQuarterInput = document.getElementById('dotted-quarter-tempo');
 
     function updateTempoDisplays(baseBPM) {
         const quarterBPM = Math.round(baseBPM);
-        console.log(`[TEMPO] Updating displays to base BPM: ${quarterBPM}`);
         if (parseInt(tempoSlider.value, 10) !== quarterBPM) {
             tempoSlider.value = quarterBPM;
         }
@@ -219,72 +159,32 @@ function initAudioControls() {
         }
     }
 
-    tempoSlider.addEventListener('input', (e) => {
-        updateTempoDisplays(parseInt(e.target.value, 10));
-    });
+    tempoSlider.addEventListener('input', (e) => updateTempoDisplays(parseInt(e.target.value, 10)));
     eighthNoteInput.addEventListener('input', (e) => {
-        const eighthBPM = parseInt(e.target.value, 10);
-        if (!isNaN(eighthBPM) && eighthBPM > 0) {
-            updateTempoDisplays(eighthBPM / 2);
-        }
+        const val = parseInt(e.target.value, 10);
+        if (!isNaN(val) && val > 0) updateTempoDisplays(val / 2);
     });
     quarterNoteInput.addEventListener('input', (e) => {
-        const quarterBPM = parseInt(e.target.value, 10);
-        if (!isNaN(quarterBPM) && quarterBPM > 0) {
-            updateTempoDisplays(quarterBPM);
-        }
+        const val = parseInt(e.target.value, 10);
+        if (!isNaN(val) && val > 0) updateTempoDisplays(val);
     });
     dottedQuarterInput.addEventListener('input', (e) => {
-        const dottedQuarterBPM = parseInt(e.target.value, 10);
-        if (!isNaN(dottedQuarterBPM) && dottedQuarterBPM > 0) {
-            updateTempoDisplays(dottedQuarterBPM * 1.5);
-        }
+        const val = parseInt(e.target.value, 10);
+        if (!isNaN(val) && val > 0) updateTempoDisplays(val * 1.5);
     });
+    tempoSlider.addEventListener('mouseup', function() { this.blur(); });
     updateTempoDisplays(store.state.tempo);
 
-    document.getElementById('preset-sine').addEventListener('click', () => {
-        store.setADSR({ attack: 0.1, decay: 0.2, sustain: 0.8, release: 0.3 });
-        store.setHarmonicCoefficients(generateSineCoeffs());
-        store.setActivePreset('sine');
-    });
-    document.getElementById('preset-triangle').addEventListener('click', () => {
-        store.setADSR({ attack: 0.1, decay: 0.2, sustain: 0.8, release: 0.3 });
-        store.setHarmonicCoefficients(generateTriangleCoeffs());
-        store.setActivePreset('triangle');
-    });
-    document.getElementById('preset-square').addEventListener('click', () => {
-        store.setADSR({ attack: 0.1, decay: 0.2, sustain: 0.8, release: 0.3 });
-        store.setHarmonicCoefficients(generateSquareCoeffs());
-        store.setActivePreset('square');
-    });
-    document.getElementById('preset-sawtooth').addEventListener('click', () => {
-        store.setADSR({ attack: 0.1, decay: 0.2, sustain: 0.8, release: 0.3 });
-        store.setHarmonicCoefficients(generateSawtoothCoeffs());
-        store.setActivePreset('sawtooth');
-    });
-    document.getElementById('preset-piano').addEventListener('click', () => {
-        const preset = generatePianoPreset();
-        store.setADSR(preset.adsr);
-        store.setHarmonicCoefficients(preset.coeffs);
-        store.setActivePreset(preset.name);
-    });
-    document.getElementById('preset-strings').addEventListener('click', () => {
-        const preset = generateStringsPreset();
-        store.setADSR(preset.adsr);
-        store.setHarmonicCoefficients(preset.coeffs);
-        store.setActivePreset(preset.name);
-    });
-    document.getElementById('preset-woodwind').addEventListener('click', () => {
-        const preset = generateWoodwindPreset();
-        store.setADSR(preset.adsr);
-        store.setHarmonicCoefficients(preset.coeffs);
-        store.setActivePreset(preset.name);
-    });
-    document.getElementById('preset-marimba').addEventListener('click', () => {
-        const preset = generateMarimbaPreset();
-        store.setADSR(preset.adsr);
-        store.setHarmonicCoefficients(preset.coeffs);
-        store.setActivePreset(preset.name);
+    // Preset Buttons
+    document.querySelectorAll('.preset-button').forEach(button => {
+        const presetId = button.id.replace('preset-', '');
+        const preset = PRESETS[presetId];
+        
+        if (preset) {
+            button.addEventListener('click', () => {
+                store.applyPreset(preset);
+            });
+        }
     });
 
     store.on('presetChanged', (presetName) => {
@@ -297,12 +197,11 @@ function initAudioControls() {
 }
 
 function initGridControls() {
-    document.getElementById('grid-expand-button').addEventListener('click', () => ConfigService.zoomIn());
-    document.getElementById('grid-shrink-button').addEventListener('click', () => ConfigService.zoomOut());
-    document.getElementById('fit-to-width').addEventListener('click', () => ConfigService.fitToWidth());
-    document.getElementById('fit-to-height').addEventListener('click', () => ConfigService.fitToHeight());
-    document.getElementById('shift-up-button').addEventListener('click', () => store.shiftGridUp());
-    document.getElementById('shift-down-button').addEventListener('click', () => store.shiftGridDown());
+    document.getElementById('grid-zoom-in').addEventListener('click', () => ConfigService.zoomIn());
+    document.getElementById('grid-zoom-out').addEventListener('click', () => ConfigService.zoomOut());
+    document.getElementById('grid-scroll-up').addEventListener('click', () => store.shiftGridUp());
+    document.getElementById('grid-scroll-down').addEventListener('click', () => store.shiftGridDown());
+    
     document.getElementById('macrobeat-increase').addEventListener('click', () => store.increaseMacrobeatCount());
     document.getElementById('macrobeat-decrease').addEventListener('click', () => store.decreaseMacrobeatCount());
 }
