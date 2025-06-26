@@ -1,0 +1,110 @@
+/* --- Add to style/_modal.css --- */
+#print-preview-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.6);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  opacity: 1;
+  transition: opacity 0.3s ease;
+}
+#print-preview-overlay.hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+#print-preview-modal {
+  background-color: var(--c-surface);
+  border-radius: var(--border-radius-md);
+  box-shadow: var(--box-shadow-md);
+  width: 80vw;
+  height: 80vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.print-preview-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 20px;
+  border-bottom: 1px solid var(--c-border);
+  flex-shrink: 0;
+}
+.print-preview-header h2 { margin: 0; font-size: 18px; }
+
+.print-preview-content {
+  flex-grow: 1;
+  display: flex;
+  gap: 20px;
+  padding: 20px;
+  min-height: 0;
+}
+.print-preview-canvas-wrapper {
+  flex-grow: 1;
+  border: 1px dashed var(--c-border);
+  background-color: var(--c-bg);
+  overflow: auto;
+  padding: 10px;
+}
+#print-preview-canvas {
+  display: block;
+  background-color: white;
+}
+.print-preview-options {
+  flex-basis: 280px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+.print-option-row {
+  display: grid;
+  grid-template-columns: 90px 40px 1fr;
+  align-items: center;
+  gap: 10px;
+}
+.print-option-row label { font-weight: bold; }
+.print-option-row span { font-family: monospace; font-size: 12px; }
+.print-preview-options h3 { margin-top: 10px; margin-bottom: 5px; border-bottom: 1px solid var(--c-gridline); padding-bottom: 5px;}
+
+.print-preview-footer {
+  padding: 10px 20px;
+  border-top: 1px solid var(--c-border);
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.close-button {
+  background: none;
+  border: none;
+  font-size: 24px;
+  line-height: 1;
+  padding: 0 5px;
+  color: var(--c-text-muted);
+  cursor: pointer;
+}
+.confirm-button {
+  background-color: #28a745;
+  font-weight: bold;
+}
+.confirm-button:hover {
+  background-color: #218838;
+}
+
+.toggle-button {
+  width: 100%;
+  grid-column: 2 / -1;
+}
+.toggle-button.active {
+  background-color: var(--c-accent);
+}
+.toggle-button:not(.active) {
+  background-color: var(--c-gridline);
+  color: var(--c-text);
+}

@@ -1,18 +1,36 @@
 // js/services/transportService.js
 import * as Tone from 'tone';
 import store from '../state/store.js';
-import ConfigService from './configService.js';
+import LayoutService from './layoutService.js';
 import SynthEngine from './synthEngine.js';
 
 console.log("TransportService: Module loaded.");
 
 let playheadAnimationFrame;
 let drumPlayers; 
+let timeMap = [];
 
 function getMicrobeatDuration() {
-    const macrobeatBPM = store.state.tempo;
-    const microbeatBPM = macrobeatBPM * 2;
+    const tempo = store.state.tempo;
+    const microbeatBPM = tempo * 2; 
     return 60 / microbeatBPM;
+}
+
+function calculateTimeMap() {
+    timeMap = [];
+    let currentTime = 0;
+    const microbeatDuration = getMicrobeatDuration();
+    const { columnWidths } = store.state;
+    const placedTonicSigns = store.placedTonicSigns;
+    
+    for (let i = 0; i < columnWidths.length; i++) {
+        timeMap[i] = currentTime;
+        const isTonicColumn = placedTonicSigns.some(ts => ts.columnIndex === i);
+        if (!isTonicColumn) {
+            currentTime += columnWidths[i] * microbeatDuration;
+        }
+    }
+    timeMap.push(currentTime); 
 }
 
 function getPitchForNote(note) {
@@ -21,18 +39,19 @@ function getPitchForNote(note) {
         const pitch = rowData[note.row].toneNote;
         return pitch.replace('♭', 'b').replace('♯', '#');
     }
-    console.warn(`TransportService: Could not find pitch for note at row ${note.row}. Defaulting to C4.`);
     return 'C4';
 }
 
 function scheduleNotes() {
     Tone.Transport.cancel();
-    const microbeatDuration = getMicrobeatDuration();
+    calculateTimeMap();
 
     store.state.placedNotes.forEach(note => {
-        if (note.shape === "tonicization") return;
+        const startTime = timeMap[note.startColumnIndex];
+        if (startTime === undefined) return;
 
-        const startTime = (note.startColumnIndex - 2) * microbeatDuration;
+        const endTime = timeMap[note.endColumnIndex + 1];
+        const duration = endTime - startTime;
 
         if (note.isDrum) {
             Tone.Transport.schedule(time => {
@@ -40,21 +59,20 @@ function scheduleNotes() {
                 drumPlayers?.player(note.drumTrack)?.start(time);
             }, startTime);
         } else {
-            const duration = (note.endColumnIndex - note.startColumnIndex + 1) * microbeatDuration;
             const pitch = getPitchForNote(note);
+            // --- UPDATED: Pass the note's color to the engine ---
+            const color = note.color;
             
             Tone.Transport.schedule(time => {
                 if (store.state.isPaused) return;
-                SynthEngine.triggerAttack(pitch, time);
+                SynthEngine.triggerAttack(pitch, color, time);
             }, startTime);
 
             Tone.Transport.schedule(time => {
-                SynthEngine.triggerRelease(pitch, time);
+                SynthEngine.triggerRelease(pitch, color, time);
             }, startTime + duration);
         }
     });
-
-    console.log(`TransportService: Scheduled ${store.state.placedNotes.length} notes.`);
 }
 
 function animatePlayhead() {
@@ -62,8 +80,10 @@ function animatePlayhead() {
     const ctx = playheadCanvas.getContext('2d');
 
     function draw() {
-        if (store.state.isPaused) return; 
-
+        if (store.state.isPaused) {
+            playheadAnimationFrame = requestAnimationFrame(draw);
+            return;
+        }; 
         ctx.clearRect(0, 0, playheadCanvas.width, playheadCanvas.height);
         
         let currentTime = Tone.Transport.seconds;
@@ -74,17 +94,33 @@ function animatePlayhead() {
             }
         }
 
-        const microbeatDuration = getMicrobeatDuration();
-        const microbeatsElapsed = currentTime / microbeatDuration;
-        const offset = ConfigService.getColumnX(2);
-        const xPos = microbeatsElapsed * store.state.cellWidth + offset;
+        let xPos = 0;
+        for (let i = 0; i < timeMap.length - 1; i++) {
+            if (timeMap[i] === undefined) continue; 
 
-        ctx.strokeStyle = 'rgba(255,0,0,0.8)';
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.moveTo(xPos, 0);
-        ctx.lineTo(xPos, playheadCanvas.height);
-        ctx.stroke();
+            if (currentTime >= timeMap[i] && currentTime < timeMap[i+1]) {
+                const colStartTime = timeMap[i];
+                const colEndTime = timeMap[i+1];
+                const colDuration = colEndTime - colStartTime;
+                const timeIntoCol = currentTime - colStartTime;
+                
+                const colStartX = LayoutService.getColumnX(i);
+                const colWidth = LayoutService.getColumnX(i + 1) - colStartX;
+                
+                const ratio = colDuration > 0 ? timeIntoCol / colDuration : 0;
+                xPos = colStartX + ratio * colWidth;
+                break;
+            }
+        }
+        
+        if (xPos > 0) {
+            ctx.strokeStyle = 'rgba(255,0,0,0.8)';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(xPos, 0);
+            ctx.lineTo(xPos, playheadCanvas.height);
+            ctx.stroke();
+        }
 
         if (Tone.Transport.state === 'started') {
             playheadAnimationFrame = requestAnimationFrame(draw);
@@ -92,7 +128,6 @@ function animatePlayhead() {
     }
     playheadAnimationFrame = requestAnimationFrame(draw);
 }
-
 
 const TransportService = {
     init() {
@@ -103,11 +138,12 @@ const TransportService = {
         }).toDestination();
         
         window.transportService = { drumPlayers };
-
-        store.on('notesChanged', () => this.handleStateChange());
-        store.on('gridResized', () => this.handleStateChange()); 
         
-        store.on('tempoChanged', newTempo => Tone.Transport.bpm.value = newTempo * 2);
+        Tone.Transport.bpm.value = store.state.tempo;
+
+        store.on('rhythmStructureChanged', () => this.handleStateChange());
+        store.on('notesChanged', () => this.handleStateChange());
+        store.on('tempoChanged', newTempo => Tone.Transport.bpm.value = newTempo);
         store.on('loopingChanged', isLooping => Tone.Transport.loop = isLooping);
 
         console.log("TransportService: Initialized.");
@@ -115,56 +151,40 @@ const TransportService = {
 
     handleStateChange() {
         if (store.state.isPlaying && !store.state.isPaused) {
-            console.log("TransportService: Live re-scheduling notes due to state change.");
             scheduleNotes();
+        } else {
+            calculateTimeMap();
         }
     },
 
     start() {
-        console.log("TransportService: Starting playback.");
         Tone.start().then(() => {
-            const microbeatDuration = getMicrobeatDuration();
-            const totalColumns = store.state.columnWidths.length;
-            const loopEndTime = (totalColumns - 4) * microbeatDuration; 
-
-            let anacrusisMicrobeats = 0;
-            for(let i = 0; i < store.state.macrobeatBoundaryStyles.length; i++) {
-                if (store.state.macrobeatBoundaryStyles[i] === 'anacrusis') {
-                    anacrusisMicrobeats += store.state.macrobeatGroupings[i];
-                } else {
-                    break;
-                }
-            }
-            const anacrusisOffset = anacrusisMicrobeats * microbeatDuration;
-            console.log(`TransportService: Anacrusis offset is ${anacrusisOffset} seconds.`);
+            scheduleNotes();
+            const totalDuration = timeMap[timeMap.length - 1];
+            const anacrusisOffset = timeMap[2] || 0;
 
             Tone.Transport.loopStart = anacrusisOffset;
-            Tone.Transport.loopEnd = loopEndTime;
+            Tone.Transport.loopEnd = totalDuration;
             Tone.Transport.loop = store.state.isLooping;
-            Tone.Transport.bpm.value = store.state.tempo * 2;
-
-            scheduleNotes();
-            
-            Tone.Transport.start(Tone.now(), 0); 
+            Tone.Transport.bpm.value = store.state.tempo;
+            Tone.Transport.start(Tone.now(), anacrusisOffset); 
             
             animatePlayhead();
         });
     },
 
     pause() {
-        console.log("TransportService: Pausing playback.");
         Tone.Transport.pause();
         SynthEngine.releaseAll();
-        cancelAnimationFrame(playheadAnimationFrame);
+        if (playheadAnimationFrame) cancelAnimationFrame(playheadAnimationFrame);
     },
 
     stop() {
-        console.log("TransportService: Stopping playback.");
         Tone.Transport.stop();
         Tone.Transport.cancel();
         SynthEngine.releaseAll();
 
-        cancelAnimationFrame(playheadAnimationFrame);
+        if (playheadAnimationFrame) cancelAnimationFrame(playheadAnimationFrame);
         const playheadCanvas = document.getElementById('playhead-canvas');
         if (playheadCanvas) {
             const ctx = playheadCanvas.getContext('2d');

@@ -15,9 +15,14 @@
   --c-warning: #ffc107;      /* A warm yellow for selection highlights */
 
   /* Spacing & Sizing */
-  --app-padding: 12px;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --app-padding: var(--space-3); /* 12px */
   --note-size: 28px;
-  --note-margin: 4px;
+  --note-margin: var(--space-1); /* 4px */
 
   /* Borders & Shadows */
   --border-radius-sm: 4px;
@@ -27,4 +32,7 @@
 
   /* Font */
   --main-font: 'Atkinson Hyperlegible', Arial, sans-serif;
+  --font-size-sm: 0.875rem;   /* 14px */
+  --font-size-base: 1rem;       /* 16px */
+  --font-size-lg: 1.125rem;    /* 18px */
 }

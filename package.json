@@ -13,19 +13,17 @@
   "engines": {
     "node": ">=18"
   },
-
   "scripts": {
-    "dev": "vite",         
-    "start": "vite",        
-    "build": "vite build", 
+    "dev": "vite",
+    "start": "vite",
+    "build": "vite build",
     "preview": "vite preview"
   },
-
   "dependencies": {
     "nexusui": "^2.1.6",
+    "tonal": "^6.4.2",
     "tone": "^15.0.4"
   },
-
   "devDependencies": {
     "vite": "^6.1.1"
   }

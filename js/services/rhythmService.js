@@ -1,20 +1,38 @@
 // js/services/rhythmService.js
 import store from '../state/store.js';
-import ConfigService from './configService.js';
+import LayoutService from './layoutService.js';
 
 console.log("RhythmService: Module loaded.");
 
 const RhythmService = {
     /**
      * Computes the layout data for the time signature display.
+     * This logic must perfectly mirror how the grid columns are actually laid out.
      * @returns {Array<object>} An array of segment objects with label, position, and type.
      */
     getTimeSignatureSegments() {
         const segments = [];
+        let columnCursor = 2;
+        // FIX: Use the new store getter
+        const sortedTonicSigns = [...store.placedTonicSigns].sort((a, b) => a.preMacrobeatIndex - b.preMacrobeatIndex);
+        let tonicSignCursor = 0;
+
+        const advancePastTonicsAtBoundary = (mbIndex) => {
+            while (sortedTonicSigns[tonicSignCursor] && sortedTonicSigns[tonicSignCursor].preMacrobeatIndex === mbIndex) {
+                columnCursor += 1;
+                const uuid = sortedTonicSigns[tonicSignCursor]?.uuid;
+                while(sortedTonicSigns[tonicSignCursor] && sortedTonicSigns[tonicSignCursor].uuid === uuid) {
+                    tonicSignCursor++;
+                }
+            }
+        };
+
+        advancePastTonicsAtBoundary(-1);
+
+        let segmentStartColumn = columnCursor;
         let segmentMicrobeatTotal = 0;
-        let startColumn = 2;
+        let containsThreeGrouping = false;
         let isAnacrusisSegment = true;
-        let containsThreeGrouping = false; 
 
         store.state.macrobeatGroupings.forEach((groupValue, index) => {
             segmentMicrobeatTotal += groupValue;
@@ -24,23 +42,24 @@ const RhythmService = {
             const isSolidBoundary = (store.state.macrobeatBoundaryStyles[index] === 'solid');
 
             if (isSolidBoundary || isLastBeat) {
-                const segmentStartX = ConfigService.getColumnX(startColumn);
-                const segmentEndX = ConfigService.getColumnX(startColumn + segmentMicrobeatTotal);
-                
-                const label = containsThreeGrouping 
-                    ? `${segmentMicrobeatTotal}/8` 
-                    : `${segmentMicrobeatTotal / 2}/4`;
+                const segmentStartX = LayoutService.getColumnX(segmentStartColumn);
+                const segmentEndColumn = segmentStartColumn + segmentMicrobeatTotal;
+                const segmentEndX = LayoutService.getColumnX(segmentEndColumn);
+
+                const label = containsThreeGrouping ? `${segmentMicrobeatTotal}/8` : `${segmentMicrobeatTotal / 2}/4`;
 
                 segments.push({
                     label: label,
                     centerX: (segmentStartX + segmentEndX) / 2,
                     isAnacrusis: isAnacrusisSegment,
                 });
-                
-                startColumn += segmentMicrobeatTotal;
-                segmentMicrobeatTotal = 0; 
+
+                columnCursor += segmentMicrobeatTotal;
+                advancePastTonicsAtBoundary(index);
+                segmentStartColumn = columnCursor;
+                segmentMicrobeatTotal = 0;
                 containsThreeGrouping = false;
-                if (isSolidBoundary) isAnacrusisSegment = false; 
+                if (isSolidBoundary) isAnacrusisSegment = false;
             }
         });
         return segments;
@@ -52,21 +71,29 @@ const RhythmService = {
      */
     getRhythmUIButtons() {
         const buttons = [];
-        let currentColumn = 2;
+        let columnCursor = 2;
+        // FIX: Use the new store getter
+        const sortedTonicSigns = [...store.placedTonicSigns].sort((a, b) => a.preMacrobeatIndex - b.preMacrobeatIndex);
+        let tonicSignCursor = 0;
+
+        const advancePastTonicsAtBoundary = (mbIndex) => {
+            while (sortedTonicSigns[tonicSignCursor] && sortedTonicSigns[tonicSignCursor].preMacrobeatIndex === mbIndex) {
+                columnCursor += 1;
+                 const uuid = sortedTonicSigns[tonicSignCursor]?.uuid;
+                while(sortedTonicSigns[tonicSignCursor] && sortedTonicSigns[tonicSignCursor].uuid === uuid) {
+                    tonicSignCursor++;
+                }
+            }
+        };
+
+        advancePastTonicsAtBoundary(-1);
 
         store.state.macrobeatGroupings.forEach((group, index) => {
-            const startX = ConfigService.getColumnX(currentColumn);
-            const endX = ConfigService.getColumnX(currentColumn + group);
+            const startX = LayoutService.getColumnX(columnCursor);
+            const endX = LayoutService.getColumnX(columnCursor + group);
             const centerX = (startX + endX) / 2;
 
-            // Grouping button (e.g., '2' or '3')
-            buttons.push({
-                type: 'grouping',
-                content: group,
-                x: centerX,
-                y: 0,
-                index: index,
-            });
+            buttons.push({ type: 'grouping', content: group, x: centerX, y: 0, index: index });
 
             if (index < store.state.macrobeatGroupings.length - 1) {
                 const style = store.state.macrobeatBoundaryStyles[index];
@@ -76,17 +103,10 @@ const RhythmService = {
                     case 'anacrusis': content = 'x'; break;
                     default: content = '○'; break;
                 }
-                // Boundary button (e.g., '●' or '○')
-                buttons.push({
-                    type: 'boundary',
-                    content: content,
-                    x: endX,
-                    y: 22,
-                    index: index,
-                });
+                buttons.push({ type: 'boundary', content: content, x: endX, y: 22, index: index });
             }
-
-            currentColumn += group;
+            columnCursor += group;
+            advancePastTonicsAtBoundary(index);
         });
         return buttons;
     }

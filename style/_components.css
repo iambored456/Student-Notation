@@ -2,34 +2,55 @@
    COMPONENT-SPECIFIC STYLES
    ========================================================================= */
 
+/* --- Export/Import Container --- */
+.export-import-container {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: 1fr auto;
+    gap: var(--space-1);
+    padding: var(--space-2);
+    align-items: center;
+}
+.app-title {
+    grid-column: 1 / -1; /* Span all 3 columns */
+    text-align: center;
+    font-weight: bold;
+    line-height: 1.2;
+    color: var(--c-text-muted);
+    align-self: center; /* Vertically center in its grid area */
+}
+.export-import-container .toolkit-button {
+    padding: var(--space-1) var(--space-2);
+    white-space: nowrap;
+}
+
 /* --- Note Tools --- */
 .note-tools-container {
   flex-direction: row;
   align-items: center;
   justify-content: center;
-  gap: 10px;
+  gap: var(--space-2); /* UPDATED */
 }
 #note-bank-container {
   display: flex;
   flex-direction: column; 
   align-items: center;
   justify-content: center;
-  gap: 8px; 
+  gap: var(--space-2); /* UPDATED */
 }
 .note-bank-row {
     display: flex;
     flex-direction: row; 
-    gap: 8px; 
+    gap: var(--space-2); /* UPDATED */
 }
-/* NEW: Styling for the container of a circle and oval */
 .note-pair {
   display: flex;
   flex-direction: row;
   align-items: center;
-  gap: 4px;
+  gap: var(--space-1); /* UPDATED */
   padding: 3px;
   border-radius: var(--border-radius-md);
-  border: 2px solid transparent; /* For selection highlight */
+  border: 2px solid transparent; 
 }
 .note {
   width: var(--note-size);
@@ -44,26 +65,25 @@
 .note:hover {
   transform: scale(1.1);
 }
-/* NEW: Make the oval note narrower */
 .oval-note {
     width: calc(var(--note-size) * 0.7);
 }
 
 
 /* --- Tonic Sign Tools --- */
+/* UPDATED to a Grid layout */
 .tonic-sign-container {
-    display: flex;
-    flex-direction: row; 
-    flex-wrap: wrap; 
-    gap: 5px;
-    align-items: center;
-    justify-content: center;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-1);
+    justify-items: center;
+    align-content: center;
+    padding: var(--space-2);
 }
 .tonic-sign-button {
-    padding: 4px;
-    font-size: 12px;
-    width: 28px;
-    height: 28px;
+    padding: var(--space-1);
+    width: 32px;  /* A bit larger for the bigger font */
+    height: 32px;
     line-height: 1;
     border-radius: var(--border-radius-md);
 }
@@ -72,7 +92,7 @@
 #preset-buttons {
   display: flex;
   flex-direction: row;
-  gap: 8px;
+  gap: var(--space-2); /* UPDATED */
   width: 100%;
   height: 100%;
 }
@@ -80,25 +100,24 @@
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 5px;
+  gap: var(--space-1); /* UPDATED */
 }
 .preset-button { 
   width: 100%; 
   flex: 1;
-  padding: 4px;
+  padding: var(--space-1); /* UPDATED */
 }
-#export-import-buttons,
 #macrobeat-adjust-container {
   display: flex;
   flex-direction: row;
-  gap: 5px;
+  gap: var(--space-1); /* UPDATED */
 }
 
 /* --- Play Controls --- */
 #play-button-group {
     display: flex;
     flex-direction: row;
-    gap: 5px;
+    gap: var(--space-1); /* UPDATED */
     align-items: center;
     justify-content: center;
     width: 100%;
@@ -110,11 +129,12 @@ input[type="range"] {
   -webkit-appearance: none;
   appearance: none;
   width: 100%;
-  height: 8px;
+  height: var(--space-2); /* UPDATED */
   border-radius: var(--border-radius-sm);
   background: var(--c-gridline);
   outline: none;
-  margin: 10px 0 0 0;
+  margin-block-start: var(--space-2); /* UPDATED */
+  margin-block-end: 0;
 }
 input[type="range"]::-webkit-slider-thumb {
   -webkit-appearance: none;
@@ -138,8 +158,7 @@ input[type="range"]::-moz-range-thumb {
 }
 
 .slider-label {
-  margin-top: 8px;
-  font-size: 14px;
+  margin-block-start: var(--space-2); /* UPDATED */
   color: var(--c-text-muted);
   text-align: center;
   user-select: none;
@@ -150,7 +169,7 @@ input[type="range"]::-moz-range-thumb {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   grid-template-rows: auto auto;
-  gap: 5px;
+  gap: var(--space-1); /* UPDATED */
   width: 100%;
   justify-items: center;
 }
@@ -164,7 +183,7 @@ input[type="range"]::-moz-range-thumb {
 #grid-controls-container {
   position: relative;
   height: 30px;
-  margin-bottom: 5px;
+  margin-block-end: var(--space-1); /* UPDATED */
 }
 #time-signature-display {
   height: 20px;
@@ -179,7 +198,6 @@ input[type="range"]::-moz-range-thumb {
   width: 20px;
   height: 20px;
   padding: 0;
-  font-size: 12px;
   line-height: 18px;
   text-align: center;
   z-index: 10;
@@ -189,10 +207,10 @@ input[type="range"]::-moz-range-thumb {
 .rhythm-ui-button:hover { background-color: var(--c-surface); border-color: var(--c-text); }
 .time-signature-label {
   background: var(--c-bg);
-  padding: 2px 8px;
+  padding-block: 2px; /* UPDATED */
+  padding-inline: var(--space-2); /* UPDATED */
   border-radius: var(--border-radius-sm);
   font-weight: bold;
-  font-size: 14px;
   color: var(--c-text-muted);
   user-select: none;
   position: absolute;
@@ -204,7 +222,6 @@ input[type="range"]::-moz-range-thumb {
 .note.selected {
   background-color: var(--note-color, #000);
 }
-/* NEW: Style for the selected color pair */
 .note-pair.selected {
   border-color: var(--c-accent) !important;
   box-shadow: 0 0 8px var(--c-accent);
@@ -233,7 +250,7 @@ input[type="range"]::-moz-range-thumb {
     flex-direction: row;
     width: 100%;
     flex-grow: 1;
-    gap: 10px;
+    gap: var(--space-2); /* UPDATED */
     min-height: 0;
 }
 .adsr-graph-wrapper {
@@ -257,12 +274,12 @@ input[type="range"]::-moz-range-thumb {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 5px;
+    padding-inline: var(--space-1); /* UPDATED */
     width: 20px;
 }
 #sustain-slider-track {
     position: relative;
-    width: 8px;
+    width: var(--space-2); /* UPDATED */
     height: 100%;
     background-color: var(--c-gridline);
     border-radius: var(--border-radius-sm);
@@ -304,9 +321,9 @@ input[type="range"]::-moz-range-thumb {
 #multi-thumb-slider-container {
     position: relative;
     width: calc(100% - 30px);
-    height: 8px;
+    height: var(--space-2); /* UPDATED */
     border-radius: var(--border-radius-sm);
-    margin-top: 12px;
+    margin-block-start: var(--space-3); /* UPDATED */
     align-self: flex-start;
     background: linear-gradient(
       to right, 
@@ -362,13 +379,13 @@ input[type="range"]::-moz-range-thumb {
     display: flex;
     justify-content: space-around;
     width: 100%;
-    margin-bottom: 5px;
+    margin-block-end: var(--space-1); /* UPDATED */
     color: var(--c-text);
 }
 .tempo-input-group {
     display: flex;
     align-items: center;
-    gap: 4px;
+    gap: var(--space-1); /* UPDATED */
 }
 .tempo-label {
     font-size: 18px;
@@ -383,7 +400,6 @@ input[type="range"]::-moz-range-thumb {
     border-radius: var(--border-radius-sm);
     text-align: center;
     font-family: var(--main-font);
-    font-size: 14px;
 }
 .tempo-input::-webkit-outer-spin-button,
 .tempo-input::-webkit-inner-spin-button {

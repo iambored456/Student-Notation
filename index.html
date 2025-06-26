@@ -3,7 +3,15 @@
   <head>
     <meta charset="UTF-8" />
     <title>Student Notation Web Applet</title>
+    <link rel="icon" href="/favicon.ico" sizes="any"><!-- multi-size ICO -->
+    <link rel="icon" type="image/png" sizes="96x96" href="/favicon-96x96.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+    <link rel="mask-icon" href="/favicon.svg" color="#a88cf3"><!-- Safari pinned tab -->
+    <link rel="manifest" href="/site.webmanifest">
+    <meta name="theme-color" content="#ffffff">
     <link rel="stylesheet" href="style.css" /> 
+    <!-- A dedicated style tag for print rules -->
+    <style id="print-style-rules"></style>
   </head>
   <body>
     <div id="app-container">
@@ -13,15 +21,14 @@
       <div id="top-toolbar">
         <!-- Container 1: Export & Import -->
         <div class="top-toolbar-container export-import-container">
-          <div id="export-import-buttons">
-            <button class="toolkit-button" id="export-button">Export</button>
+            <div class="app-title">Quinn Fleming's<br>Student Notation</div>
+            <button class="toolkit-button" id="save-as-button">Save As</button>
             <button class="toolkit-button" id="import-button">Import</button>
-          </div>
+            <button class="toolkit-button" id="print-button">Print</button>
         </div>
 
         <!-- Container 2: Note Tools -->
         <div class="top-toolbar-container note-tools-container">
-            <!-- UPDATED: Re-introducing note-pair for the 2x2 layout -->
             <div id="note-bank-container">
                 <div class="note-bank-row">
                     <div class="note-pair" data-color="#0000ff">
@@ -48,13 +55,17 @@
         
         <!-- Container 3: Tonic Sign Tools -->
         <div class="top-toolbar-container tonic-sign-container">
-            <button class="tonic-sign-button" data-tonic="1" aria-label="Tonicization 1">⓵</button>
-            <button class="tonic-sign-button" data-tonic="2" aria-label="Tonicization 2">⓶</button>
-            <button class="tonic-sign-button" data-tonic="3" aria-label="Tonicization 3">⓷</button>
-            <button class="tonic-sign-button" data-tonic="4" aria-label="Tonicization 4">⓸</button>
-            <button class="tonic-sign-button" data-tonic="5" aria-label="Tonicization 5">⓹</button>
-            <button class="tonic-sign-button" data-tonic="6" aria-label="Tonicization 6">⓺</button>
-            <button class="tonic-sign-button" data-tonic="7" aria-label="Tonicization 7">⓻</button>
+            <button class="tonic-sign-button" data-tonic="1" aria-label="Tonicization 1">①</button>
+            <button class="tonic-sign-button" data-tonic="2" aria-label="Tonicization 2">②</button>
+            <button class="tonic-sign-button" data-tonic="3" aria-label="Tonicization 3">③</button>
+            <button class="tonic-sign-button" data-tonic="4" aria-label="Tonicization 4">④</button>
+            <button class="tonic-sign-button" data-tonic="5" aria-label="Tonicization 5">⑤</button>
+            <button class="tonic-sign-button" data-tonic="6" aria-label="Tonicization 6">⑥</button>
+            <button class="tonic-sign-button" data-tonic="7" aria-label="Tonicization 7">⑦</button>
+          <div class="degree-toggle-container" style="grid-column: 1 / -1; margin-top: 5px; width:100%; display: flex; gap: 4px;">
+              <button id="toggle-diatonic-degrees" class="toolkit-button" style="flex: 1;">Scale Degrees</button>
+              <button id="toggle-modal-degrees" class="toolkit-button" style="flex: 1;">Mode Degrees</button>
+          </div>
         </div>
 
         <!-- Container 4: Waveform Presets -->
@@ -68,9 +79,11 @@
               </div>
               <div id="preset-column-2" class="preset-column">
                   <button class="preset-button" id="preset-piano">Piano</button>
-                  <button class="preset-button" id="preset-strings">Strings</button>
-                  <button class="preset-button" id="preset-woodwind">Woodwind</button>
                   <button class="preset-button" id="preset-marimba">Marimba</button>
+                  <button class="preset-button" id="preset-woodwind">Woodwind</button>
+                  <button class="preset-button" id="preset-strings">Strings</button>
+
+                  
               </div>
             </div>
         </div>
@@ -103,9 +116,7 @@
       </div>
       <!-- End Top Toolbar -->
 
-      <!-- =======================================================
-           Middle Section
-           ======================================================= -->
+      <!-- Middle Section -->
       <div id="middle-section">
         <div id="grid-container-wrapper">
           <div id="time-signature-display"></div>
@@ -122,45 +133,46 @@
             </div>
           </div>
         </div>
-        
-        <div id="drum-grid-wrapper">
-            <canvas id="drum-grid"></canvas>
-            <canvas id="drum-hover-canvas"></canvas>
+        <!-- NEW WRAPPER for Grid Layout -->
+        <div id="bottom-content-wrapper">
+            <div id="drum-grid-wrapper">
+                <canvas id="drum-grid"></canvas>
+                <canvas id="drum-hover-canvas"></canvas>
+            </div>
+            <!-- NEW CONTAINER for the right side -->
+            <div id="right-side-container">
+                <button class="toolkit-button" id="macrobeat-increase" aria-label="Increase Macrobeat">+</button>
+                <button class="toolkit-button" id="macrobeat-decrease" aria-label="Decrease Macrobeat">–</button>
+            </div>
         </div>
-
       </div>
-      <!-- End Middle Section -->
 
-      <!-- =======================================================
-           Bottom Toolbar
-           ======================================================= -->
-     <div id="bottom-toolbar">
+      <!-- Bottom Toolbar -->
+      <div id="bottom-toolbar">
         <div class="bottom-toolbar-container grid-nav-container">
           <div id="grid-nav-keypad">
             <button class="toolkit-button" id="grid-scroll-up" aria-label="Scroll Grid Up">▲</button>
-            <button class="toolkit-button" id="grid-zoom-in" aria-label="Zoom In">◀🔍+</button>
+            <button class="toolkit-button" id="grid-zoom-in" aria-label="Zoom In">🔍</button>
             <button class="toolkit-button" id="grid-scroll-down" aria-label="Scroll Grid Down">▼</button>
-            <button class="toolkit-button" id="grid-zoom-out" aria-label="Zoom Out">🔍-▶</button>
+            <button class="toolkit-button" id="grid-zoom-out" aria-label="Zoom Out">🔎</button>
           </div>
         </div>
-    
         <div class="bottom-toolbar-container volume-container">
           <div id="volume-container">
             <input type="range" id="volume-slider" min="0" max="100" value="75" step="1" aria-label="Volume Slider" />
             <div class="slider-label">Volume</div>
           </div>
         </div>
-    
         <div class="bottom-toolbar-container play-controls-container">
           <div id="play-button-group">
             <button class="toolkit-button" id="play-button" aria-label="Play Music">⏵</button>
             <button class="toolkit-button" id="stop-button" aria-label="Stop Music">⏹</button>
+            <button class="toolkit-button" id="loop-button" aria-label="Loop Playback">🔁</button>
             <button class="toolkit-button" id="undo-button" aria-label="Undo">Undo</button>
             <button class="toolkit-button" id="redo-button" aria-label="Redo">Redo</button>
             <button class="toolkit-button" id="clear-button" aria-label="Clear Notes">Clear</button>
           </div>
         </div>
-    
         <div class="bottom-toolbar-container tempo-container">
           <div id="tempo-container">
             <div id="tempo-display-container">
@@ -181,17 +193,55 @@
             <div class="slider-label">Tempo</div>
           </div>
         </div>
-    
-        <div class="bottom-toolbar-container macrobeat-container">
-          <div id="macrobeat-adjust-container">
-            <button class="toolkit-button" id="macrobeat-decrease" aria-label="Decrease Macrobeat">–</button>
-            <button class="toolkit-button" id="macrobeat-increase" aria-label="Increase Macrobeat">+</button>
-            <button class="toolkit-button" id="loop-button" aria-label="Loop Playback">🔁</button>
+      </div>
+    </div>
+
+    <!-- NEW: Print Preview Modal -->
+    <div id="print-preview-overlay" class="hidden">
+      <div id="print-preview-modal">
+        <div class="print-preview-header">
+          <h2>Print Preview & Options</h2>
+          <button id="print-close-button" class="close-button">×</button>
+        </div>
+        <div class="print-preview-content">
+          <div class="print-preview-canvas-wrapper">
+            <canvas id="print-preview-canvas"></canvas>
+          </div>
+          <div class="print-preview-options">
+            <h3>Crop Range</h3>
+            <div class="print-option-row">
+              <label for="print-top-row-slider">Top Row:</label>
+              <span id="print-top-row-label">C8</span>
+              <input type="range" id="print-top-row-slider" min="0" max="87" value="0">
+            </div>
+            <div class="print-option-row">
+              <label for="print-bottom-row-slider">Bottom Row:</label>
+              <span id="print-bottom-row-label">C1</span>
+              <input type="range" id="print-bottom-row-slider" min="0" max="87" value="87">
+            </div>
+            <h3>Options</h3>
+            <div class="print-option-row">
+              <label for="print-orientation-toggle">Orientation:</label>
+              <button id="print-orientation-toggle" class="toggle-button">Landscape</button>
+            </div>
+             <div class="print-option-row">
+              <label for="print-color-mode-toggle">Color Mode:</label>
+              <button id="print-color-mode-toggle" class="toggle-button active">Color</button>
+            </div>
+            <div class="print-option-row">
+              <label for="print-drums-toggle">Include Drums:</label>
+              <button id="print-drums-toggle" class="toggle-button active">Yes</button>
+            </div>
           </div>
         </div>
+        <div class="print-preview-footer">
+          <button id="print-confirm-button" class="confirm-button">Print Score</button>
+        </div>
+      </div>
     </div>
-    
-    </div>
+
+    <!-- NEW: Hidden staging area for the final print image -->
+    <div id="print-staging-area"></div>
 
     <script type="module" src="/js/main.js"></script>
   </body>

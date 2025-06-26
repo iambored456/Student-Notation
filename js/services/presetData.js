@@ -1,11 +1,11 @@
 // js/services/presetData.js
+import { HARMONIC_BINS } from '../constants.js';
 
 console.log("PresetData: Module loaded.");
 
-const BINS = 32;
+const BINS = HARMONIC_BINS;
 
 // --- Private Helper Functions for Generating Coefficients ---
-
 function generateSineCoeffs() {
     const coeffs = new Float32Array(BINS).fill(0);
     coeffs[1] = 1;
@@ -37,7 +37,6 @@ function generateSawtoothCoeffs() {
 }
 
 // --- Public Preset Definitions ---
-
 const basicWaveADSR = { attack: 0.1, decay: 0.2, sustain: 0.8, release: 0.3 };
 
 export const PRESETS = {
@@ -78,12 +77,12 @@ export const PRESETS = {
     strings: {
         name: 'strings',
         adsr: { attack: 0.4, decay: 0.1, sustain: 0.9, release: 0.5 },
-        coeffs: generateSawtoothCoeffs() // Strings are saw-like
+        coeffs: generateSawtoothCoeffs()
     },
     woodwind: {
         name: 'woodwind',
         adsr: { attack: 0.1, decay: 0.2, sustain: 0.8, release: 0.3 },
-        coeffs: generateSquareCoeffs() // Woodwinds are square-like
+        coeffs: generateSquareCoeffs()
     },
     marimba: {
         name: 'marimba',

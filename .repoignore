@@ -1,8 +1,15 @@
+//*Default things you ignore*//
+public/
 node_modules/
 fonts/
 .git/
 docs/
-
+README.md
 package-lock.json
 .gitignore
 vite.config.js
+
+
+//*Optional large files
+pitchData.js
+//*customenvelope.js

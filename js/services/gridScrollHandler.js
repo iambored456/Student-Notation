@@ -40,6 +40,12 @@ function animate() {
 }
 
 function handleWheel(e) {
+    // BUG FIX: Only process wheel events that have a vertical scroll component.
+    // This prevents phantom horizontal scroll/trackpad events from interfering.
+    if (e.deltaY === 0) {
+        return;
+    }
+
     e.preventDefault();
     targetY -= e.deltaY;
     targetY = Math.max(getMaxScrollY(), Math.min(0, targetY));
@@ -81,7 +87,6 @@ export function initGridScrollHandler() {
 
     gridWrapper.addEventListener('wheel', handleWheel, { passive: false });
     
-    // This listener correctly syncs the scroll position after any layout change.
     store.on('layoutConfigChanged', syncToStore);
     
     syncToStore();

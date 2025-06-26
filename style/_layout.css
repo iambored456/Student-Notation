@@ -12,14 +12,15 @@
 
 #top-toolbar, #bottom-toolbar {
   display: flex;
-  gap: 10px;
-  padding: 8px;
+  gap: var(--space-2); /* UPDATED */
+  padding: var(--space-2); /* UPDATED */
   border: 1px solid var(--c-border);
   border-radius: var(--border-radius-md);
   background-color: var(--c-surface);
   box-shadow: var(--box-shadow-sm);
   overflow: visible;
   flex-shrink: 0; /* Prevent toolbars from shrinking */
+  align-items: stretch; /* Make all containers the same height */
 }
 
 #top-toolbar    { height: 22vh; }
@@ -27,8 +28,10 @@
   flex: 1; /* This is the stretchy part */
   display: flex; 
   flex-direction: column; 
-  gap: 5px; 
+  gap: var(--space-1); /* UPDATED */
   min-height: 0; /* Important fix for flexbox children */
+  overflow-x: auto; /* The main horizontal scrollbar now lives here */
+  align-items: flex-start; /* Prevent children from stretching to full width */
 }
 #bottom-toolbar { height: 10vh; }
 
@@ -41,7 +44,7 @@
   flex: 1;
   border: 1px solid var(--c-border);
   border-radius: var(--border-radius-md);
-  padding: 5px;
+  padding: var(--space-1); /* UPDATED */
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -53,20 +56,36 @@
   padding: 0;
 }
 
-/* Flex sizing for top toolbar containers */
-.export-import-container { flex: 0 0 10%; }
-.note-tools-container    { flex: 0 0 15%; }
-.tonic-sign-container    { flex: 0 0 15%; } /* UPDATED: Renamed and adjusted flex size */
-.preset-container        { flex: 0 0 18%; }
-.multislider-container   { flex: 1 1 20%; } /* Adjusted */
-.adsr-container          { flex: 1 1 22%; } /* Adjusted */
+/* --- UPDATED: More robust flex sizing --- */
 
-/* Flex Sizing for bottom toolbar containers */
-.grid-nav-container         { flex: 0 0 12%; }
-.volume-container           { flex: 0 0 20%; }
-.play-controls-container    { flex: 0 0 30%; }
-.tempo-container            { flex: 0 0 23%; }
-.macrobeat-container        { flex: 0 0 15%; }
+/* Let these containers size themselves based on their content */
+.export-import-container,
+.note-tools-container,
+.tonic-sign-container,
+.preset-container {
+    flex: 0 0 auto;
+}
+
+/* Let these containers grow to fill the remaining space */
+.multislider-container {
+    flex: 2 1 0; /* Grow twice as fast as ADSR */
+}
+.adsr-container {
+    flex: 3 1 0; /* Grow three times as fast as ADSR */
+}
+
+
+/* Let these containers size themselves based on their content */
+.grid-nav-container {
+    flex: 0 0 auto;
+}
+/* Let these containers grow to fill the remaining space */
+.volume-container,
+.play-controls-container,
+.tempo-container {
+    flex: 1;
+}
+
 
 /* ==========================================================================
    GRID & CANVAS STYLES
@@ -74,9 +93,9 @@
 #grid-container-wrapper {
   display: flex;
   flex-direction: column;
-  flex: 1; /* Allow it to take up the space in the middle section */
-  min-height: 0; /* Flexbox fix */
-  overflow-x: auto;
+  flex: 1;
+  min-height: 0;
+  /* overflow-x: auto; - MOVED TO PARENT */
   overflow-y: hidden;
   border: 1px solid var(--c-border);
   border-radius: var(--border-radius-md);
@@ -114,10 +133,19 @@
   pointer-events: none;
 }
 
+#bottom-content-wrapper {
+    display: flex;
+    flex-direction: row;
+    align-items: stretch;
+    flex-shrink: 0;
+    min-height: 90px;
+    /* UPDATED: No longer needs grid layout */
+}
+
 #drum-grid-wrapper {
-  min-height: 90px; /* Ensure it has a minimum height */
-  flex-shrink: 0;   /* Prevent it from shrinking */
-  overflow-x: auto;
+  flex: 1 1 auto;
+  min-height: 90px;
+  overflow-x: hidden; /* Scrolling is handled by the parent now */
   overflow-y: hidden;
   position: relative;
 }
@@ -127,6 +155,7 @@
   border: 1px solid var(--c-border);
   border-radius: var(--border-radius-md);
   background-color: var(--c-surface);
+  box-sizing: border-box; /* ADDED to include border in height */
 }
 
 #drum-hover-canvas {
@@ -135,4 +164,18 @@
   left: 0;
   background-color: transparent;
   border: none;
+}
+
+#right-side-container {
+    flex: 0 0 auto;
+    border: 1px solid var(--c-border);
+    border-radius: var(--border-radius-md);
+    background-color: var(--c-surface);
+    display: flex;
+    flex-direction: row-reverse;
+    justify-content: center;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-2);
+    box-sizing: border-box;
 }

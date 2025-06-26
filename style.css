@@ -7,9 +7,14 @@
 
 /* 2. Global Resets, Fonts, and Base Element Styles */
 @import url('style/_globals.css');
+@import url('style/_typography.css'); /* NEW */
 
 /* 3. Main Application Layout (Toolbars, Sections) */
 @import url('style/_layout.css');
 
 /* 4. Component-Specific Styles */
 @import url('style/_components.css');
+
+/* 5. Modal and Print Styles */
+@import url('style/_modal.css');
+@import url('style/_print.css');
