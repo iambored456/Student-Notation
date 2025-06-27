@@ -2,6 +2,7 @@
 import store from '../../../state/store.js';
 
 export function initToolSelectors() {
+    // --- Existing Tonic Button Logic ---
     const tonicButtons = document.querySelectorAll('.tonic-sign-container .tonic-sign-button');
     tonicButtons.forEach(btn => {
         btn.addEventListener('click', () => {
@@ -10,6 +11,7 @@ export function initToolSelectors() {
         });
     });
     
+    // --- Existing Degree Display Logic ---
     const diatonicBtn = document.getElementById('toggle-diatonic-degrees');
     const modalBtn = document.getElementById('toggle-modal-degrees');
 
@@ -25,6 +27,23 @@ export function initToolSelectors() {
         });
     }
 
+    // --- NEW Accidental Toggle Logic ---
+    const flatBtn = document.getElementById('flat-toggle-btn');
+    const sharpBtn = document.getElementById('sharp-toggle-btn');
+
+    if (flatBtn && sharpBtn) {
+        flatBtn.addEventListener('click', () => store.toggleAccidentalMode('flat'));
+        sharpBtn.addEventListener('click', () => store.toggleAccidentalMode('sharp'));
+
+        store.on('accidentalModeChanged', ({ sharp, flat }) => {
+            sharpBtn.classList.toggle('active', sharp);
+            sharpBtn.setAttribute('aria-pressed', sharp);
+            flatBtn.classList.toggle('active', flat);
+            flatBtn.setAttribute('aria-pressed', flat);
+        });
+    }
+
+    // --- Existing Tool Selection Highlighting ---
     store.on('toolChanged', ({ newTool }) => {
         document.querySelectorAll('.note, .note-pair, .tonic-sign-button').forEach(el => el.classList.remove('selected'));
         

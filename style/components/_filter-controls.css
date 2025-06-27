@@ -3,19 +3,23 @@
 .filter-top-controls {
     display: flex;
     align-items: center;
-    gap: var(--space-3);
-    width: calc(100% - 30px);
+    width: calc(100% - 40px); /* Adjusted width */
     align-self: center;
     margin-bottom: var(--space-2);
 }
 
 #filter-enable-toggle {
     flex-shrink: 0;
-    padding: var(--space-1) var(--space-3);
     background-color: var(--c-gridline);
     color: var(--c-text-muted);
     border: 1px solid var(--c-border);
 }
+
+#filter-enable-toggle .filter-icon {
+    width: 28px;
+    height: 28px;
+}
+
 #filter-enable-toggle.active {
     background-color: var(--c-accent);
     color: var(--c-surface);
@@ -39,64 +43,19 @@
     min-height: 0;
 }
 
-.resonance-slider-wrapper {
+.filter-button-wrapper {
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     padding-inline: var(--space-1);
-    width: 20px;
+    width: 40px;
     transition: opacity 0.2s;
-}
-
-#resonance-slider-track {
-    position: relative;
-    width: var(--space-2);
-    height: 100%;
-    background-color: var(--c-gridline);
-    border-radius: var(--border-radius-sm);
-}
-
-#resonance-slider-track::before {
-    content: '';
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    height: var(--resonance-progress, 0%);
-    background-color: var(--c-accent);
-    border-radius: var(--border-radius-sm);
-}
-
-#resonance-slider-thumb {
-    position: absolute;
-    left: 50%;
-    transform: translate(-50%, 50%);
-    width: 20px;
-    height: 20px;
-    background-color: var(--c-accent);
-    border-radius: 50%;
-    border: 2px solid var(--c-surface);
-    box-shadow: var(--box-shadow-sm);
-    cursor: grab;
-    color: var(--c-surface);
-    font-size: 12px;
-    font-weight: bold;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    user-select: none;
-}
-
-#resonance-slider-thumb:active {
-    cursor: grabbing;
-    background-color: var(--c-accent-hover);
-    transform: translate(-50%, 50%) scale(1.1);
 }
 
 #cutoff-slider-container {
     position: relative;
-    width: calc(100% - 30px);
+    width: calc(100% - 40px); /* Adjusted width */
     height: var(--space-2);
     border-radius: var(--border-radius-sm);
     margin-block-start: var(--space-3);
@@ -105,7 +64,6 @@
     transition: opacity 0.2s;
 }
 
-/* Common styles for all thumbs */
 .filter-cutoff-thumb,
 .filter-blend-thumb {
     position: absolute;
@@ -134,9 +92,7 @@
     transform: translate(-50%, -50%) scale(1.1);
 }
 
-/* Class to disable controls when filter is off */
 .multislider-container.filter-disabled #blend-slider-container,
-.multislider-container.filter-disabled .resonance-slider-wrapper,
 .multislider-container.filter-disabled #cutoff-slider-container {
     opacity: 0.5;
     pointer-events: none;

@@ -7,6 +7,7 @@ import { drawDrumShape } from '../renderers/drumGridRenderer.js';
 // --- Interaction State ---
 let drumHoverCtx;
 let isRightClickActive = false;
+let rightClickActionTaken = false;
 
 // --- Hover Drawing Logic ---
 function drawHoverHighlight(colIndex, rowIndex, color) {
@@ -48,7 +49,9 @@ function handleMouseMove(e) {
     const drumTrack = ['H', 'M', 'L'][rowIndex];
     
     if (isRightClickActive) {
-        store.eraseDrumNoteAt(colIndex, drumTrack);
+        if (store.eraseDrumNoteAt(colIndex, drumTrack, false)) {
+            rightClickActionTaken = true;
+        }
         drawHoverHighlight(colIndex, rowIndex, 'rgba(220, 53, 69, 0.3)');
     } else {
         drawHoverHighlight(colIndex, rowIndex, 'rgba(74, 144, 226, 0.2)');
@@ -77,7 +80,12 @@ function handleMouseDown(e) {
 
     if (e.button === 2) { // Right-click for erasing
         isRightClickActive = true;
-        store.eraseDrumNoteAt(colIndex, drumTrack);
+        rightClickActionTaken = false;
+        document.getElementById('eraser-tool-button')?.classList.add('erasing-active');
+
+        if (store.eraseDrumNoteAt(colIndex, drumTrack, false)) {
+            rightClickActionTaken = true;
+        }
         drumHoverCtx.clearRect(0, 0, drumHoverCtx.canvas.width, drumHoverCtx.canvas.height);
         drawHoverHighlight(colIndex, drumRow, 'rgba(220, 53, 69, 0.3)');
         return;
@@ -102,7 +110,14 @@ function handleMouseDown(e) {
 }
 
 function handleGlobalMouseUp() {
-    isRightClickActive = false;
+    if (isRightClickActive) {
+        if (rightClickActionTaken) {
+            store.recordState();
+        }
+        isRightClickActive = false;
+        rightClickActionTaken = false;
+        document.getElementById('eraser-tool-button')?.classList.remove('erasing-active');
+    }
     handleMouseLeave();
 }
 

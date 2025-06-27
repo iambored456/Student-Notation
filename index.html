@@ -65,21 +65,26 @@
                     </div>
                 </div>
             </div>
+            <button id="eraser-tool-button" class="toolkit-icon-button eraser-button" aria-label="Eraser Tool">
+                <span class="flipped-emoji">✏️</span>
+            </button>
         </div>
         
         <!-- Container 3: Tonic Sign Tools -->
         <div class="top-toolbar-container tonic-sign-container">
-            <button class="tonic-sign-button" data-tonic="1" aria-label="Tonicization 1">①</button>
-            <button class="tonic-sign-button" data-tonic="2" aria-label="Tonicization 2">②</button>
-            <button class="tonic-sign-button" data-tonic="3" aria-label="Tonicization 3">③</button>
-            <button class="tonic-sign-button" data-tonic="4" aria-label="Tonicization 4">④</button>
-            <button class="tonic-sign-button" data-tonic="5" aria-label="Tonicization 5">⑤</button>
-            <button class="tonic-sign-button" data-tonic="6" aria-label="Tonicization 6">⑥</button>
-            <button class="tonic-sign-button" data-tonic="7" aria-label="Tonicization 7">⑦</button>
-          <div class="degree-toggle-container" style="grid-column: 1 / -1; margin-top: 5px; width:100%; display: flex; gap: 4px;">
-              <button id="toggle-diatonic-degrees" class="toolkit-button" style="flex: 1;">Scale Degrees</button>
-              <button id="toggle-modal-degrees" class="toolkit-button" style="flex: 1;">Mode Degrees</button>
-          </div>
+            <div class="tonic-buttons-row">
+              <button class="tonic-sign-button" data-tonic="1" aria-label="Tonicization 1">①</button>
+              <button class="tonic-sign-button" data-tonic="2" aria-label="Tonicization 2">②</button>
+              <button class="tonic-sign-button" data-tonic="3" aria-label="Tonicization 3">③</button>
+              <button class="tonic-sign-button" data-tonic="4" aria-label="Tonicization 4">④</button>
+              <button class="tonic-sign-button" data-tonic="5" aria-label="Tonicization 5">⑤</button>
+              <button class="tonic-sign-button" data-tonic="6" aria-label="Tonicization 6">⑥</button>
+              <button class="tonic-sign-button" data-tonic="7" aria-label="Tonicization 7">⑦</button>
+            </div>
+            <div class="degree-toggle-container">
+                <button id="toggle-diatonic-degrees" class="toolkit-button">Scale<br>Degrees</button>
+                <button id="toggle-modal-degrees" class="toolkit-button">Mode<br>Degrees</button>
+            </div>
         </div>
 
         <!-- Container 4: Waveform Presets -->
@@ -103,7 +108,6 @@
         <!-- Container 5: Harmonic Multislider & Filter -->
         <div class="top-toolbar-container multislider-container">
             <div class="filter-top-controls">
-                <button id="filter-enable-toggle" class="toolkit-button">Filter</button>
                 <div id="blend-slider-container">
                     <div class="filter-blend-thumb" id="thumb-b" tabindex="0">B</div>
                 </div>
@@ -113,10 +117,17 @@
                 <canvas id="harmonic-multislider-canvas"></canvas>
                 <canvas id="filter-overlay-canvas"></canvas>
               </div>
-              <div class="resonance-slider-wrapper">
-                <div id="resonance-slider-track">
-                  <div id="resonance-slider-thumb" tabindex="0">R</div>
-                </div>
+              <div class="filter-button-wrapper">
+                <button id="filter-enable-toggle" class="toolkit-icon-button" aria-label="Toggle Filter">
+                  <svg class="filter-icon" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M6 24 H22 L30 16 L40 36"
+                          fill="none"
+                          stroke="currentColor"
+                          stroke-width="6"
+                          stroke-linecap="round"
+                          stroke-linejoin="round"/>
+                  </svg>
+                </button>
               </div>
             </div>
             <div id="cutoff-slider-container">
@@ -187,6 +198,10 @@
       <!-- Middle Section -->
       <div id="middle-section">
         <div id="grid-container-wrapper">
+          <div id="accidental-controls-container">
+              <button id="flat-toggle-btn" class="accidental-button active" aria-pressed="true">♭</button>
+              <button id="sharp-toggle-btn" class="accidental-button active" aria-pressed="true">♯</button>
+          </div>
           <div id="time-signature-display"></div>
           <div id="grid-controls-container">
             <div id="beat-line-controls"></div>

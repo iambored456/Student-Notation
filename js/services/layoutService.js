@@ -92,6 +92,9 @@ function applyDimensions() {
     [drumCanvas, drumHoverCanvas].forEach(c => { c.width = drumCanvasWidth; c.height = drumCanvasHeight; });
     
     gridContainerWrapper.style.width = `${canvasWidth}px`;
+    // NEW: Set CSS variable for dynamic positioning of accidental buttons
+    gridContainerWrapper.style.setProperty('--cell-width-val', `${cellWidth}`);
+
     bottomContentWrapper.style.width = `${canvasWidth}px`;
     
     store.emit('layoutConfigChanged');

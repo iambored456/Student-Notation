@@ -2,20 +2,39 @@
 
 /* --- Tonic Sign Tools --- */
 .tonic-sign-container {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: var(--space-1);
-    justify-items: center;
-    align-content: center;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    justify-content: center;
+    align-items: stretch;
     padding: var(--space-2);
 }
+
+.tonic-buttons-row {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: var(--space-1);
+}
+
 .tonic-sign-button {
     padding: var(--space-1);
     width: 32px;
     height: 32px;
     line-height: 1;
     border-radius: var(--border-radius-md);
+    flex-shrink: 0;
 }
+
+.degree-toggle-container {
+    display: flex;
+    gap: var(--space-1);
+}
+
+.degree-toggle-container > .toolkit-button {
+    flex: 1;
+}
+
 
 /* --- Preset Voice Buttons --- */
 #preset-buttons {
@@ -64,4 +83,46 @@
   display: flex;
   flex-direction: row;
   gap: var(--space-1);
+}
+
+/* --- Accidental Toggle Buttons --- */
+#accidental-controls-container {
+    position: absolute;
+    top: 5px;
+    left: 0; /* Align to the very start of the parent wrapper */
+    /* Set the container width to match the left legend (3 + 3 units) */
+    width: calc(6 * var(--cell-width-val, 0) * 1px);
+    z-index: 20;
+    display: flex;
+    justify-content: center; /* Center the buttons within the container */
+    gap: var(--space-1);
+}
+
+.accidental-button {
+    width: 30px;
+    height: 30px;
+    font-size: 20px;
+    font-weight: bold;
+    padding: 0;
+    line-height: 1;
+    border: 1px solid var(--c-border);
+    border-radius: var(--border-radius-sm);
+    background-color: var(--c-gridline);
+    color: var(--c-text);
+    opacity: 0.5;
+    transition: background-color 0.2s, opacity 0.2s;
+}
+
+.accidental-button.active {
+    background-color: var(--c-warning);
+    color: var(--c-text);
+    opacity: 1.0;
+}
+
+.accidental-button:not(.active):hover {
+    background-color: var(--c-border);
+}
+
+.accidental-button.active:hover {
+    background-color: #ffca2c; /* A slightly darker yellow for hover */
 }

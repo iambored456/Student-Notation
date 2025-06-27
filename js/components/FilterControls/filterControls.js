@@ -3,10 +3,9 @@ import store from '../../state/store.js';
 
 console.log("FilterControls: Module loaded.");
 
-let enableToggle, blendThumb, blendTrack, cutoffThumb, cutoffTrack, resonanceThumb, resonanceTrack, container;
-let isDraggingResonance = false;
+let enableToggle, blendThumb, blendTrack, cutoffThumb, cutoffTrack, container;
 let isDraggingCutoff = false;
-let isDraggingBlend = false; // New state for blend dragging
+let isDraggingBlend = false;
 let currentColor;
 
 const CUTOFF_MIN = 1;
@@ -20,33 +19,18 @@ function updateFromStore() {
     const timbre = store.state.timbres[currentColor];
     if (!timbre || !timbre.filter) return;
 
-    const { enabled, cutoff, blend, resonance } = timbre.filter;
+    const { enabled, cutoff, blend } = timbre.filter;
     
     enableToggle.classList.toggle('active', enabled);
     container.classList.toggle('filter-disabled', !enabled);
 
-    // Update blend thumb position (inverted)
     const blendPercent = (BLEND_MAX - blend) / (BLEND_MAX - BLEND_MIN);
     blendThumb.style.left = `${blendPercent * 100}%`;
     
     const cutoffPercent = (cutoff - CUTOFF_MIN) / (CUTOFF_MAX - CUTOFF_MIN);
     cutoffThumb.style.left = `${cutoffPercent * 100}%`;
     
-    const resonancePercent = resonance / 100;
-    resonanceThumb.style.bottom = `${resonancePercent * 100}%`;
-    resonanceTrack.style.setProperty('--resonance-progress', `${resonancePercent * 100}%`);
-
     container.style.setProperty('--c-accent', currentColor);
-}
-
-function handleResonanceDrag(e) {
-    if (!isDraggingResonance) return;
-    const rect = resonanceTrack.getBoundingClientRect();
-    const y = e.clientY - rect.top;
-    const h = rect.height;
-    let percent = 1 - (y / h);
-    percent = Math.max(0, Math.min(1, percent));
-    store.setFilterSettings(currentColor, { resonance: percent * 100 });
 }
 
 function handleCutoffDrag(e) {
@@ -67,7 +51,6 @@ function handleBlendDrag(e) {
     const w = rect.width;
     let percent = x / w;
     percent = Math.max(0, Math.min(1, percent));
-    // Invert the value: 0% left = 2.0, 100% left = 0.0
     const value = BLEND_MAX - (percent * (BLEND_MAX - BLEND_MIN));
     store.setFilterSettings(currentColor, { blend: value });
 }
@@ -79,11 +62,9 @@ export function initFilterControls() {
     blendTrack = document.getElementById('blend-slider-container');
     cutoffThumb = document.getElementById('thumb-c');
     cutoffTrack = document.getElementById('cutoff-slider-container');
-    resonanceThumb = document.getElementById('resonance-slider-thumb');
-    resonanceTrack = document.getElementById('resonance-slider-track');
 
-    if (!enableToggle || !blendThumb || !cutoffThumb || !resonanceThumb) {
-        console.error("FilterControls: Could not find required filter UI elements.");
+    if (!container || !enableToggle || !blendThumb || !cutoffThumb) {
+        console.error("FilterControls: Could not find one or more required filter UI elements.");
         return;
     }
     
@@ -93,7 +74,6 @@ export function initFilterControls() {
         store.recordState();
     });
 
-    // --- Blend Thumb Drag Logic ---
     blendThumb.addEventListener('mousedown', e => {
         e.preventDefault();
         isDraggingBlend = true;
@@ -110,7 +90,6 @@ export function initFilterControls() {
         window.addEventListener('mouseup', onUp);
     });
 
-    // --- Cutoff Thumb Drag Logic ---
     cutoffThumb.addEventListener('mousedown', e => {
         e.preventDefault();
         isDraggingCutoff = true;
@@ -118,23 +97,6 @@ export function initFilterControls() {
         const onMove = (ev) => handleCutoffDrag(ev);
         const onUp = () => {
             isDraggingCutoff = false;
-            document.body.style.cursor = 'default';
-            window.removeEventListener('mousemove', onMove);
-            window.removeEventListener('mouseup', onUp);
-            store.recordState();
-        };
-        window.addEventListener('mousemove', onMove);
-        window.addEventListener('mouseup', onUp);
-    });
-
-    // --- Resonance Thumb Drag Logic ---
-    resonanceThumb.addEventListener('mousedown', e => {
-        e.preventDefault();
-        isDraggingResonance = true;
-        document.body.style.cursor = 'ns-resize';
-        const onMove = (ev) => handleResonanceDrag(ev);
-        const onUp = () => {
-            isDraggingResonance = false;
             document.body.style.cursor = 'default';
             window.removeEventListener('mousemove', onMove);
             window.removeEventListener('mouseup', onUp);

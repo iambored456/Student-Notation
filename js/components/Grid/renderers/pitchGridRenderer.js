@@ -55,6 +55,16 @@ function drawScaleDegreeText(ctx, note, options, centerX, centerY, noteHeight) {
 
 function drawLegends(ctx, options) {
     const { fullRowData, columnWidths, cellWidth, cellHeight, colorMode } = options;
+    const { sharp, flat } = store.state.accidentalMode;
+
+    const processLabel = (label) => {
+        if (!label.includes('/')) return label;
+        const [sharpName, flatName] = label.split('/');
+        if (sharp && flat) return label;
+        if (sharp) return sharpName;
+        if (flat) return flatName;
+        return sharpName; // Default to sharp if somehow both are false
+    };
     
     function drawLegendColumn(startCol, columnsOrder) {
         const xStart = getColumnX(startCol, options);
@@ -70,22 +80,22 @@ function drawLegends(ctx, options) {
                     ctx.fillStyle = colorMode === 'bw' ? '#ffffff' : (row.hex || '#ffffff');
                     ctx.fillRect(cumulativeX, y - cellHeight / 2, colWidth, cellHeight);
                     
-                    if (colorMode === 'bw') {
-                        ctx.fillStyle = '#212529'; 
-                    } else {
-                        const hex = (row.hex || '#ffffff').substring(1);
-                        const r = parseInt(hex.substring(0, 2), 16);
-                        const g = parseInt(hex.substring(2, 4), 16);
-                        const b = parseInt(hex.substring(4, 6), 16);
-                        const luminance = (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255;
-                        ctx.fillStyle = luminance > 0.5 ? '#212529' : '#ffffff';
-                    }
-
                     const fontSize = Math.max(10, Math.min(cellWidth * 0.7, cellHeight * 0.7));
-                    ctx.font = `${fontSize}px 'Atkinson Hyperlegible', sans-serif`;
+                    ctx.font = `bold ${fontSize}px 'Atkinson Hyperlegible', sans-serif`;
                     ctx.textAlign = 'center';
                     ctx.textBaseline = 'middle';
-                    ctx.fillText(row.pitch, cumulativeX + colWidth / 2, y);
+
+                    const textX = cumulativeX + colWidth / 2;
+                    const textY = y;
+                    const pitchToDraw = processLabel(row.pitch);
+
+                    ctx.strokeStyle = '#212529';
+                    ctx.lineWidth = 2.5;        
+                    ctx.lineJoin = 'round';     
+                    ctx.strokeText(pitchToDraw, textX, textY);
+
+                    ctx.fillStyle = '#ffffff';
+                    ctx.fillText(pitchToDraw, textX, textY);
                 }
             });
             cumulativeX += colWidth;

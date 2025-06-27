@@ -10,10 +10,19 @@
 }
 
 /* --- Button Selection States --- */
-.tonic-sign-button.selected {
-  border: 2px solid var(--c-accent) !important;
-  box-shadow: 0 0 5px var(--c-accent);
+.tonic-sign-button.selected,
+.eraser-button.selected { 
+  border: 2px solid var(--c-danger) !important;
+  box-shadow: 0 0 5px var(--c-danger);
+  color: var(--c-danger);
 }
+
+/* NEW: Style for when right-click drag is happening */
+.eraser-button.erasing-active {
+    background-color: var(--c-danger);
+    color: var(--c-surface); /* Make emoji white */
+}
+
 .preset-button.selected {
   background-color: var(--c-accent);
   color: var(--c-surface);

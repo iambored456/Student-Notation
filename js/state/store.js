@@ -11,8 +11,8 @@ function generateUUID() {
 const createDefaultFilterState = () => ({
     enabled: false,
     blend: 2.0,
-    cutoff: 16,      // UPDATED: Start cutoff in the middle
-    resonance: 50,   // UPDATED: Start resonance at 50%
+    cutoff: 16,
+    resonance: 0, 
     type: 'lowpass'
 });
 
@@ -37,6 +37,7 @@ const store = {
         isLooping: false,
         tempo: 90,
         degreeDisplayMode: 'off',
+        accidentalMode: { sharp: true, flat: true },
         timbres: {
             '#0000ff': { name: 'Blue', adsr: { attack: 0.1, decay: 0.2, sustain: 0.8, release: 0.3 }, coeffs: (() => { const c = new Float32Array(32).fill(0); c[1] = 1; return c; })(), activePresetName: 'sine', filter: createDefaultFilterState() },
             '#000000': { name: 'Black', adsr: { attack: 0.1, decay: 0.2, sustain: 0.8, release: 0.3 }, coeffs: (() => { const c = new Float32Array(32).fill(0); for (let n = 1; n < 32; n += 2) { c[n] = 1 / n; } return c; })(), activePresetName: 'square', filter: createDefaultFilterState() },
@@ -49,6 +50,20 @@ const store = {
     
     get placedTonicSigns() {
         return Object.values(this.state.tonicSignGroups).flat();
+    },
+
+    toggleAccidentalMode(type) {
+        if (!this.state.accidentalMode.hasOwnProperty(type)) return;
+        
+        this.state.accidentalMode[type] = !this.state.accidentalMode[type];
+
+        if (!this.state.accidentalMode.sharp && !this.state.accidentalMode.flat) {
+            const otherType = type === 'sharp' ? 'flat' : 'sharp';
+            this.state.accidentalMode[otherType] = true;
+        }
+        
+        this.emit('accidentalModeChanged', this.state.accidentalMode);
+        this.emit('layoutConfigChanged');
     },
 
     setDegreeDisplayMode(mode) {
@@ -113,7 +128,6 @@ const store = {
             else this.state.timbres[color].filter.type = 'bandpass';
 
             if(newSettings.enabled !== undefined) {
-                // If we're just toggling the filter, don't invalidate the preset
             } else {
                 this.state.timbres[color].activePresetName = null;
             }
@@ -153,26 +167,30 @@ const store = {
         this.emit('notesChanged');
     },
 
-    eraseNoteAt(colIndex, row) {
+    eraseNoteAt(colIndex, row, record = true) {
         const initialCount = this.state.placedNotes.length;
         this.state.placedNotes = this.state.placedNotes.filter(note => 
             !( !note.isDrum && note.row === row && colIndex >= note.startColumnIndex && colIndex <= note.endColumnIndex )
         );
-        if (this.state.placedNotes.length < initialCount) {
+        const wasErased = this.state.placedNotes.length < initialCount;
+        if (wasErased) {
             this.emit('notesChanged');
-            this.recordState();
+            if (record) this.recordState();
         }
+        return wasErased;
     },
     
-    eraseDrumNoteAt(colIndex, drumTrack) {
+    eraseDrumNoteAt(colIndex, drumTrack, record = true) {
         const initialCount = this.state.placedNotes.length;
         this.state.placedNotes = this.state.placedNotes.filter(note => 
             !(note.isDrum && note.drumTrack === drumTrack && note.startColumnIndex === colIndex)
         );
-        if (this.state.placedNotes.length < initialCount) {
+        const wasErased = this.state.placedNotes.length < initialCount;
+        if (wasErased) {
             this.emit('notesChanged');
-            this.recordState();
+            if (record) this.recordState();
         }
+        return wasErased;
     },
 
     addTonicSignGroup(tonicSignGroup) {
@@ -187,12 +205,14 @@ const store = {
         this.recordState();
     },
 
-    eraseTonicSignGroup(uuid) {
+    eraseTonicSignGroup(uuid, record = true) {
         if (this.state.tonicSignGroups[uuid]) {
             delete this.state.tonicSignGroups[uuid];
             this.emit('rhythmStructureChanged');
-            this.recordState();
+            if (record) this.recordState();
+            return true;
         }
+        return false;
     },
     
     toggleDrumNote(drumHit) {

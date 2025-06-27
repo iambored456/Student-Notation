@@ -43,3 +43,9 @@
 .oval-note {
     width: calc(var(--note-size) * 0.7);
 }
+
+.eraser-button .flipped-emoji {
+    display: inline-block;
+    /* This is the corrected line */
+    transform: scaleY(-1);
+}

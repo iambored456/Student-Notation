@@ -13,6 +13,7 @@ let isRightClickActive = false;
 let previousTool = null;
 let lastHoveredTonicPoint = null;
 let lastHoveredOctaveRows = [];
+let rightClickActionTaken = false; 
 
 // --- Interaction Helpers ---
 function getPitchForRow(rowIndex) {
@@ -22,7 +23,7 @@ function getPitchForRow(rowIndex) {
 
 function findHoveredMacrobeat(columnIndex) {
     const { macrobeatGroupings, columnWidths } = store.state;
-    const placedTonicSigns = store.placedTonicSigns; // Use getter
+    const placedTonicSigns = store.placedTonicSigns; 
 
     if (columnIndex < 2 || columnIndex >= columnWidths.length - 2) return null;
 
@@ -79,7 +80,7 @@ function drawGhostNote(colIndex, rowIndex, isFaint = false) {
     if (type === 'tonicization') {
         const ghostTonic = { row: rowIndex, columnIndex: colIndex, tonicNumber: tonicNumber };
         drawTonicShape(pitchHoverCtx, ghostOptions, ghostTonic);
-    } else {
+    } else if (type !== 'eraser') { 
         const ghostNote = { 
             row: rowIndex, startColumnIndex: colIndex, endColumnIndex: colIndex, 
             color: color, shape: type, isDrum: false 
@@ -106,19 +107,23 @@ function handleMouseDown(e) {
     if (e.button === 2) { // Right-click
         e.preventDefault();
         isRightClickActive = true;
+        rightClickActionTaken = false; 
 
-        // Check if deleting a tonic sign
-        const clickedTonic = store.placedTonicSigns.find(ts => ts.columnIndex === colIndex && ts.row === rowIndex);
-        if (clickedTonic) {
-            store.eraseTonicSignGroup(clickedTonic.uuid);
-        } else {
-            store.eraseNoteAt(colIndex, rowIndex);
-        }
-        
         if (store.state.selectedTool.type !== 'eraser') {
             previousTool = { ...store.state.selectedTool };
             store.setSelectedTool('eraser');
         }
+        document.getElementById('eraser-tool-button')?.classList.add('erasing-active');
+        
+        const clickedTonic = store.placedTonicSigns.find(ts => ts.columnIndex === colIndex && ts.row === rowIndex);
+        let wasErased = false;
+        if (clickedTonic) {
+            wasErased = store.eraseTonicSignGroup(clickedTonic.uuid, false);
+        } else {
+            wasErased = store.eraseNoteAt(colIndex, rowIndex, false);
+        }
+        if (wasErased) rightClickActionTaken = true;
+
         pitchHoverCtx.clearRect(0, 0, pitchHoverCtx.canvas.width, pitchHoverCtx.canvas.height);
         drawHoverHighlight(colIndex, rowIndex, 'rgba(220, 53, 69, 0.3)');
         return;
@@ -175,9 +180,17 @@ function handleMouseMove(e) {
         lastHoveredOctaveRows = [];
         return;
     }
-
+    
     if (isRightClickActive) {
-        // Deletion logic is handled in mousedown now, just draw highlight
+        const clickedTonic = store.placedTonicSigns.find(ts => ts.columnIndex === colIndex && ts.row === rowIndex);
+        let wasErased = false;
+        if (clickedTonic) {
+            wasErased = store.eraseTonicSignGroup(clickedTonic.uuid, false);
+        } else {
+            wasErased = store.eraseNoteAt(colIndex, rowIndex, false);
+        }
+        if (wasErased) rightClickActionTaken = true;
+
         drawHoverHighlight(colIndex, rowIndex, 'rgba(220, 53, 69, 0.3)');
         return;
     } 
@@ -200,12 +213,11 @@ function handleMouseMove(e) {
             drawGhostNote(drawColumn, rowIndex);
             lastHoveredTonicPoint = hoveredMacrobeat;
             
-            // Find and draw octave duplicates
             const hoveredPitchName = store.state.fullRowData[rowIndex]?.pitch.replace(/\d/g, '').trim();
             lastHoveredOctaveRows = [rowIndex];
             store.state.fullRowData.forEach((row, idx) => {
                 if (idx !== rowIndex && row.pitch.replace(/\d/g, '').trim() === hoveredPitchName) {
-                    drawGhostNote(drawColumn, idx, true); // true for fainter
+                    drawGhostNote(drawColumn, idx, true);
                     lastHoveredOctaveRows.push(idx);
                 }
             });
@@ -214,10 +226,11 @@ function handleMouseMove(e) {
             lastHoveredOctaveRows = [];
         }
 
-    } else { // Handle note tools
+    } else { 
         lastHoveredTonicPoint = null;
         lastHoveredOctaveRows = [];
-        drawHoverHighlight(colIndex, rowIndex, 'rgba(74, 144, 226, 0.2)');
+        const highlightColor = store.state.selectedTool.type === 'eraser' ? 'rgba(220, 53, 69, 0.3)' : 'rgba(74, 144, 226, 0.2)';
+        drawHoverHighlight(colIndex, rowIndex, highlightColor);
         drawGhostNote(colIndex, rowIndex);
     }
 }
@@ -241,11 +254,16 @@ function handleGlobalMouseUp() {
     lastHoveredOctaveRows = [];
 
     if (isRightClickActive) {
+        if (rightClickActionTaken) {
+            store.recordState();
+        }
         isRightClickActive = false;
+        rightClickActionTaken = false;
         if (previousTool) {
             store.setSelectedTool(previousTool.type, previousTool.color, previousTool.tonicNumber);
             previousTool = null;
         }
+        document.getElementById('eraser-tool-button')?.classList.remove('erasing-active');
     }
     handleMouseLeave();
 }
