@@ -3,33 +3,47 @@
   <head>
     <meta charset="UTF-8" />
     <title>Student Notation Web Applet</title>
-    <link rel="icon" href="/Student-Notation/favicon.ico" sizes="any"><!-- multi-size ICO -->
-    <link rel="icon" type="image/png" sizes="96x96" href="/Student-Notation/favicon-96x96.png">
-    <link rel="apple-touch-icon" sizes="180x180" href="/Student-Notation/apple-touch-icon.png">
-    <link rel="mask-icon" href="/Student-Notation/favicon.svg" color="#a88cf3"><!-- Safari pinned tab -->
-    <link rel="manifest" href="/Student-Notation/site.webmanifest">
-    <meta name="theme-color" content="#ffffff"> 
-    <!-- A dedicated style tag for print rules -->
+    <link rel="icon" href="/Student-Notation/favicon.ico" sizes="any" />
+    <link rel="icon" type="image/png" sizes="96x96" href="/Student-Notation/favicon-96x96.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/Student-Notation/apple-touch-icon.png" />
+    <link rel="mask-icon" href="/Student-Notation/favicon.svg" color="#a88cf3" />
+    <link rel="manifest" href="/Student-Notation/site.webmanifest" />
+    <meta name="theme-color" content="#ffffff" />
     <style id="print-style-rules"></style>
-    <script type="module" crossorigin src="/Student-Notation/assets/index-CLy39IR0.js"></script>
-    <link rel="stylesheet" crossorigin href="/Student-Notation/assets/index-Bg88WQsh.css">
+    <script type="module" crossorigin src="/Student-Notation/assets/index-CkpGd0CC.js"></script>
+    <link rel="stylesheet" crossorigin href="/Student-Notation/assets/index-BhpuwwsG.css">
   </head>
   <body>
+    <!-- Sidebar and Overlay (Unchanged) -->
+    <div id="sidebar-overlay"></div>
+    <div id="sidebar">
+      <div class="sidebar-container">
+        <div class="app-title">Quinn Fleming's<br />Student Notation</div>
+      </div>
+      <div class="sidebar-container">
+        <button class="sidebar-button" id="save-as-button">Save As</button>
+        <button class="sidebar-button" id="import-button">Open</button>
+        <button class="sidebar-button" id="print-button">Print</button>
+      </div>
+    </div>
+
     <div id="app-container">
       <!-- =======================================================
            Top Toolbar
            ======================================================= -->
       <div id="top-toolbar">
-        <!-- Container 1: Export & Import -->
-        <div class="top-toolbar-container export-import-container">
-            <div class="app-title">Quinn Fleming's<br>Student Notation</div>
-            <button class="toolkit-button" id="save-as-button">Save As</button>
-            <button class="toolkit-button" id="import-button">Import</button>
-            <button class="toolkit-button" id="print-button">Print</button>
-        </div>
-
+        
         <!-- Container 2: Note Tools -->
         <div class="top-toolbar-container note-tools-container">
+            <div class="app-actions-sub-container">
+                <button class="toolkit-icon-button" id="settings-button" aria-label="Settings">⚙️</button>
+                <div id="volume-control-wrapper">
+                    <button class="toolkit-icon-button" id="volume-icon-button" aria-label="Volume">🔊</button>
+                    <div id="volume-popup">
+                    <input type="range" id="vertical-volume-slider" orient="vertical" min="0" max="100" value="75" step="1" />
+                    </div>
+                </div>
+            </div>
             <div id="note-bank-container">
                 <div class="note-bank-row">
                     <div class="note-pair" data-color="#0000ff">
@@ -83,17 +97,32 @@
                   <button class="preset-button" id="preset-marimba">Marimba</button>
                   <button class="preset-button" id="preset-woodwind">Woodwind</button>
                   <button class="preset-button" id="preset-strings">Strings</button>
-
-                  
               </div>
             </div>
         </div>
 
-        <!-- Container 5: Harmonic Multislider -->
+        <!-- Container 5: Harmonic Multislider & Filter -->
         <div class="top-toolbar-container multislider-container">
-          <div class="buffer-container">
-            <canvas id="harmonic-multislider-canvas"></canvas>
-          </div>
+            <div class="filter-top-controls">
+                <button id="filter-enable-toggle" class="toolkit-button">Filter</button>
+                <div id="blend-slider-container">
+                    <div class="filter-blend-thumb" id="thumb-b" tabindex="0">B</div>
+                </div>
+            </div>
+            <div class="filter-main-panel">
+              <div class="buffer-container">
+                <canvas id="harmonic-multislider-canvas"></canvas>
+                <canvas id="filter-overlay-canvas"></canvas>
+              </div>
+              <div class="resonance-slider-wrapper">
+                <div id="resonance-slider-track">
+                  <div id="resonance-slider-thumb" tabindex="0">R</div>
+                </div>
+              </div>
+            </div>
+            <div id="cutoff-slider-container">
+                <div class="filter-cutoff-thumb" id="thumb-c" tabindex="0">C</div>
+            </div>
         </div>
 
         <!-- Container 6: ADSR Visualization -->
@@ -117,58 +146,10 @@
       </div>
       <!-- End Top Toolbar -->
 
-      <!-- Middle Section -->
-      <div id="middle-section">
-        <div id="grid-container-wrapper">
-          <div id="time-signature-display"></div>
-          <div id="grid-controls-container">
-            <div id="beat-line-controls"></div>
-          </div>
-          <div id="pitch-grid-container">
-            <div id="grid-container">
-              <div id="pitch-canvas-wrapper">
-                <canvas id="notation-grid"></canvas>
-                <canvas id="playhead-canvas"></canvas>
-                <canvas id="hover-canvas"></canvas>
-              </div>
-            </div>
-          </div>
-        </div>
-        <!-- NEW WRAPPER for Grid Layout -->
-        <div id="bottom-content-wrapper">
-            <div id="drum-grid-wrapper">
-                <canvas id="drum-grid"></canvas>
-                <canvas id="drum-hover-canvas"></canvas>
-            </div>
-            <!-- NEW CONTAINER for the right side -->
-            <div id="right-side-container">
-                <button class="toolkit-button" id="macrobeat-increase" aria-label="Increase Macrobeat">+</button>
-                <button class="toolkit-button" id="macrobeat-decrease" aria-label="Decrease Macrobeat">–</button>
-            </div>
-        </div>
-      </div>
-
-      <!-- Bottom Toolbar -->
-      <div id="bottom-toolbar">
-        <div class="bottom-toolbar-container grid-nav-container">
-          <div id="grid-nav-keypad">
-            <button class="toolkit-button" id="grid-scroll-up" aria-label="Scroll Grid Up">▲</button>
-            <button class="toolkit-button" id="grid-zoom-in" aria-label="Zoom In">🔍</button>
-            <button class="toolkit-button" id="grid-scroll-down" aria-label="Scroll Grid Down">▼</button>
-            <button class="toolkit-button" id="grid-zoom-out" aria-label="Zoom Out">🔎</button>
-          </div>
-        </div>
-        <div class="bottom-toolbar-container volume-container">
-          <div id="volume-container">
-            <input type="range" id="volume-slider" min="0" max="100" value="75" step="1" aria-label="Volume Slider" />
-            <div class="slider-label">Volume</div>
-          </div>
-        </div>
+      <!-- Control Toolbar -->
+      <div id="controlToolbar">
         <div class="bottom-toolbar-container play-controls-container">
           <div id="play-button-group">
-            <button class="toolkit-button" id="play-button" aria-label="Play Music">⏵</button>
-            <button class="toolkit-button" id="stop-button" aria-label="Stop Music">⏹</button>
-            <button class="toolkit-button" id="loop-button" aria-label="Loop Playback">🔁</button>
             <button class="toolkit-button" id="undo-button" aria-label="Undo">Undo</button>
             <button class="toolkit-button" id="redo-button" aria-label="Redo">Redo</button>
             <button class="toolkit-button" id="clear-button" aria-label="Clear Notes">Clear</button>
@@ -191,13 +172,51 @@
                 </div>
             </div>
             <input type="range" id="tempo-slider" min="30" max="240" value="90" step="1" aria-label="Tempo Slider" />
-            <div class="slider-label">Tempo</div>
+          </div>
+        </div>
+                <div class="bottom-toolbar-container grid-nav-container">
+          <div id="grid-nav-keypad">
+            <button class="toolkit-button" id="play-button" aria-label="Play Music">⏵</button>
+            <button class="toolkit-button" id="stop-button" aria-label="Stop Music">⏹</button>
+            <button class="toolkit-button" id="loop-button" aria-label="Loop Playback">🔁</button>
+            <button class="toolkit-button" id="grid-zoom-in" aria-label="Zoom In">🔍</button>
+            <button class="toolkit-button" id="grid-zoom-out" aria-label="Zoom Out">🔎</button>
           </div>
         </div>
       </div>
+
+      <!-- Middle Section -->
+      <div id="middle-section">
+        <div id="grid-container-wrapper">
+          <div id="time-signature-display"></div>
+          <div id="grid-controls-container">
+            <div id="beat-line-controls"></div>
+          </div>
+          <div id="pitch-grid-container">
+            <div id="grid-container">
+              <div id="pitch-canvas-wrapper">
+                <canvas id="notation-grid"></canvas>
+                <canvas id="playhead-canvas"></canvas>
+                <canvas id="hover-canvas"></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div id="bottom-content-wrapper">
+            <div id="drum-grid-wrapper">
+                <canvas id="drum-grid"></canvas>
+                <canvas id="drum-hover-canvas"></canvas>
+            </div>
+            <div id="right-side-container">
+                <button class="toolkit-button" id="macrobeat-increase" aria-label="Increase Macrobeat">+</button>
+                <button class="toolkit-button" id="macrobeat-decrease" aria-label="Decrease Macrobeat">–</button>
+            </div>
+        </div>
+      </div>
+
     </div>
 
-    <!-- NEW: Print Preview Modal -->
+    <!-- Print Preview Modal -->
     <div id="print-preview-overlay" class="hidden">
       <div id="print-preview-modal">
         <div class="print-preview-header">
@@ -240,8 +259,7 @@
         </div>
       </div>
     </div>
-
-    <!-- NEW: Hidden staging area for the final print image -->
+    
     <div id="print-staging-area"></div>
 
   </body>

@@ -7,13 +7,14 @@ function generateUUID() {
     return `uuid-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 }
 
-// --- Default Timbre Definitions ---
-const defaultSineCoeffs = (() => { const c = new Float32Array(32).fill(0); c[1] = 1; return c; })();
-const defaultSquareCoeffs = (() => { const c = new Float32Array(32).fill(0); for (let n = 1; n < 32; n += 2) { c[n] = 1 / n; } return c; })();
-const defaultSawtoothCoeffs = (() => { const c = new Float32Array(32).fill(0); for (let n = 1; n < 32; n++) { c[n] = 1 / n; } return c; })();
-
-const defaultADSR = { attack: 0.1, decay: 0.2, sustain: 0.8, release: 0.3 };
-const pluckedADSR = { attack: 0.01, decay: 0.8, sustain: 0.1, release: 0.5 };
+// Helper to create a default filter state
+const createDefaultFilterState = () => ({
+    enabled: false,
+    blend: 2.0,
+    cutoff: 16,      // UPDATED: Start cutoff in the middle
+    resonance: 50,   // UPDATED: Start resonance at 50%
+    type: 'lowpass'
+});
 
 const store = {
     state: {
@@ -36,15 +37,12 @@ const store = {
         isLooping: false,
         tempo: 90,
         degreeDisplayMode: 'off',
-        
-        // --- NEW TIMBRE STATE STRUCTURE ---
         timbres: {
-            '#0000ff': { name: 'Blue', adsr: defaultADSR, coeffs: defaultSineCoeffs, activePresetName: 'sine' },
-            '#000000': { name: 'Black', adsr: defaultADSR, coeffs: defaultSquareCoeffs, activePresetName: 'square' },
-            '#ff0000': { name: 'Red', adsr: pluckedADSR, coeffs: defaultSawtoothCoeffs, activePresetName: 'sawtooth' },
-            '#00ff00': { name: 'Green', adsr: pluckedADSR, coeffs: defaultSineCoeffs, activePresetName: 'sine' }
+            '#0000ff': { name: 'Blue', adsr: { attack: 0.1, decay: 0.2, sustain: 0.8, release: 0.3 }, coeffs: (() => { const c = new Float32Array(32).fill(0); c[1] = 1; return c; })(), activePresetName: 'sine', filter: createDefaultFilterState() },
+            '#000000': { name: 'Black', adsr: { attack: 0.1, decay: 0.2, sustain: 0.8, release: 0.3 }, coeffs: (() => { const c = new Float32Array(32).fill(0); for (let n = 1; n < 32; n += 2) { c[n] = 1 / n; } return c; })(), activePresetName: 'square', filter: createDefaultFilterState() },
+            '#ff0000': { name: 'Red', adsr: { attack: 0.01, decay: 0.8, sustain: 0.1, release: 0.5 }, coeffs: (() => { const c = new Float32Array(32).fill(0); for (let n = 1; n < 32; n++) { c[n] = 1 / n; } return c; })(), activePresetName: 'sawtooth', filter: createDefaultFilterState() },
+            '#00ff00': { name: 'Green', adsr: { attack: 0.01, decay: 0.8, sustain: 0.1, release: 0.5 }, coeffs: (() => { const c = new Float32Array(32).fill(0); c[1] = 1; return c; })(), activePresetName: 'sine', filter: createDefaultFilterState() }
         },
-        
         isPrintPreviewActive: false,
         printOptions: { topRow: 0, bottomRow: 87, includeDrums: true, orientation: 'landscape', colorMode: 'color' }
     },
@@ -54,11 +52,7 @@ const store = {
     },
 
     setDegreeDisplayMode(mode) {
-        if (this.state.degreeDisplayMode === mode) {
-            this.state.degreeDisplayMode = 'off';
-        } else {
-            this.state.degreeDisplayMode = mode;
-        }
+        this.state.degreeDisplayMode = this.state.degreeDisplayMode === mode ? 'off' : mode;
         this.emit('layoutConfigChanged');
         this.emit('degreeDisplayModeChanged', this.state.degreeDisplayMode);
     },
@@ -68,7 +62,7 @@ const store = {
         const newSnapshot = {
             notes: JSON.parse(JSON.stringify(this.state.placedNotes)),
             tonicSignGroups: JSON.parse(JSON.stringify(this.state.tonicSignGroups)),
-            timbres: JSON.parse(JSON.stringify(this.state.timbres)) // Also save timbre state
+            timbres: JSON.parse(JSON.stringify(this.state.timbres))
         };
         this.state.history.push(newSnapshot);
         this.state.historyIndex++;
@@ -84,7 +78,7 @@ const store = {
             this.state.timbres = JSON.parse(JSON.stringify(snapshot.timbres));
             this.emit('notesChanged');
             this.emit('rhythmStructureChanged');
-            this.emit('timbreChanged', this.state.selectedTool.color);
+            this.emit('timbreChanged', this.state.selectedTool.color); 
             this.emit('historyChanged');
         }
     },
@@ -103,16 +97,33 @@ const store = {
         }
     },
 
-    // --- REFACTORED ACTIONS FOR TIMBRE ---
     setADSR(color, newADSR) {
         this.state.timbres[color].adsr = newADSR;
-        this.state.timbres[color].activePresetName = null; // Custom change invalidates preset
+        this.state.timbres[color].activePresetName = null;
         this.emit('timbreChanged', color);
+    },
+
+    setFilterSettings(color, newSettings) {
+        if (this.state.timbres[color]) {
+            Object.assign(this.state.timbres[color].filter, newSettings);
+
+            const blend = this.state.timbres[color].filter.blend;
+            if (blend <= 0.0) this.state.timbres[color].filter.type = 'highpass';
+            else if (blend >= 2.0) this.state.timbres[color].filter.type = 'lowpass';
+            else this.state.timbres[color].filter.type = 'bandpass';
+
+            if(newSettings.enabled !== undefined) {
+                // If we're just toggling the filter, don't invalidate the preset
+            } else {
+                this.state.timbres[color].activePresetName = null;
+            }
+            this.emit('timbreChanged', color);
+        }
     },
 
     setHarmonicCoefficients(color, coeffs) {
         this.state.timbres[color].coeffs = coeffs;
-        this.state.timbres[color].activePresetName = null; // Custom change invalidates preset
+        this.state.timbres[color].activePresetName = null;
         this.emit('timbreChanged', color);
     },
 
@@ -121,10 +132,14 @@ const store = {
         this.state.timbres[color].adsr = preset.adsr;
         this.state.timbres[color].coeffs = preset.coeffs;
         this.state.timbres[color].activePresetName = preset.name;
+        if (preset.filter) {
+            this.state.timbres[color].filter = JSON.parse(JSON.stringify(preset.filter));
+        } else {
+            this.state.timbres[color].filter = createDefaultFilterState();
+        }
         this.emit('timbreChanged', color);
     },
 
-    // --- Actions below are mostly unchanged ---
     addNote(note) {
         this.state.placedNotes.push(note);
         this.emit('notesChanged');
@@ -206,8 +221,12 @@ const store = {
         this.state.selectedTool = { type, color, tonicNumber };
         this.emit('toolChanged', { newTool: this.state.selectedTool, oldTool });
     },
+    
+    setPrintOptions(newOptions) {
+        this.state.printOptions = { ...this.state.printOptions, ...newOptions };
+        this.emit('printOptionsChanged', this.state.printOptions);
+    },
 
-    // --- Other state setters remain the same ---
     setTempo(newTempo) { this.state.tempo = newTempo; this.emit('tempoChanged', newTempo); },
     setLooping(isLooping) { this.state.isLooping = isLooping; this.emit('loopingChanged', isLooping); },
     setPlaybackState(isPlaying, isPaused = false) { this.state.isPlaying = isPlaying; this.emit('playbackStateChanged', { isPlaying, isPaused }); },

@@ -1,0 +1,131 @@
+/* ==========================================================================
+   Sidebar, Overlay, and App Controls Styles
+   ========================================================================= */
+
+#sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 250px;
+  height: 100%;
+  background-color: rgba(248, 249, 250, 0.95);
+  border-right: 1px solid var(--c-border);
+  box-shadow: var(--box-shadow-md);
+  padding: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  z-index: 2000;
+  transform: translateX(-100%);
+  transition: transform 0.3s ease-in-out;
+  backdrop-filter: blur(5px);
+}
+
+body.sidebar-open #sidebar {
+  transform: translateX(0);
+}
+
+.sidebar-container {
+  border: 1px solid var(--c-border);
+  border-radius: var(--border-radius-md);
+  padding: var(--space-3);
+  background-color: var(--c-surface);
+}
+
+.sidebar-container .app-title {
+  text-align: center;
+  font-weight: bold;
+  line-height: 1.2;
+  color: var(--c-text-muted);
+}
+
+.sidebar-button {
+  display: block;
+  width: 100%;
+  padding: var(--space-2) var(--space-3);
+  text-align: left;
+  margin-bottom: var(--space-2);
+}
+.sidebar-button:last-child {
+  margin-bottom: 0;
+}
+
+#sidebar-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.4);
+  z-index: 1999;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.3s ease-in-out, visibility 0.3s ease-in-out;
+}
+
+body.sidebar-open #sidebar-overlay {
+  opacity: 1;
+  visibility: visible;
+}
+
+.app-controls-container {
+  flex-direction: row !important;
+  justify-content: flex-start !important;
+  gap: var(--space-2);
+  flex-grow: 0 !important;
+  flex-basis: auto !important;
+}
+
+.toolkit-icon-button {
+  font-size: 20px;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  background-color: transparent;
+  border: 1px solid var(--c-border);
+  color: var(--c-text-muted);
+}
+.toolkit-icon-button:hover {
+    background-color: var(--c-gridline);
+}
+
+/* --- New Vertical Volume Control --- */
+#volume-control-wrapper {
+  position: relative;
+}
+
+#volume-popup {
+  position: absolute;
+  top: 100%; 
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: var(--c-surface);
+  border: 1px solid var(--c-border);
+  border-radius: var(--border-radius-md);
+  padding: var(--space-3) var(--space-2);
+  margin-top: var(--space-2); 
+  box-shadow: var(--box-shadow-sm);
+  visibility: hidden;
+  opacity: 0;
+  transition: opacity 0.2s, visibility 0.2s;
+}
+
+#volume-popup.visible {
+  visibility: visible;
+  opacity: 1;
+}
+
+/* UPDATED: Modern CSS for vertical slider to fix deprecation warning */
+input[type="range"][orient="vertical"] {
+  appearance: none;
+  -webkit-appearance: none;
+  writing-mode: vertical-lr;
+  direction: rtl;
+  width: 8px;
+  height: 120px;
+  padding: 0 5px;
+}

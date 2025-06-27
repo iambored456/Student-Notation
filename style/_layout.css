@@ -10,20 +10,29 @@
   gap: var(--app-padding);
 }
 
-#top-toolbar, #bottom-toolbar {
+#top-toolbar, #controlToolbar {
   display: flex;
-  gap: var(--space-2); /* UPDATED */
-  padding: var(--space-2); /* UPDATED */
+  gap: var(--space-2);
+  padding: var(--space-2);
   border: 1px solid var(--c-border);
   border-radius: var(--border-radius-md);
   background-color: var(--c-surface);
   box-shadow: var(--box-shadow-sm);
   overflow: visible;
-  flex-shrink: 0; /* Prevent toolbars from shrinking */
+  flex-shrink: 0;
+}
+
+#top-toolbar {
+  height: 22vh;
   align-items: stretch; /* Make all containers the same height */
 }
 
-#top-toolbar    { height: 22vh; }
+#controlToolbar {
+  height: auto;
+  justify-content: flex-start; /* Key change for left-alignment */
+  align-items: center; /* Vertically center items */
+}
+
 #middle-section { 
   flex: 1; /* This is the stretchy part */
   display: flex; 
@@ -33,7 +42,6 @@
   overflow-x: auto; /* The main horizontal scrollbar now lives here */
   align-items: flex-start; /* Prevent children from stretching to full width */
 }
-#bottom-toolbar { height: 10vh; }
 
 
 /* ==========================================================================
@@ -54,9 +62,10 @@
 .bottom-toolbar-container {
   border: none;
   padding: 0;
+  flex: 0 0 auto; /* Key change: make all control toolbar items size to content */
 }
 
-/* --- UPDATED: More robust flex sizing --- */
+/* --- UPDATED: More robust flex sizing for TOP toolbar --- */
 
 /* Let these containers size themselves based on their content */
 .export-import-container,
@@ -73,19 +82,6 @@
 .adsr-container {
     flex: 3 1 0; /* Grow three times as fast as ADSR */
 }
-
-
-/* Let these containers size themselves based on their content */
-.grid-nav-container {
-    flex: 0 0 auto;
-}
-/* Let these containers grow to fill the remaining space */
-.volume-container,
-.play-controls-container,
-.tempo-container {
-    flex: 1;
-}
-
 
 /* ==========================================================================
    GRID & CANVAS STYLES

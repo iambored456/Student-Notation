@@ -1,9 +1,6 @@
 // js/components/PrintPreview.js
 import store from '../state/store.js';
 import PrintService from '../services/printService.js';
-// We no longer need to import the grid drawers here directly
-// import { drawPitchGrid } from './Grid/Grid.js';
-// import { drawDrumGrid } from './Grid/drumGrid.js';
 
 console.log("PrintPreview: Module loaded.");
 
@@ -16,7 +13,6 @@ const PrintPreview = {
         this.ctx = this.canvas.getContext('2d');
         this.canvasWrapper = this.canvas.parentElement;
 
-        // Controls
         this.topRowSlider = document.getElementById('print-top-row-slider');
         this.bottomRowSlider = document.getElementById('print-bottom-row-slider');
         this.topRowLabel = document.getElementById('print-top-row-label');
@@ -25,33 +21,33 @@ const PrintPreview = {
         this.colorBtn = document.getElementById('print-color-mode-toggle');
         this.drumsBtn = document.getElementById('print-drums-toggle');
 
-        // Main buttons
-        document.getElementById('print-close-button').addEventListener('click', () => store.setPrintPreviewActive(false));
+        document.getElementById('print-close-button').addEventListener('click', () => this.hide());
         document.getElementById('print-confirm-button').addEventListener('click', () => {
-            PrintService.generateAndPrint(); 
-            store.setPrintPreviewActive(false);
+            PrintService.generateAndPrint();
+            this.hide();
         });
 
-        // Event listeners
-        this.topRowSlider.addEventListener('input', e => this.handleSliderChange(e, 'topRow'));
-        this.bottomRowSlider.addEventListener('input', e => this.handleSliderChange(e, 'bottomRow'));
+        this.topRowSlider.addEventListener('input', (e) => store.setPrintOptions({ topRow: parseInt(e.target.value) }));
+        this.bottomRowSlider.addEventListener('input', (e) => store.setPrintOptions({ bottomRow: parseInt(e.target.value) }));
         this.orientationBtn.addEventListener('click', () => this.handleToggle('orientation', ['landscape', 'portrait']));
         this.colorBtn.addEventListener('click', () => this.handleToggle('colorMode', ['color', 'bw']));
         this.drumsBtn.addEventListener('click', () => this.handleToggle('includeDrums', [true, false]));
 
-        // Listen for changes
         store.on('printPreviewStateChanged', isActive => isActive ? this.show() : this.hide());
-        store.on('printOptionsChanged', () => this.renderPreview());
+        store.on('printOptionsChanged', () => this.render());
         store.on('notesChanged', () => {
-            if (store.state.isPrintPreviewActive) this.renderPreview();
+            if (store.state.isPrintPreviewActive) this.render();
         });
-
+        
         new ResizeObserver(() => {
-            if (store.state.isPrintPreviewActive) this.renderPreview();
+            if (store.state.isPrintPreviewActive) this.render();
         }).observe(this.canvasWrapper);
     },
-
+    
     show() {
+        store.state.isPrintPreviewActive = true;
+        this.overlay.classList.remove('hidden');
+        
         const pitchNotes = store.state.placedNotes.filter(n => !n.isDrum);
         let minRow = pitchNotes.length > 0 ? Infinity : 34;
         let maxRow = pitchNotes.length > 0 ? -Infinity : 54;
@@ -67,40 +63,27 @@ const PrintPreview = {
 
         this.topRowSlider.max = store.state.fullRowData.length - 1;
         this.bottomRowSlider.max = store.state.fullRowData.length - 1;
-
-        store.setPrintOptions({ topRow, bottomRow });
         
-        this.overlay.classList.remove('hidden');
-        this.renderPreview();
+        store.setPrintOptions({ ...store.state.printOptions, topRow, bottomRow });
     },
 
     hide() {
+        store.state.isPrintPreviewActive = false;
         this.overlay.classList.add('hidden');
-    },
-
-    handleSliderChange(e, optionKey) {
-        const value = parseInt(e.target.value, 10);
-        store.setPrintOptions({ [optionKey]: value });
     },
 
     handleToggle(optionKey, values) {
         const currentVal = store.state.printOptions[optionKey];
         const nextVal = currentVal === values[0] ? values[1] : values[0];
-        console.log(`[PrintPreview] Toggling option '${optionKey}' to new value:`, nextVal);
         store.setPrintOptions({ [optionKey]: nextVal });
     },
 
     updateControls() {
         const { topRow, bottomRow, orientation, colorMode, includeDrums } = store.state.printOptions;
         
-        if (bottomRow < topRow) {
-            this.bottomRowSlider.value = topRow;
-            store.setPrintOptions({ bottomRow: topRow });
-            return;
-        }
-        
         this.topRowSlider.value = topRow;
         this.bottomRowSlider.value = bottomRow;
+        
         this.topRowLabel.textContent = store.state.fullRowData[topRow]?.pitch || 'N/A';
         this.bottomRowLabel.textContent = store.state.fullRowData[bottomRow]?.pitch || 'N/A';
 
@@ -110,43 +93,27 @@ const PrintPreview = {
         
         this.drumsBtn.classList.toggle('active', includeDrums);
         this.colorBtn.classList.toggle('active', colorMode === 'color');
-        // No 'active' class needed for orientation button
     },
 
-    renderPreview() {
+    render() {
         if (!store.state.isPrintPreviewActive) return;
         this.updateControls();
-        const printOptions = store.state.printOptions;
         
-        // --- 1. Calculate Preview Canvas Dimensions ---
         const wrapperWidth = this.canvasWrapper.clientWidth;
         const wrapperHeight = this.canvasWrapper.clientHeight;
-        if (wrapperWidth === 0 || wrapperHeight === 0) return; // Don't render if not visible
+        if (wrapperWidth === 0 || wrapperHeight === 0) return;
 
-        const isLandscape = printOptions.orientation === 'landscape';
-        const aspectRatio = isLandscape ? 11 / 8.5 : 8.5 / 11;
-        
-        let canvasWidth = wrapperWidth;
-        let canvasHeight = canvasWidth / aspectRatio;
-
-        if (canvasHeight > wrapperHeight) {
-            canvasHeight = wrapperHeight;
-            canvasWidth = canvasHeight * aspectRatio;
-        }
-        
-        this.canvas.width = canvasWidth;
-        this.canvas.height = canvasHeight;
-
-        // --- 2. Generate the Score Image using the Centralized Service ---
-        const scoreCanvas = PrintService.generateScoreCanvas(printOptions, { 
-            width: this.canvas.width, 
-            height: this.canvas.height 
+        const scoreCanvas = PrintService.generateScoreCanvas(store.state.printOptions, { 
+            width: wrapperWidth, 
+            height: wrapperHeight 
         });
 
-        // --- 3. Draw the Generated Image onto the Preview Canvas ---
-        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-        this.ctx.drawImage(scoreCanvas, 0, 0);
-        console.log('[PrintPreview] Preview canvas updated.');
+        if (scoreCanvas) {
+            this.canvas.width = scoreCanvas.width;
+            this.canvas.height = scoreCanvas.height;
+            this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+            this.ctx.drawImage(scoreCanvas, 0, 0);
+        }
     }
 };
 

@@ -2,19 +2,24 @@
    Main Stylesheet - Imports Only
    ========================================================================== */
 
-/* 1. Design System & Variables */
+/* --- Global & Layout --- */
 @import url('style/_variables.css');
-
-/* 2. Global Resets, Fonts, and Base Element Styles */
 @import url('style/_globals.css');
-@import url('style/_typography.css'); /* NEW */
-
-/* 3. Main Application Layout (Toolbars, Sections) */
+@import url('style/_typography.css');
 @import url('style/_layout.css');
 
-/* 4. Component-Specific Styles */
-@import url('style/_components.css');
-
-/* 5. Modal and Print Styles */
+/* --- Main UI Sections --- */
+@import url('style/_sidebar.css');
 @import url('style/_modal.css');
 @import url('style/_print.css');
+
+/* --- Component-Specific Styles --- */
+@import url('style/components/_sliders.css');
+@import url('style/components/_buttons.css');
+@import url('style/components/_note-bank.css');
+@import url('style/components/_tempo-display.css');
+@import url('style/components/_grid-ui.css');
+@import url('style/components/_adsr.css');
+@import url('style/components/_multislider.css');
+@import url('style/components/_filter-controls.css'); /* ADD THIS LINE */
+@import url('style/components/_ui-states.css');

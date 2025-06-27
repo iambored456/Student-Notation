@@ -28,8 +28,12 @@ export function initSpacebarHandler() {
 
         currentSpacebarNote = lastNote && !lastNote.isDrum ? getPitchForNote(lastNote) : 'C4';
         
-        SynthEngine.triggerAttack(currentSpacebarNote);
-        console.log(`Spacebar: Attack ${currentSpacebarNote}`);
+        // --- FIX: Get the active tool's color and pass it to the synth engine ---
+        const activeColor = store.state.selectedTool.color;
+        if (activeColor) {
+            SynthEngine.triggerAttack(currentSpacebarNote, activeColor);
+            console.log(`Spacebar: Attack ${currentSpacebarNote} with color ${activeColor}`);
+        }
     });
 
     document.addEventListener('keyup', (e) => {
@@ -39,7 +43,11 @@ export function initSpacebarHandler() {
         spacebarPressed = false;
         
         if (currentSpacebarNote) {
-            SynthEngine.triggerRelease(currentSpacebarNote);
+            // --- FIX: Get the active tool's color for the release as well ---
+            const activeColor = store.state.selectedTool.color;
+            if (activeColor) {
+                SynthEngine.triggerRelease(currentSpacebarNote, activeColor);
+            }
             console.log(`Spacebar: Release ${currentSpacebarNote}`);
             currentSpacebarNote = null;
         }

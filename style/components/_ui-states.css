@@ -1,0 +1,34 @@
+/* style/components/_ui-states.css */
+
+/* --- Note Selection States --- */
+.note.selected {
+  background-color: var(--note-color, #000);
+}
+.note-pair.selected {
+  border-color: var(--c-accent) !important;
+  box-shadow: 0 0 8px var(--c-accent);
+}
+
+/* --- Button Selection States --- */
+.tonic-sign-button.selected {
+  border: 2px solid var(--c-accent) !important;
+  box-shadow: 0 0 5px var(--c-accent);
+}
+.preset-button.selected {
+  background-color: var(--c-accent);
+  color: var(--c-surface);
+  border: 1px solid var(--c-accent-hover);
+  box-shadow: 0 0 5px var(--c-accent);
+}
+.preset-button.selected:hover {
+    background-color: var(--c-accent-hover);
+}
+
+/* --- Playback Control States --- */
+#loop-button.active {
+  background-color: var(--c-accent-hover);
+  border-color: var(--c-accent);
+}
+#play-button.active {
+  color: #28a745; 
+}

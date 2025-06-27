@@ -1,0 +1,44 @@
+/* style/components/_grid-ui.css */
+
+#grid-controls-container {
+  position: relative;
+  height: 30px;
+  margin-block-end: var(--space-1);
+}
+#time-signature-display {
+  height: 20px;
+  width: 100%;
+  position: relative;
+}
+.rhythm-ui-button {
+  background-color: rgba(255, 255, 255, 0.8);
+  color: var(--c-text);
+  border: 1px solid var(--c-border);
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  line-height: 18px;
+  text-align: center;
+  z-index: 10;
+  position: absolute;
+  transform: translateX(-50%);
+}
+.rhythm-ui-button:hover { 
+  background-color: var(--c-surface); 
+  border-color: var(--c-text); 
+}
+.time-signature-label {
+  background: var(--c-bg);
+  padding-block: 2px;
+  padding-inline: var(--space-2);
+  border-radius: var(--border-radius-sm);
+  font-weight: bold;
+  color: var(--c-text-muted);
+  user-select: none;
+  position: absolute;
+  transform: translateX(-50%);
+}
+.time-signature-label.anacrusis-label { 
+  color: var(--c-border); 
+}

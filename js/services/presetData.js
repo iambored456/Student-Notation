@@ -5,6 +5,14 @@ console.log("PresetData: Module loaded.");
 
 const BINS = HARMONIC_BINS;
 
+// Helper to create a default filter state for presets
+const defaultFilter = {
+    blend: 2.0,
+    cutoff: 31,
+    resonance: 0,
+    type: 'lowpass'
+};
+
 // --- Private Helper Functions for Generating Coefficients ---
 function generateSineCoeffs() {
     const coeffs = new Float32Array(BINS).fill(0);
@@ -23,7 +31,7 @@ function generateSquareCoeffs() {
 function generateTriangleCoeffs() {
     const coeffs = new Float32Array(BINS).fill(0);
     for (let n = 1; n < BINS; n += 2) {
-        coeffs[n] = (1 / (n * n)) * ((n - 1) / 2 % 2 === 0 ? 1 : -1);
+        coeffs[n] = 1 / (n * n);
     }
     return coeffs;
 }
@@ -44,22 +52,26 @@ export const PRESETS = {
     sine: {
         name: 'sine',
         adsr: basicWaveADSR,
-        coeffs: generateSineCoeffs()
+        coeffs: generateSineCoeffs(),
+        filter: { ...defaultFilter }
     },
     triangle: {
         name: 'triangle',
         adsr: basicWaveADSR,
-        coeffs: generateTriangleCoeffs()
+        coeffs: generateTriangleCoeffs(),
+        filter: { ...defaultFilter }
     },
     square: {
         name: 'square',
         adsr: basicWaveADSR,
-        coeffs: generateSquareCoeffs()
+        coeffs: generateSquareCoeffs(),
+        filter: { ...defaultFilter }
     },
     sawtooth: {
         name: 'sawtooth',
         adsr: basicWaveADSR,
-        coeffs: generateSawtoothCoeffs()
+        coeffs: generateSawtoothCoeffs(),
+        filter: { ...defaultFilter }
     },
 
     // Instrument Presets
@@ -72,17 +84,20 @@ export const PRESETS = {
                 c[n] = (1 / (n * n)) * Math.pow(0.85, n);
             }
             return c;
-        })()
+        })(),
+        filter: { ...defaultFilter, cutoff: 28 } // Slightly closed filter for piano
     },
     strings: {
         name: 'strings',
         adsr: { attack: 0.4, decay: 0.1, sustain: 0.9, release: 0.5 },
-        coeffs: generateSawtoothCoeffs()
+        coeffs: generateSawtoothCoeffs(),
+        filter: { ...defaultFilter }
     },
     woodwind: {
         name: 'woodwind',
         adsr: { attack: 0.1, decay: 0.2, sustain: 0.8, release: 0.3 },
-        coeffs: generateSquareCoeffs()
+        coeffs: generateSquareCoeffs(),
+        filter: { ...defaultFilter }
     },
     marimba: {
         name: 'marimba',
@@ -93,6 +108,7 @@ export const PRESETS = {
             c[4] = 0.5;
             c[9] = 0.2;
             return c;
-        })()
+        })(),
+        filter: { ...defaultFilter, cutoff: 25 }
     }
 };

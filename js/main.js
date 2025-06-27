@@ -13,6 +13,7 @@ import Toolbar from './components/Toolbar/Toolbar.js';
 import GridManager from './components/Grid/gridManager.js';
 import { initHarmonicMultislider } from './components/HarmonicMultislider/harmonicMultislider.js';
 import { initADSR } from './components/ADSR/customenvelope.js';
+import { initFilterControls } from './components/FilterControls/filterControls.js'; // IMPORT NEW MODULE
 import PrintPreview from './components/PrintPreview.js';
 
 console.log("Main.js: Application starting...");
@@ -35,9 +36,9 @@ document.addEventListener("DOMContentLoaded", () => {
     
     Toolbar.init();
     GridManager.init();
-    initADSR(); // Initialize the ADSR component
-    // FIX: Removed the obsolete call to SynthEngine.setCustomEnvelope
+    initADSR(); 
     initHarmonicMultislider();
+    initFilterControls(); // INITIALIZE NEW MODULE
     PrintPreview.init();
     
     console.log("----------------------------------------");
