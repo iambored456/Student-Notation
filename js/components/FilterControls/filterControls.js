@@ -1,5 +1,5 @@
 // js/components/FilterControls/filterControls.js
-import store from '../../state/store.js';
+import store from '../../state/index.js'; // <-- UPDATED PATH
 
 console.log("FilterControls: Module loaded.");
 

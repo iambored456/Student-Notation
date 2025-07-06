@@ -1,6 +1,7 @@
 // js/services/transportService.js
 import * as Tone from 'tone';
-import store from '../state/store.js';
+import store from '../state/index.js'; // <-- UPDATED PATH
+import { getPlacedTonicSigns } from '../state/selectors.js'; // <-- ADDED SELECTOR
 import LayoutService from './layoutService.js';
 import SynthEngine from './synthEngine.js';
 import GlobalService from './globalService.js';
@@ -22,7 +23,7 @@ function calculateTimeMap() {
     let currentTime = 0;
     const microbeatDuration = getMicrobeatDuration();
     const { columnWidths } = store.state;
-    const placedTonicSigns = store.placedTonicSigns;
+    const placedTonicSigns = getPlacedTonicSigns(store.state); // <-- UPDATED GETTER
     
     for (let i = 0; i < columnWidths.length; i++) {
         timeMap[i] = currentTime;
@@ -65,16 +66,22 @@ function scheduleNotes() {
             const toolColor = note.color; // The color for the synth voice
             const pitchColor = store.state.fullRowData[note.row]?.hex || '#888888'; // The color for the playhead
             const noteId = note.uuid;
+            const timbre = store.state.timbres[toolColor];
+
+            if (!timbre) {
+                console.warn(`[TransportService] Timbre not found for color ${toolColor}. Skipping note ${noteId}.`);
+                return; // 'continue' in a forEach loop
+            }
             
             Tone.Transport.schedule(time => {
                 if (store.state.isPaused) return;
                 SynthEngine.triggerAttack(pitch, toolColor, time);
-                GlobalService.adsrComponent?.playheadManager.trigger(noteId, 'attack', pitchColor);
+                GlobalService.adsrComponent?.playheadManager.trigger(noteId, 'attack', pitchColor, timbre.adsr);
             }, startTime);
 
             Tone.Transport.schedule(time => {
                 SynthEngine.triggerRelease(pitch, toolColor, time);
-                GlobalService.adsrComponent?.playheadManager.trigger(noteId, 'release', pitchColor);
+                GlobalService.adsrComponent?.playheadManager.trigger(noteId, 'release', pitchColor, timbre.adsr);
             }, startTime + duration);
         }
     });

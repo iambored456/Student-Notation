@@ -1,5 +1,5 @@
 // js/components/Toolbar/rhythmUI.js
-import store from '../../state/store.js';
+import store from '../../state/index.js'; // <-- UPDATED PATH
 import RhythmService from '../../services/rhythmService.js';
 
 console.log("RhythmUIComponent: Module loaded.");

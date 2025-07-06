@@ -1,5 +1,5 @@
 // js/components/ADSR/adsrComponent.js
-import store from '../../state/store.js';
+import store from '../../state/index.js'; // <-- UPDATED PATH
 import ui from './adsrUI.js';
 import { initInteractions } from './adsrInteractions.js';
 import { drawTempoGridlines, drawEnvelope, applyTheme } from './adsrRender.js';
@@ -8,7 +8,7 @@ import GlobalService from '../../services/globalService.js';
 
 
 // Define a fixed maximum time for the ADSR envelope duration in seconds.
-export const MAX_ADSR_TIME_SECONDS = 4.0;
+export const MAX_ADSR_TIME_SECONDS = 2.5;
 
 class AdsrComponent {
     constructor() {
@@ -104,15 +104,16 @@ class AdsrComponent {
         this.svgContainer.appendChild(this.playheadLayer);
     }
     
-    calculateEnvelopePoints() {
-        const totalTime = this.attack + this.decay + this.release;
+    calculateEnvelopePoints(sourceAdsr = this) {
+        const { attack, decay, sustain, release } = sourceAdsr;
+        const totalTime = attack + decay + release;
         if (!this.width || !this.height) return [];
 
         const timeToX = (time) => (time / MAX_ADSR_TIME_SECONDS) * this.width;
 
         const p1 = { x: 0, y: this.height };
-        const p2 = { x: timeToX(this.attack), y: 0 };
-        const p3 = { x: timeToX(this.attack + this.decay), y: this.height * (1 - this.sustain) };
+        const p2 = { x: timeToX(attack), y: 0 };
+        const p3 = { x: timeToX(attack + decay), y: this.height * (1 - sustain) };
         const p4 = { x: timeToX(totalTime), y: this.height };
         return [p1, p2, p3, p4];
     }

@@ -1,5 +1,5 @@
 // js/components/Toolbar/initializers/fileActionsInitializer.js
-import store from '../../../state/store.js';
+import store from '../../../state/index.js'; // <-- UPDATED PATH
 
 function getScoreAsCSV() {
     return store.state.placedNotes.map(note => {

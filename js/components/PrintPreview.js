@@ -1,5 +1,5 @@
 // js/components/PrintPreview.js
-import store from '../state/store.js';
+import store from '../state/index.js'; // <-- UPDATED PATH
 import PrintService from '../services/printService.js';
 
 console.log("PrintPreview: Module loaded.");

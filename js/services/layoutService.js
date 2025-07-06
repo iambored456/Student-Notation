@@ -1,11 +1,15 @@
 // js/services/layoutService.js
-import store from '../state/store.js';
+import store from '../state/index.js';
+import { getPlacedTonicSigns } from '../state/selectors.js';
 import { RESIZE_DEBOUNCE_DELAY, MIN_VISUAL_ROWS } from '../constants.js';
+import GridManager from '../components/Grid/gridManager.js';
+import Toolbar from '../components/Toolbar/Toolbar.js';
 
 console.log("LayoutService: Module loaded.");
 
-const INITIAL_TOP_NOTE = 'G5';
-const INITIAL_BOTTOM_NOTE = 'A3';
+// --- UPDATED: New initial view range from C5 down to G3 ---
+const INITIAL_TOP_NOTE = 'C5';
+const INITIAL_BOTTOM_NOTE = 'G3';
 
 let resizeTimeout;
 let gridContainer, canvas, ctx, drumCanvas, drumCtx, playheadCanvas, hoverCanvas, drumHoverCanvas, pitchCanvasWrapper, drumGridWrapper, gridContainerWrapper, rightSideContainer, bottomContentWrapper;
@@ -35,7 +39,7 @@ function initDOMElements() {
 
 function recalcGridColumns() {
     const { macrobeatGroupings } = store.state;
-    const placedTonicSigns = store.placedTonicSigns;
+    const placedTonicSigns = getPlacedTonicSigns(store.state);
     
     const newColumnWidths = [3, 3];
     const sortedTonicSigns = [...placedTonicSigns].sort((a, b) => a.preMacrobeatIndex - b.preMacrobeatIndex);
@@ -94,15 +98,17 @@ function applyDimensions() {
 }
 
 function calculateAndApplyLayout() {
-    console.log("[LayoutService] calculateAndApplyLayout called."); // <<< LOG
+    console.log("[LayoutService] calculateAndApplyLayout called.");
     const container = document.getElementById('grid-container-wrapper');
     if (!container) return false;
     
     const containerHeight = container.offsetHeight;
     if (containerHeight < 50) return false;
     
+    let needsInitialRender = false;
+
     if (!isInitialLayoutDone) {
-        console.log("[LayoutService] Performing INITIAL layout calculation."); // <<< LOG
+        console.log("[LayoutService] Performing INITIAL layout calculation.");
         const topNoteIndex = store.state.fullRowData.findIndex(row => row.toneNote === INITIAL_TOP_NOTE);
         const bottomNoteIndex = store.state.fullRowData.findIndex(row => row.toneNote === INITIAL_BOTTOM_NOTE);
         
@@ -114,27 +120,33 @@ function calculateAndApplyLayout() {
             store.state.logicRows = visualRows * 2;
             store.state.gridPosition = topNoteIndex;
 
-            // <<< LOG
             console.log(`[LayoutService] Initial view calculated. visualRows: ${visualRows}, gridPosition: ${topNoteIndex}`);
         } else {
-            console.error("[LayoutService] Could not find initial notes for layout!"); // <<< LOG
+            console.error("[LayoutService] Could not find initial notes for layout!");
             store.state.visualRows = 10;
             store.state.logicRows = 20;
             store.state.gridPosition = store.state.fullRowData.findIndex(r => r.toneNote === 'C4');
         }
         
         isInitialLayoutDone = true;
+        needsInitialRender = true;
     }
     
     const cellHeight = containerHeight / store.state.visualRows;
-    const cellWidth = cellHeight / 2;
     store.state.cellWidth = cellHeight / 2;
     store.state.cellHeight = cellHeight;
-
-    // <<< LOG
     console.log(`[LayoutService] Cell dimensions calculated. cellHeight: ${cellHeight}`);
     
     applyDimensions();
+
+    if (needsInitialRender) {
+        // Trigger the very first render now that dimensions are known.
+        console.log("[LayoutService] Triggering initial full render.");
+        Toolbar.renderRhythmUI();
+        GridManager.renderPitchGrid();
+        GridManager.renderDrumGrid();
+    }
+    
     return true;
 }
 
@@ -157,12 +169,12 @@ const LayoutService = {
         recalcGridColumns();
 
         const observer = new ResizeObserver(entries => {
-            console.log("[LayoutService] ResizeObserver fired."); // <<< LOG
+            console.log("[LayoutService] ResizeObserver fired.");
             if (!gridContainerWrapper) return;
             const entry = entries[0];
             if (entry.contentRect.height > 50 && !isInitialLayoutDone) {
                 if (calculateAndApplyLayout()) {
-                    console.log("[LayoutService] Initial layout complete, disconnecting observer."); // <<< LOG
+                    console.log("[LayoutService] Initial layout complete, disconnecting observer.");
                     observer.disconnect();
                 }
             }

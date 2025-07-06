@@ -15,6 +15,14 @@ export const getPitchNotes = (state) => state.placedNotes.filter(n => !n.isDrum)
 export const getDrumNotes = (state) => state.placedNotes.filter(n => n.isDrum);
 
 /**
+ * A selector that returns a flattened array of all placed tonic signs.
+ * This is derived state.
+ * @param {object} state - The global application state.
+ * @returns {Array<object>} A flat array of all individual tonic sign objects.
+ */
+export const getPlacedTonicSigns = (state) => Object.values(state.tonicSignGroups).flat();
+
+/**
  * Finds a specific pitch note at a given grid coordinate.
  * @param {object} state - The global application state.
  * @param {number} colIndex - The column index to check.

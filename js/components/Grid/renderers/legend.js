@@ -1,5 +1,5 @@
 // js/components/Grid/renderers/legend.js
-import store from '../../../state/store.js';
+import store from '../../../state/index.js'; // <-- UPDATED PATH
 import { getColumnX, getRowY, getPitchClass, getLineStyleFromPitchClass } from './rendererUtils.js';
 
 function drawSpecialBorder(ctx, x, y, width, style) {

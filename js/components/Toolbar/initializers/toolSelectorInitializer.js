@@ -1,5 +1,5 @@
 // js/components/Toolbar/initializers/toolSelectorInitializer.js
-import store from '../../../state/store.js';
+import store from '../../../state/index.js'; // <-- UPDATED PATH
 
 export function initToolSelectors() {
     // --- Existing Tonic Button Logic ---

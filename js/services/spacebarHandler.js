@@ -1,5 +1,5 @@
 // js/services/spacebarHandler.js
-import store from '../state/store.js';
+import store from '../state/index.js'; // <-- UPDATED PATH
 import SynthEngine from './synthEngine.js';
 import GlobalService from './globalService.js';
 
@@ -36,10 +36,10 @@ export function initSpacebarHandler() {
             // Find the pitch color for the playhead
             const rowData = store.state.fullRowData.find(row => row.toneNote === currentSpacebarNote);
             const pitchColor = rowData ? rowData.hex : '#888888';
+            const adsr = store.state.timbres[toolColor].adsr;
 
             // Trigger the visual playhead for the spacebar
-            GlobalService.adsrComponent?.playheadManager.trigger('spacebar', 'attack', pitchColor);
-            console.log(`Spacebar: Attack ${currentSpacebarNote} with color ${toolColor}`);
+            GlobalService.adsrComponent?.playheadManager.trigger('spacebar', 'attack', pitchColor, adsr);
         }
     });
 
@@ -57,9 +57,10 @@ export function initSpacebarHandler() {
                 // Find the pitch color for the playhead
                 const rowData = store.state.fullRowData.find(row => row.toneNote === currentSpacebarNote);
                 const pitchColor = rowData ? rowData.hex : '#888888';
+                const adsr = store.state.timbres[toolColor].adsr;
 
                  // Trigger the release of the visual playhead
-                GlobalService.adsrComponent?.playheadManager.trigger('spacebar', 'release', pitchColor);
+                GlobalService.adsrComponent?.playheadManager.trigger('spacebar', 'release', pitchColor, adsr);
             }
             console.log(`Spacebar: Release ${currentSpacebarNote}`);
             currentSpacebarNote = null;

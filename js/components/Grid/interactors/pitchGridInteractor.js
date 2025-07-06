@@ -1,11 +1,12 @@
 // js/components/Grid/interactors/pitchGridInteractor.js
-import store from '../../../state/store.js';
+import store from '../../../state/index.js';
+import { getPlacedTonicSigns } from '../../../state/selectors.js';
 import SynthEngine from '../../../services/synthEngine.js';
 import GridCoordsService from '../../../services/gridCoordsService.js';
 import LayoutService from '../../../services/layoutService.js';
-// <<< FIX: Import from the new 'notes.js' and 'rendererUtils.js' modules
 import { drawSingleColumnOvalNote, drawTwoColumnOvalNote, drawTonicShape } from '../renderers/notes.js';
 import GlobalService from '../../../services/globalService.js';
+// --- REMOVED THE IMPORT FOR getRowY ---
 
 // --- Interaction State ---
 let pitchHoverCtx;
@@ -25,7 +26,7 @@ function getPitchForRow(rowIndex) {
 
 function findHoveredMacrobeat(columnIndex) {
     const { macrobeatGroupings, columnWidths } = store.state;
-    const placedTonicSigns = store.placedTonicSigns; 
+    const placedTonicSigns = getPlacedTonicSigns(store.state);
 
     if (columnIndex < 2 || columnIndex >= columnWidths.length - 2) return null;
 
@@ -48,9 +49,12 @@ function findHoveredMacrobeat(columnIndex) {
 
 
 // --- Hover Drawing Logic ---
+
+// --- THIS FUNCTION IS REVERTED TO ITS ORIGINAL STATE ---
 function drawHoverHighlight(colIndex, rowIndex, color, widthMultiplier = null) {
     if (!pitchHoverCtx) return;
     const x = LayoutService.getColumnX(colIndex);
+    // This local calculation is now the desired behavior
     const y = rowIndex * 0.5 * store.state.cellHeight - store.state.cellHeight / 2;
     
     let highlightWidth;
@@ -67,14 +71,13 @@ function drawHoverHighlight(colIndex, rowIndex, color, widthMultiplier = null) {
     pitchHoverCtx.fillRect(x, y, highlightWidth, store.state.cellHeight);
 }
 
+
 function drawGhostNote(colIndex, rowIndex, isFaint = false) {
     if (!pitchHoverCtx) return;
     const { type, color, tonicNumber } = store.state.selectedTool;
 
     const ghostOptions = {
-        columnWidths: store.state.columnWidths,
-        cellWidth: store.state.cellWidth,
-        cellHeight: store.state.cellHeight,
+        ...store.state // Pass the whole state for consistency
     };
     
     pitchHoverCtx.globalAlpha = isFaint ? 0.2 : 0.4;
@@ -87,6 +90,7 @@ function drawGhostNote(colIndex, rowIndex, isFaint = false) {
             row: rowIndex, startColumnIndex: colIndex, endColumnIndex: colIndex, 
             color: color, shape: type, isDrum: false 
         };
+        // These functions will now use the corrected getRowY and be in sync
         if (ghostNote.shape === 'oval') {
             drawSingleColumnOvalNote(pitchHoverCtx, ghostOptions, ghostNote, rowIndex);
         } else {
@@ -97,14 +101,14 @@ function drawGhostNote(colIndex, rowIndex, isFaint = false) {
 }
 
 
-// --- Event Handlers ---
+// --- Event Handlers (Unchanged) ---
 function handleMouseDown(e) {
     const rect = e.target.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
     const colIndex = GridCoordsService.getColumnIndex(x);
     const rowIndex = GridCoordsService.getPitchRowIndex(y);
-    if (colIndex < 2 || colIndex >= store.state.columnWidths.length - 2) return;
+    if (colIndex < 2 || colIndex >= store.state.columnWidths.length - 2 || !getPitchForRow(rowIndex)) return;
 
     if (e.button === 2) { // Right-click
         e.preventDefault();
@@ -117,7 +121,7 @@ function handleMouseDown(e) {
         }
         document.getElementById('eraser-tool-button')?.classList.add('erasing-active');
         
-        const clickedTonic = store.placedTonicSigns.find(ts => ts.columnIndex === colIndex && ts.row === rowIndex);
+        const clickedTonic = getPlacedTonicSigns(store.state).find(ts => ts.columnIndex === colIndex && ts.row === rowIndex);
         let wasErased = false;
         if (clickedTonic) {
             wasErased = store.eraseTonicSignGroup(clickedTonic.uuid, false);
@@ -149,7 +153,7 @@ function handleMouseDown(e) {
         }
 
         if (type === 'eraser') {
-             const clickedTonic = store.placedTonicSigns.find(ts => ts.columnIndex === colIndex && ts.row === rowIndex);
+             const clickedTonic = getPlacedTonicSigns(store.state).find(ts => ts.columnIndex === colIndex && ts.row === rowIndex);
             if (clickedTonic) {
                 store.eraseTonicSignGroup(clickedTonic.uuid);
             } else {
@@ -168,7 +172,7 @@ function handleMouseDown(e) {
         if (pitch) {
             SynthEngine.triggerAttack(pitch, activeNote.color);
             const pitchColor = store.state.fullRowData[rowIndex]?.hex || '#888888';
-            GlobalService.adsrComponent?.playheadManager.trigger(activeNote.uuid, 'attack', pitchColor);
+            GlobalService.adsrComponent?.playheadManager.trigger(activeNote.uuid, 'attack', pitchColor, store.state.timbres[activeNote.color].adsr);
         }
     }
 }
@@ -190,7 +194,7 @@ function handleMouseMove(e) {
     }
     
     if (isRightClickActive) {
-        const clickedTonic = store.placedTonicSigns.find(ts => ts.columnIndex === colIndex && ts.row === rowIndex);
+        const clickedTonic = getPlacedTonicSigns(store.state).find(ts => ts.columnIndex === colIndex && ts.row === rowIndex);
         let wasErased = false;
         if (clickedTonic) {
             wasErased = store.eraseTonicSignGroup(clickedTonic.uuid, false);
@@ -258,7 +262,7 @@ function handleGlobalMouseUp() {
         if (pitch) {
             SynthEngine.triggerRelease(pitch, activeNote.color);
             const pitchColor = store.state.fullRowData[activeNote.row]?.hex || '#888888';
-            GlobalService.adsrComponent?.playheadManager.trigger(activeNote.uuid, 'release', pitchColor);
+            GlobalService.adsrComponent?.playheadManager.trigger(activeNote.uuid, 'release', pitchColor, store.state.timbres[activeNote.color].adsr);
         }
     }
 

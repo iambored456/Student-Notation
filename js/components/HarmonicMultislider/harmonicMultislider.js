@@ -1,5 +1,5 @@
 // js/components/HarmonicMultislider/harmonicMultislider.js
-import store from '../../state/store.js';
+import store from '../../state/index.js'; // <-- UPDATED PATH
 import { HARMONIC_BINS } from '../../constants.js';
 
 console.log("HarmonicMultislider with Filter Overlay: Module loaded.");

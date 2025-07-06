@@ -1,5 +1,5 @@
 // js/components/Grid/renderers/pitchGridRenderer.js
-import store from '../../../state/store.js';
+import store from '../../../state/index.js'; // <-- UPDATED PATH
 import { drawHorizontalLines, drawVerticalLines } from './gridLines.js';
 import { drawLegends } from './legend.js';
 import { drawSingleColumnOvalNote, drawTwoColumnOvalNote, drawTonicShape } from './notes.js';

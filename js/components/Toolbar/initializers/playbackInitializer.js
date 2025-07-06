@@ -1,5 +1,5 @@
 // js/components/Toolbar/initializers/playbackInitializer.js
-import store from '../../../state/store.js';
+import store from '../../../state/index.js'; // <-- UPDATED PATH
 import TransportService from '../../../services/transportService.js';
 
 export function initPlaybackControls() {

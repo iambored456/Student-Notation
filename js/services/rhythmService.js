@@ -1,5 +1,6 @@
 // js/services/rhythmService.js
-import store from '../state/store.js';
+import store from '../state/index.js'; // <-- UPDATED PATH
+import { getPlacedTonicSigns } from '../state/selectors.js'; // <-- ADDED SELECTOR
 import LayoutService from './layoutService.js';
 
 console.log("RhythmService: Module loaded.");
@@ -13,8 +14,7 @@ const RhythmService = {
     getTimeSignatureSegments() {
         const segments = [];
         let columnCursor = 2;
-        // FIX: Use the new store getter
-        const sortedTonicSigns = [...store.placedTonicSigns].sort((a, b) => a.preMacrobeatIndex - b.preMacrobeatIndex);
+        const sortedTonicSigns = [...getPlacedTonicSigns(store.state)].sort((a, b) => a.preMacrobeatIndex - b.preMacrobeatIndex); // <-- UPDATED GETTER
         let tonicSignCursor = 0;
 
         const advancePastTonicsAtBoundary = (mbIndex) => {
@@ -32,14 +32,15 @@ const RhythmService = {
         let segmentStartColumn = columnCursor;
         let segmentMicrobeatTotal = 0;
         let containsThreeGrouping = false;
-        let isAnacrusisSegment = true;
+        let isAnacrusisSegment = store.state.hasAnacrusis; // Use state directly
 
         store.state.macrobeatGroupings.forEach((groupValue, index) => {
             segmentMicrobeatTotal += groupValue;
             if (groupValue === 3) containsThreeGrouping = true;
 
             const isLastBeat = (index === store.state.macrobeatGroupings.length - 1);
-            const isSolidBoundary = (store.state.macrobeatBoundaryStyles[index] === 'solid');
+            const boundaryStyle = store.state.macrobeatBoundaryStyles[index];
+            const isSolidBoundary = (boundaryStyle === 'solid');
 
             if (isSolidBoundary || isLastBeat) {
                 const segmentStartX = LayoutService.getColumnX(segmentStartColumn);
@@ -72,8 +73,7 @@ const RhythmService = {
     getRhythmUIButtons() {
         const buttons = [];
         let columnCursor = 2;
-        // FIX: Use the new store getter
-        const sortedTonicSigns = [...store.placedTonicSigns].sort((a, b) => a.preMacrobeatIndex - b.preMacrobeatIndex);
+        const sortedTonicSigns = [...getPlacedTonicSigns(store.state)].sort((a, b) => a.preMacrobeatIndex - b.preMacrobeatIndex); // <-- UPDATED GETTER
         let tonicSignCursor = 0;
 
         const advancePastTonicsAtBoundary = (mbIndex) => {

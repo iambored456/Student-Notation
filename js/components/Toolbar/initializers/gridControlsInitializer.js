@@ -1,5 +1,5 @@
 // js/components/Toolbar/initializers/gridControlsInitializer.js
-import store from '../../../state/store.js';
+import store from '../../../state/index.js'; // <-- UPDATED PATH
 
 export function initGridControls() {
     document.getElementById('grid-zoom-in').addEventListener('click', () => store.emit('zoomIn'));

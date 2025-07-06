@@ -1,6 +1,6 @@
 // js/main.js
 import * as Tone from 'tone';
-import store from './state/store.js';
+import store from './state/index.js';
 import { fullRowData } from './state/pitchData.js';
 import LayoutService from './services/layoutService.js';
 import CanvasContextService from './services/canvasContextService.js';
@@ -25,21 +25,22 @@ document.addEventListener("DOMContentLoaded", () => {
     console.log("STARTING INITIALIZATION");
     console.log("========================================");
 
-    // --- Create and inject dummy rows for scrolling padding ---
-    const topPaddingRows = 1;
-    const bottomPaddingRows = 2; // One to match the top, one extra for buffer
-    const dummyRow = { pitch: '', toneNote: '', frequency: 0, column: '', hex: 'transparent', isDummy: true };
+    // --- ADD THIS BLOCK TO HANDLE AUDIOCONTEXT ---
+    const startAudio = async () => {
+        try {
+            await Tone.start();
+            console.log("AudioContext started successfully!");
+        } catch (e) {
+            console.error("Could not start AudioContext:", e);
+        }
+    };
+    // Use { once: true } to automatically remove the listener after it runs
+    document.getElementById('app-container').addEventListener('click', startAudio, { once: true });
+    document.getElementById('app-container').addEventListener('keydown', startAudio, { once: true });
+    // --- END NEW BLOCK ---
+
+    store.state.fullRowData = fullRowData;
     
-    const topPadding = Array(topPaddingRows).fill(dummyRow);
-    const bottomPadding = Array(bottomPaddingRows).fill(dummyRow);
-
-    // Prepend and append the dummy rows to the actual data
-    store.state.fullRowData = [...topPadding, ...fullRowData, ...bottomPadding];
-    
-    // Adjust the initial grid position to account for the new top rows
-    store.state.gridPosition += topPaddingRows;
-
-
     const contexts = LayoutService.init();
     CanvasContextService.setContexts(contexts);
     
@@ -65,6 +66,12 @@ document.addEventListener("DOMContentLoaded", () => {
         GridManager.renderDrumGrid();
     });
     
+    store.on('rhythmStructureChanged', () => {
+        GridManager.renderPitchGrid();
+        GridManager.renderDrumGrid();
+        Toolbar.renderRhythmUI();
+    });
+
     store.on('layoutConfigChanged', () => {
         GridManager.renderPitchGrid();
         GridManager.renderDrumGrid();
@@ -77,9 +84,8 @@ document.addEventListener("DOMContentLoaded", () => {
     console.log("========================================");
     console.log("PERFORMING INITIAL RENDER");
     console.log("========================================");
-    Toolbar.renderRhythmUI();
-    GridManager.renderPitchGrid();
-    GridManager.renderDrumGrid();
+    
+    // RENDER CALLS REMOVED FROM HERE
     
     store.setSelectedTool('circle', '#4a90e2');
     

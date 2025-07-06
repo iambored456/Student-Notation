@@ -1,6 +1,8 @@
 // js/services/tonalService.js
 import { Note, Interval, Scale } from 'tonal';
-import store from '../state/store.js';
+import store from '../state/index.js';
+import { getPlacedTonicSigns } from '../state/selectors.js';
+
 
 console.log("TonalService: Module loaded.");
 
@@ -105,7 +107,7 @@ const TonalService = {
         const { degreeDisplayMode } = renderOptions;
         if (degreeDisplayMode === 'off') return null;
 
-        const allTonicSigns = store.placedTonicSigns;
+        const allTonicSigns = getPlacedTonicSigns(store.state); // <-- UPDATED GETTER
         const relevantTonicSigns = allTonicSigns.filter(ts => ts.columnIndex <= note.startColumnIndex);
         if (relevantTonicSigns.length === 0) return null;
         

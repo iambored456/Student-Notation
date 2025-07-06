@@ -1,7 +1,7 @@
 // js/services/synthEngine.js
 import * as Tone from 'tone';
-import store from '../state/store.js';
-import { PRESETS } from './presetData.js'; // <<< FIX: Add the missing import
+import store from '../state/index.js';
+import { PRESETS } from './presetData.js';
 
 console.log("SynthEngine: Module loaded");
 

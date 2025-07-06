@@ -23,7 +23,7 @@
 }
 
 #top-toolbar {
-  height: 22vh;
+  height: 18vh;
   align-items: stretch; /* Make all containers the same height */
 }
 
@@ -80,7 +80,7 @@
     flex: 2 1 0; /* Grow twice as fast as ADSR */
 }
 .adsr-container {
-    flex: 3 1 0; /* Grow three times as fast as ADSR */
+    flex: 1 1 auto; /* Grow three times as fast as ADSR */
 }
 
 /* ==========================================================================

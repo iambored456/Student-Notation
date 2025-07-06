@@ -23,17 +23,17 @@ function createPlayheadElements(noteId, color) {
     return group;
 }
 
-function trigger(noteId, phase, color) {
-    if (!componentRef) return;
+function trigger(noteId, phase, color, adsr = null) {
+    if (!componentRef || !adsr) return;
 
-    // Clean up any existing playhead for this note first
-    if (playheads[noteId]) {
-        cancelAnimationFrame(playheads[noteId].requestId);
-        playheads[noteId].group.remove();
-        delete playheads[noteId];
-    }
-    
     if (phase === 'attack') {
+        // If a playhead for this ID already exists, get rid of it.
+        // This is important for rapid re-triggering (e.g., the spacebar).
+        if (playheads[noteId]) {
+            cancelAnimationFrame(playheads[noteId].requestId);
+            playheads[noteId].group.remove();
+        }
+
         const group = createPlayheadElements(noteId, color);
         componentRef.playheadLayer.appendChild(group);
 
@@ -41,6 +41,7 @@ function trigger(noteId, phase, color) {
             group,
             phase,
             color,
+            adsr, // Store the note-specific ADSR
             requestId: null,
             startTimestamp: Tone.now(),
             elapsed: 0
@@ -49,20 +50,24 @@ function trigger(noteId, phase, color) {
         animateAttack(noteId);
 
     } else if (phase === 'release') {
-        // Don't start a release animation if paused
         if (isPaused) return;
 
-        const group = createPlayheadElements(noteId, color);
-        componentRef.playheadLayer.appendChild(group);
+        const ph = playheads[noteId];
+        // Don't animate a release for a note that wasn't playing.
+        if (!ph) return;
 
-        playheads[noteId] = {
-            group,
-            phase,
-            color,
-            requestId: null,
-            startTimestamp: Tone.now(),
-            elapsed: 0
-        };
+        // Log the value for verification
+        console.log(`[ADSR Playhead] TRIGGER RELEASE for note ${noteId}. Animation Release Time: ${adsr.release.toFixed(3)}s`);
+
+        // Stop any ongoing attack/decay animation
+        cancelAnimationFrame(ph.requestId);
+
+        // Transition the existing playhead object to the release phase
+        ph.phase = 'release';
+        ph.adsr = adsr; 
+        ph.startTimestamp = Tone.now(); // Reset start time for the release phase
+        ph.elapsed = 0; // Reset elapsed time for the release phase
+        
         animateRelease(noteId);
     }
 }
@@ -71,8 +76,11 @@ function animateAttack(noteId) {
     if (!playheads[noteId] || isPaused) return;
 
     const ph = playheads[noteId];
-    const { attack, decay } = componentRef;
-    const points = componentRef.calculateEnvelopePoints();
+    if (!ph.adsr) return; // Safety check
+
+    // Use the note-specific ADSR values
+    const { attack, decay } = ph.adsr;
+    const points = componentRef.calculateEnvelopePoints(ph.adsr);
     if (points.length < 4) return;
     const [p1, p2, p3] = points;
 
@@ -84,12 +92,12 @@ function animateAttack(noteId) {
 
     let x, y;
     if (t <= attack) {
-        const ratio = t / attack;
+        const ratio = attack > 0 ? t / attack : 1;
         x = p1.x + ratio * (p2.x - p1.x);
         y = p1.y + ratio * (p2.y - p1.y);
     } else {
         const t2 = t - attack;
-        const ratio = t2 / decay;
+        const ratio = decay > 0 ? t2 / decay : 1;
         x = p2.x + ratio * (p3.x - p2.x);
         y = p2.y + ratio * (p3.y - p2.y);
     }
@@ -111,8 +119,11 @@ function animateRelease(noteId) {
     if (!playheads[noteId] || isPaused) return;
 
     const ph = playheads[noteId];
-    const { release } = componentRef;
-    const points = componentRef.calculateEnvelopePoints();
+    if (!ph.adsr) return; // Safety check
+
+    // Use the note-specific ADSR values
+    const { release } = ph.adsr;
+    const points = componentRef.calculateEnvelopePoints(ph.adsr);
      if (points.length < 4) return;
     const [, , p3, p4] = points;
 
@@ -120,7 +131,7 @@ function animateRelease(noteId) {
     ph.elapsed = elapsed;
     const t = Math.min(elapsed, release);
 
-    const ratio = t / release;
+    const ratio = release > 0 ? t / release : 1;
     const x = p3.x + ratio * (p4.x - p3.x);
     const y = p3.y + ratio * (p4.y - p3.y);
 
@@ -158,7 +169,7 @@ function resume() {
         ph.startTimestamp = Tone.now() - ph.elapsed; // Adjust start time
         if (ph.phase === 'attack') {
             animateAttack(noteId);
-        } else {
+        } else if (ph.phase === 'release') {
             animateRelease(noteId);
         }
     }

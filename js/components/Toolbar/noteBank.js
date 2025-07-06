@@ -1,5 +1,5 @@
 // js/components/Toolbar/noteBank.js
-import store from '../../state/store.js';
+import store from '../../state/index.js'; // <-- UPDATED PATH
 
 console.log("NoteBank: Module loaded.");
 

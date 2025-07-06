@@ -1,5 +1,5 @@
 // js/components/Toolbar/initializers/audioControlsInitializer.js
-import store from '../../../state/store.js';
+import store from '../../../state/index.js'; // <-- UPDATED PATH
 import { PRESETS } from '../../../services/presetData.js';
 
 export function initAudioControls() {

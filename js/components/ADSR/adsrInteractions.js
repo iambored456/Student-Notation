@@ -1,5 +1,5 @@
 // js/components/ADSR/adsrInteractions.js
-import store from '../../state/store.js';
+import store from '../../state/index.js'; // <-- UPDATED PATH
 import { MAX_ADSR_TIME_SECONDS } from './adsrComponent.js';
 
 /**

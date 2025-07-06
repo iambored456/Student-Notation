@@ -1,5 +1,5 @@
 // js/components/ADSR/adsrRender.js
-import store from '../../state/store.js';
+import store from '../../state/index.js'; // <-- UPDATED PATH
 
 function hexToRgba(hex, alpha) {
     if (!hex) return `rgba(204, 204, 204, ${alpha})`;

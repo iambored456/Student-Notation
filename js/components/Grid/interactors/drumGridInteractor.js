@@ -1,5 +1,5 @@
 // js/components/Grid/interactors/drumGridInteractor.js
-import store from '../../../state/store.js';
+import store from '../../../state/index.js'; // <-- UPDATED PATH
 import GridCoordsService from '../../../services/gridCoordsService.js';
 import LayoutService from '../../../services/layoutService.js';
 import { drawDrumShape } from '../renderers/drumGridRenderer.js';

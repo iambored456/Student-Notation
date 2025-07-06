@@ -1,8 +1,8 @@
 // js/components/Grid/drumGrid.js
-import store from '../../state/store.js';
+import store from '../../state/index.js';
 import CanvasContextService from '../../services/canvasContextService.js';
 import { drawDrumGrid } from './renderers/drumGridRenderer.js';
-import { getDrumNotes } from '../../state/selectors.js';
+import { getDrumNotes, getPlacedTonicSigns } from '../../state/selectors.js';
 
 console.log("DrumGridController: Module loaded.");
 
@@ -15,8 +15,7 @@ function renderDrumGrid() {
     
     const renderOptions = {
         placedNotes: getDrumNotes(store.state),
-        // FIX: Use the new getter
-        placedTonicSigns: store.placedTonicSigns,
+        placedTonicSigns: getPlacedTonicSigns(store.state),
         columnWidths: store.state.columnWidths,
         cellWidth: store.state.cellWidth,
         cellHeight: store.state.cellHeight,

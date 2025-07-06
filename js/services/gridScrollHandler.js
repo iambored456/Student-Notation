@@ -1,5 +1,5 @@
 // js/services/gridScrollHandler.js
-import store from '../state/store.js';
+import store from '../state/index.js';
 
 console.log("GridScrollHandler: Module loaded.");
 
@@ -61,23 +61,29 @@ function commitScrollPosition() {
 
 function syncToStore() {
     const rowHeight = getRowHeight();
-    // <<< LOG
     console.log(`[GridScrollHandler] syncToStore called. rowHeight: ${rowHeight}, gridPosition: ${store.state.gridPosition}`);
 
     if (rowHeight === 0) {
-        console.log("[GridScrollHandler] rowHeight is 0, returning early."); // <<< LOG
+        console.log("[GridScrollHandler] rowHeight is 0, returning early.");
         return;
     }
 
     const maxScroll = getMaxScrollY();
-    targetY = Math.max(maxScroll, -store.state.gridPosition * rowHeight);
-    currentY = targetY;
+    const scrollTargetY = -(store.state.gridPosition * rowHeight);
 
-    // <<< LOG
+    // THE FIX: Set the target, snap the current position, and cancel any old animation.
+    targetY = Math.max(maxScroll, scrollTargetY);
+    currentY = targetY; // Snap the animated value to the target
+
     console.log(`[GridScrollHandler] Applying transform: translateY(${currentY}px)`);
 
     if (scrollableContainer) {
        scrollableContainer.style.transform = `translateY(${currentY}px)`;
+       // If an animation was running, stop it. We've just teleported to the final spot.
+       if (animationFrameId) {
+           cancelAnimationFrame(animationFrameId);
+           animationFrameId = null;
+       }
     }
 }
 

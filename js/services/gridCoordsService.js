@@ -1,5 +1,5 @@
 // js/services/gridCoordsService.js
-import store from '../state/store.js';
+import store from '../state/index.js'; // <-- UPDATED PATH
 
 const GridCoordsService = {
     /**

@@ -1,5 +1,5 @@
 // js/components/Toolbar/initializers/sidebarInitializer.js
-import store from '../../../state/store.js';
+import store from '../../../state/index.js';
 
 function initAnacrusisToggle() {
     const anacrusisOnBtn = document.getElementById('anacrusis-on-btn');
@@ -33,6 +33,10 @@ export function initSidebarAndVolume() {
     const toggleSidebar = () => document.body.classList.toggle('sidebar-open');
     settingsBtn.addEventListener('click', toggleSidebar);
     sidebarOverlay.addEventListener('click', toggleSidebar);
+
+    document.getElementById('save-as-button').innerHTML = '💾 Save As';
+    document.getElementById('import-button').innerHTML = '📁 Open';
+    document.getElementById('print-button').innerHTML = '🖨️ Print';
 
     // Volume Popup Logic
     volumeIconBtn.addEventListener('click', (e) => {

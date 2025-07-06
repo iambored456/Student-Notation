@@ -1,5 +1,6 @@
 // js/services/printService.js
-import store from '../state/store.js';
+import store from '../state/index.js'; // <-- UPDATED PATH
+import { getPlacedTonicSigns } from '../state/selectors.js'; // <-- ADDED SELECTOR
 import { drawPitchGrid } from '../components/Grid/renderers/pitchGridRenderer.js';
 import { drawDrumGrid } from '../components/Grid/renderers/drumGridRenderer.js';
 
@@ -7,7 +8,7 @@ console.log("PrintService: Module loaded.");
 
 function generateScoreCanvas(printOptions, targetDimensions) {
     const mainState = store.state;
-    const placedTonicSigns = store.placedTonicSigns;
+    const placedTonicSigns = getPlacedTonicSigns(store.state); // <-- UPDATED GETTER
     
     const croppedRowData = mainState.fullRowData.slice(printOptions.topRow, printOptions.bottomRow + 1);
     
