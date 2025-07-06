@@ -1,11 +1,13 @@
 // js/services/synthEngine.js
 import * as Tone from 'tone';
 import store from '../state/store.js';
+import { PRESETS } from './presetData.js'; // <<< FIX: Add the missing import
 
 console.log("SynthEngine: Module loaded");
 
 let synths = {};
 let volumeControl;
+let limiter; // Add a limiter to the master output
 
 // A custom synth voice with a more sophisticated series/parallel filter blend
 class FilteredVoice extends Tone.Synth {
@@ -13,6 +15,8 @@ class FilteredVoice extends Tone.Synth {
         super(options);
 
         // --- Create all necessary audio nodes ---
+        this.presetGain = new Tone.Gain(options.gain || 1.0); // Gain node for preset volume compensation
+        
         // Filters for the three distinct paths
         this.hpFilter = new Tone.Filter({ type: "highpass" });
         this.lpFilterForBP = new Tone.Filter({ type: "lowpass" }); // This LPF is part of the bandpass chain
@@ -30,13 +34,16 @@ class FilteredVoice extends Tone.Synth {
         // Wet/Dry control for filter bypass
         this.wetDryFade = new Tone.CrossFade(0);
 
-        // --- Audio Routing ---
-        // 1. Oscillator -> Dry Path & Wet Path (start)
-        this.oscillator.connect(this.wetDryFade.a); // Dry Path
+        // --- UPDATED Audio Routing ---
+        // 1. Oscillator -> Preset Gain Node
+        this.oscillator.connect(this.presetGain);
+
+        // 2. Preset Gain -> Dry Path & Wet Path (start)
+        this.presetGain.connect(this.wetDryFade.a); // Dry Path
         
-        // 2. Setup Wet Path
+        // 3. Setup Wet Path (now fed from presetGain)
         // A) High-Pass path
-        this.oscillator.connect(this.hpFilter);
+        this.presetGain.connect(this.hpFilter);
         this.hpFilter.connect(this.hpOutput); // Tap the pure HP signal here
 
         // B) Band-Pass path (HPF -> LPF in series)
@@ -44,23 +51,29 @@ class FilteredVoice extends Tone.Synth {
         this.lpFilterForBP.connect(this.bpOutput); // Tap the BP signal here
         
         // C) Low-Pass path (a separate, parallel LPF)
-        this.oscillator.connect(this.lpFilterSolo);
+        this.presetGain.connect(this.lpFilterSolo);
         this.lpFilterSolo.connect(this.lpOutput); // Tap the pure LP signal here
 
-        // 3. Route the three paths into the blender
+        // 4. Route the three paths into the blender
         this.hpOutput.connect(this.hp_bp_fade.a);
         this.bpOutput.connect(this.hp_bp_fade.b);
         this.lpOutput.connect(this.main_fade.b);
         this.hp_bp_fade.connect(this.main_fade.a);
 
-        // 4. Connect the blended (wet) signal to the wet/dry fader
+        // 5. Connect the blended (wet) signal to the wet/dry fader
         this.main_fade.connect(this.wetDryFade.b); 
 
-        // 5. Final output goes to the main amplitude envelope
+        // 6. Final output goes to the main amplitude envelope
         this.wetDryFade.connect(this.envelope);
 
         if (options.filter) {
             this._setFilter(options.filter);
+        }
+    }
+
+    _setPresetGain(value) {
+        if (this.presetGain) {
+            this.presetGain.gain.value = value;
         }
     }
     
@@ -92,7 +105,9 @@ class FilteredVoice extends Tone.Synth {
 
 const SynthEngine = {
     init() {
-        volumeControl = new Tone.Volume(-15).toDestination();
+        // Add a limiter to the master output chain
+        limiter = new Tone.Limiter(-1).toDestination(); // Don't let signal pass -1dB
+        volumeControl = new Tone.Volume(-15).connect(limiter);
         
         for (const color in store.state.timbres) {
             const timbre = store.state.timbres[color];
@@ -102,7 +117,8 @@ const SynthEngine = {
                 options: {
                     oscillator: { type: 'custom', partials: Array.from(timbre.coeffs).slice(1) },
                     envelope: timbre.adsr,
-                    filter: timbre.filter 
+                    filter: timbre.filter,
+                    gain: store.state.timbres[color].activePresetName ? PRESETS[store.state.timbres[color].activePresetName].gain : 0.7 // Pass initial gain
                 }
             }).connect(volumeControl);
             
@@ -133,9 +149,16 @@ const SynthEngine = {
         });
 
         if (synth.voices && Array.isArray(synth.voices)) {
+            // Set both filter and gain on each voice
+            const preset = timbre.activePresetName ? PRESETS[timbre.activePresetName] : null;
+            const gainValue = preset ? preset.gain : 0.7; // Default gain if not from a preset
+
             synth.voices.forEach(voice => {
                 if (voice._setFilter) {
                     voice._setFilter(timbre.filter);
+                }
+                if (voice._setPresetGain) {
+                    voice._setPresetGain(gainValue);
                 }
             });
         }

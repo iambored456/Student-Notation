@@ -1,19 +1,22 @@
 // js/state/store.js
 console.log("Store: Module loaded");
 
+// --- Rhythm structure constants ---
+const ANACRUSIS_ON_GROUPINGS = Array(19).fill(2);
+const ANACRUSIS_ON_STYLES = ['anacrusis','anacrusis','solid','dashed','dashed','dashed','solid','dashed','dashed','dashed','solid','dashed','dashed','dashed','solid','dashed','dashed','dashed','solid'];
+
+const ANACRUSIS_OFF_GROUPINGS = Array(16).fill(2);
+const ANACRUSIS_OFF_STYLES = ['solid','dashed','dashed','dashed','solid','dashed','dashed','dashed','solid','dashed','dashed','dashed','solid','dashed','dashed','dashed'];
+
+
 const _subscribers = {};
 
 function generateUUID() {
     return `uuid-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 }
 
-// Helper to create a default filter state
 const createDefaultFilterState = () => ({
-    enabled: false,
-    blend: 2.0,
-    cutoff: 16,
-    resonance: 0, 
-    type: 'lowpass'
+    enabled: false, blend: 2.0, cutoff: 16, resonance: 0, type: 'lowpass'
 });
 
 const store = {
@@ -22,13 +25,15 @@ const store = {
         tonicSignGroups: {},
         history: [ { notes: [], tonicSignGroups: {} } ],
         historyIndex: 0,
-        macrobeatGroupings: Array(19).fill(2),
-        macrobeatBoundaryStyles: ['anacrusis','anacrusis','solid','dashed','dashed','dashed','solid','dashed','dashed','dashed','solid','dashed','dashed','dashed','solid','dashed','dashed','dashed','solid'],
+        // State now references the constants
+        hasAnacrusis: true,
+        macrobeatGroupings: ANACRUSIS_ON_GROUPINGS,
+        macrobeatBoundaryStyles: ANACRUSIS_ON_STYLES,
         fullRowData: [],
-        selectedTool: { type: 'circle', color: '#0000ff', tonicNumber: null },
-        gridPosition: 34,
-        visualRows: 10,
-        logicRows: 20,
+        selectedTool: { type: 'circle', color: '#4a90e2', tonicNumber: null },
+        gridPosition: 0,
+        visualRows: 0,
+        logicRows: 0,
         cellWidth: 0,
         cellHeight: 0,
         columnWidths: [],
@@ -38,11 +43,17 @@ const store = {
         tempo: 90,
         degreeDisplayMode: 'off',
         accidentalMode: { sharp: true, flat: true },
+        colorPalette: {
+            '#4a90e2': { primary: '#4a90e2', light: '#63a9fd' },
+            '#68a03f': { primary: '#68a03f', light: '#80b958' },
+            '#d66573': { primary: '#d66573', light: '#f27e8b' },
+            '#2d2d2d': { primary: '#2d2d2d', light: '#424242' }
+        },
         timbres: {
-            '#0000ff': { name: 'Blue', adsr: { attack: 0.1, decay: 0.2, sustain: 0.8, release: 0.3 }, coeffs: (() => { const c = new Float32Array(32).fill(0); c[1] = 1; return c; })(), activePresetName: 'sine', filter: createDefaultFilterState() },
-            '#000000': { name: 'Black', adsr: { attack: 0.1, decay: 0.2, sustain: 0.8, release: 0.3 }, coeffs: (() => { const c = new Float32Array(32).fill(0); for (let n = 1; n < 32; n += 2) { c[n] = 1 / n; } return c; })(), activePresetName: 'square', filter: createDefaultFilterState() },
-            '#ff0000': { name: 'Red', adsr: { attack: 0.01, decay: 0.8, sustain: 0.1, release: 0.5 }, coeffs: (() => { const c = new Float32Array(32).fill(0); for (let n = 1; n < 32; n++) { c[n] = 1 / n; } return c; })(), activePresetName: 'sawtooth', filter: createDefaultFilterState() },
-            '#00ff00': { name: 'Green', adsr: { attack: 0.01, decay: 0.8, sustain: 0.1, release: 0.5 }, coeffs: (() => { const c = new Float32Array(32).fill(0); c[1] = 1; return c; })(), activePresetName: 'sine', filter: createDefaultFilterState() }
+            '#4a90e2': { name: 'Blue', adsr: { attack: 0.1, decay: 0.2, sustain: 0.8, release: 0.3 }, coeffs: (() => { const c = new Float32Array(32).fill(0); c[1] = 1; return c; })(), activePresetName: 'sine', filter: createDefaultFilterState() },
+            '#2d2d2d': { name: 'Black', adsr: { attack: 0.1, decay: 0.2, sustain: 0.8, release: 0.3 }, coeffs: (() => { const c = new Float32Array(32).fill(0); for (let n = 1; n < 32; n += 2) { c[n] = 1 / n; } return c; })(), activePresetName: 'square', filter: createDefaultFilterState() },
+            '#d66573': { name: 'Red', adsr: { attack: 0.01, decay: 0.8, sustain: 0.1, release: 0.5 }, coeffs: (() => { const c = new Float32Array(32).fill(0); for (let n = 1; n < 32; n++) { c[n] = 1 / n; } return c; })(), activePresetName: 'sawtooth', filter: createDefaultFilterState() },
+            '#68a03f': { name: 'Green', adsr: { attack: 0.01, decay: 0.8, sustain: 0.1, release: 0.5 }, coeffs: (() => { const c = new Float32Array(32).fill(0); c[1] = 1; return c; })(), activePresetName: 'sine', filter: createDefaultFilterState() }
         },
         isPrintPreviewActive: false,
         printOptions: { topRow: 0, bottomRow: 87, includeDrums: true, orientation: 'landscape', colorMode: 'color' }
@@ -52,16 +63,48 @@ const store = {
         return Object.values(this.state.tonicSignGroups).flat();
     },
 
+    setAnacrusis(enabled) {
+        if (this.state.hasAnacrusis === enabled) return;
+        
+        this.state.hasAnacrusis = enabled;
+        if (enabled) {
+            this.state.macrobeatGroupings = ANACRUSIS_ON_GROUPINGS;
+            this.state.macrobeatBoundaryStyles = ANACRUSIS_ON_STYLES;
+        } else {
+            this.state.macrobeatGroupings = ANACRUSIS_OFF_GROUPINGS;
+            this.state.macrobeatBoundaryStyles = ANACRUSIS_OFF_STYLES;
+        }
+
+        console.log(`[Store] Anacrusis mode set to: ${enabled}`);
+        this.emit('anacrusisChanged', enabled);
+        this.emit('rhythmStructureChanged');
+    },
+
+    toggleMacrobeatGrouping(index) {
+        if (index === undefined || index < 0 || index >= this.state.macrobeatGroupings.length) {
+            console.error(`[Store] Invalid index provided for toggleMacrobeatGrouping: ${index}`);
+            return;
+        }
+
+        const currentValue = this.state.macrobeatGroupings[index];
+        // Toggle between 2 and 3
+        this.state.macrobeatGroupings[index] = currentValue === 2 ? 3 : 2;
+
+        // This event is already listened to by services that need to react,
+        // such as LayoutService to recalculate column widths.
+        this.emit('rhythmStructureChanged');
+
+        // Record the state change for undo/redo functionality.
+        this.recordState();
+    },
+
     toggleAccidentalMode(type) {
         if (!this.state.accidentalMode.hasOwnProperty(type)) return;
-        
         this.state.accidentalMode[type] = !this.state.accidentalMode[type];
-
         if (!this.state.accidentalMode.sharp && !this.state.accidentalMode.flat) {
             const otherType = type === 'sharp' ? 'flat' : 'sharp';
             this.state.accidentalMode[otherType] = true;
         }
-        
         this.emit('accidentalModeChanged', this.state.accidentalMode);
         this.emit('layoutConfigChanged');
     },
@@ -113,22 +156,21 @@ const store = {
     },
 
     setADSR(color, newADSR) {
-        this.state.timbres[color].adsr = newADSR;
-        this.state.timbres[color].activePresetName = null;
-        this.emit('timbreChanged', color);
+        if(this.state.timbres[color]) {
+            this.state.timbres[color].adsr = newADSR;
+            this.state.timbres[color].activePresetName = null;
+            this.emit('timbreChanged', color);
+        }
     },
 
     setFilterSettings(color, newSettings) {
         if (this.state.timbres[color]) {
             Object.assign(this.state.timbres[color].filter, newSettings);
-
             const blend = this.state.timbres[color].filter.blend;
             if (blend <= 0.0) this.state.timbres[color].filter.type = 'highpass';
             else if (blend >= 2.0) this.state.timbres[color].filter.type = 'lowpass';
             else this.state.timbres[color].filter.type = 'bandpass';
-
-            if(newSettings.enabled !== undefined) {
-            } else {
+            if(newSettings.enabled === undefined) {
                 this.state.timbres[color].activePresetName = null;
             }
             this.emit('timbreChanged', color);
@@ -136,13 +178,15 @@ const store = {
     },
 
     setHarmonicCoefficients(color, coeffs) {
-        this.state.timbres[color].coeffs = coeffs;
-        this.state.timbres[color].activePresetName = null;
-        this.emit('timbreChanged', color);
+        if(this.state.timbres[color]) {
+            this.state.timbres[color].coeffs = coeffs;
+            this.state.timbres[color].activePresetName = null;
+            this.emit('timbreChanged', color);
+        }
     },
 
     applyPreset(color, preset) {
-        if (!preset) return;
+        if (!preset || !this.state.timbres[color]) return;
         this.state.timbres[color].adsr = preset.adsr;
         this.state.timbres[color].coeffs = preset.coeffs;
         this.state.timbres[color].activePresetName = preset.name;
@@ -155,11 +199,13 @@ const store = {
     },
 
     addNote(note) {
-        this.state.placedNotes.push(note);
+        const noteWithId = { ...note, uuid: generateUUID() };
+        this.state.placedNotes.push(noteWithId);
         this.emit('notesChanged');
         if (note.shape !== 'circle') {
              this.recordState();
         }
+        return noteWithId;
     },
 
     updateNoteTail(note, newEndColumn) {
@@ -249,9 +295,10 @@ const store = {
 
     setTempo(newTempo) { this.state.tempo = newTempo; this.emit('tempoChanged', newTempo); },
     setLooping(isLooping) { this.state.isLooping = isLooping; this.emit('loopingChanged', isLooping); },
-    setPlaybackState(isPlaying, isPaused = false) { this.state.isPlaying = isPlaying; this.emit('playbackStateChanged', { isPlaying, isPaused }); },
+    setPlaybackState(isPlaying, isPaused = false) { this.state.isPlaying = isPlaying; this.state.isPaused = isPaused; this.emit('playbackStateChanged', { isPlaying, isPaused }); },
+    
     setGridPosition(newPosition) {
-        const maxPosition = this.state.fullRowData.length - this.state.logicRows;
+        const maxPosition = this.state.fullRowData.length - (this.state.visualRows * 2);
         const clampedPosition = Math.max(0, Math.min(newPosition, maxPosition));
         if (this.state.gridPosition !== clampedPosition) {
             this.state.gridPosition = clampedPosition;

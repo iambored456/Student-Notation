@@ -3,12 +3,14 @@ import store from '../../../state/store.js';
 import SynthEngine from '../../../services/synthEngine.js';
 import GridCoordsService from '../../../services/gridCoordsService.js';
 import LayoutService from '../../../services/layoutService.js';
-import { drawSingleColumnOvalNote, drawTwoColumnOvalNote, drawTonicShape } from '../renderers/pitchGridRenderer.js';
+// <<< FIX: Import from the new 'notes.js' and 'rendererUtils.js' modules
+import { drawSingleColumnOvalNote, drawTwoColumnOvalNote, drawTonicShape } from '../renderers/notes.js';
+import GlobalService from '../../../services/globalService.js';
 
 // --- Interaction State ---
 let pitchHoverCtx;
 let isDragging = false;
-let currentDraggedNote = null;
+let activeNote = null;
 let isRightClickActive = false;
 let previousTool = null;
 let lastHoveredTonicPoint = null;
@@ -157,11 +159,17 @@ function handleMouseDown(e) {
         }
         
         const newNote = { row: rowIndex, startColumnIndex: colIndex, endColumnIndex: colIndex, color: color, shape: type, isDrum: false };
-        store.addNote(newNote);
+        const addedNote = store.addNote(newNote); 
+        
+        activeNote = addedNote;
         isDragging = (type === 'circle');
-        if(isDragging) { currentDraggedNote = newNote; }
+
         const pitch = getPitchForRow(rowIndex);
-        if (pitch) { SynthEngine.playNote(pitch, '8n'); }
+        if (pitch) {
+            SynthEngine.triggerAttack(pitch, activeNote.color);
+            const pitchColor = store.state.fullRowData[rowIndex]?.hex || '#888888';
+            GlobalService.adsrComponent?.playheadManager.trigger(activeNote.uuid, 'attack', pitchColor);
+        }
     }
 }
 
@@ -195,11 +203,11 @@ function handleMouseMove(e) {
         return;
     } 
     
-    if (isDragging && currentDraggedNote) {
-        const startIndex = currentDraggedNote.startColumnIndex;
+    if (isDragging && activeNote) {
+        const startIndex = activeNote.startColumnIndex;
         const newEndIndex = (colIndex >= startIndex + 2) ? colIndex : startIndex;
-        if (newEndIndex !== currentDraggedNote.endColumnIndex) {
-            store.updateNoteTail(currentDraggedNote, newEndIndex);
+        if (newEndIndex !== activeNote.endColumnIndex) {
+            store.updateNoteTail(activeNote, newEndIndex);
         }
         return;
     }
@@ -245,11 +253,21 @@ function handleMouseLeave() {
 }
 
 function handleGlobalMouseUp() {
+    if (activeNote) {
+        const pitch = getPitchForRow(activeNote.row);
+        if (pitch) {
+            SynthEngine.triggerRelease(pitch, activeNote.color);
+            const pitchColor = store.state.fullRowData[activeNote.row]?.hex || '#888888';
+            GlobalService.adsrComponent?.playheadManager.trigger(activeNote.uuid, 'release', pitchColor);
+        }
+    }
+
     if (isDragging) {
         store.recordState();
     }
+    
     isDragging = false;
-    currentDraggedNote = null;
+    activeNote = null;
     lastHoveredTonicPoint = null;
     lastHoveredOctaveRows = [];
 

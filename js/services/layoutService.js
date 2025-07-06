@@ -4,6 +4,9 @@ import { RESIZE_DEBOUNCE_DELAY, MIN_VISUAL_ROWS } from '../constants.js';
 
 console.log("LayoutService: Module loaded.");
 
+const INITIAL_TOP_NOTE = 'G5';
+const INITIAL_BOTTOM_NOTE = 'A3';
+
 let resizeTimeout;
 let gridContainer, canvas, ctx, drumCanvas, drumCtx, playheadCanvas, hoverCanvas, drumHoverCanvas, pitchCanvasWrapper, drumGridWrapper, gridContainerWrapper, rightSideContainer, bottomContentWrapper;
 let isInitialLayoutDone = false;
@@ -31,9 +34,8 @@ function initDOMElements() {
 }
 
 function recalcGridColumns() {
-    // FIX: Use the new getter `store.placedTonicSigns` instead of the non-existent `store.state.placedTonicSigns`
     const { macrobeatGroupings } = store.state;
-    const placedTonicSigns = store.placedTonicSigns; // Use the getter
+    const placedTonicSigns = store.placedTonicSigns;
     
     const newColumnWidths = [3, 3];
     const sortedTonicSigns = [...placedTonicSigns].sort((a, b) => a.preMacrobeatIndex - b.preMacrobeatIndex);
@@ -41,15 +43,11 @@ function recalcGridColumns() {
     
     const addTonicSignsForIndex = (mbIndex) => {
         while (sortedTonicSigns[tonicSignCursor] && sortedTonicSigns[tonicSignCursor].preMacrobeatIndex === mbIndex) {
-            // A tonic sign occupies one index in the array but has a width of 2 units.
             newColumnWidths.push(2);
-            // Assign the correct columnIndex to the entire group
             const uuid = sortedTonicSigns[tonicSignCursor].uuid;
             store.state.tonicSignGroups[uuid].forEach(sign => {
                 sign.columnIndex = newColumnWidths.length - 1;
             });
-            
-            // Advance cursor past all signs with the same UUID
             while(sortedTonicSigns[tonicSignCursor] && sortedTonicSigns[tonicSignCursor].uuid === uuid) {
                 tonicSignCursor++;
             }
@@ -68,16 +66,13 @@ function recalcGridColumns() {
 }
 
 function applyDimensions() {
-    if (!isInitialLayoutDone) {
-        return;
-    }
+    if (!isInitialLayoutDone) return;
 
     const { cellWidth, cellHeight, columnWidths } = store.state;
     const totalWidthUnits = columnWidths.reduce((sum, w) => sum + w, 0);
     const canvasWidth = cellWidth * totalWidthUnits;
     const totalLogicRows = store.state.fullRowData.length;
-    const totalVisualRows = totalLogicRows / 2;
-    const canvasHeight = cellHeight * totalVisualRows;
+    const canvasHeight = (totalLogicRows / 2) * cellHeight;
     
     [canvas, playheadCanvas, hoverCanvas].forEach(c => { c.width = canvasWidth; c.height = canvasHeight; });
     pitchCanvasWrapper.style.height = `${canvasHeight}px`;
@@ -92,43 +87,68 @@ function applyDimensions() {
     [drumCanvas, drumHoverCanvas].forEach(c => { c.width = drumCanvasWidth; c.height = drumCanvasHeight; });
     
     gridContainerWrapper.style.width = `${canvasWidth}px`;
-    // NEW: Set CSS variable for dynamic positioning of accidental buttons
     gridContainerWrapper.style.setProperty('--cell-width-val', `${cellWidth}`);
-
     bottomContentWrapper.style.width = `${canvasWidth}px`;
     
     store.emit('layoutConfigChanged');
 }
 
 function calculateAndApplyLayout() {
+    console.log("[LayoutService] calculateAndApplyLayout called."); // <<< LOG
     const container = document.getElementById('grid-container-wrapper');
-    if (!container) {
-        console.error("FATAL: grid-container-wrapper not found.");
-        return false;
-    }
+    if (!container) return false;
+    
     const containerHeight = container.offsetHeight;
-    if (containerHeight < 50) {
-        return false;
+    if (containerHeight < 50) return false;
+    
+    if (!isInitialLayoutDone) {
+        console.log("[LayoutService] Performing INITIAL layout calculation."); // <<< LOG
+        const topNoteIndex = store.state.fullRowData.findIndex(row => row.toneNote === INITIAL_TOP_NOTE);
+        const bottomNoteIndex = store.state.fullRowData.findIndex(row => row.toneNote === INITIAL_BOTTOM_NOTE);
+        
+        if (topNoteIndex !== -1 && bottomNoteIndex !== -1) {
+            const rowsInRange = Math.abs(bottomNoteIndex - topNoteIndex) + 1;
+            const visualRows = Math.ceil(rowsInRange / 2);
+            
+            store.state.visualRows = visualRows;
+            store.state.logicRows = visualRows * 2;
+            store.state.gridPosition = topNoteIndex;
+
+            // <<< LOG
+            console.log(`[LayoutService] Initial view calculated. visualRows: ${visualRows}, gridPosition: ${topNoteIndex}`);
+        } else {
+            console.error("[LayoutService] Could not find initial notes for layout!"); // <<< LOG
+            store.state.visualRows = 10;
+            store.state.logicRows = 20;
+            store.state.gridPosition = store.state.fullRowData.findIndex(r => r.toneNote === 'C4');
+        }
+        
+        isInitialLayoutDone = true;
     }
     
     const cellHeight = containerHeight / store.state.visualRows;
     const cellWidth = cellHeight / 2;
-    
-    store.state.cellWidth = cellWidth;
+    store.state.cellWidth = cellHeight / 2;
     store.state.cellHeight = cellHeight;
 
-    if (!isInitialLayoutDone) {
-        isInitialLayoutDone = true;
-    }
+    // <<< LOG
+    console.log(`[LayoutService] Cell dimensions calculated. cellHeight: ${cellHeight}`);
     
     applyDimensions();
     return true;
 }
 
 function resizeCanvas() {
-    if (!isInitialLayoutDone) return;
     clearTimeout(resizeTimeout);
-    resizeTimeout = setTimeout(calculateAndApplyLayout, RESIZE_DEBOUNCE_DELAY);
+    resizeTimeout = setTimeout(() => {
+        const container = document.getElementById('grid-container-wrapper');
+        if (!container) return;
+        const containerHeight = container.offsetHeight;
+        const cellHeight = containerHeight / store.state.visualRows;
+        store.state.cellWidth = cellHeight / 2;
+        store.state.cellHeight = cellHeight;
+        applyDimensions();
+    }, RESIZE_DEBOUNCE_DELAY);
 }
 
 const LayoutService = {
@@ -137,10 +157,12 @@ const LayoutService = {
         recalcGridColumns();
 
         const observer = new ResizeObserver(entries => {
+            console.log("[LayoutService] ResizeObserver fired."); // <<< LOG
             if (!gridContainerWrapper) return;
             const entry = entries[0];
             if (entry.contentRect.height > 50 && !isInitialLayoutDone) {
                 if (calculateAndApplyLayout()) {
+                    console.log("[LayoutService] Initial layout complete, disconnecting observer."); // <<< LOG
                     observer.disconnect();
                 }
             }
@@ -176,7 +198,7 @@ const LayoutService = {
         if (store.state.visualRows > MIN_VISUAL_ROWS) {
             store.state.visualRows--;
             store.state.logicRows = store.state.visualRows * 2;
-            calculateAndApplyLayout();
+            resizeCanvas();
         }
     },
 
@@ -186,7 +208,7 @@ const LayoutService = {
         if (store.state.visualRows < maxVisualRows) {
             store.state.visualRows++;
             store.state.logicRows = store.state.visualRows * 2;
-            calculateAndApplyLayout();
+            resizeCanvas();
         }
     }
 };

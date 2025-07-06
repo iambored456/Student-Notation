@@ -12,9 +12,10 @@ import { initKeyboardHandler } from './services/keyboardHandler.js';
 import Toolbar from './components/Toolbar/Toolbar.js';
 import GridManager from './components/Grid/gridManager.js';
 import { initHarmonicMultislider } from './components/HarmonicMultislider/harmonicMultislider.js';
-import { initADSR } from './components/ADSR/customenvelope.js';
-import { initFilterControls } from './components/FilterControls/filterControls.js'; // IMPORT NEW MODULE
+import { initAdsrComponent } from './components/ADSR/adsrComponent.js';
+import { initFilterControls } from './components/FilterControls/filterControls.js';
 import PrintPreview from './components/PrintPreview.js';
+import GlobalService from './services/globalService.js';
 
 console.log("Main.js: Application starting...");
 
@@ -24,7 +25,21 @@ document.addEventListener("DOMContentLoaded", () => {
     console.log("STARTING INITIALIZATION");
     console.log("========================================");
 
-    store.state.fullRowData = fullRowData;
+    // --- Create and inject dummy rows for scrolling padding ---
+    const topPaddingRows = 1;
+    const bottomPaddingRows = 2; // One to match the top, one extra for buffer
+    const dummyRow = { pitch: '', toneNote: '', frequency: 0, column: '', hex: 'transparent', isDummy: true };
+    
+    const topPadding = Array(topPaddingRows).fill(dummyRow);
+    const bottomPadding = Array(bottomPaddingRows).fill(dummyRow);
+
+    // Prepend and append the dummy rows to the actual data
+    store.state.fullRowData = [...topPadding, ...fullRowData, ...bottomPadding];
+    
+    // Adjust the initial grid position to account for the new top rows
+    store.state.gridPosition += topPaddingRows;
+
+
     const contexts = LayoutService.init();
     CanvasContextService.setContexts(contexts);
     
@@ -36,9 +51,9 @@ document.addEventListener("DOMContentLoaded", () => {
     
     Toolbar.init();
     GridManager.init();
-    initADSR(); 
+    initAdsrComponent();
     initHarmonicMultislider();
-    initFilterControls(); // INITIALIZE NEW MODULE
+    initFilterControls();
     PrintPreview.init();
     
     console.log("----------------------------------------");
@@ -66,7 +81,7 @@ document.addEventListener("DOMContentLoaded", () => {
     GridManager.renderPitchGrid();
     GridManager.renderDrumGrid();
     
-    store.setSelectedTool('circle', '#0000ff');
+    store.setSelectedTool('circle', '#4a90e2');
     
     console.log("========================================");
     console.log("INITIALIZATION COMPLETE");

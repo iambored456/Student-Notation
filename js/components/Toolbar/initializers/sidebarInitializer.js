@@ -1,6 +1,25 @@
 // js/components/Toolbar/initializers/sidebarInitializer.js
 import store from '../../../state/store.js';
 
+function initAnacrusisToggle() {
+    const anacrusisOnBtn = document.getElementById('anacrusis-on-btn');
+    const anacrusisOffBtn = document.getElementById('anacrusis-off-btn');
+
+    if (!anacrusisOnBtn || !anacrusisOffBtn) return;
+
+    anacrusisOnBtn.addEventListener('click', () => store.setAnacrusis(true));
+    anacrusisOffBtn.addEventListener('click', () => store.setAnacrusis(false));
+
+    store.on('anacrusisChanged', (isEnabled) => {
+        anacrusisOnBtn.classList.toggle('active', isEnabled);
+        anacrusisOffBtn.classList.toggle('active', !isEnabled);
+    });
+
+    // Set initial state
+    anacrusisOnBtn.classList.toggle('active', store.state.hasAnacrusis);
+    anacrusisOffBtn.classList.toggle('active', !store.state.hasAnacrusis);
+}
+
 export function initSidebarAndVolume() {
     const settingsBtn = document.getElementById('settings-button');
     const sidebar = document.getElementById('sidebar');
@@ -36,4 +55,7 @@ export function initSidebarAndVolume() {
 
     // Initial Volume Dispatch
     verticalVolumeSlider.dispatchEvent(new Event('input'));
+    
+    // Initialize the anacrusis toggle
+    initAnacrusisToggle();
 }

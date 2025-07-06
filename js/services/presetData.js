@@ -51,24 +51,28 @@ export const PRESETS = {
     // Basic Waveforms
     sine: {
         name: 'sine',
+        gain: 1.0, // Sine is our quietest baseline, so no reduction.
         adsr: basicWaveADSR,
         coeffs: generateSineCoeffs(),
         filter: { ...defaultFilter }
     },
     triangle: {
         name: 'triangle',
+        gain: 0.8, // Triangle is a bit louder than sine.
         adsr: basicWaveADSR,
         coeffs: generateTriangleCoeffs(),
         filter: { ...defaultFilter }
     },
     square: {
         name: 'square',
+        gain: 0.4, // Square waves are significantly louder.
         adsr: basicWaveADSR,
         coeffs: generateSquareCoeffs(),
         filter: { ...defaultFilter }
     },
     sawtooth: {
         name: 'sawtooth',
+        gain: 0.5, // Sawtooth is also very loud.
         adsr: basicWaveADSR,
         coeffs: generateSawtoothCoeffs(),
         filter: { ...defaultFilter }
@@ -77,6 +81,7 @@ export const PRESETS = {
     // Instrument Presets
     piano: {
         name: 'piano',
+        gain: 0.8, // Piano has a sharp attack but decays, so can be reasonably loud.
         adsr: { attack: 0.01, decay: 0.8, sustain: 0.1, release: 1.0 },
         coeffs: (() => {
             const c = new Float32Array(BINS).fill(0);
@@ -89,18 +94,21 @@ export const PRESETS = {
     },
     strings: {
         name: 'strings',
+        gain: 0.5, // Based on a sawtooth, so needs reduction.
         adsr: { attack: 0.4, decay: 0.1, sustain: 0.9, release: 0.5 },
         coeffs: generateSawtoothCoeffs(),
         filter: { ...defaultFilter }
     },
     woodwind: {
         name: 'woodwind',
+        gain: 0.6, // Based on a square wave, needs reduction.
         adsr: { attack: 0.1, decay: 0.2, sustain: 0.8, release: 0.3 },
         coeffs: generateSquareCoeffs(),
         filter: { ...defaultFilter }
     },
     marimba: {
         name: 'marimba',
+        gain: 0.9, // Percussive and sine-like, can be loud at the start.
         adsr: { attack: 0.01, decay: 0.8, sustain: 0, release: 0.8 },
         coeffs: (() => {
             const c = new Float32Array(BINS).fill(0);

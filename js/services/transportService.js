@@ -3,6 +3,7 @@ import * as Tone from 'tone';
 import store from '../state/store.js';
 import LayoutService from './layoutService.js';
 import SynthEngine from './synthEngine.js';
+import GlobalService from './globalService.js';
 
 console.log("TransportService: Module loaded.");
 
@@ -45,6 +46,7 @@ function getPitchForNote(note) {
 function scheduleNotes() {
     Tone.Transport.cancel();
     calculateTimeMap();
+    GlobalService.adsrComponent?.playheadManager.clearAll();
 
     store.state.placedNotes.forEach(note => {
         const startTime = timeMap[note.startColumnIndex];
@@ -60,16 +62,19 @@ function scheduleNotes() {
             }, startTime);
         } else {
             const pitch = getPitchForNote(note);
-            // --- UPDATED: Pass the note's color to the engine ---
-            const color = note.color;
+            const toolColor = note.color; // The color for the synth voice
+            const pitchColor = store.state.fullRowData[note.row]?.hex || '#888888'; // The color for the playhead
+            const noteId = note.uuid;
             
             Tone.Transport.schedule(time => {
                 if (store.state.isPaused) return;
-                SynthEngine.triggerAttack(pitch, color, time);
+                SynthEngine.triggerAttack(pitch, toolColor, time);
+                GlobalService.adsrComponent?.playheadManager.trigger(noteId, 'attack', pitchColor);
             }, startTime);
 
             Tone.Transport.schedule(time => {
-                SynthEngine.triggerRelease(pitch, color, time);
+                SynthEngine.triggerRelease(pitch, toolColor, time);
+                GlobalService.adsrComponent?.playheadManager.trigger(noteId, 'release', pitchColor);
             }, startTime + duration);
         }
     });

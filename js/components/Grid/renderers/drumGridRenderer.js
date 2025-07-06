@@ -67,7 +67,7 @@ function drawVerticalGridLines(ctx, options) {
             if (mbIndex !== -1) {
                 const boundaryStyle = macrobeatBoundaryStyles[mbIndex];
                 if (boundaryStyle === 'anacrusis') continue;
-                style = { lineWidth: 1, strokeStyle: '#dee2e6', dash: boundaryStyle === 'solid' ? [] : [4, 2] };
+                style = { lineWidth: 1, strokeStyle: '#dee2e6', dash: boundaryStyle === 'solid' ? [] : [5, 5] };
             } else { continue; }
         } else { continue; }
         

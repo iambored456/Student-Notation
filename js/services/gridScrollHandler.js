@@ -8,7 +8,7 @@ const LERP_FACTOR = 0.15;
 const COMMIT_DEBOUNCE_MS = 150;
 
 // --- State Variables ---
-let scrollableContainer; // The element we will transform
+let scrollableContainer;
 let currentY = 0;
 let targetY = 0;
 let animationFrameId = null;
@@ -21,6 +21,7 @@ function getRowHeight() {
 function getMaxScrollY() {
     const totalRows = store.state.fullRowData.length;
     const visibleRows = store.state.logicRows;
+    if(visibleRows === 0) return 0;
     const maxPosition = totalRows - visibleRows;
     return -maxPosition * getRowHeight();
 }
@@ -40,20 +41,13 @@ function animate() {
 }
 
 function handleWheel(e) {
-    // BUG FIX: Only process wheel events that have a vertical scroll component.
-    // This prevents phantom horizontal scroll/trackpad events from interfering.
-    if (e.deltaY === 0) {
-        return;
-    }
-
+    if (e.deltaY === 0) return;
     e.preventDefault();
     targetY -= e.deltaY;
     targetY = Math.max(getMaxScrollY(), Math.min(0, targetY));
-
     if (!animationFrameId) {
         animationFrameId = requestAnimationFrame(animate);
     }
-
     clearTimeout(commitTimeoutId);
     commitTimeoutId = setTimeout(commitScrollPosition, COMMIT_DEBOUNCE_MS);
 }
@@ -61,15 +55,26 @@ function handleWheel(e) {
 function commitScrollPosition() {
     const rowHeight = getRowHeight();
     if (rowHeight === 0) return;
-
     const newPosition = Math.round(-targetY / rowHeight);
     store.setGridPosition(newPosition);
 }
 
 function syncToStore() {
     const rowHeight = getRowHeight();
-    targetY = -store.state.gridPosition * rowHeight;
+    // <<< LOG
+    console.log(`[GridScrollHandler] syncToStore called. rowHeight: ${rowHeight}, gridPosition: ${store.state.gridPosition}`);
+
+    if (rowHeight === 0) {
+        console.log("[GridScrollHandler] rowHeight is 0, returning early."); // <<< LOG
+        return;
+    }
+
+    const maxScroll = getMaxScrollY();
+    targetY = Math.max(maxScroll, -store.state.gridPosition * rowHeight);
     currentY = targetY;
+
+    // <<< LOG
+    console.log(`[GridScrollHandler] Applying transform: translateY(${currentY}px)`);
 
     if (scrollableContainer) {
        scrollableContainer.style.transform = `translateY(${currentY}px)`;

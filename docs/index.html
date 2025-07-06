@@ -10,8 +10,8 @@
     <link rel="manifest" href="/Student-Notation/site.webmanifest" />
     <meta name="theme-color" content="#ffffff" />
     <style id="print-style-rules"></style>
-    <script type="module" crossorigin src="/Student-Notation/assets/index-DXmvNSJb.js"></script>
-    <link rel="stylesheet" crossorigin href="/Student-Notation/assets/index-DiBuFGEM.css">
+    <script type="module" crossorigin src="/Student-Notation/assets/index-9HHXOioK.js"></script>
+    <link rel="stylesheet" crossorigin href="/Student-Notation/assets/index-ByfFNVRE.css">
   </head>
   <body>
     <!-- Sidebar and Overlay (Unchanged) -->
@@ -21,9 +21,17 @@
         <div class="app-title">Quinn Fleming's<br />Student Notation</div>
       </div>
       <div class="sidebar-container">
-        <button class="sidebar-button" id="save-as-button">Save As</button>
-        <button class="sidebar-button" id="import-button">Open</button>
-        <button class="sidebar-button" id="print-button">Print</button>
+        <button class="sidebar-button" id="save-as-button">💾 Save As</button>
+        <button class="sidebar-button" id="import-button">📁 Open</button>
+        <button class="sidebar-button" id="print-button">🖨️ Print</button>
+      </div>
+      <!-- Anacrusis Toggle Container -->
+      <div class="sidebar-container">
+        <div class="sidebar-label">Anacrusis</div>
+        <div class="toggle-button-group">
+            <button class="sidebar-toggle-button" id="anacrusis-on-btn">On</button>
+            <button class="sidebar-toggle-button" id="anacrusis-off-btn">Off</button>
+        </div>
       </div>
     </div>
 
@@ -46,21 +54,21 @@
             </div>
             <div id="note-bank-container">
                 <div class="note-bank-row">
-                    <div class="note-pair" data-color="#0000ff">
+                    <div class="note-pair" data-color="#4a90e2">
                         <div class="note circle-note" data-type="circle" aria-label="Blue Circle Note" tabindex="0"></div>
                         <div class="note oval-note"   data-type="oval"   aria-label="Blue Oval Note"   tabindex="0"></div>
                     </div>
-                    <div class="note-pair" data-color="#000000">
+                    <div class="note-pair" data-color="#2d2d2d">
                         <div class="note circle-note" data-type="circle" aria-label="Black Circle Note" tabindex="0"></div>
                         <div class="note oval-note"   data-type="oval"   aria-label="Black Oval Note"   tabindex="0"></div>
                     </div>
                 </div>
                 <div class="note-bank-row">
-                    <div class="note-pair" data-color="#ff0000">
+                    <div class="note-pair" data-color="#d66573">
                         <div class="note circle-note" data-type="circle" aria-label="Red Circle Note" tabindex="0"></div>
                         <div class="note oval-note"   data-type="oval"   aria-label="Red Oval Note"   tabindex="0"></div>
                     </div>
-                    <div class="note-pair" data-color="#00ff00">
+                    <div class="note-pair" data-color="#68a03f">
                         <div class="note circle-note" data-type="circle" aria-label="Green Circle Note" tabindex="0"></div>
                         <div class="note oval-note"   data-type="oval"   aria-label="Green Oval Note"   tabindex="0"></div>
                     </div>
@@ -170,15 +178,15 @@
           <div id="tempo-container">
             <div id="tempo-display-container">
                 <div class="tempo-input-group">
-                    <span class="tempo-label">♪</span>
+                    <img src="/Student-Notation/assets/icons/8thNote.svg" alt="Eighth Note Tempo" class="tempo-label-icon">
                     <input type="number" id="eighth-note-tempo" class="tempo-input">
                 </div>
                 <div class="tempo-input-group">
-                    <span class="tempo-label">♩</span>
+                    <img src="/Student-Notation/assets/icons/QuarterNote.svg" alt="Quarter Note Tempo" class="tempo-label-icon">
                     <input type="number" id="quarter-note-tempo" class="tempo-input">
                 </div>
                 <div class="tempo-input-group">
-                    <span class="tempo-label">♩.</span>
+                    <img src="/Student-Notation/assets/icons/DottedQuarterNote.svg" alt="Dotted Quarter Note Tempo" class="tempo-label-icon">
                     <input type="number" id="dotted-quarter-tempo" class="tempo-input">
                 </div>
             </div>
