@@ -9,10 +9,6 @@ export function getColumnX(index, { columnWidths, cellWidth }) {
     return x;
 }
 
-// --- THIS IS THE REVERTED AND CORRECTED FUNCTION ---
-// It calculates the Y-coordinate for the CENTER of a row.
-// This simple calculation relies on the padding rows added in main.js
-// to ensure the top-most notes are not visually cut off.
 export function getRowY(rowIndex, { cellHeight }) {
     return rowIndex * 0.5 * cellHeight;
 }

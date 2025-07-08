@@ -11,12 +11,22 @@ export function initPlaybackControls() {
     const redoBtn = document.getElementById('redo-button');
 
     playBtn.addEventListener('click', () => {
-        if (!store.state.isPlaying || store.state.isPaused) {
+        const { isPlaying, isPaused } = store.state;
+
+        // Condition 1: If it's currently paused, RESUME playback.
+        if (isPlaying && isPaused) {
             store.setPlaybackState(true, false);
-            TransportService.start();
-        } else {
+            TransportService.resume();
+        } 
+        // Condition 2: If it's currently playing, PAUSE it.
+        else if (isPlaying && !isPaused) {
             store.setPlaybackState(true, true);
             TransportService.pause();
+        }
+        // Condition 3: If it's stopped, START playback from the beginning.
+        else {
+            store.setPlaybackState(true, false);
+            TransportService.start();
         }
     });
 

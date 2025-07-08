@@ -76,4 +76,12 @@ export function initFileActions() {
         document.body.classList.remove('sidebar-open');
         store.emit('printPreviewStateChanged', true);
     });
+
+    document.getElementById('reset-canvas-button').addEventListener('click', () => {
+        if (window.confirm('Are you sure you want to reset the canvas? This will clear all your work and cannot be undone.')) {
+            // This action is defined in js/state/index.js
+            // It clears the saved state from localStorage and reloads the page.
+            store.clearSavedState();
+        }
+    });
 }

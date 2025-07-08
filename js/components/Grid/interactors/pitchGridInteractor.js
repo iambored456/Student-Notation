@@ -6,7 +6,6 @@ import GridCoordsService from '../../../services/gridCoordsService.js';
 import LayoutService from '../../../services/layoutService.js';
 import { drawSingleColumnOvalNote, drawTwoColumnOvalNote, drawTonicShape } from '../renderers/notes.js';
 import GlobalService from '../../../services/globalService.js';
-// --- REMOVED THE IMPORT FOR getRowY ---
 
 // --- Interaction State ---
 let pitchHoverCtx;
@@ -24,15 +23,57 @@ function getPitchForRow(rowIndex) {
     return rowData ? rowData.toneNote : null;
 }
 
-function findHoveredMacrobeat(columnIndex) {
-    const { macrobeatGroupings, columnWidths } = store.state;
+/**
+ * **NEW HELPER FUNCTION**
+ * Calculates the column index for a given tonic sign boundary. This is crucial for drawing
+ * the hover highlight in the correct snapped position.
+ * @param {number} preMacrobeatIndex - The boundary index to find the column for.
+ * @returns {number} The starting column index for drawing.
+ */
+function getDrawColumnForBoundary(preMacrobeatIndex) {
+    let columnCursor = 2; // Start after left legend
+    const { macrobeatGroupings } = store.state;
+    const placedTonicSigns = getPlacedTonicSigns(store.state);
+
+    // Sort existing tonics by their musical position to ensure correct calculation
+    const sortedTonicIndices = [...new Set(placedTonicSigns.map(ts => ts.preMacrobeatIndex))].sort((a,b) => a - b);
+    
+    // Add columns for all macrobeats that come before the target boundary
+    for (let i = 0; i < preMacrobeatIndex + 1 && i < macrobeatGroupings.length; i++) {
+        columnCursor += macrobeatGroupings[i];
+    }
+    
+    // Add columns for all tonic signs that are placed before the target boundary
+    sortedTonicIndices.forEach(tonicIndex => {
+        if (tonicIndex < preMacrobeatIndex) {
+            columnCursor += 2;
+        }
+    });
+
+    return columnCursor;
+}
+
+
+/**
+ * **THE CORE NEW LOGIC**
+ * Finds the macrobeat the user is hovering over, then finds the beginning of the measure
+ * containing that macrobeat, and returns the boundary information for that start point.
+ * @param {number} columnIndex - The current mouse hover column.
+ * @returns {object|null} An object with { drawColumn, preMacrobeatIndex } for the snapped position, or null.
+ */
+function findMeasureSnapPoint(columnIndex) {
+    const { macrobeatGroupings, columnWidths, macrobeatBoundaryStyles } = store.state;
     const placedTonicSigns = getPlacedTonicSigns(store.state);
 
     if (columnIndex < 2 || columnIndex >= columnWidths.length - 2) return null;
 
+    // --- Step 1: Find which macrobeat the user is currently hovering over ---
     let currentCol = 2;
+    let hoveredMbIndex = -1;
+
     for (let i = 0; i < macrobeatGroupings.length; i++) {
-        while (placedTonicSigns.some(ts => ts.columnIndex === currentCol)) {
+        // Account for any tonic signs that shift the grid
+        while(placedTonicSigns.some(ts => ts.columnIndex === currentCol)) {
             currentCol++;
         }
         const macrobeatStart = currentCol;
@@ -40,21 +81,43 @@ function findHoveredMacrobeat(columnIndex) {
         const macrobeatEnd = macrobeatStart + groupSize - 1;
 
         if (columnIndex >= macrobeatStart && columnIndex <= macrobeatEnd) {
-            return { drawColumn: macrobeatStart, preMacrobeatIndex: i - 1 };
+            hoveredMbIndex = i;
+            break;
         }
         currentCol = macrobeatEnd + 1;
     }
-    return null;
+
+    if (hoveredMbIndex === -1) {
+        console.log("[Tonic Snap] Hover is not over a valid macrobeat.");
+        return null;
+    }
+    console.log(`[Tonic Snap] Hover detected over macrobeat index: ${hoveredMbIndex}`);
+
+    // --- Step 2: Find the start of the measure containing that macrobeat ---
+    let measureStartIndex = 0;
+    // Look backwards from the beat *before* the one we're hovering over.
+    for (let i = hoveredMbIndex - 1; i >= 0; i--) {
+        if (macrobeatBoundaryStyles[i] === 'solid') {
+            // We found the bar line. The measure starts at the beat *after* it.
+            measureStartIndex = i + 1;
+            break;
+        }
+    }
+    console.log(`[Tonic Snap] The containing measure starts at macrobeat index: ${measureStartIndex}`);
+
+    // --- Step 3: The target placement is the boundary BEFORE the start of the measure ---
+    const targetPreMacrobeatIndex = measureStartIndex - 1;
+    const drawColumn = getDrawColumnForBoundary(targetPreMacrobeatIndex);
+
+    console.log(`[Tonic Snap] Snapping to preMacrobeatIndex: ${targetPreMacrobeatIndex} at draw column: ${drawColumn}`);
+    return { drawColumn, preMacrobeatIndex: targetPreMacrobeatIndex };
 }
 
 
 // --- Hover Drawing Logic ---
-
-// --- THIS FUNCTION IS REVERTED TO ITS ORIGINAL STATE ---
 function drawHoverHighlight(colIndex, rowIndex, color, widthMultiplier = null) {
     if (!pitchHoverCtx) return;
     const x = LayoutService.getColumnX(colIndex);
-    // This local calculation is now the desired behavior
     const y = rowIndex * 0.5 * store.state.cellHeight - store.state.cellHeight / 2;
     
     let highlightWidth;
@@ -71,26 +134,18 @@ function drawHoverHighlight(colIndex, rowIndex, color, widthMultiplier = null) {
     pitchHoverCtx.fillRect(x, y, highlightWidth, store.state.cellHeight);
 }
 
-
 function drawGhostNote(colIndex, rowIndex, isFaint = false) {
     if (!pitchHoverCtx) return;
     const { type, color, tonicNumber } = store.state.selectedTool;
 
-    const ghostOptions = {
-        ...store.state // Pass the whole state for consistency
-    };
-    
+    const ghostOptions = { ...store.state };
     pitchHoverCtx.globalAlpha = isFaint ? 0.2 : 0.4;
     
     if (type === 'tonicization') {
         const ghostTonic = { row: rowIndex, columnIndex: colIndex, tonicNumber: tonicNumber };
         drawTonicShape(pitchHoverCtx, ghostOptions, ghostTonic);
     } else if (type !== 'eraser') { 
-        const ghostNote = { 
-            row: rowIndex, startColumnIndex: colIndex, endColumnIndex: colIndex, 
-            color: color, shape: type, isDrum: false 
-        };
-        // These functions will now use the corrected getRowY and be in sync
+        const ghostNote = { row: rowIndex, startColumnIndex: colIndex, endColumnIndex: colIndex, color: color, shape: type, isDrum: false };
         if (ghostNote.shape === 'oval') {
             drawSingleColumnOvalNote(pitchHoverCtx, ghostOptions, ghostNote, rowIndex);
         } else {
@@ -101,7 +156,7 @@ function drawGhostNote(colIndex, rowIndex, isFaint = false) {
 }
 
 
-// --- Event Handlers (Unchanged) ---
+// --- Event Handlers ---
 function handleMouseDown(e) {
     const rect = e.target.getBoundingClientRect();
     const x = e.clientX - rect.left;
@@ -139,6 +194,7 @@ function handleMouseDown(e) {
         const { type, color, tonicNumber } = store.state.selectedTool;
         
         if (type === 'tonicization') {
+            // Use the snapped position stored during the mouse move event
             if (lastHoveredTonicPoint && lastHoveredOctaveRows.length > 0) {
                 const newTonicGroup = lastHoveredOctaveRows.map(rowIdx => ({
                     row: rowIdx,
@@ -217,14 +273,18 @@ function handleMouseMove(e) {
     }
 
     if (store.state.selectedTool.type === 'tonicization') {
-        const hoveredMacrobeat = findHoveredMacrobeat(colIndex);
+        // **MODIFIED: Use the new snapping logic**
+        const snappedPoint = findMeasureSnapPoint(colIndex);
         
-        if (hoveredMacrobeat) {
-            const drawColumn = hoveredMacrobeat.drawColumn;
+        if (snappedPoint) {
+            const { drawColumn, preMacrobeatIndex } = snappedPoint;
             drawHoverHighlight(drawColumn, rowIndex, 'rgba(74, 144, 226, 0.2)', 2);
             drawGhostNote(drawColumn, rowIndex);
-            lastHoveredTonicPoint = hoveredMacrobeat;
+
+            // Store the snapped position for use on click
+            lastHoveredTonicPoint = { preMacrobeatIndex: preMacrobeatIndex };
             
+            // Highlight octave duplicates based on the main hovered row
             const hoveredPitchName = store.state.fullRowData[rowIndex]?.pitch.replace(/\d/g, '').trim();
             lastHoveredOctaveRows = [rowIndex];
             store.state.fullRowData.forEach((row, idx) => {

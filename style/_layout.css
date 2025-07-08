@@ -25,6 +25,8 @@
 #top-toolbar {
   height: 18vh;
   align-items: stretch; /* Make all containers the same height */
+  position: relative; /* Add this to create a stacking context */
+  z-index: 10; /* Add this to lift it above the controlToolbar */
 }
 
 #controlToolbar {
