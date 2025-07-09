@@ -3,6 +3,7 @@ import { getColumnX, getRowY } from './rendererUtils.js';
 import TonalService from '../../../services/tonalService.js';
 
 function drawScaleDegreeText(ctx, note, options, centerX, centerY, noteHeight) {
+    // Pass the entire state ('options' in this context) to the service
     const degreeStr = TonalService.getDegreeForNote(note, options);
     if (!degreeStr) return;
     

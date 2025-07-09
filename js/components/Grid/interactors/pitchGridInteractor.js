@@ -1,11 +1,14 @@
 // js/components/Grid/interactors/pitchGridInteractor.js
 import store from '../../../state/index.js';
-import { getPlacedTonicSigns } from '../../../state/selectors.js';
+import { getPlacedTonicSigns, getMacrobeatInfo } from '../../../state/selectors.js';
 import SynthEngine from '../../../services/synthEngine.js';
 import GridCoordsService from '../../../services/gridCoordsService.js';
 import LayoutService from '../../../services/layoutService.js';
 import { drawSingleColumnOvalNote, drawTwoColumnOvalNote, drawTonicShape } from '../renderers/notes.js';
 import GlobalService from '../../../services/globalService.js';
+import { Note } from 'tonal';
+import { buildNotes } from '../../../harmony/utils/build-notes.js';
+
 
 // --- Interaction State ---
 let pitchHoverCtx;
@@ -16,6 +19,8 @@ let previousTool = null;
 let lastHoveredTonicPoint = null;
 let lastHoveredOctaveRows = [];
 let rightClickActionTaken = false; 
+let isDraggingChord = false;
+let tempChordShape = null;
 
 // --- Interaction Helpers ---
 function getPitchForRow(rowIndex) {
@@ -23,39 +28,19 @@ function getPitchForRow(rowIndex) {
     return rowData ? rowData.toneNote : null;
 }
 
-/**
- * **NEW HELPER FUNCTION**
- * Calculates the column index for a given tonic sign boundary. This is crucial for drawing
- * the hover highlight in the correct snapped position.
- * @param {number} preMacrobeatIndex - The boundary index to find the column for.
- * @returns {number} The starting column index for drawing.
- */
-function getDrawColumnForBoundary(preMacrobeatIndex) {
-    let columnCursor = 2; // Start after left legend
-    const { macrobeatGroupings } = store.state;
-    const placedTonicSigns = getPlacedTonicSigns(store.state);
+function findChordAt(colIndex, rowIndex) {
+    const clickedNoteName = getPitchForRow(rowIndex);
+    if (!clickedNoteName) return null;
 
-    // Sort existing tonics by their musical position to ensure correct calculation
-    const sortedTonicIndices = [...new Set(placedTonicSigns.map(ts => ts.preMacrobeatIndex))].sort((a,b) => a - b);
-    
-    // Add columns for all macrobeats that come before the target boundary
-    for (let i = 0; i < preMacrobeatIndex + 1 && i < macrobeatGroupings.length; i++) {
-        columnCursor += macrobeatGroupings[i];
-    }
-    
-    // Add columns for all tonic signs that are placed before the target boundary
-    sortedTonicIndices.forEach(tonicIndex => {
-        if (tonicIndex < preMacrobeatIndex) {
-            columnCursor += 2;
+    for (const chord of store.state.placedChords) {
+        if (chord.position.xBeat === colIndex && chord.notes.includes(clickedNoteName)) {
+            return chord;
         }
-    });
-
-    return columnCursor;
+    }
+    return null;
 }
 
-
 /**
- * **THE CORE NEW LOGIC**
  * Finds the macrobeat the user is hovering over, then finds the beginning of the measure
  * containing that macrobeat, and returns the boundary information for that start point.
  * @param {number} columnIndex - The current mouse hover column.
@@ -63,53 +48,35 @@ function getDrawColumnForBoundary(preMacrobeatIndex) {
  */
 function findMeasureSnapPoint(columnIndex) {
     const { macrobeatGroupings, columnWidths, macrobeatBoundaryStyles } = store.state;
-    const placedTonicSigns = getPlacedTonicSigns(store.state);
 
     if (columnIndex < 2 || columnIndex >= columnWidths.length - 2) return null;
 
     // --- Step 1: Find which macrobeat the user is currently hovering over ---
-    let currentCol = 2;
     let hoveredMbIndex = -1;
-
     for (let i = 0; i < macrobeatGroupings.length; i++) {
-        // Account for any tonic signs that shift the grid
-        while(placedTonicSigns.some(ts => ts.columnIndex === currentCol)) {
-            currentCol++;
-        }
-        const macrobeatStart = currentCol;
-        const groupSize = macrobeatGroupings[i];
-        const macrobeatEnd = macrobeatStart + groupSize - 1;
-
-        if (columnIndex >= macrobeatStart && columnIndex <= macrobeatEnd) {
+        const { startColumn, endColumn } = getMacrobeatInfo(store.state, i);
+        if (columnIndex >= startColumn && columnIndex <= endColumn) {
             hoveredMbIndex = i;
             break;
         }
-        currentCol = macrobeatEnd + 1;
     }
 
-    if (hoveredMbIndex === -1) {
-        console.log("[Tonic Snap] Hover is not over a valid macrobeat.");
-        return null;
-    }
-    console.log(`[Tonic Snap] Hover detected over macrobeat index: ${hoveredMbIndex}`);
+    if (hoveredMbIndex === -1) return null;
 
     // --- Step 2: Find the start of the measure containing that macrobeat ---
     let measureStartIndex = 0;
-    // Look backwards from the beat *before* the one we're hovering over.
     for (let i = hoveredMbIndex - 1; i >= 0; i--) {
         if (macrobeatBoundaryStyles[i] === 'solid') {
-            // We found the bar line. The measure starts at the beat *after* it.
             measureStartIndex = i + 1;
             break;
         }
     }
-    console.log(`[Tonic Snap] The containing measure starts at macrobeat index: ${measureStartIndex}`);
 
-    // --- Step 3: The target placement is the boundary BEFORE the start of the measure ---
+    // --- Step 3: Get the insertion point for the boundary BEFORE the measure start ---
     const targetPreMacrobeatIndex = measureStartIndex - 1;
-    const drawColumn = getDrawColumnForBoundary(targetPreMacrobeatIndex);
+    // THE FIX: The draw column is the start of the next measure, not the column before it.
+    const drawColumn = getMacrobeatInfo(store.state, measureStartIndex).startColumn;
 
-    console.log(`[Tonic Snap] Snapping to preMacrobeatIndex: ${targetPreMacrobeatIndex} at draw column: ${drawColumn}`);
     return { drawColumn, preMacrobeatIndex: targetPreMacrobeatIndex };
 }
 
@@ -144,7 +111,7 @@ function drawGhostNote(colIndex, rowIndex, isFaint = false) {
     if (type === 'tonicization') {
         const ghostTonic = { row: rowIndex, columnIndex: colIndex, tonicNumber: tonicNumber };
         drawTonicShape(pitchHoverCtx, ghostOptions, ghostTonic);
-    } else if (type !== 'eraser') { 
+    } else if (type !== 'eraser' && type !== 'chord') { 
         const ghostNote = { row: rowIndex, startColumnIndex: colIndex, endColumnIndex: colIndex, color: color, shape: type, isDrum: false };
         if (ghostNote.shape === 'oval') {
             drawSingleColumnOvalNote(pitchHoverCtx, ghostOptions, ghostNote, rowIndex);
@@ -165,6 +132,16 @@ function handleMouseDown(e) {
     const rowIndex = GridCoordsService.getPitchRowIndex(y);
     if (colIndex < 2 || colIndex >= store.state.columnWidths.length - 2 || !getPitchForRow(rowIndex)) return;
 
+    const clickedChord = findChordAt(colIndex, rowIndex);
+    if (clickedChord) {
+        store.setActiveChord(clickedChord.id);
+        return;
+    }
+
+    if (store.state.activeChordId) {
+        store.setActiveChord(null);
+    }
+
     if (e.button === 2) { // Right-click
         e.preventDefault();
         isRightClickActive = true;
@@ -181,9 +158,15 @@ function handleMouseDown(e) {
         if (clickedTonic) {
             wasErased = store.eraseTonicSignGroup(clickedTonic.uuid, false);
         } else {
-            wasErased = store.eraseNoteAt(colIndex, rowIndex, false);
+            const chordToErase = findChordAt(colIndex, rowIndex);
+            if (chordToErase) {
+                store.deleteChord(chordToErase.id);
+                wasErased = true;
+            } else {
+                wasErased = store.eraseNoteAt(colIndex, rowIndex, false);
+            }
         }
-        if (wasErased) rightClickActionTaken = true;
+        if (wasErased && !findChordAt(colIndex, rowIndex)) rightClickActionTaken = true;
 
         pitchHoverCtx.clearRect(0, 0, pitchHoverCtx.canvas.width, pitchHoverCtx.canvas.height);
         drawHoverHighlight(colIndex, rowIndex, 'rgba(220, 53, 69, 0.3)');
@@ -192,14 +175,22 @@ function handleMouseDown(e) {
 
     if (e.button === 0) { // Left-click
         const { type, color, tonicNumber } = store.state.selectedTool;
+
+        if (type === 'chord') {
+            isDraggingChord = true;
+            tempChordShape = {
+                id: 'temp-chord-drag',
+                root: 'X', quality: 'maj', inversion: 0, extension: '', notes: [],
+                position: { xBeat: colIndex, yStaff: rowIndex }
+            };
+            handleMouseMove(e);
+            return;
+        }
         
         if (type === 'tonicization') {
-            // Use the snapped position stored during the mouse move event
             if (lastHoveredTonicPoint && lastHoveredOctaveRows.length > 0) {
                 const newTonicGroup = lastHoveredOctaveRows.map(rowIdx => ({
-                    row: rowIdx,
-                    tonicNumber,
-                    preMacrobeatIndex: lastHoveredTonicPoint.preMacrobeatIndex
+                    row: rowIdx, tonicNumber, preMacrobeatIndex: lastHoveredTonicPoint.preMacrobeatIndex
                 }));
                 store.addTonicSignGroup(newTonicGroup);
                 lastHoveredTonicPoint = null;
@@ -209,11 +200,16 @@ function handleMouseDown(e) {
         }
 
         if (type === 'eraser') {
-             const clickedTonic = getPlacedTonicSigns(store.state).find(ts => ts.columnIndex === colIndex && ts.row === rowIndex);
-            if (clickedTonic) {
-                store.eraseTonicSignGroup(clickedTonic.uuid);
+             const chordToErase = findChordAt(colIndex, rowIndex);
+            if (chordToErase) {
+                store.deleteChord(chordToErase.id);
             } else {
-                store.eraseNoteAt(colIndex, rowIndex);
+                const clickedTonic = getPlacedTonicSigns(store.state).find(ts => ts.columnIndex === colIndex && ts.row === rowIndex);
+                if (clickedTonic) {
+                    store.eraseTonicSignGroup(clickedTonic.uuid);
+                } else {
+                    store.eraseNoteAt(colIndex, rowIndex);
+                }
             }
             return;
         }
@@ -249,15 +245,51 @@ function handleMouseMove(e) {
         return;
     }
     
-    if (isRightClickActive) {
-        const clickedTonic = getPlacedTonicSigns(store.state).find(ts => ts.columnIndex === colIndex && ts.row === rowIndex);
-        let wasErased = false;
-        if (clickedTonic) {
-            wasErased = store.eraseTonicSignGroup(clickedTonic.uuid, false);
-        } else {
-            wasErased = store.eraseNoteAt(colIndex, rowIndex, false);
+    if (isDraggingChord && tempChordShape) {
+        const rootWithOctave = getPitchForRow(rowIndex);
+        if (!rootWithOctave) {
+            pitchHoverCtx.clearRect(0, 0, pitchHoverCtx.canvas.width, pitchHoverCtx.canvas.height);
+            return;
         }
-        if (wasErased) rightClickActionTaken = true;
+        
+        tempChordShape.root = rootWithOctave;
+        tempChordShape.position = { xBeat: colIndex, yStaff: rowIndex };
+    
+        const notes = buildNotes(tempChordShape, store.state.keySignature);
+    
+        pitchHoverCtx.globalAlpha = 0.4;
+        const ghostNoteOptions = { ...store.state, degreeDisplayMode: 'off' };
+        
+        notes.forEach(noteName => {
+            const noteRowIndex = store.state.fullRowData.findIndex(r => r.toneNote === noteName);
+            if (noteRowIndex > -1) {
+                const ghostNote = {
+                    row: noteRowIndex, startColumnIndex: colIndex, endColumnIndex: colIndex,
+                    color: '#2d2d2d', shape: 'oval', isDrum: false
+                };
+                drawSingleColumnOvalNote(pitchHoverCtx, ghostNoteOptions, ghostNote, noteRowIndex);
+            }
+        });
+    
+        pitchHoverCtx.globalAlpha = 1.0;
+        return;
+    }
+
+    if (isRightClickActive) {
+        const chordToErase = findChordAt(colIndex, rowIndex);
+        if (chordToErase) {
+            store.deleteChord(chordToErase.id);
+            rightClickActionTaken = true;
+        } else {
+            const clickedTonic = getPlacedTonicSigns(store.state).find(ts => ts.columnIndex === colIndex && ts.row === rowIndex);
+            let wasErased = false;
+            if (clickedTonic) {
+                wasErased = store.eraseTonicSignGroup(clickedTonic.uuid, false);
+            } else {
+                wasErased = store.eraseNoteAt(colIndex, rowIndex, false);
+            }
+            if (wasErased) rightClickActionTaken = true;
+        }
 
         drawHoverHighlight(colIndex, rowIndex, 'rgba(220, 53, 69, 0.3)');
         return;
@@ -273,7 +305,6 @@ function handleMouseMove(e) {
     }
 
     if (store.state.selectedTool.type === 'tonicization') {
-        // **MODIFIED: Use the new snapping logic**
         const snappedPoint = findMeasureSnapPoint(colIndex);
         
         if (snappedPoint) {
@@ -281,10 +312,8 @@ function handleMouseMove(e) {
             drawHoverHighlight(drawColumn, rowIndex, 'rgba(74, 144, 226, 0.2)', 2);
             drawGhostNote(drawColumn, rowIndex);
 
-            // Store the snapped position for use on click
-            lastHoveredTonicPoint = { preMacrobeatIndex: preMacrobeatIndex };
+            lastHoveredTonicPoint = { preMacrobeatIndex };
             
-            // Highlight octave duplicates based on the main hovered row
             const hoveredPitchName = store.state.fullRowData[rowIndex]?.pitch.replace(/\d/g, '').trim();
             lastHoveredOctaveRows = [rowIndex];
             store.state.fullRowData.forEach((row, idx) => {
@@ -317,6 +346,19 @@ function handleMouseLeave() {
 }
 
 function handleGlobalMouseUp() {
+    if (isDraggingChord && tempChordShape) {
+        isDraggingChord = false;
+        
+        const { root, position } = tempChordShape;
+        if (root !== 'X' && position.xBeat >= 2) {
+            const finalShape = { ...tempChordShape };
+            finalShape.notes = buildNotes(finalShape, store.state.keySignature);
+            store.addChord(finalShape);
+        }
+        tempChordShape = null;
+        handleMouseLeave();
+    }
+
     if (activeNote) {
         const pitch = getPitchForRow(activeNote.row);
         if (pitch) {

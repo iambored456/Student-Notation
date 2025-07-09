@@ -5,6 +5,7 @@ import { noteActions } from './actions/noteActions.js';
 import { timbreActions } from './actions/timbreActions.js';
 import { rhythmActions } from './actions/rhythmActions.js';
 import { viewActions } from './actions/viewActions.js';
+import { harmonyActions } from './actions/harmonyActions.js';
 
 console.log("Store: Modular store loaded.");
 
@@ -45,6 +46,7 @@ function saveStateToLocalStorage(state) {
         // We only persist the data that represents the user's "document"
         const stateToPersist = {
             placedNotes: state.placedNotes,
+            placedChords: state.placedChords, // Save chords
             tonicSignGroups: state.tonicSignGroups,
             timbres: state.timbres,
             macrobeatGroupings: state.macrobeatGroupings,
@@ -66,6 +68,7 @@ const actions = {
     ...timbreActions,
     ...rhythmActions,
     ...viewActions,
+    ...harmonyActions, // <-- THIS LINE FIXES THE CRASH
     // --- NEW: Action to clear saved state ---
     clearSavedState() {
         try {

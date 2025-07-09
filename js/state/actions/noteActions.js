@@ -1,37 +1,8 @@
 // js/state/actions/noteActions.js
+import { getMacrobeatInfo } from '../selectors.js'; // Import the centralized function
 
 function generateUUID() {
     return `uuid-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-}
-
-/**
- * Calculates the column index where a tonic sign will be inserted.
- * This function is the single source of truth for this calculation.
- * @param {number} preMacrobeatIndex - The index of the macrobeat the tonic sign follows.
- * @param {object} state - The current application state.
- * @returns {number} The calculated column index for the start of the tonic sign.
- */
-function calculateTonicInsertionColumn(preMacrobeatIndex, state) {
-    let columnIndex = 2; // Start after the two left legend columns
-    const { macrobeatGroupings, tonicSignGroups } = state;
-
-    // Get an array of the preMacrobeatIndex for each unique, existing tonic sign group
-    const existingTonicIndices = [...new Set(Object.values(tonicSignGroups).flat().map(ts => ts.preMacrobeatIndex))];
-
-    // Loop through each macrobeat position up to the insertion point
-    for (let i = -1; i < preMacrobeatIndex; i++) {
-        // Add the width of the macrobeat itself (if it exists)
-        if (i > -1 && macrobeatGroupings[i] !== undefined) {
-            columnIndex += macrobeatGroupings[i];
-        }
-        // Add the width for any tonic sign that exists at this position
-        if (existingTonicIndices.includes(i)) {
-            columnIndex += 2;
-        }
-    }
-    
-    console.log(`[calculateInsertionPoint] Final calculated insertion column for preMacrobeatIndex ${preMacrobeatIndex} is: ${columnIndex}`);
-    return columnIndex;
 }
 
 export const noteActions = {
@@ -84,12 +55,11 @@ export const noteActions = {
             return;
         }
 
-        const boundaryColumn = calculateTonicInsertionColumn(preMacrobeatIndex, this.state);
+        // Use the centralized selector to find the insertion point.
+        // It's the start column of the *next* macrobeat.
+        const boundaryColumn = getMacrobeatInfo(this.state, preMacrobeatIndex + 1).startColumn;
         
-        // --- THE CORRECTED SHIFT AMOUNT ---
-        // We are inserting ONE item into the columnWidths array, so we shift indices by +1.
-        const SHIFT_AMOUNT = 1; 
-        console.log(`[addTonicSignGroup] Making room: Shifting note indices at or after column ${boundaryColumn} by +${SHIFT_AMOUNT}`);
+        const SHIFT_AMOUNT = 1; // We are inserting ONE column.
         
         this.state.placedNotes.forEach(note => {
             if (note.startColumnIndex >= boundaryColumn) {
@@ -113,13 +83,13 @@ export const noteActions = {
 
         const { preMacrobeatIndex } = groupToErase[0];
         
-        const boundaryColumn = calculateTonicInsertionColumn(preMacrobeatIndex, this.state);
-        
-        delete this.state.tonicSignGroups[uuid];
+        // Temporarily add the group back to calculate the correct boundary before its removal
+        const tempState = { ...this.state, tonicSignGroups: { ...this.state.tonicSignGroups, [uuid]: groupToErase } };
+        const boundaryColumn = getMacrobeatInfo(tempState, preMacrobeatIndex + 1).startColumn;
 
-        // --- THE CORRECTED SHIFT AMOUNT ---
-        const SHIFT_AMOUNT = -1; // Shift indices left
-        console.log(`[eraseTonicSignGroup] Closing gap: Shifting note indices at or after column ${boundaryColumn} by ${SHIFT_AMOUNT}`);
+        delete this.state.tonicSignGroups[uuid];
+        
+        const SHIFT_AMOUNT = -1; // Shift indices left.
         
         this.state.placedNotes.forEach(note => {
             if (note.startColumnIndex >= boundaryColumn) {

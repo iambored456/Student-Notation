@@ -1,37 +1,85 @@
 // js/state/selectors.js
+import { Note } from 'tonal';
+import LayoutService from '../services/layoutService.js';
 
-/**
- * Selects only the pitch notes from the state.
- * @param {object} state - The global application state.
- * @returns {Array} An array of pitch note objects.
- */
-export const getPitchNotes = (state) => state.placedNotes.filter(n => !n.isDrum);
+const MODE_NAMES = ["major", "dorian", "phrygian", "lydian", "mixolydian", "minor", "locrian"];
 
-/**
- * Selects only the drum notes from the state.
- * @param {object} state - The global application state.
- * @returns {Array} An array of drum note objects.
- */
-export const getDrumNotes = (state) => state.placedNotes.filter(n => n.isDrum);
-
-/**
- * A selector that returns a flattened array of all placed tonic signs.
- * This is derived state.
- * @param {object} state - The global application state.
- * @returns {Array<object>} A flat array of all individual tonic sign objects.
- */
 export const getPlacedTonicSigns = (state) => Object.values(state.tonicSignGroups).flat();
 
-/**
- * Finds a specific pitch note at a given grid coordinate.
- * @param {object} state - The global application state.
- * @param {number} colIndex - The column index to check.
- * @param {number} rowIndex - The row index to check.
- * @returns {object|undefined} The found note object or undefined.
- */
-export const getNoteAt = (state, colIndex, rowIndex) => 
-    getPitchNotes(state).find(note => 
-        note.row === rowIndex && 
-        colIndex >= note.startColumnIndex && 
-        colIndex <= note.endColumnIndex
+export const getMacrobeatInfo = (state, macrobeatIndex) => {
+    let columnCursor = 2;
+    const { macrobeatGroupings } = state;
+    const placedTonicSigns = getPlacedTonicSigns(state);
+    
+    if (placedTonicSigns.some(ts => ts.preMacrobeatIndex === -1)) {
+        columnCursor += 1;
+    }
+    for (let i = 0; i < macrobeatIndex; i++) {
+        columnCursor += macrobeatGroupings[i];
+        if (placedTonicSigns.some(ts => ts.preMacrobeatIndex === i)) {
+            columnCursor += 1;
+        }
+    }
+    const startColumn = columnCursor;
+    const grouping = macrobeatGroupings[macrobeatIndex];
+    const endColumn = startColumn + (grouping || 0) - 1;
+    return { startColumn, endColumn, grouping };
+};
+
+export const getPitchNotes = (state) => state.placedNotes.filter(n => !n.isDrum);
+export const getDrumNotes = (state) => state.placedNotes.filter(n => n.isDrum);
+
+export const getKeyContextForBeat = (state, beatIndex) => {
+    const allTonicSigns = getPlacedTonicSigns(state);
+    const relevantTonicSigns = allTonicSigns.filter(ts => ts.columnIndex <= beatIndex);
+
+    if (relevantTonicSigns.length === 0) {
+        return { keyTonic: 'C', keyMode: 'major' };
+    }
+    const latestTonic = relevantTonicSigns.reduce((latest, current) => 
+        current.columnIndex > latest.columnIndex ? current : latest
     );
+    const keyTonic = Note.pitchClass(state.fullRowData[latestTonic.row].toneNote);
+    const keyMode = MODE_NAMES[latestTonic.tonicNumber - 1] || 'major';
+    return { keyTonic, keyMode };
+};
+
+export const getNotesAtBeat = (state, beatIndex) => {
+    const notes = [];
+    const { fullRowData, placedNotes, placedChords } = state;
+
+    placedNotes.forEach(note => {
+        if (!note.isDrum && beatIndex >= note.startColumnIndex && beatIndex <= note.endColumnIndex) {
+            const pitch = fullRowData[note.row]?.toneNote;
+            if (pitch) notes.push(pitch);
+        }
+    });
+    placedChords.forEach(chord => {
+        if (chord.position.xBeat === beatIndex) {
+            notes.push(...chord.notes);
+        }
+    });
+    return notes;
+};
+
+export const getNotesInMacrobeat = (state, macrobeatIndex) => {
+    const allPitches = new Set();
+    const { startColumn, endColumn } = getMacrobeatInfo(state, macrobeatIndex);
+    
+    // --- LOGGING INJECTION ---
+    console.log(`[getNotesInMacrobeat] For macrobeat ${macrobeatIndex}, checking columns ${startColumn} to ${endColumn}.`);
+    
+    for (let i = startColumn; i <= endColumn; i++) {
+        const notesAtThisBeat = getNotesAtBeat(state, i);
+        if(notesAtThisBeat.length > 0) {
+            console.log(` -> Found notes at column ${i}:`, notesAtThisBeat);
+        }
+        notesAtThisBeat.forEach(noteName => {
+            allPitches.add(Note.pitchClass(noteName));
+        });
+    }
+
+    const finalNotes = Array.from(allPitches);
+    console.log(` -> Final unique notes for macrobeat ${macrobeatIndex}:`, finalNotes);
+    return finalNotes;
+};

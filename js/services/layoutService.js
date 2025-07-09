@@ -4,19 +4,18 @@ import { getPlacedTonicSigns } from '../state/selectors.js';
 import { RESIZE_DEBOUNCE_DELAY, MIN_VISUAL_ROWS } from '../constants.js';
 import GridManager from '../components/Grid/gridManager.js';
 import Toolbar from '../components/Toolbar/Toolbar.js';
+import Harmony from '../components/Harmony/Harmony.js';
 
 console.log("LayoutService: Module loaded.");
 
-// --- UPDATED: New initial view range from C5 down to G3 ---
 const INITIAL_TOP_NOTE = 'C5';
 const INITIAL_BOTTOM_NOTE = 'G3';
 
 let resizeTimeout;
-let gridContainer, canvas, ctx, drumCanvas, drumCtx, playheadCanvas, hoverCanvas, drumHoverCanvas, pitchCanvasWrapper, drumGridWrapper, gridContainerWrapper, rightSideContainer, bottomContentWrapper;
+let gridContainer, canvas, ctx, drumCanvas, drumCtx, playheadCanvas, hoverCanvas, drumHoverCanvas, pitchCanvasWrapper, drumGridWrapper, gridContainerWrapper, rightSideContainer, bottomContentWrapper, harmonyContainer, harmonyCanvas;
 let isInitialLayoutDone = false;
 
 function initDOMElements() {
-    console.log("[LayoutService] initDOMElements START");
     gridContainerWrapper = document.getElementById('grid-container-wrapper'); 
     gridContainer = document.getElementById('grid-container');
     pitchCanvasWrapper = document.getElementById('pitch-canvas-wrapper');
@@ -28,12 +27,13 @@ function initDOMElements() {
     bottomContentWrapper = document.getElementById('bottom-content-wrapper');
     drumGridWrapper = document.getElementById('drum-grid-wrapper'); 
     rightSideContainer = document.getElementById('right-side-container'); 
+    harmonyContainer = document.getElementById('harmony-container');
+    harmonyCanvas = document.getElementById('harmony-analysis-canvas');
     
     if (!gridContainerWrapper) console.error("FATAL: gridContainerWrapper not found");
     
     ctx = canvas.getContext('2d');
     drumCtx = drumCanvas.getContext('2d');
-    console.log("[LayoutService] initDOMElements END");
     return { ctx, drumCtx };
 }
 
@@ -89,16 +89,17 @@ function applyDimensions() {
     const drumCanvasHeight = 3 * pitchRowHeight;
     
     [drumCanvas, drumHoverCanvas].forEach(c => { c.width = drumCanvasWidth; c.height = drumCanvasHeight; });
-    
+    harmonyCanvas.width = canvasWidth;
+
     gridContainerWrapper.style.width = `${canvasWidth}px`;
     gridContainerWrapper.style.setProperty('--cell-width-val', `${cellWidth}`);
     bottomContentWrapper.style.width = `${canvasWidth}px`;
+    harmonyContainer.style.width = `${canvasWidth}px`;
     
     store.emit('layoutConfigChanged');
 }
 
 function calculateAndApplyLayout() {
-    console.log("[LayoutService] calculateAndApplyLayout called.");
     const container = document.getElementById('grid-container-wrapper');
     if (!container) return false;
     
@@ -108,7 +109,6 @@ function calculateAndApplyLayout() {
     let needsInitialRender = false;
 
     if (!isInitialLayoutDone) {
-        console.log("[LayoutService] Performing INITIAL layout calculation.");
         const topNoteIndex = store.state.fullRowData.findIndex(row => row.toneNote === INITIAL_TOP_NOTE);
         const bottomNoteIndex = store.state.fullRowData.findIndex(row => row.toneNote === INITIAL_BOTTOM_NOTE);
         
@@ -119,10 +119,7 @@ function calculateAndApplyLayout() {
             store.state.visualRows = visualRows;
             store.state.logicRows = visualRows * 2;
             store.state.gridPosition = topNoteIndex;
-
-            console.log(`[LayoutService] Initial view calculated. visualRows: ${visualRows}, gridPosition: ${topNoteIndex}`);
         } else {
-            console.error("[LayoutService] Could not find initial notes for layout!");
             store.state.visualRows = 10;
             store.state.logicRows = 20;
             store.state.gridPosition = store.state.fullRowData.findIndex(r => r.toneNote === 'C4');
@@ -135,16 +132,15 @@ function calculateAndApplyLayout() {
     const cellHeight = containerHeight / store.state.visualRows;
     store.state.cellWidth = cellHeight / 2;
     store.state.cellHeight = cellHeight;
-    console.log(`[LayoutService] Cell dimensions calculated. cellHeight: ${cellHeight}`);
     
+    recalcGridColumns();
     applyDimensions();
 
     if (needsInitialRender) {
-        // Trigger the very first render now that dimensions are known.
-        console.log("[LayoutService] Triggering initial full render.");
         Toolbar.renderRhythmUI();
         GridManager.renderPitchGrid();
         GridManager.renderDrumGrid();
+        Harmony.render();
     }
     
     return true;
@@ -166,15 +162,11 @@ function resizeCanvas() {
 const LayoutService = {
     init() {
         const contexts = initDOMElements();
-        recalcGridColumns();
-
         const observer = new ResizeObserver(entries => {
-            console.log("[LayoutService] ResizeObserver fired.");
             if (!gridContainerWrapper) return;
             const entry = entries[0];
             if (entry.contentRect.height > 50 && !isInitialLayoutDone) {
                 if (calculateAndApplyLayout()) {
-                    console.log("[LayoutService] Initial layout complete, disconnecting observer.");
                     observer.disconnect();
                 }
             }
@@ -192,8 +184,12 @@ const LayoutService = {
             applyDimensions(); 
         });
         
-        console.log("LayoutService: Initialized.");
         return contexts;
+    },
+
+    // SIMPLIFIED: This function is now purely geometric.
+    getMacrobeatWidthPx(state, grouping) {
+        return grouping * state.cellWidth;
     },
 
     getColumnX(index) {
@@ -203,6 +199,11 @@ const LayoutService = {
             x += widthMultiplier * store.state.cellWidth;
         }
         return x;
+    },
+
+    getCanvasWidth() {
+        const { cellWidth, columnWidths } = store.state;
+        return columnWidths.reduce((sum, w) => sum + w, 0) * cellWidth;
     },
     
     zoomIn() {

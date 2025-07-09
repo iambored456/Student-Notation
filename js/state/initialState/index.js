@@ -5,8 +5,9 @@ import { getInitialTimbresState } from './timbres.js';
 export const initialState = {
     // --- Data & History ---
     placedNotes: [],
+    placedChords: [],
     tonicSignGroups: {},
-    history: [ { notes: [], tonicSignGroups: {}, timbres: getInitialTimbresState().timbres } ],
+    history: [ { notes: [], tonicSignGroups: {}, timbres: getInitialTimbresState().timbres, placedChords: [] } ],
     historyIndex: 0,
     fullRowData: [],
 
@@ -18,6 +19,8 @@ export const initialState = {
 
     // --- UI & View State ---
     selectedTool: { type: 'circle', color: '#4a90e2', tonicNumber: null },
+    activeChordId: null,
+    regionContext: { startBeat: 2, length: 8 }, // Default to first measure
     gridPosition: 0,
     visualRows: 0,
     logicRows: 0,

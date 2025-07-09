@@ -25,6 +25,13 @@ export const viewActions = {
         this.emit('toolChanged', { newTool: this.state.selectedTool, oldTool });
     },
 
+    setKeySignature(newKey) {
+        if (this.state.keySignature !== newKey) {
+            this.state.keySignature = newKey;
+            this.emit('keySignatureChanged', newKey);
+        }
+    },
+
     // Playback
     setTempo(newTempo) { this.state.tempo = newTempo; this.emit('tempoChanged', newTempo); },
     setLooping(isLooping) { this.state.isLooping = isLooping; this.emit('loopingChanged', isLooping); },

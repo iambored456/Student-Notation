@@ -10,8 +10,8 @@
     <link rel="manifest" href="/Student-Notation/site.webmanifest" />
     <meta name="theme-color" content="#ffffff" />
     <style id="print-style-rules"></style>
-    <script type="module" crossorigin src="/Student-Notation/assets/index-mLGUeY0Q.js"></script>
-    <link rel="stylesheet" crossorigin href="/Student-Notation/assets/index-DAJ7P58v.css">
+    <script type="module" crossorigin src="/Student-Notation/assets/index-BQxuuPPT.js"></script>
+    <link rel="stylesheet" crossorigin href="/Student-Notation/assets/index-B9kAKbm3.css">
   </head>
   <body>
     <!-- Sidebar and Overlay (Unchanged) -->
@@ -24,8 +24,8 @@
         <button class="sidebar-button" id="save-as-button">💾 Save As</button>
         <button class="sidebar-button" id="import-button">📁 Open</button>
         <button class="sidebar-button" id="print-button">🖨️ Print</button>
+        <button class="sidebar-button" id="reset-canvas-button">🔄 Reset Canvas</button>
       </div>
-      <!-- Anacrusis Toggle Container -->
       <div class="sidebar-container">
         <div class="sidebar-label">Anacrusis</div>
         <div class="toggle-button-group">
@@ -41,7 +41,6 @@
            ======================================================= -->
       <div id="top-toolbar">
         
-        <!-- Container 2: Note Tools -->
         <div class="top-toolbar-container note-tools-container">
             <div class="app-actions-sub-container">
                 <button class="toolkit-icon-button" id="settings-button" aria-label="Settings">⚙️</button>
@@ -79,24 +78,38 @@
             </button>
         </div>
         
-        <!-- Container 3: Tonic Sign Tools -->
         <div class="top-toolbar-container tonic-sign-container">
-            <div class="tonic-buttons-row">
-              <button class="tonic-sign-button" data-tonic="1" aria-label="Tonicization 1">①</button>
-              <button class="tonic-sign-button" data-tonic="2" aria-label="Tonicization 2">②</button>
-              <button class="tonic-sign-button" data-tonic="3" aria-label="Tonicization 3">③</button>
-              <button class="tonic-sign-button" data-tonic="4" aria-label="Tonicization 4">④</button>
-              <button class="tonic-sign-button" data-tonic="5" aria-label="Tonicization 5">⑤</button>
-              <button class="tonic-sign-button" data-tonic="6" aria-label="Tonicization 6">⑥</button>
-              <button class="tonic-sign-button" data-tonic="7" aria-label="Tonicization 7">⑦</button>
+            <div class="tonic-tools-wrapper">
+                <div class="tonic-buttons-row">
+                  <button class="tonic-sign-button" data-tonic="1" aria-label="Tonicization 1">①</button>
+                  <button class="tonic-sign-button" data-tonic="2" aria-label="Tonicization 2">②</button>
+                  <button class="tonic-sign-button" data-tonic="3" aria-label="Tonicization 3">③</button>
+                  <button class="tonic-sign-button" data-tonic="4" aria-label="Tonicization 4">④</button>
+                  <button class="tonic-sign-button" data-tonic="5" aria-label="Tonicization 5">⑤</button>
+                  <button class="tonic-sign-button" data-tonic="6" aria-label="Tonicization 6">⑥</button>
+                  <button class="tonic-sign-button" data-tonic="7" aria-label="Tonicization 7">⑦</button>
+                </div>
+                <div id="harmony-toolkit-container">
+                  <button id="x-chord-shape-tool" class="toolkit-button" aria-label="Drag to create a chord">X</button>
+                </div>
             </div>
             <div class="degree-toggle-container">
                 <button id="toggle-diatonic-degrees" class="toolkit-button">Scale<br>Degrees</button>
                 <button id="toggle-modal-degrees" class="toolkit-button">Mode<br>Degrees</button>
             </div>
+            
+            <!-- CHORD TOOLBAR MOVED HERE -->
+            <div id="chord-toolbar-wrapper" class="collapsed" role="group" aria-label="Chord Editor">
+              <div class="chord-toolbar-panel">
+                  <select id="chord-quality-select" aria-label="Chord Quality"></select>
+                  <select id="chord-inversion-select" aria-label="Chord Inversion"></select>
+                  <select id="chord-extension-select" aria-label="Chord Extension"></select>
+              </div>
+              <button id="chord-toolbar-collapse-btn" aria-label="Collapse Toolbar">‹</button>
+            </div>
         </div>
 
-        <!-- Container 4: Waveform Presets -->
+        <!-- Other Toolbar Containers... -->
         <div class="top-toolbar-container preset-container">
             <div id="preset-buttons">
               <div id="preset-column-1" class="preset-column">
@@ -114,7 +127,6 @@
             </div>
         </div>
 
-        <!-- Container 5: Harmonic Multislider & Filter -->
         <div class="top-toolbar-container multislider-container">
             <div class="filter-top-controls">
                 <div id="blend-slider-container">
@@ -129,12 +141,7 @@
               <div class="filter-button-wrapper">
                 <button id="filter-enable-toggle" class="toolkit-icon-button" aria-label="Toggle Filter">
                   <svg class="filter-icon" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M6 24 H22 L30 16 L40 36"
-                          fill="none"
-                          stroke="currentColor"
-                          stroke-width="6"
-                          stroke-linecap="round"
-                          stroke-linejoin="round"/>
+                    <path d="M6 24 H22 L30 16 L40 36" fill="none" stroke="currentColor" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
                   </svg>
                 </button>
               </div>
@@ -144,7 +151,6 @@
             </div>
         </div>
 
-        <!-- Container 6: ADSR Visualization -->
         <div class="top-toolbar-container adsr-container">
           <div class="adsr-main-panel">
             <div class="adsr-graph-wrapper">
@@ -193,7 +199,7 @@
             <input type="range" id="tempo-slider" min="30" max="240" value="90" step="1" aria-label="Tempo Slider" />
           </div>
         </div>
-                <div class="bottom-toolbar-container grid-nav-container">
+        <div class="bottom-toolbar-container grid-nav-container">
           <div id="grid-nav-keypad">
             <button class="toolkit-button" id="play-button" aria-label="Play Music">⏵</button>
             <button class="toolkit-button" id="stop-button" aria-label="Stop Music">⏹</button>
@@ -203,6 +209,8 @@
           </div>
         </div>
       </div>
+
+      <!-- FLOATING TOOLBAR REMOVED FROM HERE -->
 
       <!-- Middle Section -->
       <div id="middle-section">
@@ -225,6 +233,11 @@
             </div>
           </div>
         </div>
+        
+        <div id="harmony-container">
+          <canvas id="harmony-analysis-canvas"></canvas>
+        </div>
+
         <div id="bottom-content-wrapper">
             <div id="drum-grid-wrapper">
                 <canvas id="drum-grid"></canvas>
@@ -239,7 +252,7 @@
 
     </div>
 
-    <!-- Print Preview Modal -->
+    <!-- Print Preview Modal and Staging Area... -->
     <div id="print-preview-overlay" class="hidden">
       <div id="print-preview-modal">
         <div class="print-preview-header">
@@ -282,7 +295,6 @@
         </div>
       </div>
     </div>
-    
     <div id="print-staging-area"></div>
 
   </body>

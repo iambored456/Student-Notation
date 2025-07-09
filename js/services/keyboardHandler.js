@@ -1,5 +1,5 @@
 // js/services/keyboardHandler.js
-import store from '../state/index.js'; // <-- UPDATED PATH
+import store from '../state/index.js';
 console.log("KeyboardHandler: Module loaded.");
 export function initKeyboardHandler() {
 document.addEventListener('keydown', (e) => {

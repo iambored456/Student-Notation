@@ -4,7 +4,7 @@
 #app-container {
   display: flex;
   flex-direction: column;
-  flex: 1; /* Allow the app container to fill the body */
+  flex: 1;
   min-height: 0;
   padding: var(--app-padding);
   gap: var(--app-padding);
@@ -24,25 +24,25 @@
 
 #top-toolbar {
   height: 18vh;
-  align-items: stretch; /* Make all containers the same height */
-  position: relative; /* Add this to create a stacking context */
-  z-index: 10; /* Add this to lift it above the controlToolbar */
+  align-items: stretch;
+  position: relative;
+  z-index: 10;
 }
 
 #controlToolbar {
   height: auto;
-  justify-content: flex-start; /* Key change for left-alignment */
-  align-items: center; /* Vertically center items */
+  justify-content: flex-start;
+  align-items: center;
 }
 
 #middle-section { 
-  flex: 1; /* This is the stretchy part */
+  flex: 1;
   display: flex; 
   flex-direction: column; 
-  gap: var(--space-1); /* UPDATED */
-  min-height: 0; /* Important fix for flexbox children */
-  overflow-x: auto; /* The main horizontal scrollbar now lives here */
-  align-items: flex-start; /* Prevent children from stretching to full width */
+  gap: 0;
+  min-height: 0;
+  overflow-x: auto; /* Revert to only horizontal scroll */
+  align-items: flex-start; 
 }
 
 
@@ -54,7 +54,7 @@
   flex: 1;
   border: 1px solid var(--c-border);
   border-radius: var(--border-radius-md);
-  padding: var(--space-1); /* UPDATED */
+  padding: var(--space-1);
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -64,12 +64,9 @@
 .bottom-toolbar-container {
   border: none;
   padding: 0;
-  flex: 0 0 auto; /* Key change: make all control toolbar items size to content */
+  flex: 0 0 auto;
 }
 
-/* --- UPDATED: More robust flex sizing for TOP toolbar --- */
-
-/* Let these containers size themselves based on their content */
 .export-import-container,
 .note-tools-container,
 .tonic-sign-container,
@@ -77,12 +74,11 @@
     flex: 0 0 auto;
 }
 
-/* Let these containers grow to fill the remaining space */
 .multislider-container {
-    flex: 2 1 0; /* Grow twice as fast as ADSR */
+    flex: 2 1 0;
 }
 .adsr-container {
-    flex: 1 1 auto; /* Grow three times as fast as ADSR */
+    flex: 1 1 auto;
 }
 
 /* ==========================================================================
@@ -91,12 +87,12 @@
 #grid-container-wrapper {
   display: flex;
   flex-direction: column;
-  flex: 1;
-  min-height: 0;
-  /* overflow-x: auto; - MOVED TO PARENT */
+  flex: 1; /* FIXED: Reverted to flex: 1 to fill available space */
+  min-height: 0; /* Add this to ensure flex works correctly in all browsers */
   overflow-y: hidden;
   border: 1px solid var(--c-border);
-  border-radius: var(--border-radius-md);
+  border-bottom: none;
+  border-radius: var(--border-radius-md) var(--border-radius-md) 0 0;
   position: relative;
   background-color: var(--c-surface);
 }
@@ -127,9 +123,30 @@
   display: block;
 }
 
-#playhead-canvas, #hover-canvas, #drum-hover-canvas {
+#playhead-canvas, #hover-canvas, #drum-hover-canvas, #harmony-analysis-canvas {
   pointer-events: none;
 }
+
+#harmony-container {
+  flex-shrink: 0;
+  /* FIXED: Set a larger, fixed height. Removed min-height and auto. */
+  height: 90px;
+  width: 100%;
+  position: relative;
+  background-color: var(--c-surface);
+  border-left: 1px solid var(--c-border);
+  border-right: 1px solid var(--c-border);
+  border-bottom: 1px solid var(--c-border);
+}
+
+#harmony-analysis-canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
+
 
 #bottom-content-wrapper {
     display: flex;
@@ -137,13 +154,12 @@
     align-items: stretch;
     flex-shrink: 0;
     min-height: 90px;
-    /* UPDATED: No longer needs grid layout */
 }
 
 #drum-grid-wrapper {
   flex: 1 1 auto;
   min-height: 90px;
-  overflow-x: hidden; /* Scrolling is handled by the parent now */
+  overflow-x: hidden;
   overflow-y: hidden;
   position: relative;
 }
@@ -151,9 +167,10 @@
 #drum-grid {
   display: block;
   border: 1px solid var(--c-border);
-  border-radius: var(--border-radius-md);
+  border-top: none;
+  border-radius: 0 0 var(--border-radius-md) var(--border-radius-md);
   background-color: var(--c-surface);
-  box-sizing: border-box; /* ADDED to include border in height */
+  box-sizing: border-box; 
 }
 
 #drum-hover-canvas {
@@ -167,7 +184,8 @@
 #right-side-container {
     flex: 0 0 auto;
     border: 1px solid var(--c-border);
-    border-radius: var(--border-radius-md);
+    border-top: none;
+    border-radius: 0 0 var(--border-radius-md) 0;
     background-color: var(--c-surface);
     display: flex;
     flex-direction: row-reverse;

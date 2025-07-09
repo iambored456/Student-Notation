@@ -1,5 +1,5 @@
 // js/components/Toolbar/initializers/toolSelectorInitializer.js
-import store from '../../../state/index.js'; // <-- UPDATED PATH
+import store from '../../../state/index.js';
 
 export function initToolSelectors() {
     // --- Existing Tonic Button Logic ---
@@ -10,6 +10,14 @@ export function initToolSelectors() {
             store.setSelectedTool('tonicization', '#000000', tonicNumber);
         });
     });
+
+    // --- NEW: Chord Shape Tool ---
+    const chordShapeTool = document.getElementById('x-chord-shape-tool');
+    if (chordShapeTool) {
+        chordShapeTool.addEventListener('click', () => {
+            store.setSelectedTool('chord');
+        });
+    }
     
     // --- Existing Degree Display Logic ---
     const diatonicBtn = document.getElementById('toggle-diatonic-degrees');
@@ -27,7 +35,7 @@ export function initToolSelectors() {
         });
     }
 
-    // --- NEW Accidental Toggle Logic ---
+    // --- Accidental Toggle Logic ---
     const flatBtn = document.getElementById('flat-toggle-btn');
     const sharpBtn = document.getElementById('sharp-toggle-btn');
 
@@ -43,12 +51,14 @@ export function initToolSelectors() {
         });
     }
 
-    // --- Existing Tool Selection Highlighting ---
+    // --- Tool Selection Highlighting ---
     store.on('toolChanged', ({ newTool }) => {
-        document.querySelectorAll('.note, .note-pair, .tonic-sign-button').forEach(el => el.classList.remove('selected'));
+        document.querySelectorAll('.note, .note-pair, .tonic-sign-button, #x-chord-shape-tool').forEach(el => el.classList.remove('selected'));
         
         if (newTool.type === 'tonicization') {
             document.querySelector(`.tonic-sign-button[data-tonic='${newTool.tonicNumber}']`)?.classList.add('selected');
+        } else if (newTool.type === 'chord') {
+            document.getElementById('x-chord-shape-tool')?.classList.add('selected');
         } else {
             const targetPair = document.querySelector(`.note-pair[data-color='${newTool.color}']`);
             if (targetPair) {

@@ -11,11 +11,14 @@ import { initGridScrollHandler } from './services/gridScrollHandler.js';
 import { initKeyboardHandler } from './services/keyboardHandler.js';
 import Toolbar from './components/Toolbar/Toolbar.js';
 import GridManager from './components/Grid/gridManager.js';
+import Harmony from './components/Harmony/Harmony.js'; // This line must match the file path
 import { initHarmonicMultislider } from './components/HarmonicMultislider/harmonicMultislider.js';
 import { initAdsrComponent } from './components/ADSR/adsrComponent.js';
 import { initFilterControls } from './components/FilterControls/filterControls.js';
 import PrintPreview from './components/PrintPreview.js';
 import GlobalService from './services/globalService.js';
+import { initChordToolbar } from './harmony/ui/ChordToolbar.js';
+
 
 console.log("Main.js: Application starting...");
 
@@ -25,7 +28,6 @@ document.addEventListener("DOMContentLoaded", () => {
     console.log("STARTING INITIALIZATION");
     console.log("========================================");
 
-    // --- ADD THIS BLOCK TO HANDLE AUDIOCONTEXT ---
     const startAudio = async () => {
         try {
             await Tone.start();
@@ -34,10 +36,8 @@ document.addEventListener("DOMContentLoaded", () => {
             console.error("Could not start AudioContext:", e);
         }
     };
-    // Use { once: true } to automatically remove the listener after it runs
     document.getElementById('app-container').addEventListener('click', startAudio, { once: true });
     document.getElementById('app-container').addEventListener('keydown', startAudio, { once: true });
-    // --- END NEW BLOCK ---
 
     store.state.fullRowData = fullRowData;
     
@@ -52,30 +52,39 @@ document.addEventListener("DOMContentLoaded", () => {
     
     Toolbar.init();
     GridManager.init();
+    Harmony.init();
     initAdsrComponent();
     initHarmonicMultislider();
     initFilterControls();
     PrintPreview.init();
+    initChordToolbar();
     
     console.log("----------------------------------------");
     console.log("SETTING UP STATE SUBSCRIPTIONS");
     console.log("----------------------------------------");
     
-    store.on('notesChanged', () => {
+    const renderAll = () => {
         GridManager.renderPitchGrid();
         GridManager.renderDrumGrid();
-    });
+        Harmony.render();
+    };
+
+    store.on('notesChanged', renderAll);
+    store.on('chordsChanged', renderAll);
     
     store.on('rhythmStructureChanged', () => {
-        GridManager.renderPitchGrid();
-        GridManager.renderDrumGrid();
+        renderAll();
         Toolbar.renderRhythmUI();
     });
 
     store.on('layoutConfigChanged', () => {
-        GridManager.renderPitchGrid();
-        GridManager.renderDrumGrid();
+        renderAll();
         Toolbar.renderRhythmUI();
+    });
+
+    store.on('keySignatureChanged', (newKey) => {
+        store.rebuildAllChords(newKey);
+        renderAll(); 
     });
 
     store.on('zoomIn', () => LayoutService.zoomIn());
@@ -84,8 +93,6 @@ document.addEventListener("DOMContentLoaded", () => {
     console.log("========================================");
     console.log("PERFORMING INITIAL RENDER");
     console.log("========================================");
-    
-    // RENDER CALLS REMOVED FROM HERE
     
     store.setSelectedTool('circle', '#4a90e2');
     

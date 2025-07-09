@@ -5,9 +5,17 @@
     display: flex;
     flex-direction: column;
     gap: var(--space-2);
-    justify-content: center;
+    justify-content: space-around;
     align-items: stretch;
     padding: var(--space-2);
+}
+
+/* NEW: Wrapper for tonic and chord buttons */
+.tonic-tools-wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: var(--space-3);
 }
 
 .tonic-buttons-row {
@@ -26,9 +34,33 @@
     flex-shrink: 0;
 }
 
+.key-and-degree-row {
+    display: flex;
+    gap: var(--space-2);
+    align-items: center;
+}
+
+#key-signature-container {
+    display: flex;
+    align-items: center;
+    gap: var(--space-1);
+}
+
+#key-signature-container label {
+    font-size: var(--font-size-sm);
+    color: var(--c-text-muted);
+}
+#key-signature-select {
+    font-size: var(--font-size-sm);
+    border-radius: var(--border-radius-sm);
+    padding: var(--space-1);
+    border: 1px solid var(--c-border);
+}
+
 .degree-toggle-container {
     display: flex;
     gap: var(--space-1);
+    flex-grow: 1;
 }
 
 .degree-toggle-container > .toolkit-button {
