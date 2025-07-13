@@ -27,25 +27,19 @@
 
 /* --- Chord Toolbar (Now part of the Tonic container) --- */
 #chord-toolbar-wrapper {
-  /* REMOVED: No longer a floating element */
-  /* position: fixed; */
-  /* z-index: 100; */
-
-  /* NEW: Styles for in-flow layout */
   background-color: var(--c-gridline);
   border: 1px solid var(--c-border);
   border-radius: var(--border-radius-md);
-  display: flex; /* This remains */
+  display: flex; 
   align-items: center;
   padding: var(--space-1);
-  margin-top: var(--space-2); /* Add space above it */
+  margin-top: var(--space-2); 
   width: 100%;
-  box-shadow: none; /* Remove floating shadow */
-  transition: opacity 0.2s; /* Keep a fade effect */
+  box-shadow: none; 
+  transition: opacity 0.2s; 
 }
 
 #chord-toolbar-wrapper.collapsed {
-  /* Use display: none to remove it from layout completely when hidden */
   display: none; 
 }
 
@@ -88,4 +82,103 @@
 }
 #chord-toolbar-collapse-btn:hover {
     background-color: var(--c-gridline);
+}
+
+/* --- Tonic Dropdown Styles --- */
+.dropdown-container {
+    position: relative;
+    display: inline-block;
+}
+
+.tonic-dropdown-toggle {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    width: 60px;
+    justify-content: center;
+    background-color: var(--c-surface);
+    color: var(--c-text);
+    border: 1px solid var(--c-border);
+}
+
+.dropdown-arrow {
+    font-size: 10px;
+    transition: transform 0.2s ease;
+}
+
+.dropdown-container.open .dropdown-arrow {
+    transform: rotate(180deg);
+}
+
+.dropdown-menu {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    background-color: var(--c-surface);
+    border: 1px solid var(--c-border);
+    border-radius: var(--border-radius-md);
+    box-shadow: var(--box-shadow-md);
+    z-index: 100;
+    padding: var(--space-1);
+    flex-direction: column;
+    gap: var(--space-1);
+}
+
+.dropdown-container.open .dropdown-menu {
+    display: flex;
+}
+
+.dropdown-menu .tonic-sign-button {
+    width: 100%;
+    border: 2px solid transparent; 
+}
+
+.dropdown-menu .tonic-sign-button.selected {
+    border-color: var(--c-accent) !important;
+    background-color: var(--c-accent-hover);
+    color: var(--c-surface);
+}
+
+.tonic-dropdown-toggle.selected {
+    border: 2px solid var(--c-accent);
+    box-shadow: 0 0 5px var(--c-accent);
+}
+
+/* --- NEW: Degree Dropdown Styles --- */
+#degree-dropdown-wrapper {
+    position: relative; 
+}
+
+.degree-dropdown-toggle {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: var(--space-2);
+}
+
+#degree-dropdown-menu {
+    top: 100%;
+    left: 0;
+    width: 100%; 
+    margin-top: var(--space-1);
+}
+
+#degree-dropdown-menu .toolkit-button {
+    width: 100%;
+    justify-content: center;
+    line-height: initial;
+    padding: var(--space-2);
+}
+
+#degree-dropdown-menu .toolkit-button.active {
+    background-color: var(--c-accent);
+    color: var(--c-surface);
+    border: 1px solid var(--c-accent-hover);
+}
+
+#degree-dropdown-menu .toolkit-button:not(.active) {
+    background-color: var(--c-surface);
+    color: var(--c-text);
 }

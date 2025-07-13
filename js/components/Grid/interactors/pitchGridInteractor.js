@@ -40,18 +40,11 @@ function findChordAt(colIndex, rowIndex) {
     return null;
 }
 
-/**
- * Finds the macrobeat the user is hovering over, then finds the beginning of the measure
- * containing that macrobeat, and returns the boundary information for that start point.
- * @param {number} columnIndex - The current mouse hover column.
- * @returns {object|null} An object with { drawColumn, preMacrobeatIndex } for the snapped position, or null.
- */
 function findMeasureSnapPoint(columnIndex) {
     const { macrobeatGroupings, columnWidths, macrobeatBoundaryStyles } = store.state;
 
     if (columnIndex < 2 || columnIndex >= columnWidths.length - 2) return null;
 
-    // --- Step 1: Find which macrobeat the user is currently hovering over ---
     let hoveredMbIndex = -1;
     for (let i = 0; i < macrobeatGroupings.length; i++) {
         const { startColumn, endColumn } = getMacrobeatInfo(store.state, i);
@@ -63,7 +56,6 @@ function findMeasureSnapPoint(columnIndex) {
 
     if (hoveredMbIndex === -1) return null;
 
-    // --- Step 2: Find the start of the measure containing that macrobeat ---
     let measureStartIndex = 0;
     for (let i = hoveredMbIndex - 1; i >= 0; i--) {
         if (macrobeatBoundaryStyles[i] === 'solid') {
@@ -72,9 +64,7 @@ function findMeasureSnapPoint(columnIndex) {
         }
     }
 
-    // --- Step 3: Get the insertion point for the boundary BEFORE the measure start ---
     const targetPreMacrobeatIndex = measureStartIndex - 1;
-    // THE FIX: The draw column is the start of the next measure, not the column before it.
     const drawColumn = getMacrobeatInfo(store.state, measureStartIndex).startColumn;
 
     return { drawColumn, preMacrobeatIndex: targetPreMacrobeatIndex };
@@ -92,9 +82,14 @@ function drawHoverHighlight(colIndex, rowIndex, color, widthMultiplier = null) {
         highlightWidth = store.state.cellWidth * widthMultiplier;
     } else {
         const selectedToolType = store.state.selectedTool.type;
-        highlightWidth = (selectedToolType === 'circle' || isRightClickActive)
-            ? store.state.cellWidth * 2
-            : store.state.columnWidths[colIndex] * store.state.cellWidth;
+        // UPDATED: Standardize eraser highlight width to 2 columns
+        if (selectedToolType === 'eraser' || isRightClickActive) {
+            highlightWidth = store.state.cellWidth * 2; 
+        } else if (selectedToolType === 'circle' || selectedToolType === 'tonicization') {
+            highlightWidth = store.state.cellWidth * 2;
+        } else {
+            highlightWidth = store.state.columnWidths[colIndex] * store.state.cellWidth;
+        }
     }
     
     pitchHoverCtx.fillStyle = color;
@@ -153,23 +148,14 @@ function handleMouseDown(e) {
         }
         document.getElementById('eraser-tool-button')?.classList.add('erasing-active');
         
-        const clickedTonic = getPlacedTonicSigns(store.state).find(ts => ts.columnIndex === colIndex && ts.row === rowIndex);
-        let wasErased = false;
-        if (clickedTonic) {
-            wasErased = store.eraseTonicSignGroup(clickedTonic.uuid, false);
-        } else {
-            const chordToErase = findChordAt(colIndex, rowIndex);
-            if (chordToErase) {
-                store.deleteChord(chordToErase.id);
-                wasErased = true;
-            } else {
-                wasErased = store.eraseNoteAt(colIndex, rowIndex, false);
-            }
+        // ** THE FIX **: Erase starting from one column to the left of the cursor
+        if (store.eraseInPitchArea(colIndex - 1, rowIndex, 2, false)) {
+            rightClickActionTaken = true;
         }
-        if (wasErased && !findChordAt(colIndex, rowIndex)) rightClickActionTaken = true;
 
         pitchHoverCtx.clearRect(0, 0, pitchHoverCtx.canvas.width, pitchHoverCtx.canvas.height);
-        drawHoverHighlight(colIndex, rowIndex, 'rgba(220, 53, 69, 0.3)');
+        // ** THE FIX **: Draw the hover highlight one column to the left
+        drawHoverHighlight(colIndex - 1, rowIndex, 'rgba(220, 53, 69, 0.3)');
         return;
     }
 
@@ -200,17 +186,8 @@ function handleMouseDown(e) {
         }
 
         if (type === 'eraser') {
-             const chordToErase = findChordAt(colIndex, rowIndex);
-            if (chordToErase) {
-                store.deleteChord(chordToErase.id);
-            } else {
-                const clickedTonic = getPlacedTonicSigns(store.state).find(ts => ts.columnIndex === colIndex && ts.row === rowIndex);
-                if (clickedTonic) {
-                    store.eraseTonicSignGroup(clickedTonic.uuid);
-                } else {
-                    store.eraseNoteAt(colIndex, rowIndex);
-                }
-            }
+            // ** THE FIX **: Erase starting from one column to the left of the cursor
+            store.eraseInPitchArea(colIndex - 1, rowIndex, 2, true);
             return;
         }
         
@@ -276,22 +253,12 @@ function handleMouseMove(e) {
     }
 
     if (isRightClickActive) {
-        const chordToErase = findChordAt(colIndex, rowIndex);
-        if (chordToErase) {
-            store.deleteChord(chordToErase.id);
+        // ** THE FIX **: Erase starting from one column to the left of the cursor
+        if (store.eraseInPitchArea(colIndex - 1, rowIndex, 2, false)) {
             rightClickActionTaken = true;
-        } else {
-            const clickedTonic = getPlacedTonicSigns(store.state).find(ts => ts.columnIndex === colIndex && ts.row === rowIndex);
-            let wasErased = false;
-            if (clickedTonic) {
-                wasErased = store.eraseTonicSignGroup(clickedTonic.uuid, false);
-            } else {
-                wasErased = store.eraseNoteAt(colIndex, rowIndex, false);
-            }
-            if (wasErased) rightClickActionTaken = true;
         }
-
-        drawHoverHighlight(colIndex, rowIndex, 'rgba(220, 53, 69, 0.3)');
+        // ** THE FIX **: Draw the hover highlight one column to the left
+        drawHoverHighlight(colIndex - 1, rowIndex, 'rgba(220, 53, 69, 0.3)');
         return;
     } 
     
@@ -309,7 +276,7 @@ function handleMouseMove(e) {
         
         if (snappedPoint) {
             const { drawColumn, preMacrobeatIndex } = snappedPoint;
-            drawHoverHighlight(drawColumn, rowIndex, 'rgba(74, 144, 226, 0.2)', 2);
+            drawHoverHighlight(drawColumn, rowIndex, 'rgba(74, 144, 226, 0.2)');
             drawGhostNote(drawColumn, rowIndex);
 
             lastHoveredTonicPoint = { preMacrobeatIndex };
@@ -331,7 +298,10 @@ function handleMouseMove(e) {
         lastHoveredTonicPoint = null;
         lastHoveredOctaveRows = [];
         const highlightColor = store.state.selectedTool.type === 'eraser' ? 'rgba(220, 53, 69, 0.3)' : 'rgba(74, 144, 226, 0.2)';
-        drawHoverHighlight(colIndex, rowIndex, highlightColor);
+        
+        // ** THE FIX **: Draw hover highlight starting one column to the left for the eraser tool
+        const highlightStartCol = store.state.selectedTool.type === 'eraser' ? colIndex - 1 : colIndex;
+        drawHoverHighlight(highlightStartCol, rowIndex, highlightColor);
         drawGhostNote(colIndex, rowIndex);
     }
 }

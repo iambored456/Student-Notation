@@ -10,8 +10,8 @@
     <link rel="manifest" href="/Student-Notation/site.webmanifest" />
     <meta name="theme-color" content="#ffffff" />
     <style id="print-style-rules"></style>
-    <script type="module" crossorigin src="/Student-Notation/assets/index-BQxuuPPT.js"></script>
-    <link rel="stylesheet" crossorigin href="/Student-Notation/assets/index-B9kAKbm3.css">
+    <script type="module" crossorigin src="/Student-Notation/assets/index-D2RS_pO8.js"></script>
+    <link rel="stylesheet" crossorigin href="/Student-Notation/assets/index-CiAthVIw.css">
   </head>
   <body>
     <!-- Sidebar and Overlay (Unchanged) -->
@@ -80,25 +80,37 @@
         
         <div class="top-toolbar-container tonic-sign-container">
             <div class="tonic-tools-wrapper">
-                <div class="tonic-buttons-row">
-                  <button class="tonic-sign-button" data-tonic="1" aria-label="Tonicization 1">①</button>
-                  <button class="tonic-sign-button" data-tonic="2" aria-label="Tonicization 2">②</button>
-                  <button class="tonic-sign-button" data-tonic="3" aria-label="Tonicization 3">③</button>
-                  <button class="tonic-sign-button" data-tonic="4" aria-label="Tonicization 4">④</button>
-                  <button class="tonic-sign-button" data-tonic="5" aria-label="Tonicization 5">⑤</button>
-                  <button class="tonic-sign-button" data-tonic="6" aria-label="Tonicization 6">⑥</button>
-                  <button class="tonic-sign-button" data-tonic="7" aria-label="Tonicization 7">⑦</button>
+                <div id="tonic-dropdown-container" class="dropdown-container">
+                    <button id="tonic-dropdown-button" class="toolkit-button tonic-dropdown-toggle">
+                        <span id="tonic-dropdown-label">①</span> <span class="dropdown-arrow">▼</span>
+                    </button>
+                    <div id="tonic-dropdown-menu" class="dropdown-menu">
+                        <button class="tonic-sign-button" data-tonic="1" aria-label="Tonicization 1">①</button>
+                        <button class="tonic-sign-button" data-tonic="2" aria-label="Tonicization 2">②</button>
+                        <button class="tonic-sign-button" data-tonic="3" aria-label="Tonicization 3">③</button>
+                        <button class="tonic-sign-button" data-tonic="4" aria-label="Tonicization 4">④</button>
+                        <button class="tonic-sign-button" data-tonic="5" aria-label="Tonicization 5">⑤</button>
+                        <button class="tonic-sign-button" data-tonic="6" aria-label="Tonicization 6">⑥</button>
+                        <button class="tonic-sign-button" data-tonic="7" aria-label="Tonicization 7">⑦</button>
+                    </div>
                 </div>
+
+                <!-- DEGREE DROPDOWN MOVED HERE -->
+                <div id="degree-dropdown-wrapper" class="degree-toggle-container dropdown-container">
+                    <button id="degree-dropdown-button" class="toolkit-button degree-dropdown-toggle">
+                        Show Degrees <span class="dropdown-arrow">▼</span>
+                    </button>
+                    <div id="degree-dropdown-menu" class="dropdown-menu">
+                        <button id="toggle-diatonic-degrees" class="toolkit-button">Scale Degrees</button>
+                        <button id="toggle-modal-degrees" class="toolkit-button">Mode Degrees</button>
+                    </div>
+                </div>
+
                 <div id="harmony-toolkit-container">
                   <button id="x-chord-shape-tool" class="toolkit-button" aria-label="Drag to create a chord">X</button>
                 </div>
             </div>
-            <div class="degree-toggle-container">
-                <button id="toggle-diatonic-degrees" class="toolkit-button">Scale<br>Degrees</button>
-                <button id="toggle-modal-degrees" class="toolkit-button">Mode<br>Degrees</button>
-            </div>
             
-            <!-- CHORD TOOLBAR MOVED HERE -->
             <div id="chord-toolbar-wrapper" class="collapsed" role="group" aria-label="Chord Editor">
               <div class="chord-toolbar-panel">
                   <select id="chord-quality-select" aria-label="Chord Quality"></select>

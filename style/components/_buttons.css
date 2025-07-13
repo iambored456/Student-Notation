@@ -18,13 +18,6 @@
     gap: var(--space-3);
 }
 
-.tonic-buttons-row {
-    display: flex;
-    justify-content: center;
-    flex-wrap: wrap;
-    gap: var(--space-1);
-}
-
 .tonic-sign-button {
     padding: var(--space-1);
     width: 32px;
@@ -60,7 +53,7 @@
 .degree-toggle-container {
     display: flex;
     gap: var(--space-1);
-    flex-grow: 1;
+    /* flex-grow: 1; <-- REMOVED THIS LINE */
 }
 
 .degree-toggle-container > .toolkit-button {

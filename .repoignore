@@ -8,7 +8,3 @@ package-lock.json
 .gitignore
 vite.config.js
 
-js/componets/HarmonicMultislider.js
-js/componets/FilterControls.js
-js/componets/ADSR
-js/state/pitchData.js

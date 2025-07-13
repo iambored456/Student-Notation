@@ -10,14 +10,15 @@
 }
 
 /* --- Button Selection States --- */
-.tonic-sign-button.selected,
+/* NEW: Specific style for the selected eraser tool */
 .eraser-button.selected { 
-  border: 2px solid var(--c-danger) !important;
+  background-color: rgba(220, 53, 69, 0.2); /* Light red fill */
+  border: 1px solid var(--c-danger) !important;
   box-shadow: 0 0 5px var(--c-danger);
-  color: var(--c-danger);
+  color: var(--c-danger); /* Darker red emoji */
 }
 
-/* NEW: Style for when right-click drag is happening */
+/* Style for when right-click drag is happening or active erasing */
 .eraser-button.erasing-active {
     background-color: var(--c-danger);
     color: var(--c-surface); /* Make emoji white */

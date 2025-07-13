@@ -66,20 +66,17 @@ export const getNotesInMacrobeat = (state, macrobeatIndex) => {
     const allPitches = new Set();
     const { startColumn, endColumn } = getMacrobeatInfo(state, macrobeatIndex);
     
-    // --- LOGGING INJECTION ---
-    console.log(`[getNotesInMacrobeat] For macrobeat ${macrobeatIndex}, checking columns ${startColumn} to ${endColumn}.`);
-    
     for (let i = startColumn; i <= endColumn; i++) {
         const notesAtThisBeat = getNotesAtBeat(state, i);
-        if(notesAtThisBeat.length > 0) {
-            console.log(` -> Found notes at column ${i}:`, notesAtThisBeat);
-        }
         notesAtThisBeat.forEach(noteName => {
             allPitches.add(Note.pitchClass(noteName));
         });
     }
 
     const finalNotes = Array.from(allPitches);
-    console.log(` -> Final unique notes for macrobeat ${macrobeatIndex}:`, finalNotes);
+    // Only log if notes were actually found
+    if (finalNotes.length > 0) {
+        console.log(`[getNotesInMacrobeat] Found notes for macrobeat ${macrobeatIndex}:`, finalNotes);
+    }
     return finalNotes;
 };

@@ -49,7 +49,8 @@ export const harmonyActions = {
         if (this.state.activeChordId === chordId) {
             this.setActiveChord(null);
         }
-        this.emit('chordsChanged');
+        // THE FIX: Pass an empty object to prevent destructuring errors in listeners.
+        this.emit('chordsChanged', {});
         this.recordState();
     },
 

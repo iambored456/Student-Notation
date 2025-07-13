@@ -34,6 +34,43 @@ export const noteActions = {
         return wasErased;
     },
     
+    eraseInPitchArea(col, row, width = 2, record = true) {
+        const eraseEndCol = col + width - 1;
+        let wasErased = false;
+    
+        const initialNoteCount = this.state.placedNotes.length;
+        this.state.placedNotes = this.state.placedNotes.filter(note => {
+            if (note.isDrum) return true; 
+            if (note.row !== row) return true;
+            const noteOverlaps = note.startColumnIndex <= eraseEndCol && note.endColumnIndex >= col;
+            return !noteOverlaps;
+        });
+        if (this.state.placedNotes.length < initialNoteCount) {
+            wasErased = true;
+        }
+    
+        const initialChordCount = this.state.placedChords.length;
+        this.state.placedChords = this.state.placedChords.filter(chord => {
+            const chordIsHit = chord.notes.some(noteName => {
+                const noteRowIndex = this.state.fullRowData.findIndex(r => r.toneNote === noteName);
+                const noteCol = chord.position.xBeat;
+                return (noteRowIndex === row) && (noteCol >= col && noteCol <= eraseEndCol);
+            });
+            return !chordIsHit;
+        });
+        if (this.state.placedChords.length < initialChordCount) {
+            wasErased = true;
+        }
+    
+        if (wasErased) {
+            // THE FIX: Pass an empty object to prevent destructuring errors.
+            this.emit('chordsChanged', {});
+            this.emit('notesChanged');
+            if (record) this.recordState();
+        }
+        return wasErased;
+    },
+
     eraseDrumNoteAt(colIndex, drumTrack, record = true) {
         const initialCount = this.state.placedNotes.length;
         this.state.placedNotes = this.state.placedNotes.filter(note => 
@@ -55,11 +92,9 @@ export const noteActions = {
             return;
         }
 
-        // Use the centralized selector to find the insertion point.
-        // It's the start column of the *next* macrobeat.
         const boundaryColumn = getMacrobeatInfo(this.state, preMacrobeatIndex + 1).startColumn;
         
-        const SHIFT_AMOUNT = 1; // We are inserting ONE column.
+        const SHIFT_AMOUNT = 1; 
         
         this.state.placedNotes.forEach(note => {
             if (note.startColumnIndex >= boundaryColumn) {
@@ -83,13 +118,12 @@ export const noteActions = {
 
         const { preMacrobeatIndex } = groupToErase[0];
         
-        // Temporarily add the group back to calculate the correct boundary before its removal
         const tempState = { ...this.state, tonicSignGroups: { ...this.state.tonicSignGroups, [uuid]: groupToErase } };
         const boundaryColumn = getMacrobeatInfo(tempState, preMacrobeatIndex + 1).startColumn;
 
         delete this.state.tonicSignGroups[uuid];
         
-        const SHIFT_AMOUNT = -1; // Shift indices left.
+        const SHIFT_AMOUNT = -1;
         
         this.state.placedNotes.forEach(note => {
             if (note.startColumnIndex >= boundaryColumn) {

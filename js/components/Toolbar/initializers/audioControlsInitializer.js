@@ -48,11 +48,14 @@ export function initAudioControls() {
     };
     
     store.on('toolChanged', ({ newTool }) => {
-        if (newTool.color) {
+        // Only react to tools that are directly associated with a timbre/color
+        if (newTool.color && (newTool.type === 'circle' || newTool.type === 'oval')) {
             updatePresetSelection(newTool.color);
             presetContainer.style.setProperty('--c-accent', newTool.color);
         } else {
-            presetContainer.style.setProperty('--c-accent', '#4A90E2');
+            // For any other tool (eraser, tonic, chord), reset the preset UI
+            document.querySelectorAll('.preset-button').forEach(btn => btn.classList.remove('selected'));
+            presetContainer.style.setProperty('--c-accent', '#4A90E2'); // Reset to default blue
         }
     });
 
