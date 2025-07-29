@@ -1,153 +1,109 @@
 /* style/components/_buttons.css */
 
-/* --- Tonic Sign Tools --- */
-.tonic-sign-container {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-2);
-    justify-content: space-around;
-    align-items: stretch;
-    padding: var(--space-2);
+/* --- Tab Buttons --- */
+.tab-button {
+    padding: var(--space-2) var(--space-3);
+    border: none; background-color: transparent; color: var(--c-text-muted);
+    font-family: var(--main-font); font-size: 14px; font-weight: 500;
+    cursor: pointer; text-align: left;
+    border-bottom: 1px solid var(--c-border);
+    transition: all 0.2s ease; position: relative;
+}
+.tab-button:hover {
+    background-color: rgba(74, 144, 226, 0.1); color: var(--c-text);
+}
+.tab-button.active {
+    background-color: var(--c-surface); color: var(--c-accent);
+    font-weight: 600; border-right: 2px solid var(--c-accent);
+    margin-right: -1px;
+}
+.tab-button.active::after {
+    content: ''; position: absolute; right: -1px;
+    top: 0; bottom: 0; width: 1px;
+    background-color: var(--c-surface);
 }
 
-/* NEW: Wrapper for tonic and chord buttons */
-.tonic-tools-wrapper {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: var(--space-3);
+/* --- General Toolkit Buttons --- */
+.toolkit-button { line-height: 1.2; padding: var(--space-2); }
+.toolkit-icon-button {
+    font-size: 16px; width: 36px; height: 36px; padding: 0;
+    display: flex; align-items: center; justify-content: center;
+    background-color: transparent; border: 1px solid var(--c-border);
+    color: var(--c-text-muted); border-radius: var(--border-radius-sm);
 }
-
-.tonic-sign-button {
-    padding: var(--space-1);
-    width: 32px;
-    height: 32px;
-    line-height: 1;
-    border-radius: var(--border-radius-md);
-    flex-shrink: 0;
-}
-
-.key-and-degree-row {
-    display: flex;
-    gap: var(--space-2);
-    align-items: center;
-}
-
-#key-signature-container {
-    display: flex;
-    align-items: center;
-    gap: var(--space-1);
-}
-
-#key-signature-container label {
-    font-size: var(--font-size-sm);
-    color: var(--c-text-muted);
-}
-#key-signature-select {
-    font-size: var(--font-size-sm);
-    border-radius: var(--border-radius-sm);
-    padding: var(--space-1);
-    border: 1px solid var(--c-border);
-}
-
-.degree-toggle-container {
-    display: flex;
-    gap: var(--space-1);
-    /* flex-grow: 1; <-- REMOVED THIS LINE */
-}
-
-.degree-toggle-container > .toolkit-button {
-    flex: 1;
-}
-
+.toolkit-icon-button:hover { background-color: var(--c-gridline); }
 
 /* --- Preset Voice Buttons --- */
-#preset-buttons {
-  display: flex;
-  flex-direction: row;
-  gap: var(--space-2);
-  width: 100%;
-  height: 100%;
-}
-.preset-column {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-1);
-}
+.preset-grid { display: flex; gap: var(--space-2); }
+.preset-column { display: flex; flex-direction: column; gap: var(--space-1); }
 .preset-button { 
-  width: 100%; 
-  flex: 1;
-  padding: var(--space-1);
-  background-color: var(--c-gridline);
-  color: var(--c-text);
-  border: 1px solid var(--c-border);
+  width: 95px; justify-content: center; display: flex; align-items: center;
+  padding: var(--space-1); background-color: var(--c-surface);
+  color: var(--c-text); border: 1px solid var(--c-border); font-size: 13px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
-.preset-button:hover {
-  background-color: var(--c-border);
-}
+.preset-button:hover { background-color: var(--c-border); }
 
-/* --- Play Control Buttons --- */
-#play-button-group {
-    display: flex;
-    flex-direction: row;
-    gap: var(--space-1);
-    align-items: center;
-    justify-content: center;
-    width: 100%;
-}
-
-/* --- Grid Navigation Buttons --- */
-#grid-nav-keypad {
-  display: flex;
-  gap: var(--space-1);
-}
-
-/* --- Macrobeat Buttons (on right side) --- */
-#macrobeat-adjust-container {
-  display: flex;
-  flex-direction: row;
-  gap: var(--space-1);
-}
+/* --- Playback Control Buttons --- */
+.playback-row { display: flex; justify-content: center; gap: var(--space-2); padding: var(--space-2); }
+.playback-row .toolkit-button { flex: 1; text-align: center; justify-content: center; }
 
 /* --- Accidental Toggle Buttons --- */
-#accidental-controls-container {
-    position: absolute;
-    top: 5px;
-    left: 0; /* Align to the very start of the parent wrapper */
-    /* Set the container width to match the left legend (3 + 3 units) */
-    width: calc(6 * var(--cell-width-val, 0) * 1px);
-    z-index: 20;
-    display: flex;
-    justify-content: center; /* Center the buttons within the container */
-    gap: var(--space-1);
-}
-
+#accidental-controls-container-v2 { display: flex; justify-content: center; gap: var(--space-2); }
 .accidental-button {
-    width: 30px;
-    height: 30px;
-    font-size: 20px;
-    font-weight: bold;
-    padding: 0;
-    line-height: 1;
-    border: 1px solid var(--c-border);
-    border-radius: var(--border-radius-sm);
-    background-color: var(--c-gridline);
-    color: var(--c-text);
-    opacity: 0.5;
-    transition: background-color 0.2s, opacity 0.2s;
+    width: 40px; height: 40px; font-size: 22px; font-weight: bold; padding: 0;
+    line-height: 1; border: 1px solid var(--c-border); border-radius: var(--border-radius-sm);
+    background-color: var(--c-surface); color: var(--c-text); opacity: 0.6;
+}
+.accidental-button.active { background-color: var(--c-warning); color: var(--c-text); opacity: 1.0; }
+.accidental-button:not(.active):hover { background-color: var(--c-border); }
+
+/* Anacrusis and Macrobeat Buttons */
+.toggle-button-group, .macrobeat-adjust-group { display: flex; gap: var(--space-1); justify-content: center;}
+.sidebar-toggle-button {
+    flex: 1; padding: var(--space-2); text-align: center;
+    background-color: var(--c-surface); color: var(--c-text-muted); border: 1px solid var(--c-border);
+}
+.sidebar-toggle-button.active {
+    background-color: var(--c-accent); color: var(--c-surface); border-color: var(--c-accent-hover);
+}
+.sidebar-toggle-button:not(.active):hover { background-color: var(--c-border); }
+
+/* --- Dropdown Container Styles --- */
+.dropdown-container { position: relative; display: inline-block; }
+.tonic-dropdown-toggle, .degree-dropdown-toggle {
+    display: flex; align-items: center; gap: var(--space-2);
+    justify-content: center; background-color: var(--c-surface);
+    color: var(--c-text); border: 1px solid var(--c-border);
+}
+.dropdown-arrow { font-size: 10px; transition: transform 0.2s ease; }
+.dropdown-container.open .dropdown-arrow { transform: rotate(180deg); }
+.dropdown-menu {
+    display: none; position: absolute; top: 100%; left: 50%;
+    transform: translateX(-50%); background-color: var(--c-surface);
+    border: 1px solid var(--c-border); border-radius: var(--border-radius-md);
+    box-shadow: var(--box-shadow-md); z-index: 100;
+    padding: var(--space-1); flex-direction: column; gap: var(--space-1);
+    margin-top: var(--space-1); max-height: 110px; overflow-y: auto;
+}
+.dropdown-container.open .dropdown-menu { display: flex; }
+.dropdown-menu .tonic-sign-button { width: 100%; border: 1px solid transparent; }
+.tonic-dropdown-toggle.selected, #degree-dropdown-menu .toolkit-button.active {
+    border-color: var(--c-accent); box-shadow: 0 0 5px var(--c-accent);
 }
 
-.accidental-button.active {
-    background-color: var(--c-warning);
-    color: var(--c-text);
-    opacity: 1.0;
+/* --- Harmony Preset Button Styles --- */
+.harmony-preset-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: var(--space-1); flex: 1; }
+.harmony-preset-button {
+    background-color: var(--c-surface); color: var(--c-text);
+    border: 1px solid var(--c-border); border-radius: var(--border-radius-sm);
+    font-size: 18px; font-weight: bold; min-height: 40px;
 }
+.harmony-preset-button:hover { background-color: var(--c-border); }
 
-.accidental-button:not(.active):hover {
-    background-color: var(--c-border);
-}
-
-.accidental-button.active:hover {
-    background-color: #ffca2c; /* A slightly darker yellow for hover */
+/* NEW: Style for the selected harmony button, using the dynamic accent color */
+.harmony-preset-button.selected {
+    background-color: var(--c-accent);
+    color: var(--c-surface);
+    border-color: var(--c-accent-hover);
 }

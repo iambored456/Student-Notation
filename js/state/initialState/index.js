@@ -18,9 +18,17 @@ export const initialState = {
     ...getInitialTimbresState(),
 
     // --- UI & View State ---
-    selectedTool: { type: 'circle', color: '#4a90e2', tonicNumber: null },
+    selectedTool: 'note', 
+    selectedNote: { shape: 'circle', color: '#4a90e2' },
     activeChordId: null,
-    regionContext: { startBeat: 2, length: 8 }, // Default to first measure
+    activeChordIntervals: ["1P", "3M", "5P"],
+    
+    // --- NEW: State for the Chord Candidate Menu ---
+    isChordCandidateMenuOpen: false,
+    chordCandidateMenuPosition: { x: 0, y: 0 },
+    activeMacrobeatIndex: null,
+    chordCandidates: [],
+    
     gridPosition: 0,
     visualRows: 0,
     logicRows: 0,

@@ -1,7 +1,6 @@
 // js/components/Toolbar/Toolbar.js
 import { renderRhythmUI } from './rhythmUI.js';
 import { renderTimeSignatureDisplay } from './timeSignatureDisplay.js';
-import { initNoteBank } from './noteBank.js';
 import { initSidebarAndVolume } from './initializers/sidebarInitializer.js';
 import { initFileActions } from './initializers/fileActionsInitializer.js';
 import { initToolSelectors } from './initializers/toolSelectorInitializer.js';
@@ -13,15 +12,16 @@ console.log("ToolbarComponent: Module loaded.");
 
 const Toolbar = {
     init() {
-        initNoteBank();
         initSidebarAndVolume();
         initFileActions();
         initToolSelectors();
         initPlaybackControls();
         initAudioControls();
         initGridControls();
+        
         console.log("ToolbarComponent: All controls initialized.");
     },
+
     renderRhythmUI() {
         renderRhythmUI();
         renderTimeSignatureDisplay();

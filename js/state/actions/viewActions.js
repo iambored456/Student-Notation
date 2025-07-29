@@ -19,10 +19,20 @@ export const viewActions = {
         this.emit('degreeDisplayModeChanged', this.state.degreeDisplayMode);
     },
 
-    setSelectedTool(type, color = null, tonicNumber = null) {
-        const oldTool = this.state.selectedTool;
-        this.state.selectedTool = { type, color, tonicNumber };
-        this.emit('toolChanged', { newTool: this.state.selectedTool, oldTool });
+    // REVISED: This now only sets the tool type string
+    setSelectedTool(type) {
+        if (this.state.selectedTool !== type) {
+            const oldTool = this.state.selectedTool;
+            this.state.selectedTool = type;
+            this.emit('toolChanged', { newTool: type, oldTool });
+        }
+    },
+
+    // NEW: Action to set the active note properties
+    setSelectedNote(shape, color) {
+        const oldNote = { ...this.state.selectedNote };
+        this.state.selectedNote = { shape, color };
+        this.emit('noteChanged', { newNote: this.state.selectedNote, oldNote });
     },
 
     setKeySignature(newKey) {

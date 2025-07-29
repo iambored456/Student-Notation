@@ -31,35 +31,33 @@ export function initSidebarAndVolume() {
 
     // Sidebar Logic
     const toggleSidebar = () => document.body.classList.toggle('sidebar-open');
-    settingsBtn.addEventListener('click', toggleSidebar);
-    sidebarOverlay.addEventListener('click', toggleSidebar);
-
-    document.getElementById('save-as-button').innerHTML = '💾 Save As';
-    document.getElementById('import-button').innerHTML = '📁 Open';
-    document.getElementById('print-button').innerHTML = '🖨️ Print';
+    if (settingsBtn && sidebar && sidebarOverlay) {
+        settingsBtn.addEventListener('click', toggleSidebar);
+        sidebarOverlay.addEventListener('click', toggleSidebar);
+    }
 
     // Volume Popup Logic
-    volumeIconBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        volumePopup.classList.toggle('visible');
-    });
+    if (volumeIconBtn && volumePopup && verticalVolumeSlider) {
+        volumeIconBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            volumePopup.classList.toggle('visible');
+        });
 
-    verticalVolumeSlider.addEventListener('input', function() {
-        const value = parseInt(this.value, 10);
-        const dB = (value === 0) ? -Infinity : (value / 100) * 50 - 50;
-        store.emit('volumeChanged', dB);
-    });
-    
-    // Close popup if clicking outside
-    document.addEventListener('click', (e) => {
-        if (!volumePopup.contains(e.target) && e.target !== volumeIconBtn) {
-            volumePopup.classList.remove('visible');
-        }
-    });
+        verticalVolumeSlider.addEventListener('input', function() {
+            const value = parseInt(this.value, 10);
+            const dB = (value === 0) ? -Infinity : (value / 100) * 50 - 50;
+            store.emit('volumeChanged', dB);
+        });
+        
+        document.addEventListener('click', (e) => {
+            if (!volumePopup.contains(e.target) && e.target !== volumeIconBtn) {
+                volumePopup.classList.remove('visible');
+            }
+        });
 
-    // Initial Volume Dispatch
-    verticalVolumeSlider.dispatchEvent(new Event('input'));
+        verticalVolumeSlider.dispatchEvent(new Event('input'));
+    }
     
-    // Initialize the anacrusis toggle
+    // Initialize the anacrusis toggle from the "Rhythm" tab
     initAnacrusisToggle();
 }

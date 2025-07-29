@@ -1,91 +1,80 @@
 // js/state/actions/harmonyActions.js
 import { buildNotes } from '../../harmony/utils/build-notes.js';
+import { getMacrobeatInfo, getNotesInMacrobeat } from '../selectors.js';
+import { Chord, Note } from 'tonal';
 
 function generateUUID() {
     return `uuid-chord-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 }
 
 export const harmonyActions = {
-    /**
-     * Adds a new chord to the state.
-     * @param {object} chordData - The initial data for the chord, minus id and notes.
-     */
-    addChord(chordData) {
-        const newChord = {
-            ...chordData,
-            id: generateUUID(),
-        };
-        this.state.placedChords.push(newChord);
-        this.emit('chordsChanged', { newChord });
-        // Set the newly created chord as active
-        this.setActiveChord(newChord.id);
-        this.recordState();
-        return newChord;
+    // ... (keep all your existing functions like addChord, updateChord, etc.)
+    addChord(chordData) { /* ... existing code ... */ },
+    updateChord(chordId, updates) { /* ... existing code ... */ },
+    deleteChord(chordId) { /* ... existing code ... */ },
+    setActiveChord(chordId) { /* ... existing code ... */ },
+    setRegionContext(newRegion) { /* ... existing code ... */ },
+    rebuildAllChords(newKey) { /* ... existing code ... */ },
+    setActiveChordIntervals(intervals) { /* ... existing code ... */ },
+
+
+    // --- NEW ACTIONS FOR CHORD CANDIDATE MENU ---
+
+    openChordCandidateMenu(macrobeatIndex, candidates, position) {
+        this.state.isChordCandidateMenuOpen = true;
+        this.state.activeMacrobeatIndex = macrobeatIndex;
+        this.state.chordCandidates = candidates;
+        this.state.chordCandidateMenuPosition = position;
+        this.emit('chordCandidateMenuStateChanged');
     },
 
-    /**
-     * Updates an existing chord in the state.
-     * @param {string} chordId - The ID of the chord to update.
-     * @param {object} updates - An object containing the properties to change.
-     */
-    updateChord(chordId, updates) {
-        const chord = this.state.placedChords.find(c => c.id === chordId);
-        if (chord) {
-            Object.assign(chord, updates);
-            
-            // After updating properties, regenerate the notes array.
-            chord.notes = buildNotes(chord, this.state.keySignature);
-            
-            this.emit('chordsChanged', { updatedChordId: chordId });
-        }
+    closeChordCandidateMenu() {
+        this.state.isChordCandidateMenuOpen = false;
+        this.state.activeMacrobeatIndex = null;
+        this.emit('chordCandidateMenuStateChanged');
     },
 
-    /**
-     * Deletes a chord from the state.
-     * @param {string} chordId - The ID of the chord to delete.
-     */
-    deleteChord(chordId) {
-        this.state.placedChords = this.state.placedChords.filter(c => c.id !== chordId);
-        if (this.state.activeChordId === chordId) {
-            this.setActiveChord(null);
-        }
-        // THE FIX: Pass an empty object to prevent destructuring errors in listeners.
-        this.emit('chordsChanged', {});
-        this.recordState();
-    },
+    applyChordCandidate(chordSymbol) {
+        if (this.state.activeMacrobeatIndex === null) return;
 
-    /**
-     * Sets the currently active/selected chord for editing.
-     * @param {string | null} chordId - The ID of the chord to select, or null to deselect.
-     */
-    setActiveChord(chordId) {
-        if (this.state.activeChordId !== chordId) {
-            this.state.activeChordId = chordId;
-            this.emit('activeChordChanged', chordId);
-            // Don't record history for selection changes
-        }
-    },
-
-    /**
-     * Sets the analysis region.
-     * @param {{startBeat: number, length: number}} newRegion 
-     */
-    setRegionContext(newRegion) {
-        if (this.state.regionContext.startBeat !== newRegion.startBeat || this.state.regionContext.length !== newRegion.length) {
-            this.state.regionContext = newRegion;
-            this.emit('regionContextChanged', newRegion);
-        }
-    },
-
-    /**
-     * Loops through all placed chords and rebuilds their note arrays based on a new key.
-     * @param {string} newKey - The new key signature tonic.
-     */
-    rebuildAllChords(newKey) {
-        this.state.placedChords.forEach(chord => {
-            chord.notes = buildNotes(chord, newKey);
+        const { startColumn, endColumn } = getMacrobeatInfo(this.state, this.state.activeMacrobeatIndex);
+        
+        // 1. Find the lowest note in the current macrobeat to determine the octave
+        const notesInBeat = getNotesInMacrobeat(this.state, this.state.activeMacrobeatIndex);
+        let lowestNote = 'C8'; // Start high
+        this.state.placedNotes.forEach(note => {
+            if (note.startColumnIndex >= startColumn && note.startColumnIndex <= endColumn) {
+                const pitch = this.state.fullRowData[note.row].toneNote;
+                if (Note.midi(pitch) < Note.midi(lowestNote)) {
+                    lowestNote = pitch;
+                }
+            }
         });
-        this.emit('chordsChanged', { reason: 'keyChange' });
+        const octave = Note.octave(lowestNote);
+        const root = Chord.get(chordSymbol).tonic;
+        const rootWithOctave = `${root}${octave}`;
+
+        // 2. Get the notes of the new chord
+        const newNotes = Chord.getChord(chordSymbol, rootWithOctave).notes.map(n => Note.simplify(n));
+
+        // 3. Remove all old notes from that macrobeat
+        this.state.placedNotes = this.state.placedNotes.filter(note => 
+            note.startColumnIndex < startColumn || note.startColumnIndex > endColumn
+        );
+
+        // 4. Add the new notes
+        const { shape, color } = this.state.selectedNote;
+        newNotes.forEach(noteName => {
+            const noteRow = this.state.fullRowData.findIndex(r => r.toneNote === noteName);
+            if (noteRow !== -1) {
+                const newNote = { row: noteRow, startColumnIndex: startColumn, endColumnIndex: startColumn, color, shape, isDrum: false };
+                this.addNote(newNote); // Use existing action to add notes
+            }
+        });
+
+        // 5. Close the menu, record history, and update the view
+        this.closeChordCandidateMenu();
         this.recordState();
+        this.emit('notesChanged'); // This will trigger a redraw
     }
 };

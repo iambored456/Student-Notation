@@ -1,4 +1,6 @@
-/* --- Add to style/_modal.css --- */
+/* style/_modal.css */
+
+/* --- Print Preview Modal --- */
 #print-preview-overlay {
   position: fixed;
   top: 0;
@@ -17,7 +19,6 @@
   opacity: 0;
   pointer-events: none;
 }
-
 #print-preview-modal {
   background-color: var(--c-surface);
   border-radius: var(--border-radius-md);
@@ -27,7 +28,6 @@
   display: flex;
   flex-direction: column;
 }
-
 .print-preview-header {
   display: flex;
   justify-content: space-between;
@@ -37,7 +37,6 @@
   flex-shrink: 0;
 }
 .print-preview-header h2 { margin: 0; font-size: 18px; }
-
 .print-preview-content {
   flex-grow: 1;
   display: flex;
@@ -52,59 +51,85 @@
   overflow: auto;
   padding: 10px;
 }
-#print-preview-canvas {
-  display: block;
-  background-color: white;
-}
+#print-preview-canvas { display: block; background-color: white; }
 .print-preview-options {
-  flex-basis: 280px;
-  flex-shrink: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
+  flex-basis: 280px; flex-shrink: 0; display: flex;
+  flex-direction: column; gap: 15px;
 }
 .print-option-row {
-  display: grid;
-  grid-template-columns: 90px 40px 1fr;
-  align-items: center;
-  gap: 10px;
+  display: grid; grid-template-columns: 90px 40px 1fr;
+  align-items: center; gap: 10px;
 }
 .print-option-row label { font-weight: bold; }
 .print-option-row span { font-family: monospace; font-size: 12px; }
-.print-preview-options h3 { margin-top: 10px; margin-bottom: 5px; border-bottom: 1px solid var(--c-gridline); padding-bottom: 5px;}
-
+.print-preview-options h3 { 
+    margin-top: 10px; margin-bottom: 5px; 
+    border-bottom: 1px solid var(--c-gridline); padding-bottom: 5px;
+}
 .print-preview-footer {
-  padding: 10px 20px;
-  border-top: 1px solid var(--c-border);
-  text-align: right;
-  flex-shrink: 0;
+  padding: 10px 20px; border-top: 1px solid var(--c-border);
+  text-align: right; flex-shrink: 0;
 }
-
 .close-button {
-  background: none;
-  border: none;
-  font-size: 24px;
-  line-height: 1;
-  padding: 0 5px;
-  color: var(--c-text-muted);
-  cursor: pointer;
+  background: none; border: none; font-size: 24px; line-height: 1;
+  padding: 0 5px; color: var(--c-text-muted); cursor: pointer;
 }
-.confirm-button {
-  background-color: #28a745;
-  font-weight: bold;
-}
-.confirm-button:hover {
-  background-color: #218838;
-}
+.confirm-button { background-color: #28a745; font-weight: bold; }
+.confirm-button:hover { background-color: #218838; }
+.toggle-button { width: 100%; grid-column: 2 / -1; }
+.toggle-button.active { background-color: var(--c-accent); }
+.toggle-button:not(.active) { background-color: var(--c-gridline); color: var(--c-text); }
 
-.toggle-button {
-  width: 100%;
-  grid-column: 2 / -1;
+
+/* --- Chord Candidate Drop-up Menu --- */
+#chord-candidate-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: transparent;
+    z-index: 1001;
 }
-.toggle-button.active {
-  background-color: var(--c-accent);
+#chord-candidate-menu {
+    position: fixed;
+    background-color: var(--c-surface);
+    border: 1px solid var(--c-border);
+    border-radius: var(--border-radius-md);
+    box-shadow: var(--box-shadow-md);
+    z-index: 1002;
+    padding: var(--space-2);
+    transform: translate(-50%, 10px);
+    opacity: 0;
+    transition: transform 0.2s ease-out, opacity 0.2s ease-out;
 }
-.toggle-button:not(.active) {
-  background-color: var(--c-gridline);
-  color: var(--c-text);
+#chord-candidate-menu:not(.hidden) {
+    transform: translate(-50%, -100%);
+    opacity: 1;
+}
+#chord-candidate-menu.hidden, #chord-candidate-overlay.hidden {
+    display: none;
+}
+#chord-candidate-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+    max-height: 200px;
+    overflow-y: auto;
+}
+.chord-candidate-button {
+    background-color: var(--c-gridline);
+    color: var(--c-text);
+    text-align: left;
+    padding: var(--space-2) var(--space-3);
+    font-size: 14px;
+}
+.chord-candidate-button.is-primary {
+    background-color: var(--c-accent);
+    color: var(--c-surface);
+    font-weight: bold;
+}
+.chord-candidate-button:hover {
+    background-color: var(--c-accent-hover);
+    color: var(--c-surface);
 }

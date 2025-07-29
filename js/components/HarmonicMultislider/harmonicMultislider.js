@@ -1,15 +1,18 @@
 // js/components/HarmonicMultislider/harmonicMultislider.js
-import store from '../../state/index.js'; // <-- UPDATED PATH
+import store from '../../state/index.js';
 import { HARMONIC_BINS } from '../../constants.js';
 
 console.log("HarmonicMultislider with Filter Overlay: Module loaded.");
 
 function shadeHexColor(hex, percent) {
+    // Safety check for undefined hex value
+    if (!hex) hex = '#CCCCCC'; 
     const f=parseInt(hex.slice(1),16),t=percent<0?0:255,p=percent<0?percent*-1:percent,R=f>>16,G=f>>8&0x00FF,B=f&0x0000FF;
     return "#"+(0x1000000+(Math.round((t-R)*p)+R)*0x10000+(Math.round((t-G)*p)+G)*0x100+(Math.round((t-B)*p)+B)).toString(16).slice(1);
 }
 
 function hexToRgba(hex, alpha) {
+    if (!hex) hex = '#CCCCCC';
     const r = parseInt(hex.slice(1, 3), 16);
     const g = parseInt(hex.slice(3, 5), 16);
     const b = parseInt(hex.slice(5, 7), 16);
@@ -24,33 +27,27 @@ let currentColor;
 function getFilterAmplitudeAt(norm_pos, filterSettings) {
     const { blend, cutoff, resonance } = filterSettings;
     const norm_cutoff = (cutoff - 1) / (BINS - 2);
-
     const steepness = 4;
     const lp_ratio = norm_cutoff > 0 ? norm_pos / norm_cutoff : norm_pos * 1e6;
     const hp_ratio = norm_pos > 0 ? norm_cutoff / norm_pos : norm_cutoff * 1e6;
-
     const lp = 1 / (1 + Math.pow(lp_ratio, 2 * steepness));
     const hp = 1 / (1 + Math.pow(hp_ratio, 2 * steepness));
     const bp = lp * hp * 4;
-
     let shape;
     if (blend <= 1.0) {
         shape = hp * (1 - blend) + bp * blend;
     } else {
         shape = bp * (2 - blend) + lp * (blend - 1);
     }
-
     const res_q = 1.0 - (resonance / 105);
     const peak_width = Math.max(0.01, 0.2 * res_q * res_q);
     const peak = Math.exp(-Math.pow((norm_pos - norm_cutoff) / peak_width, 2));
     const res_gain = (resonance / 100) * 0.6;
-    
     return Math.min(1.0, shape + peak * res_gain);
 }
 
 function draw() {
     if (!ctx || !overlayCtx) return;
-
     const { width, height } = ctx.canvas;
     const barW = (width - (BINS + 1) * 4) / BINS;
     const gap = 4;
@@ -60,24 +57,19 @@ function draw() {
 
     ctx.clearRect(0, 0, width, height);
     overlayCtx.clearRect(0, 0, width, height);
-    
     if (!filterSettings) return;
 
-    // --- Draw Harmonic Bars (Always at full height) ---
     coeffs.forEach((c, i) => {
         if (i === 0) return;
         const x = gap + (i - 1) * (barW + gap);
-        const barHeight = c * maxBarHeight; // No longer modified by filter
-        
+        const barHeight = c * maxBarHeight;
         ctx.fillStyle = barColor;
         ctx.fillRect(x, height - barHeight, barW, barHeight);
     });
 
-    // --- Draw Smooth Filter Curve Overlay ---
     if (filterSettings.enabled) {
         overlayCtx.beginPath();
         const step = 2;
-
         for (let x = 0; x <= width; x += step) {
             const norm_pos = x / width;
             const amp = getFilterAmplitudeAt(norm_pos, filterSettings);
@@ -88,11 +80,9 @@ function draw() {
                 overlayCtx.lineTo(x, y);
             }
         }
-        
         overlayCtx.strokeStyle = shadeHexColor(currentColor, -0.3);
         overlayCtx.lineWidth = 2.5;
         overlayCtx.stroke();
-        
         overlayCtx.lineTo(width, height);
         overlayCtx.lineTo(0, height);
         overlayCtx.closePath();
@@ -114,15 +104,12 @@ function sizeCanvas() {
 }
 
 function handlePointerEvent(e) {
-    // REMOVED: The check for whether the filter is enabled is gone.
-    // This function will now run at all times.
     const rect = canvas.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
     const { width, height } = ctx.canvas;
     const barW = (width - (BINS + 1) * 4) / BINS;
     const gap = 4;
-    
     const idx = Math.floor((x - gap) / (barW + gap)) + 1;
 
     if (idx > 0 && idx < BINS) {
@@ -152,7 +139,8 @@ export function initHarmonicMultislider() {
     ctx = canvas.getContext('2d');
     overlayCtx = overlayCanvas.getContext('2d');
     
-    currentColor = store.state.selectedTool.color;
+    // THE FIX: Always get color from selectedNote
+    currentColor = store.state.selectedNote.color;
     updateForNewColor(currentColor);
 
     canvas.addEventListener('pointerdown', (e) => {
@@ -162,7 +150,6 @@ export function initHarmonicMultislider() {
         const stopDrag = () => {
             window.removeEventListener('pointermove', onMove);
             window.removeEventListener('pointerup', stopDrag);
-            // We now record state regardless of filter, as bar editing is always possible.
             store.recordState();
         };
         window.addEventListener('pointermove', onMove);
@@ -176,9 +163,10 @@ export function initHarmonicMultislider() {
         }
     });
 
-    store.on('toolChanged', ({ newTool }) => {
-        if (newTool.color && newTool.color !== currentColor) {
-            updateForNewColor(newTool.color);
+    // THE FIX: Listen for 'noteChanged' instead of 'toolChanged'
+    store.on('noteChanged', ({ newNote }) => {
+        if (newNote.color && newNote.color !== currentColor) {
+            updateForNewColor(newNote.color);
         }
     });
 

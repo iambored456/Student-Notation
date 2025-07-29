@@ -8,15 +8,17 @@ let canvas, ctx;
 function render() {
     if (!ctx) return;
 
-    // Revert to simpler width/height management
     const totalWidth = LayoutService.getCanvasWidth();
 
     if (canvas.width !== totalWidth) {
         canvas.width = totalWidth;
     }
-    // Set to the new fixed height from CSS
-    canvas.height = 90;
 
+    // THE FIX: Set the canvas height dynamically from its container's actual height
+    if (canvas.height !== canvas.clientHeight) {
+        canvas.height = canvas.clientHeight;
+    }
+    
     const renderOptions = {
         state: store.state,
     };
@@ -33,7 +35,8 @@ const Harmony = {
         }
         ctx = canvas.getContext('2d');
         
-        // Removed the ResizeObserver as it's no longer needed for dynamic height.
+        // Listen for layout changes that might affect width
+        store.on('layoutConfigChanged', render);
         
         render(); // Initial render
         console.log("Harmony: Initialized.");

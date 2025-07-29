@@ -1,27 +1,30 @@
 /* style/components/_tempo-display.css */
 
-#tempo-display-container {
+.tempo-row {
     display: flex;
     justify-content: center;
-    gap: 24px;
-    width: 100%;
-    margin-block-end: var(--space-1);
-    color: var(--c-text);
+    gap: 0.5em;
+    background-color: var(--c-surface);
+    padding: var(--space-2);
+    border-radius: var(--border-radius-sm);
+    border: 1px solid var(--c-border);
 }
+
+.tempo-slider-row {
+    background-color: var(--c-surface);
+    padding: var(--space-2);
+    border-radius: var(--border-radius-sm);
+    border: 1px solid var(--c-border);
+}
+
 .tempo-input-group {
     display: flex;
     align-items: center;
     gap: var(--space-2);
 }
 
-/* Remove old text styles */
-.tempo-label {
-    /* No longer needed */
-}
-
-/* NEW: Styles for the SVG icons */
 .tempo-label-icon {
-    height: 1.5rem; /* Increased size for better visibility */
+    height: 1.5rem;
     width: auto;
     user-select: none;
 }

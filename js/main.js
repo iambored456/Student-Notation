@@ -11,14 +11,12 @@ import { initGridScrollHandler } from './services/gridScrollHandler.js';
 import { initKeyboardHandler } from './services/keyboardHandler.js';
 import Toolbar from './components/Toolbar/Toolbar.js';
 import GridManager from './components/Grid/gridManager.js';
-import Harmony from './components/Harmony/Harmony.js'; // This line must match the file path
+import Harmony from './components/Harmony/Harmony.js';
 import { initHarmonicMultislider } from './components/HarmonicMultislider/harmonicMultislider.js';
 import { initAdsrComponent } from './components/ADSR/adsrComponent.js';
 import { initFilterControls } from './components/FilterControls/filterControls.js';
 import PrintPreview from './components/PrintPreview.js';
-import GlobalService from './services/globalService.js';
-import { initChordToolbar } from './harmony/ui/ChordToolbar.js';
-
+// REMOVED: The old harmony toolbar initializer is no longer needed.
 
 console.log("Main.js: Application starting...");
 
@@ -57,7 +55,6 @@ document.addEventListener("DOMContentLoaded", () => {
     initHarmonicMultislider();
     initFilterControls();
     PrintPreview.init();
-    initChordToolbar();
     
     console.log("----------------------------------------");
     console.log("SETTING UP STATE SUBSCRIPTIONS");
@@ -70,7 +67,6 @@ document.addEventListener("DOMContentLoaded", () => {
     };
 
     store.on('notesChanged', renderAll);
-    store.on('chordsChanged', renderAll);
     
     store.on('rhythmStructureChanged', () => {
         renderAll();
@@ -80,11 +76,6 @@ document.addEventListener("DOMContentLoaded", () => {
     store.on('layoutConfigChanged', () => {
         renderAll();
         Toolbar.renderRhythmUI();
-    });
-
-    store.on('keySignatureChanged', (newKey) => {
-        store.rebuildAllChords(newKey);
-        renderAll(); 
     });
 
     store.on('zoomIn', () => LayoutService.zoomIn());

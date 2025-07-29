@@ -12,7 +12,8 @@ const INITIAL_TOP_NOTE = 'C5';
 const INITIAL_BOTTOM_NOTE = 'G3';
 
 let resizeTimeout;
-let gridContainer, canvas, ctx, drumCanvas, drumCtx, playheadCanvas, hoverCanvas, drumHoverCanvas, pitchCanvasWrapper, drumGridWrapper, gridContainerWrapper, rightSideContainer, bottomContentWrapper, harmonyContainer, harmonyCanvas;
+// REMOVED: rightSideContainer variable
+let gridContainer, canvas, ctx, drumCanvas, drumCtx, playheadCanvas, hoverCanvas, drumHoverCanvas, pitchCanvasWrapper, drumGridWrapper, gridContainerWrapper, bottomContentWrapper, harmonyContainer, harmonyCanvas;
 let isInitialLayoutDone = false;
 
 function initDOMElements() {
@@ -26,9 +27,9 @@ function initDOMElements() {
     drumHoverCanvas = document.getElementById('drum-hover-canvas');
     bottomContentWrapper = document.getElementById('bottom-content-wrapper');
     drumGridWrapper = document.getElementById('drum-grid-wrapper'); 
-    rightSideContainer = document.getElementById('right-side-container'); 
     harmonyContainer = document.getElementById('harmony-container');
     harmonyCanvas = document.getElementById('harmony-analysis-canvas');
+    // REMOVED: Initialization of rightSideContainer
     
     if (!gridContainerWrapper) console.error("FATAL: gridContainerWrapper not found");
     
@@ -78,23 +79,24 @@ function applyDimensions() {
     const totalLogicRows = store.state.fullRowData.length;
     const canvasHeight = (totalLogicRows / 2) * cellHeight;
     
-    [canvas, playheadCanvas, hoverCanvas].forEach(c => { c.width = canvasWidth; c.height = canvasHeight; });
-    pitchCanvasWrapper.style.height = `${canvasHeight}px`;
+    [canvas, playheadCanvas, hoverCanvas].forEach(c => { if(c) { c.width = canvasWidth; c.height = canvasHeight; } });
+    if(pitchCanvasWrapper) pitchCanvasWrapper.style.height = `${canvasHeight}px`;
     
-    const rightLegendWidth = (columnWidths[columnWidths.length - 1] + columnWidths[columnWidths.length - 2]) * cellWidth;
-    rightSideContainer.style.width = `${rightLegendWidth}px`;
+    // REMOVED: Logic that tried to style the non-existent rightSideContainer
     
     const drumCanvasWidth = canvasWidth;
     const pitchRowHeight = 0.5 * cellHeight;
     const drumCanvasHeight = 3 * pitchRowHeight;
     
-    [drumCanvas, drumHoverCanvas].forEach(c => { c.width = drumCanvasWidth; c.height = drumCanvasHeight; });
-    harmonyCanvas.width = canvasWidth;
+    [drumCanvas, drumHoverCanvas].forEach(c => { if(c) { c.width = drumCanvasWidth; c.height = drumCanvasHeight; } });
+    if(harmonyCanvas) harmonyCanvas.width = canvasWidth;
 
-    gridContainerWrapper.style.width = `${canvasWidth}px`;
-    gridContainerWrapper.style.setProperty('--cell-width-val', `${cellWidth}`);
-    bottomContentWrapper.style.width = `${canvasWidth}px`;
-    harmonyContainer.style.width = `${canvasWidth}px`;
+    if(gridContainerWrapper) {
+        gridContainerWrapper.style.width = `${canvasWidth}px`;
+        gridContainerWrapper.style.setProperty('--cell-width-val', `${cellWidth}`);
+    }
+    if(bottomContentWrapper) bottomContentWrapper.style.width = `${canvasWidth}px`;
+    if(harmonyContainer) harmonyContainer.style.width = `${canvasWidth}px`;
     
     store.emit('layoutConfigChanged');
 }
@@ -187,7 +189,6 @@ const LayoutService = {
         return contexts;
     },
 
-    // SIMPLIFIED: This function is now purely geometric.
     getMacrobeatWidthPx(state, grouping) {
         return grouping * state.cellWidth;
     },

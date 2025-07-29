@@ -1,10 +1,18 @@
 // js/components/Toolbar/initializers/gridControlsInitializer.js
-import store from '../../../state/index.js'; // <-- UPDATED PATH
+import store from '../../../state/index.js';
 
 export function initGridControls() {
-    document.getElementById('grid-zoom-in').addEventListener('click', () => store.emit('zoomIn'));
-    document.getElementById('grid-zoom-out').addEventListener('click', () => store.emit('zoomOut'));
+    // Zoom controls are now in container-1
+    const zoomInBtn = document.getElementById('grid-zoom-in');
+    const zoomOutBtn = document.getElementById('grid-zoom-out');
     
-    document.getElementById('macrobeat-increase').addEventListener('click', () => store.increaseMacrobeatCount());
-    document.getElementById('macrobeat-decrease').addEventListener('click', () => store.decreaseMacrobeatCount());
+    // Macrobeat controls are now in the "Rhythm" tab
+    const increaseBtn = document.getElementById('macrobeat-increase');
+    const decreaseBtn = document.getElementById('macrobeat-decrease');
+
+    if (zoomInBtn) zoomInBtn.addEventListener('click', () => store.emit('zoomIn'));
+    if (zoomOutBtn) zoomOutBtn.addEventListener('click', () => store.emit('zoomOut'));
+    
+    if (increaseBtn) increaseBtn.addEventListener('click', () => store.increaseMacrobeatCount());
+    if (decreaseBtn) decreaseBtn.addEventListener('click', () => store.decreaseMacrobeatCount());
 }

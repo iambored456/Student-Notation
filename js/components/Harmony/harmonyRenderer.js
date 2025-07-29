@@ -61,9 +61,14 @@ function drawAnalysisForMacrobeat(ctx, state, macrobeatIndex) {
 
     const romanNumeralInfo = TonalService.getRomanNumeralForNotes(notes, keyTonic, keyMode);
     
-    const degreeRowHeight = 60;
-    const romanRowHeight = 30;
+    // REMOVED: The variables for splitting the canvas height are no longer needed.
+    // const degreeRowHeight = 60;
+    // const romanRowHeight = 30;
 
+    // REMOVED: This entire block of code was responsible for drawing the
+    // individual scale degrees. By removing it, we achieve the desired visual result
+    // without "nerfing" the Roman numeral calculation which happens next.
+    /*
     if (notes.length > 0) {
         const chordRoot = romanNumeralInfo ? romanNumeralInfo.root : null;
         
@@ -79,7 +84,6 @@ function drawAnalysisForMacrobeat(ctx, state, macrobeatIndex) {
         ctx.textBaseline = 'middle';
         ctx.fillStyle = '#343a40';
         
-        // CORRECTED: This draws ascending from the bottom (index 0 is lowest on canvas).
         degreeObjects.forEach((dObj, index) => {
             let label = dObj.degree;
             if (chordRoot && dObj.pc === chordRoot) {
@@ -89,12 +93,13 @@ function drawAnalysisForMacrobeat(ctx, state, macrobeatIndex) {
             ctx.fillText(label, centerX, y);
         });
     }
+    */
 
     if (romanNumeralInfo && romanNumeralInfo.roman) {
         const { roman, ext } = romanNumeralInfo;
         
-        const mainFont = "bold 18px 'Atkinson Hyperlegible', sans-serif";
-        const superFont = "bold 12px 'Atkinson Hyperlegible', sans-serif";
+        const mainFont = "bold 22px 'Atkinson Hyperlegible', sans-serif"; // Slightly larger font
+        const superFont = "bold 14px 'Atkinson Hyperlegible', sans-serif";
         
         ctx.font = mainFont;
         const mainWidth = ctx.measureText(roman).width;
@@ -104,7 +109,9 @@ function drawAnalysisForMacrobeat(ctx, state, macrobeatIndex) {
 
         const totalWidth = mainWidth + extWidth;
         const startX = centerX - totalWidth / 2;
-        const y = degreeRowHeight + (romanRowHeight / 2);
+
+        // CHANGED: The 'y' position is now calculated to be the vertical center of the canvas.
+        const y = ctx.canvas.height / 2;
 
         ctx.font = mainFont;
         ctx.fillStyle = '#212529';
@@ -114,7 +121,7 @@ function drawAnalysisForMacrobeat(ctx, state, macrobeatIndex) {
         
         if (ext) {
             ctx.font = superFont;
-            ctx.fillText(ext, startX + mainWidth, y - 7);
+            ctx.fillText(ext, startX + mainWidth, y - 8); // Adjusted superscript position
         }
     }
 }
@@ -124,12 +131,13 @@ export function drawHarmonyGrid(ctx, options) {
     const { state } = options;
     ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
     
-    ctx.beginPath();
-    ctx.moveTo(0, 60);
-    ctx.lineTo(ctx.canvas.width, 60);
-    ctx.strokeStyle = '#e9ecef';
-    ctx.lineWidth = 1;
-    ctx.stroke();
+    // REMOVED: The horizontal line dividing the two sections is no longer needed.
+    // ctx.beginPath();
+    // ctx.moveTo(0, 60);
+    // ctx.lineTo(ctx.canvas.width, 60);
+    // ctx.strokeStyle = '#e9ecef';
+    // ctx.lineWidth = 1;
+    // ctx.stroke();
 
     drawVerticalHarmonyLines(ctx, state);
 
@@ -138,6 +146,7 @@ export function drawHarmonyGrid(ctx, options) {
     }
 }
 
+// This helper function is no longer called, but we can leave it in case you want to use it elsewhere.
 function formatInterval(interval) {
     if (!interval) return null;
     const details = Interval.get(interval);

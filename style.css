@@ -12,7 +12,6 @@
 @import url('style/_sidebar.css');
 @import url('style/_modal.css');
 @import url('style/_print.css');
-@import url('style/_harmony.css'); /* ADD THIS LINE */
 
 /* --- Component-Specific Styles --- */
 @import url('style/components/_sliders.css');

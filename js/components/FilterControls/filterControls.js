@@ -1,5 +1,5 @@
 // js/components/FilterControls/filterControls.js
-import store from '../../state/index.js'; // <-- UPDATED PATH
+import store from '../../state/index.js';
 
 console.log("FilterControls: Module loaded.");
 
@@ -21,16 +21,25 @@ function updateFromStore() {
 
     const { enabled, cutoff, blend } = timbre.filter;
     
-    enableToggle.classList.toggle('active', enabled);
-    container.classList.toggle('filter-disabled', !enabled);
+    if(enableToggle) enableToggle.classList.toggle('active', enabled);
+    if(container) container.classList.toggle('filter-disabled', !enabled);
 
-    const blendPercent = (BLEND_MAX - blend) / (BLEND_MAX - BLEND_MIN);
-    blendThumb.style.left = `${blendPercent * 100}%`;
+    if(blendThumb && blendTrack) {
+        // This calculation is inverted because 0 blend = 100% left on the slider
+        const blendPercent = (BLEND_MAX - blend) / (BLEND_MAX - BLEND_MIN);
+        blendThumb.style.left = `${blendPercent * 100}%`;
+        // NEW: Update the track's progress variable
+        blendTrack.style.setProperty('--progress', `${blendPercent * 100}%`);
+    }
     
-    const cutoffPercent = (cutoff - CUTOFF_MIN) / (CUTOFF_MAX - CUTOFF_MIN);
-    cutoffThumb.style.left = `${cutoffPercent * 100}%`;
+    if(cutoffThumb && cutoffTrack) {
+        const cutoffPercent = (cutoff - CUTOFF_MIN) / (CUTOFF_MAX - CUTOFF_MIN);
+        cutoffThumb.style.left = `${cutoffPercent * 100}%`;
+        // NEW: Update the track's progress variable
+        cutoffTrack.style.setProperty('--progress', `${cutoffPercent * 100}%`);
+    }
     
-    container.style.setProperty('--c-accent', currentColor);
+    if(container) container.style.setProperty('--c-accent', currentColor);
 }
 
 function handleCutoffDrag(e) {

@@ -1,15 +1,5 @@
 // js/components/Toolbar/initializers/fileActionsInitializer.js
-import store from '../../../state/index.js'; // <-- UPDATED PATH
-
-function getScoreAsCSV() {
-    return store.state.placedNotes.map(note => {
-        return [
-            note.row, note.startColumnIndex, note.endColumnIndex,
-            note.color, note.shape, note.tonicNumber || '',
-            note.isDrum, note.drumTrack || ''
-        ].join(',');
-    }).join('\n');
-}
+import store from '../../../state/index.js';
 
 async function saveWithPicker(blob) {
     try {
@@ -37,15 +27,25 @@ function saveWithLegacyLink(blob) {
     URL.revokeObjectURL(url);
 }
 
+function getScoreAsCSV() {
+    return store.state.placedNotes.map(note => {
+        return [
+            note.row, note.startColumnIndex, note.endColumnIndex,
+            note.color, note.shape, note.tonicNumber || '',
+            note.isDrum, note.drumTrack || ''
+        ].join(',');
+    }).join('\n');
+}
+
 export function initFileActions() {
-    document.getElementById('save-as-button').addEventListener('click', async () => {
+    document.getElementById('save-as-button')?.addEventListener('click', async () => {
         const csvData = getScoreAsCSV();
         const blob = new Blob([csvData], { type: 'text/csv;charset=utf-8;' });
         if (window.showSaveFilePicker) await saveWithPicker(blob);
         else saveWithLegacyLink(blob);
     });
 
-    document.getElementById('import-button').addEventListener('click', () => {
+    document.getElementById('import-button')?.addEventListener('click', () => {
         const input = document.createElement('input');
         input.type = 'file';
         input.accept = '.csv,.txt';
@@ -71,16 +71,13 @@ export function initFileActions() {
         input.click();
     });
 
-    document.getElementById('print-button').addEventListener('click', () => {
-        console.log('[FileActions] Print button clicked. Closing sidebar and emitting event.');
-        document.body.classList.remove('sidebar-open');
+    document.getElementById('print-button')?.addEventListener('click', () => {
+        document.body.classList.remove('sidebar-open'); // Close sidebar
         store.emit('printPreviewStateChanged', true);
     });
 
-    document.getElementById('reset-canvas-button').addEventListener('click', () => {
+    document.getElementById('reset-canvas-button')?.addEventListener('click', () => {
         if (window.confirm('Are you sure you want to reset the canvas? This will clear all your work and cannot be undone.')) {
-            // This action is defined in js/state/index.js
-            // It clears the saved state from localStorage and reloads the page.
             store.clearSavedState();
         }
     });

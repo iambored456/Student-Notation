@@ -3,9 +3,9 @@
 .filter-top-controls {
     display: flex;
     align-items: center;
-    width: calc(100% - 40px); /* Adjusted width */
-    align-self: center;
+    width: 100%;
     margin-bottom: var(--space-2);
+    flex-shrink: 0;
 }
 
 #filter-enable-toggle {
@@ -15,10 +15,7 @@
     border: 1px solid var(--c-border);
 }
 
-#filter-enable-toggle .filter-icon {
-    width: 28px;
-    height: 28px;
-}
+#filter-enable-toggle .filter-icon { width: 24px; height: 24px; }
 
 #filter-enable-toggle.active {
     background-color: var(--c-accent);
@@ -26,12 +23,19 @@
     border-color: var(--c-accent-hover);
 }
 
-#blend-slider-container {
+/* --- REVISED SLIDER TRACKS --- */
+#blend-slider-container,
+#cutoff-slider-container {
     flex-grow: 1;
     position: relative;
     height: var(--space-2);
     border-radius: var(--border-radius-sm);
-    background-color: var(--c-gridline);
+    /* NEW: Use a linear gradient for the progress fill */
+    background: linear-gradient(
+      to right, 
+      var(--c-accent) var(--progress, 0%), 
+      var(--c-gridline) var(--progress, 0%)
+    );
 }
 
 .filter-main-panel {
@@ -54,35 +58,35 @@
 }
 
 #cutoff-slider-container {
-    position: relative;
-    width: calc(100% - 40px); /* Adjusted width */
-    height: var(--space-2);
-    border-radius: var(--border-radius-sm);
-    margin-block-start: var(--space-3);
+    width: 100%;
+    margin-block-start: var(--space-2);
     align-self: flex-start;
-    background-color: var(--c-gridline);
     transition: opacity 0.2s;
+    flex-shrink: 0;
 }
 
+/* --- REVISED SLIDER THUMBS --- */
 .filter-cutoff-thumb,
 .filter-blend-thumb {
     position: absolute;
     top: 50%;
     transform: translate(-50%, -50%);
+    /* CHANGED: Matched size and font to ADSR thumbs */
     width: 20px;
     height: 20px;
+    font-size: 12px;
     background-color: var(--c-accent);
     border-radius: 50%;
     border: 2px solid var(--c-surface);
     box-shadow: var(--box-shadow-sm);
     cursor: grab;
     color: var(--c-surface);
-    font-size: 12px;
     font-weight: bold;
     display: flex;
     justify-content: center;
     align-items: center;
     user-select: none;
+    z-index: 5;
 }
 
 .filter-cutoff-thumb:active,

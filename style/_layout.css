@@ -6,79 +6,138 @@
   flex-direction: column;
   flex: 1;
   min-height: 0;
-  padding: var(--app-padding);
-  gap: var(--app-padding);
-}
-
-#top-toolbar, #controlToolbar {
-  display: flex;
-  gap: var(--space-2);
-  padding: var(--space-2);
-  border: 1px solid var(--c-border);
-  border-radius: var(--border-radius-md);
-  background-color: var(--c-surface);
-  box-shadow: var(--box-shadow-sm);
-  overflow: visible;
-  flex-shrink: 0;
-}
-
-#top-toolbar {
-  height: 18vh;
-  align-items: stretch;
-  position: relative;
-  z-index: 10;
-}
-
-#controlToolbar {
-  height: auto;
-  justify-content: flex-start;
-  align-items: center;
+  /* CHANGED: Removed padding and gap to allow direct vh control */
+  padding: 0;
+  gap: 0;
 }
 
 #middle-section { 
-  flex: 1;
+  /* CHANGED: Set explicit height to 80% of viewport height */
+  height: 80vh; 
   display: flex; 
   flex-direction: column; 
   gap: 0;
   min-height: 0;
-  overflow-x: auto; /* Revert to only horizontal scroll */
+  overflow-x: auto;
   align-items: flex-start; 
+  /* ADDED: Padding to maintain spacing around the grid */
+  padding: 0 var(--app-padding) var(--app-padding);
 }
-
 
 /* ==========================================================================
-   TOOLBAR CONTAINERS
+   NEW UNIFIED TOOLBAR
    ========================================================================= */
-
-.top-toolbar-container, .bottom-toolbar-container {
-  flex: 1;
-  border: 1px solid var(--c-border);
-  border-radius: var(--border-radius-md);
-  padding: var(--space-1);
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
+#new-toolbar {
+    /* CHANGED: Set explicit height to 20% of viewport height */
+    height: 20vh;
+    min-height: 170px;
+    display: flex;
+    gap: var(--space-2);
+    /* ADDED: Padding to maintain spacing for the inner components */
+    padding: var(--app-padding);
+    padding-bottom: 0;
+    border: none;
+    background-color: transparent;
+    box-shadow: none;
+    flex-shrink: 0;
+    margin-bottom: 0;
 }
 
-.bottom-toolbar-container {
-  border: none;
-  padding: 0;
-  flex: 0 0 auto;
+#container-1, #container-2 {
+    display: flex;
+    padding: var(--space-2);
+    border: 1px solid var(--c-border);
+    border-radius: var(--border-radius-md);
+    background-color: var(--c-gridline);
 }
 
-.export-import-container,
-.note-tools-container,
-.tonic-sign-container,
-.preset-container {
+#container-1 {
     flex: 0 0 auto;
+    gap: 0;
+    align-items: stretch;
 }
 
-.multislider-container {
-    flex: 2 1 0;
+#container-2 {
+    width: 13.5em; 
+    flex-shrink: 0;
+    flex-direction: column;
+    gap: var(--space-2);
+    justify-content: space-around;
 }
-.adsr-container {
-    flex: 1 1 auto;
+
+.tool-subcontainer {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+    align-items: center;
+    padding: var(--space-2);
+    background-color: var(--c-surface);
+    border-radius: 0;
+    border-right: 1px solid var(--c-border);
+    height: 100%;
+    justify-content: center;
+}
+
+.tool-subcontainer:last-child, .control-section:last-child {
+    border-right: none;
+}
+
+#container-3 {
+    flex: 1 1 0; 
+    display: flex;
+    border: 1px solid var(--c-border);
+    border-radius: var(--border-radius-md);
+    background-color: var(--c-surface);
+    overflow: hidden;
+    min-width: 0;
+}
+
+.tab-sidebar {
+    flex: 0 0 100px;
+    display: flex;
+    flex-direction: column;
+    background-color: var(--c-gridline);
+    border-right: 1px solid var(--c-border);
+}
+
+.tab-content {
+    flex: 1;
+    padding: var(--space-2);
+    background-color: var(--c-surface);
+    overflow: hidden;
+    min-width: 0;
+}
+
+.tab-panel { display: none; height: 100%; align-items: stretch; }
+.tab-panel.active { 
+    display: flex;
+    gap: 0;
+}
+
+.control-section {
+    flex: 1;
+    padding: var(--space-2);
+    background-color: var(--c-gridline);
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    border-radius: 0;
+    border-right: 1px solid var(--c-border);
+}
+
+.preset-container {
+    align-items: center;
+    justify-content: center;
+}
+
+.control-section h4 {
+    margin: 0 0 var(--space-2) 0;
+    color: var(--c-text-muted);
+    font-size: 0.75em;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    flex-shrink: 0;
+    width: 100%;
 }
 
 /* ==========================================================================
@@ -87,111 +146,69 @@
 #grid-container-wrapper {
   display: flex;
   flex-direction: column;
-  flex: 1; /* FIXED: Reverted to flex: 1 to fill available space */
-  min-height: 0; /* Add this to ensure flex works correctly in all browsers */
-  overflow-y: hidden;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
   border: 1px solid var(--c-border);
-  border-bottom: none;
+  border-bottom: 1px solid var(--c-border);
   border-radius: var(--border-radius-md) var(--border-radius-md) 0 0;
   position: relative;
   background-color: var(--c-surface);
 }
 
-#pitch-grid-container {
-  position: relative;
-  width: 100%;
-  flex: 1;
-  overflow: hidden;
-}
-
-#grid-container {
-  position: relative;
-  width: 100%;
-}
-
-#pitch-canvas-wrapper {
-  position: relative;
-  width: 100%;
-  background-color: transparent;
-  border: none;
-}
+#pitch-grid-container { flex: 1; position: relative; width: 100%; overflow: hidden; }
+#grid-container { position: relative; width: 100%; }
+#pitch-canvas-wrapper { position: relative; width: 100%; }
 
 #notation-grid, #playhead-canvas, #hover-canvas {
-  position: absolute;
-  top: 0;
-  left: 0;
-  display: block;
+  position: absolute; top: 0; left: 0; display: block;
 }
 
-#playhead-canvas, #hover-canvas, #drum-hover-canvas, #harmony-analysis-canvas {
+#playhead-canvas, #hover-canvas, #drum-hover-canvas {
   pointer-events: none;
 }
 
 #harmony-container {
   flex-shrink: 0;
-  /* FIXED: Set a larger, fixed height. Removed min-height and auto. */
-  height: 90px;
+  height: 45px;
   width: 100%;
   position: relative;
-  background-color: var(--c-surface);
+  background-color: var(--c-gridline);
   border-left: 1px solid var(--c-border);
   border-right: 1px solid var(--c-border);
   border-bottom: 1px solid var(--c-border);
+  border-radius: 0 0 var(--border-radius-sm) var(--border-radius-sm);
 }
 
 #harmony-analysis-canvas {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
+    position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none;
 }
 
-
 #bottom-content-wrapper {
+    flex-shrink: 0;
     display: flex;
     flex-direction: row;
     align-items: stretch;
-    flex-shrink: 0;
     min-height: 90px;
 }
 
 #drum-grid-wrapper {
   flex: 1 1 auto;
   min-height: 90px;
-  overflow-x: hidden;
-  overflow-y: hidden;
+  overflow: hidden;
   position: relative;
 }
 
 #drum-grid {
   display: block;
+  box-sizing: border-box; 
+  position: absolute; top: 0; left: 0;
   border: 1px solid var(--c-border);
   border-top: none;
   border-radius: 0 0 var(--border-radius-md) var(--border-radius-md);
-  background-color: var(--c-surface);
-  box-sizing: border-box; 
 }
 
 #drum-hover-canvas {
-  position: absolute;
-  top: 0;
-  left: 0;
-  background-color: transparent;
-  border: none;
-}
-
-#right-side-container {
-    flex: 0 0 auto;
-    border: 1px solid var(--c-border);
-    border-top: none;
-    border-radius: 0 0 var(--border-radius-md) 0;
-    background-color: var(--c-surface);
-    display: flex;
-    flex-direction: row-reverse;
-    justify-content: center;
-    align-items: center;
-    gap: var(--space-2);
-    padding: var(--space-2);
-    box-sizing: border-box;
+  box-sizing: border-box; 
+  position: absolute; top: 0; left: 0;
 }
