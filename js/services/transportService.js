@@ -106,8 +106,11 @@ function animatePlayhead() {
         const isLooping = store.state.isLooping;
         const currentTime = Tone.Transport.seconds;
         
+        // NEW LOGS FOR DEBUGGING THE STOP ISSUE
+        console.log(`[animatePlayhead] Checking stop condition: currentTime=${currentTime.toFixed(3)}, musicalDuration=${musicalDuration.toFixed(3)}, isLooping=${isLooping}`);
+        
         if (!isLooping && currentTime >= musicalDuration) {
-            console.log(`[transportService] Playback reached end (${currentTime.toFixed(2)}s >= ${musicalDuration.toFixed(2)}s). Forcing stop.`);
+            console.error(`[animatePlayhead] Playback reached end. Forcing stop.`);
             TransportService.stop();
             return; 
         }
@@ -155,11 +158,10 @@ function animatePlayhead() {
             ctx.lineTo(finalXPos, playheadCanvas.height);
             ctx.stroke();
         }
-
-        console.log(`[animatePlayhead] Transport Time: ${currentTime.toFixed(3)}s, Calculated xPos: ${finalXPos.toFixed(2)}px`);
+        
         playheadAnimationFrame = requestAnimationFrame(draw);
     }
-    draw(); // Start the loop immediately
+    draw();
 }
 
 const TransportService = {
@@ -177,41 +179,34 @@ const TransportService = {
         store.on('rhythmStructureChanged', () => this.handleStateChange());
         store.on('notesChanged', () => this.handleStateChange());
         
-        // --- *** THE CORRECTED TEMPO CHANGE LOGIC *** ---
         store.on('tempoChanged', newTempo => {
             console.log(`[transportService] EVENT: tempoChanged triggered with new value: ${newTempo} BPM`);
             
-            // Check the transport's actual state, not the store's state, to avoid race conditions.
             if (Tone.Transport.state === 'started') {
                 console.log("[transportService] Tempo changed WHILE PLAYING. Resynchronizing transport...");
 
-                // 1. Get current playback position in tempo-independent format.
                 const currentPosition = Tone.Transport.position;
                 console.log(`[transportService]   - Saved musical position: ${currentPosition}`);
                 
-                // 2. PAUSE the transport instead of stopping it. This does NOT trigger the 'stop' event.
                 Tone.Transport.pause();
                 console.log("[transportService]   - Transport paused.");
 
-                // Cancel scheduled animation frame to prevent it from drawing with stale data
                 if (playheadAnimationFrame) {
                     cancelAnimationFrame(playheadAnimationFrame);
                     playheadAnimationFrame = null;
                 }
                 
-                // 3. Set the new tempo.
                 Tone.Transport.bpm.value = newTempo;
                 console.log(`[transportService]   - New BPM set to ${Tone.Transport.bpm.value}.`);
                 
-                // 4. Reschedule all notes. This calls calculateTimeMap() internally.
                 scheduleNotes();
                 
-                // 5. Restart the transport from the saved musical position.
                 Tone.Transport.start(undefined, currentPosition);
                 console.log(`[transportService]   - Transport restarted at musical position ${currentPosition}.`);
                 
-                // 6. Restart the animation loop.
-                animatePlayhead();
+                if (!store.state.paint.isMicPaintActive) {
+                    animatePlayhead();
+                }
 
             } else {
                 console.log("[transportService] Tempo changed while stopped/paused. Updating BPM for next run.");
@@ -239,7 +234,6 @@ const TransportService = {
         if (Tone.Transport.state === 'started') {
             console.log("[transportService] handleStateChange: Notes or rhythm changed during playback. Rescheduling.");
             
-            // Re-use the same robust logic as a tempo change
             const currentPosition = Tone.Transport.position;
             Tone.Transport.pause();
             scheduleNotes();
@@ -265,7 +259,12 @@ const TransportService = {
             console.log(`[transportService] start: Transport configured. Loop: ${Tone.Transport.loop}, BPM: ${Tone.Transport.bpm.value}, StartOffset: ${anacrusisOffset}`);
             Tone.Transport.start(Tone.now(), anacrusisOffset); 
             
-            animatePlayhead();
+            if (store.state.paint.isMicPaintActive) {
+                store.emit('playbackStateChanged', { isPlaying: true, isPaused: false });
+                console.log("[transportService] Paint playhead is active, skipping regular playhead animation.");
+            } else {
+                animatePlayhead();
+            }
         });
     },
 
@@ -273,7 +272,9 @@ const TransportService = {
         console.log("[transportService] resume: Resuming playback.");
         Tone.start().then(() => {
             Tone.Transport.start();
-            animatePlayhead();
+            if (!store.state.paint.isMicPaintActive) {
+                animatePlayhead();
+            }
         });
     },
 
@@ -297,6 +298,10 @@ const TransportService = {
         if (playheadCanvas) {
             const ctx = playheadCanvas.getContext('2d');
             ctx.clearRect(0, 0, playheadCanvas.width, playheadCanvas.height);
+        }
+        
+        if (store.state.paint.isMicPaintActive) {
+            store.emit('playbackStateChanged', { isPlaying: false, isPaused: false });
         }
     }
 };

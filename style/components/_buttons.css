@@ -3,24 +3,32 @@
 /* --- Tab Buttons --- */
 .tab-button {
     padding: var(--space-2) var(--space-3);
-    border: none; background-color: transparent; color: var(--c-text-muted);
-    font-family: var(--main-font); font-size: 14px; font-weight: 500;
+    background-color: transparent; 
+    border: 1px solid transparent;
+    border-bottom-color: var(--c-border); 
+    color: var(--c-text-muted);
+    font-family: var(--main-font); font-size: 1.41em; font-weight: 500;
     cursor: pointer; text-align: left;
-    border-bottom: 1px solid var(--c-border);
     transition: all 0.2s ease; position: relative;
+    border-top-left-radius: var(--border-radius-md);
+    border-bottom-left-radius: var(--border-radius-md);
 }
 .tab-button:hover {
-    background-color: rgba(74, 144, 226, 0.1); color: var(--c-text);
+    background-color: rgba(0, 0, 0, 0.05); 
+    color: var(--c-text);
 }
 .tab-button.active {
-    background-color: var(--c-surface); color: var(--c-accent);
-    font-weight: 600; border-right: 2px solid var(--c-accent);
-    margin-right: -1px;
-}
-.tab-button.active::after {
-    content: ''; position: absolute; right: -1px;
-    top: 0; bottom: 0; width: 1px;
-    background-color: var(--c-surface);
+    background-color: var(--c-bg); /* Match content area */
+    color: var(--c-accent);
+    font-weight: 600; 
+    margin-right: -1px; /* Pull over the sidebar's left border */
+    position: relative;
+    z-index: 1; /* Ensure this tab is on top */
+    /* THE FIX: Apply borders to top, left, and bottom, but make the right border transparent */
+    border-color: var(--c-border);
+    border-right-color: transparent;
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
 }
 
 /* --- General Toolkit Buttons --- */

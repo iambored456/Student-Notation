@@ -6,13 +6,11 @@
   flex-direction: column;
   flex: 1;
   min-height: 0;
-  /* CHANGED: Removed padding and gap to allow direct vh control */
   padding: 0;
   gap: 0;
 }
 
 #middle-section { 
-  /* CHANGED: Set explicit height to 80% of viewport height */
   height: 80vh; 
   display: flex; 
   flex-direction: column; 
@@ -20,7 +18,6 @@
   min-height: 0;
   overflow-x: auto;
   align-items: flex-start; 
-  /* ADDED: Padding to maintain spacing around the grid */
   padding: 0 var(--app-padding) var(--app-padding);
 }
 
@@ -28,13 +25,11 @@
    NEW UNIFIED TOOLBAR
    ========================================================================= */
 #new-toolbar {
-    /* CHANGED: Set explicit height to 20% of viewport height */
     height: 20vh;
     min-height: 170px;
     display: flex;
-    gap: var(--space-2);
-    /* ADDED: Padding to maintain spacing for the inner components */
-    padding: var(--app-padding);
+    gap: var(--space-1);
+    padding: 0.4em;
     padding-bottom: 0;
     border: none;
     background-color: transparent;
@@ -43,21 +38,22 @@
     margin-bottom: 0;
 }
 
-#container-1, #container-2 {
+#container-1, #container-2, #container-3 {
     display: flex;
-    padding: var(--space-2);
     border: 1px solid var(--c-border);
     border-radius: var(--border-radius-md);
-    background-color: var(--c-gridline);
+    background-color: var(--c-bg); /* Lighter off-white for all containers */
 }
 
 #container-1 {
-    flex: 0 0 auto;
+    padding:0.5em;
+    flex: 0 0 0;
     gap: 0;
     align-items: stretch;
 }
 
 #container-2 {
+    padding: var(--space-2);
     width: 13.5em; 
     flex-shrink: 0;
     flex-direction: column;
@@ -71,7 +67,7 @@
     gap: var(--space-1);
     align-items: center;
     padding: var(--space-2);
-    background-color: var(--c-surface);
+    background-color: transparent;
     border-radius: 0;
     border-right: 1px solid var(--c-border);
     height: 100%;
@@ -84,12 +80,9 @@
 
 #container-3 {
     flex: 1 1 0; 
-    display: flex;
-    border: 1px solid var(--c-border);
-    border-radius: var(--border-radius-md);
-    background-color: var(--c-surface);
     overflow: hidden;
     min-width: 0;
+    padding: 0; 
 }
 
 .tab-sidebar {
@@ -102,8 +95,8 @@
 
 .tab-content {
     flex: 1;
-    padding: var(--space-2);
-    background-color: var(--c-surface);
+    padding: 0.1em;
+    background-color: var(--c-bg);
     overflow: hidden;
     min-width: 0;
 }
@@ -111,18 +104,18 @@
 .tab-panel { display: none; height: 100%; align-items: stretch; }
 .tab-panel.active { 
     display: flex;
-    gap: 0;
+    gap: var(--space-2);
 }
 
 .control-section {
     flex: 1;
-    padding: var(--space-2);
-    background-color: var(--c-gridline);
+    padding: 0.2em;
+    background-color: transparent;
+    border-right: none;
     display: flex;
     flex-direction: column;
     min-width: 0;
     border-radius: 0;
-    border-right: 1px solid var(--c-border);
 }
 
 .preset-container {
@@ -131,9 +124,9 @@
 }
 
 .control-section h4 {
-    margin: 0 0 var(--space-2) 0;
+    margin: 0 0 var(--space-1) 0;
     color: var(--c-text-muted);
-    font-size: 0.75em;
+    font-size: 0.9em;
     text-transform: uppercase;
     letter-spacing: 0.5px;
     flex-shrink: 0;

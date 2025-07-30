@@ -1,6 +1,7 @@
 // js/state/initialState/index.js
 import { getInitialRhythmState } from './rhythm.js';
 import { getInitialTimbresState } from './timbres.js';
+import { getInitialPaintState } from './paintState.js';
 
 export const initialState = {
     // --- Data & History ---
@@ -17,13 +18,15 @@ export const initialState = {
     // --- Timbres & Colors ---
     ...getInitialTimbresState(),
 
+    // --- NEW: Paint State ---
+    paint: getInitialPaintState(),
+
     // --- UI & View State ---
     selectedTool: 'note', 
     selectedNote: { shape: 'circle', color: '#4a90e2' },
     activeChordId: null,
     activeChordIntervals: ["1P", "3M", "5P"],
     
-    // --- NEW: State for the Chord Candidate Menu ---
     isChordCandidateMenuOpen: false,
     chordCandidateMenuPosition: { x: 0, y: 0 },
     activeMacrobeatIndex: null,

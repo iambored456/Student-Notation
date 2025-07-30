@@ -12,12 +12,26 @@ export const defaultColorPalette = {
 };
 
 export function getInitialTimbresState() {
+    // Helper function to generate a clean sine wave timbre object
+    const createSineTimbre = (name) => ({
+        name: name,
+        adsr: { attack: 0.1, decay: 0.2, sustain: 0.8, release: 0.3 },
+        coeffs: (() => {
+            const c = new Float32Array(32).fill(0);
+            c[1] = 1; // Only the fundamental harmonic
+            return c;
+        })(),
+        activePresetName: 'sine',
+        filter: createDefaultFilterState()
+    });
+
     return {
         timbres: {
-            '#4a90e2': { name: 'Blue', adsr: { attack: 0.1, decay: 0.2, sustain: 0.8, release: 0.3 }, coeffs: (() => { const c = new Float32Array(32).fill(0); c[1] = 1; return c; })(), activePresetName: 'sine', filter: createDefaultFilterState() },
-            '#2d2d2d': { name: 'Black', adsr: { attack: 0.1, decay: 0.2, sustain: 0.8, release: 0.3 }, coeffs: (() => { const c = new Float32Array(32).fill(0); for (let n = 1; n < 32; n += 2) { c[n] = 1 / n; } return c; })(), activePresetName: 'square', filter: createDefaultFilterState() },
-            '#d66573': { name: 'Red', adsr: { attack: 0.01, decay: 0.8, sustain: 0.1, release: 0.5 }, coeffs: (() => { const c = new Float32Array(32).fill(0); for (let n = 1; n < 32; n++) { c[n] = 1 / n; } return c; })(), activePresetName: 'sawtooth', filter: createDefaultFilterState() },
-            '#68a03f': { name: 'Green', adsr: { attack: 0.01, decay: 0.8, sustain: 0.1, release: 0.5 }, coeffs: (() => { const c = new Float32Array(32).fill(0); c[1] = 1; return c; })(), activePresetName: 'sine', filter: createDefaultFilterState() }
+            // All four colors now default to a sine wave
+            '#4a90e2': createSineTimbre('Blue'),
+            '#2d2d2d': createSineTimbre('Black'),
+            '#d66573': createSineTimbre('Red'),
+            '#68a03f': createSineTimbre('Green')
         },
         colorPalette: defaultColorPalette
     };

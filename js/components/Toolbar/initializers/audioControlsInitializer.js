@@ -38,8 +38,11 @@ export function initAudioControls() {
         const preset = PRESETS[presetId];
         if (preset) {
             button.addEventListener('click', () => {
-                const currentColor = store.state.selectedTool.color;
-                if (currentColor) store.applyPreset(currentColor, preset);
+                // THE FIX: Get the current color from the selectedNOTE, not the selectedTOOL.
+                const currentColor = store.state.selectedNote.color;
+                if (currentColor) {
+                    store.applyPreset(currentColor, preset);
+                }
             });
         }
     });
@@ -54,22 +57,26 @@ export function initAudioControls() {
         presetContainer.style.setProperty('--c-accent', color);
     };
     
-    store.on('toolChanged', ({ newTool }) => {
-        if (newTool.color) {
-            updatePresetSelection(newTool.color);
+    // THE FIX: Listen for 'noteChanged' to update the UI when the color changes.
+    store.on('noteChanged', ({ newNote }) => {
+        if (newNote.color) {
+            updatePresetSelection(newNote.color);
         } else {
+            // Handle cases where there might not be a color (e.g. eraser tool selected)
             document.querySelectorAll('.preset-button').forEach(btn => btn.classList.remove('selected'));
-            if(presetContainer) presetContainer.style.setProperty('--c-accent', '#4A90E2');
+            if(presetContainer) presetContainer.style.setProperty('--c-accent', '#4A90E2'); // Reset to default
         }
     });
 
+    // THE FIX: Listen for 'timbreChanged' and check against the correct state property.
     store.on('timbreChanged', (color) => {
-        if (color === store.state.selectedTool.color) {
+        if (color === store.state.selectedNote.color) {
             updatePresetSelection(color);
         }
     });
     
-    const initialColor = store.state.selectedTool.color;
+    // THE FIX: Get the initial color from the correct state property on load.
+    const initialColor = store.state.selectedNote.color;
     if (initialColor) {
         updatePresetSelection(initialColor);
     }

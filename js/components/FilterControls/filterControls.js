@@ -78,6 +78,8 @@ export function initFilterControls() {
     }
     
     enableToggle.addEventListener('click', () => {
+        // Guard against clicks when no color is selected.
+        if (!currentColor) return;
         const isEnabled = !store.state.timbres[currentColor].filter.enabled;
         store.setFilterSettings(currentColor, { enabled: isEnabled });
         store.recordState();
@@ -115,9 +117,10 @@ export function initFilterControls() {
         window.addEventListener('mouseup', onUp);
     });
 
-    store.on('toolChanged', ({ newTool }) => {
-        if (newTool.color && newTool.color !== currentColor) {
-            currentColor = newTool.color;
+    // THE FIX: Listen to 'noteChanged' to get color updates.
+    store.on('noteChanged', ({ newNote }) => {
+        if (newNote.color && newNote.color !== currentColor) {
+            currentColor = newNote.color;
             updateFromStore();
         }
     });
@@ -128,7 +131,8 @@ export function initFilterControls() {
         }
     });
 
-    currentColor = store.state.selectedTool.color;
+    // THE FIX: Get the initial color from the correct state property.
+    currentColor = store.state.selectedNote.color;
     updateFromStore();
 
     console.log("FilterControls: Initialized.");

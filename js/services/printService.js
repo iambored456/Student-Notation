@@ -1,14 +1,44 @@
 // js/services/printService.js
-import store from '../state/index.js'; // <-- UPDATED PATH
-import { getPlacedTonicSigns } from '../state/selectors.js'; // <-- ADDED SELECTOR
+import store from '../state/index.js';
+import { getPlacedTonicSigns } from '../state/selectors.js';
 import { drawPitchGrid } from '../components/Grid/renderers/pitchGridRenderer.js';
 import { drawDrumGrid } from '../components/Grid/renderers/drumGridRenderer.js';
 
 console.log("PrintService: Module loaded.");
 
+// NEW HELPER FUNCTION FOR RENDERING PAINT TRAILS
+function renderPaintTrails(ctx, paintHistory, options) {
+    if (paintHistory.length < 2) return;
+    
+    ctx.globalAlpha = options.opacity;
+    
+    for (let i = 1; i < paintHistory.length; i++) {
+        const prevPoint = paintHistory[i - 1];
+        const currentPoint = paintHistory[i];
+        
+        if (currentPoint.timestamp - prevPoint.timestamp > 200) continue;
+        
+        const gradient = ctx.createLinearGradient(prevPoint.x, prevPoint.y, currentPoint.x, currentPoint.y);
+        gradient.addColorStop(0, `rgb(${prevPoint.color.join(',')})`);
+        gradient.addColorStop(1, `rgb(${currentPoint.color.join(',')})`);
+        
+        ctx.strokeStyle = gradient;
+        ctx.lineWidth = (prevPoint.thickness + currentPoint.thickness) / 2;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        
+        ctx.beginPath();
+        ctx.moveTo(prevPoint.x, prevPoint.y);
+        ctx.lineTo(currentPoint.x, currentPoint.y);
+        ctx.stroke();
+    }
+    
+    ctx.globalAlpha = 1.0;
+}
+
 function generateScoreCanvas(printOptions, targetDimensions) {
     const mainState = store.state;
-    const placedTonicSigns = getPlacedTonicSigns(store.state); // <-- UPDATED GETTER
+    const placedTonicSigns = getPlacedTonicSigns(store.state);
     
     const croppedRowData = mainState.fullRowData.slice(printOptions.topRow, printOptions.bottomRow + 1);
     
@@ -24,18 +54,16 @@ function generateScoreCanvas(printOptions, targetDimensions) {
         drumNotes = toBlack(drumNotes);
     }
     
-    // --- REFACTORED SCALING LOGIC ---
     const totalWidthUnits = mainState.columnWidths.reduce((sum, w) => sum + w, 0);
-    const baseCellWidth = 50; // Use a high-res base for sharp rendering
+    const baseCellWidth = 50;
     const baseCellHeight = baseCellWidth * 2;
 
     const contentWidth = totalWidthUnits * baseCellWidth;
     const pitchGridHeight = (croppedRowData.length / 2) * baseCellHeight;
     const drumGridHeight = printOptions.includeDrums ? (3 * 0.5 * baseCellHeight) : 0;
-    const DRUM_SPACING = drumGridHeight > 0 ? 30 : 0; // Spacing in base units
+    const DRUM_SPACING = drumGridHeight > 0 ? 30 : 0;
     const contentHeight = pitchGridHeight + DRUM_SPACING + drumGridHeight;
 
-    // Determine the scale to fit the content within the target dimensions
     const scale = Math.min(targetDimensions.width / contentWidth, targetDimensions.height / contentHeight);
 
     const finalCanvas = document.createElement('canvas');
@@ -47,7 +75,6 @@ function generateScoreCanvas(printOptions, targetDimensions) {
     ctx.fillStyle = '#FFF';
     ctx.fillRect(0, 0, contentWidth, contentHeight);
 
-    // Render Pitch Grid
     const pitchRenderOptions = {
         placedNotes: pitchNotes,
         placedTonicSigns: placedTonicSigns, 
@@ -65,7 +92,36 @@ function generateScoreCanvas(printOptions, targetDimensions) {
     drawPitchGrid(pitchCanvas.getContext('2d'), pitchRenderOptions);
     ctx.drawImage(pitchCanvas, 0, 0);
 
-    // Render Drum Grid
+    // MODIFICATION: Render Paint Layer
+    if (mainState.paint && mainState.paint.paintHistory.length > 0) {
+        console.log(`[PrintService] Found ${mainState.paint.paintHistory.length} paint points to print.`);
+        
+        const paintCanvasForPrint = document.createElement('canvas');
+        paintCanvasForPrint.width = contentWidth;
+        paintCanvasForPrint.height = pitchGridHeight;
+        const paintCtx = paintCanvasForPrint.getContext('2d');
+        
+        const onScreenPitchCanvas = document.getElementById('notation-grid');
+        const scaleX = contentWidth / onScreenPitchCanvas.width;
+        const scaleY = pitchGridHeight / (onScreenPitchCanvas.height * (croppedRowData.length / mainState.fullRowData.length));
+        
+        const yOffset = printOptions.topRow * (baseCellHeight / 2);
+
+        const transformedPaintHistory = mainState.paint.paintHistory.map(p => ({
+            ...p,
+            x: p.x * scaleX,
+            y: (p.y * scaleY) - yOffset,
+            thickness: p.thickness * Math.min(scaleX, scaleY)
+        }));
+        
+        renderPaintTrails(paintCtx, transformedPaintHistory, {
+            opacity: mainState.paint.paintSettings.opacity / 100
+        });
+        
+        ctx.drawImage(paintCanvasForPrint, 0, 0);
+        console.log('[PrintService] Paint trail has been rendered for printing.');
+    }
+
     if (printOptions.includeDrums) {
         const drumRenderOptions = {
             placedNotes: drumNotes,

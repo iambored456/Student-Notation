@@ -8,7 +8,8 @@
 }
 
 .multislider-container .buffer-container {
-  width: 100%;
+  flex-grow: 1; /* Make it fill the available horizontal space */
+  min-width: 0; /* A good practice to prevent flex item overflow */
   height: 100%;
   padding: 0;
   margin: 0;

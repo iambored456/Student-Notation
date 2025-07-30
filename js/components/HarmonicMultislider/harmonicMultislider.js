@@ -49,15 +49,21 @@ function getFilterAmplitudeAt(norm_pos, filterSettings) {
 function draw() {
     if (!ctx || !overlayCtx) return;
     const { width, height } = ctx.canvas;
+
+    if (width === 0 || height === 0) return;
+    
     const barW = (width - (BINS + 1) * 4) / BINS;
     const gap = 4;
     const maxBarHeight = height * 0.95;
     const barColor = shadeHexColor(currentColor, -0.1);
-    const filterSettings = store.state.timbres[currentColor]?.filter;
-
-    ctx.clearRect(0, 0, width, height);
+    
+    // Clear overlay canvas
     overlayCtx.clearRect(0, 0, width, height);
-    if (!filterSettings) return;
+
+    // THE FIX: Clear main canvas and fill with white
+    ctx.fillStyle = '#FFFFFF'; // --c-surface
+    ctx.fillRect(0, 0, width, height);
+
 
     coeffs.forEach((c, i) => {
         if (i === 0) return;
@@ -67,7 +73,8 @@ function draw() {
         ctx.fillRect(x, height - barHeight, barW, barHeight);
     });
 
-    if (filterSettings.enabled) {
+    const filterSettings = store.state.timbres[currentColor]?.filter;
+    if (filterSettings && filterSettings.enabled) {
         overlayCtx.beginPath();
         const step = 2;
         for (let x = 0; x <= width; x += step) {
@@ -94,6 +101,7 @@ function draw() {
 function sizeCanvas() {
     if (!bufferContainer || !canvas || !overlayCanvas) return;
     const { clientWidth, clientHeight } = bufferContainer;
+
     if (canvas.width !== clientWidth || canvas.height !== clientHeight) {
         canvas.width = clientWidth;
         canvas.height = clientHeight;
@@ -125,7 +133,7 @@ function updateForNewColor(color) {
     currentColor = color;
     const timbre = store.state.timbres[color];
     if (timbre) {
-        coeffs = timbre.coeffs;
+        coeffs = new Float32Array(timbre.coeffs);
         draw();
     }
 }
@@ -136,10 +144,10 @@ export function initHarmonicMultislider() {
     overlayCanvas = document.getElementById('filter-overlay-canvas');
 
     if (!canvas || !bufferContainer || !overlayCanvas) return;
+
     ctx = canvas.getContext('2d');
     overlayCtx = overlayCanvas.getContext('2d');
     
-    // THE FIX: Always get color from selectedNote
     currentColor = store.state.selectedNote.color;
     updateForNewColor(currentColor);
 
@@ -158,12 +166,11 @@ export function initHarmonicMultislider() {
 
     store.on('timbreChanged', (color) => {
         if (color === currentColor) {
-            coeffs = store.state.timbres[color].coeffs;
+            coeffs = new Float32Array(store.state.timbres[color].coeffs);
             draw();
         }
     });
 
-    // THE FIX: Listen for 'noteChanged' instead of 'toolChanged'
     store.on('noteChanged', ({ newNote }) => {
         if (newNote.color && newNote.color !== currentColor) {
             updateForNewColor(newNote.color);
@@ -173,5 +180,5 @@ export function initHarmonicMultislider() {
     new ResizeObserver(sizeCanvas).observe(bufferContainer);
     sizeCanvas();
 
-    console.log("HarmonicMultislider: Initialized with filter overlay.");
+    console.log("HarmonicMultislider: Initialized.");
 }

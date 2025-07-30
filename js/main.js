@@ -16,7 +16,11 @@ import { initHarmonicMultislider } from './components/HarmonicMultislider/harmon
 import { initAdsrComponent } from './components/ADSR/adsrComponent.js';
 import { initFilterControls } from './components/FilterControls/filterControls.js';
 import PrintPreview from './components/PrintPreview.js';
-// REMOVED: The old harmony toolbar initializer is no longer needed.
+// ADD NEW IMPORTS
+import PaintCanvas from './components/PitchPaint/paintCanvas.js';
+import PaintPlayheadRenderer from './components/PitchPaint/paintPlayheadRenderer.js';
+import PaintControls from './components/PitchPaint/paintControls.js';
+
 
 console.log("Main.js: Application starting...");
 
@@ -55,6 +59,13 @@ document.addEventListener("DOMContentLoaded", () => {
     initHarmonicMultislider();
     initFilterControls();
     PrintPreview.init();
+
+    // ADD NEW INITIALIZATIONS
+    console.log("Main.js: Initializing Paint components...");
+    PaintCanvas.initialize();
+    PaintPlayheadRenderer.initialize();
+    PaintControls.initialize();
+    console.log("Main.js: Paint components initialized.");
     
     console.log("----------------------------------------");
     console.log("SETTING UP STATE SUBSCRIPTIONS");
@@ -85,7 +96,8 @@ document.addEventListener("DOMContentLoaded", () => {
     console.log("PERFORMING INITIAL RENDER");
     console.log("========================================");
     
-    store.setSelectedTool('circle', '#4a90e2');
+    store.setSelectedTool('note');
+    store.setSelectedNote('circle', '#4a90e2');
     
     console.log("========================================");
     console.log("INITIALIZATION COMPLETE");

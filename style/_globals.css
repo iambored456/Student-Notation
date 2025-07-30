@@ -19,7 +19,8 @@ html, body {
   width: 100%;
   overflow: hidden; /* Prevent body-level scrolling */
   font-family: var(--main-font);
-  background-color: var(--c-bg);
+  /* THE FIX: Changed to the darker gray for the app's main background */
+  background-color: var(--c-gridline);
   color: var(--c-text);
   display: flex; /* UPDATED: Use flexbox for the root layout */
 }
