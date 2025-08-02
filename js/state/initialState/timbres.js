@@ -11,19 +11,35 @@ export const defaultColorPalette = {
     '#2d2d2d': { primary: '#2d2d2d', light: '#424242' }
 };
 
+import { HARMONIC_BINS } from '../../constants.js';
+
 export function getInitialTimbresState() {
-    // Helper function to generate a clean sine wave timbre object
-    const createSineTimbre = (name) => ({
-        name: name,
-        adsr: { attack: 0.1, decay: 0.2, sustain: 0.8, release: 0.3 },
-        coeffs: (() => {
-            const c = new Float32Array(32).fill(0);
-            c[1] = 1; // Only the fundamental harmonic
-            return c;
-        })(),
-        activePresetName: 'sine',
-        filter: createDefaultFilterState()
-    });
+    /**
+     * Helper function to generate a default sine timbre.  Each timbre
+     * contains an ADSR envelope, an array of harmonic amplitudes
+     * (`coeffs`) and an array of harmonic phase offsets (`phases`).
+     * The length of these arrays is dictated by `HARMONIC_BINS`.
+     *
+     * The first index (0) represents the fundamental (F0) amplitude and
+     * phase.  Subsequent indices (1…HARMONIC_BINS-1) correspond to
+     * harmonics H1, H2, etc.  For a pure sine, the fundamental has
+     * amplitude 1 and zero phase; all other harmonics are silent.
+     */
+    const createSineTimbre = (name) => {
+        // Initialize amplitude and phase arrays
+        const coeffs = new Float32Array(HARMONIC_BINS).fill(0);
+        const phases = new Float32Array(HARMONIC_BINS).fill(0);
+        // Set fundamental amplitude to 1
+        coeffs[0] = 1;
+        return {
+            name: name,
+            adsr: { attack: 0.1, decay: 0.2, sustain: 0.8, release: 0.3 },
+            coeffs,
+            phases,
+            activePresetName: 'sine',
+            filter: createDefaultFilterState(),
+        };
+    };
 
     return {
         timbres: {

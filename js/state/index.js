@@ -22,13 +22,19 @@ function loadStateFromLocalStorage() {
         if (parsedState.timbres) {
             for (const color in parsedState.timbres) {
                 const timbre = parsedState.timbres[color];
+                // Convert harmonic amplitude arrays back to Float32Array
                 if (timbre.coeffs && typeof timbre.coeffs === 'object') {
                     const values = Array.isArray(timbre.coeffs) ? timbre.coeffs : Object.values(timbre.coeffs);
                     timbre.coeffs = new Float32Array(values);
                 }
+                // Convert harmonic phase arrays back to Float32Array
+                if (timbre.phases && typeof timbre.phases === 'object') {
+                    const values = Array.isArray(timbre.phases) ? timbre.phases : Object.values(timbre.phases);
+                    timbre.phases = new Float32Array(values);
+                }
             }
         }
-        
+
         if (parsedState.paint) {
             // Merge paint state safely
             const initialPaintState = initialState.paint || {};
@@ -75,6 +81,9 @@ function saveStateToLocalStorage(state) {
             for (const color in state.timbres) {
                 if (state.timbres[color].coeffs && stateToPersist.timbres[color]) {
                     stateToPersist.timbres[color].coeffs = Array.from(state.timbres[color].coeffs);
+                }
+                if (state.timbres[color].phases && stateToPersist.timbres[color]) {
+                    stateToPersist.timbres[color].phases = Array.from(state.timbres[color].phases);
                 }
             }
         }

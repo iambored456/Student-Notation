@@ -8,6 +8,7 @@ console.log("SynthEngine: Module loaded");
 let synths = {};
 let volumeControl;
 let limiter; // Add a limiter to the master output
+let waveformAnalyzers = {}; // Store analyzers for waveform visualization
 
 // A custom synth voice with a more sophisticated series/parallel filter blend
 class FilteredVoice extends Tone.Synth {
@@ -172,7 +173,7 @@ const SynthEngine = {
 
     async playNote(pitch, duration, time = Tone.now()) {
         await Tone.start();
-        const color = store.state.selectedTool.color;
+        const color = store.state.selectedNote.color;
         const synth = synths[color];
         if (synth) {
             synth.triggerAttackRelease(pitch, duration, time);
@@ -197,6 +198,101 @@ const SynthEngine = {
         for (const color in synths) {
             synths[color].releaseAll();
         }
+    },
+
+    // ===============================================
+    // WAVEFORM VISUALIZATION METHODS
+    // ===============================================
+
+    /**
+     * Creates a waveform analyzer for a specific color/synth
+     * @param {string} color - The color key for the synth
+     * @returns {Tone.Analyser} The analyser node
+     */
+    createWaveformAnalyzer(color) {
+        const synth = synths[color];
+        if (!synth) {
+            console.warn(`[SynthEngine] No synth found for color: ${color}`);
+            return null;
+        }
+
+        // Create analyzer if it doesn't exist
+        if (!waveformAnalyzers[color]) {
+            waveformAnalyzers[color] = new Tone.Analyser('waveform', 1024);
+            
+            // Connect the synth output to the analyzer (before it goes to volume control)
+            // We need to tap into the synth's output without affecting the audio routing
+            synth.connect(waveformAnalyzers[color]);
+            
+            console.log(`[SynthEngine] Created waveform analyzer for color: ${color}`);
+        }
+
+        return waveformAnalyzers[color];
+    },
+
+    /**
+     * Gets the waveform analyzer for a specific color
+     * @param {string} color - The color key
+     * @returns {Tone.Analyser|null} The analyser node or null if not found
+     */
+    getWaveformAnalyzer(color) {
+        return waveformAnalyzers[color] || null;
+    },
+
+    /**
+     * Gets all active waveform analyzers
+     * @returns {Map<string, Tone.Analyser>} Map of color to analyzer
+     */
+    getAllWaveformAnalyzers() {
+        const activeAnalyzers = new Map();
+        for (const color in waveformAnalyzers) {
+            if (waveformAnalyzers[color]) {
+                activeAnalyzers.set(color, waveformAnalyzers[color]);
+            }
+        }
+        return activeAnalyzers;
+    },
+
+    /**
+     * Removes a waveform analyzer for a specific color
+     * @param {string} color - The color key
+     */
+    removeWaveformAnalyzer(color) {
+        if (waveformAnalyzers[color]) {
+            waveformAnalyzers[color].dispose();
+            delete waveformAnalyzers[color];
+            console.log(`[SynthEngine] Removed waveform analyzer for color: ${color}`);
+        }
+    },
+
+    /**
+     * Cleans up all waveform analyzers
+     */
+    disposeAllWaveformAnalyzers() {
+        for (const color in waveformAnalyzers) {
+            if (waveformAnalyzers[color]) {
+                waveformAnalyzers[color].dispose();
+            }
+        }
+        waveformAnalyzers = {};
+        console.log("[SynthEngine] Disposed all waveform analyzers");
+    },
+
+    /**
+     * Gets the synth instance for a specific color (for advanced integrations)
+     * @param {string} color - The color key
+     * @returns {Tone.PolySynth|null} The synth instance or null if not found
+     */
+    getSynth(color) {
+        return synths[color] || null;
+    },
+
+    /**
+     * Gets all synth instances
+     * @returns {object} Object mapping colors to synth instances
+     */
+    getAllSynths() {
+        return { ...synths };
     }
 };
 

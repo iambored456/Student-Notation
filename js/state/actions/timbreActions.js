@@ -32,6 +32,21 @@ export const timbreActions = {
         }
     },
 
+    /**
+     * Update the harmonic phase offsets for a given timbre.  The phases array
+     * should be a Float32Array whose length matches the number of harmonic
+     * bins.  Each value represents the phase of the corresponding harmonic
+     * (in radians).  Changing the phase offsets will trigger a timbre
+     * update event so that the synthesizer can rebuild its periodic wave.
+     */
+    setHarmonicPhases(color, phases) {
+        if (this.state.timbres[color]) {
+            this.state.timbres[color].phases = phases;
+            this.state.timbres[color].activePresetName = null;
+            this.emit('timbreChanged', color);
+        }
+    },
+
     applyPreset(color, preset) {
         if (!preset || !this.state.timbres[color]) return;
         this.state.timbres[color].adsr = preset.adsr;
