@@ -106,17 +106,25 @@ function drawGhostNote(colIndex, rowIndex, isFaint = false) {
 }
 
 // --- Event Handlers ---
+// js/components/Grid/interactors/pitchGridInteractor.js (partial fix)
+// This shows the corrected handleMouseDown function
+
 function handleMouseDown(e) {
     const rect = e.target.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
     const colIndex = GridCoordsService.getColumnIndex(x);
     const rowIndex = GridCoordsService.getPitchRowIndex(y);
+    
+    // Debug logging
+    console.log(`[PitchGridInteractor] Mouse down at col: ${colIndex}, row: ${rowIndex}`);
+    
     if (colIndex < 2 || colIndex >= store.state.columnWidths.length - 2 || !getPitchForRow(rowIndex)) return;
 
     if (e.button === 2) {
         e.preventDefault();
-        isRightClickActive = true; rightClickActionTaken = false; 
+        isRightClickActive = true; 
+        rightClickActionTaken = false; 
         if (store.state.selectedTool !== 'eraser') {
             previousTool = store.state.selectedTool;
             store.setSelectedTool('eraser');
@@ -141,10 +149,10 @@ function handleMouseDown(e) {
                 const noteRow = store.state.fullRowData.findIndex(r => r.toneNote === noteName);
                 if (noteRow !== -1) {
                     const newNote = { row: noteRow, startColumnIndex: colIndex, endColumnIndex: colIndex, color, shape, isDrum: false };
-                    store.addNote(newNote); // Call the simplified addNote
+                    store.addNote(newNote);
                 }
             });
-            store.recordState(); // Record state once after all notes are added
+            store.recordState();
             return;
         }
         
@@ -152,7 +160,8 @@ function handleMouseDown(e) {
             if (lastHoveredTonicPoint && lastHoveredOctaveRows.length > 0) {
                 const newTonicGroup = lastHoveredOctaveRows.map(rowIdx => ({ row: rowIdx, tonicNumber: store.state.selectedToolTonicNumber, preMacrobeatIndex: lastHoveredTonicPoint.preMacrobeatIndex }));
                 store.addTonicSignGroup(newTonicGroup);
-                lastHoveredTonicPoint = null; lastHoveredOctaveRows = [];
+                lastHoveredTonicPoint = null; 
+                lastHoveredOctaveRows = [];
             }
             return;
         }
@@ -164,12 +173,28 @@ function handleMouseDown(e) {
         
         if (toolType === 'note') {
             const { shape, color } = store.state.selectedNote;
-            const newNote = { row: rowIndex, startColumnIndex: colIndex, endColumnIndex: colIndex, color, shape, isDrum: false };
+            
+            // Debug logging
+            console.log(`[PitchGridInteractor] Creating note with shape: ${shape}, color: ${color}`);
+            
+            const newNote = { 
+                row: rowIndex, 
+                startColumnIndex: colIndex, 
+                endColumnIndex: colIndex, 
+                color, 
+                shape, 
+                isDrum: false 
+            };
+            
             const addedNote = store.addNote(newNote); 
             activeNote = addedNote;
+            
+            // For circle notes, enable dragging to extend the duration
             isDragging = (shape === 'circle');
 
-            if (!isDragging) store.recordState(); // Record history for single-click ovals
+            if (!isDragging) {
+                store.recordState(); // Record history for single-click ovals
+            }
 
             const pitch = getPitchForRow(rowIndex);
             if (pitch) {
@@ -177,6 +202,9 @@ function handleMouseDown(e) {
                 const pitchColor = store.state.fullRowData[rowIndex]?.hex || '#888888';
                 GlobalService.adsrComponent?.playheadManager.trigger(activeNote.uuid, 'attack', pitchColor, store.state.timbres[activeNote.color].adsr);
             }
+            
+            // Debug logging
+            console.log(`[PitchGridInteractor] Note added:`, addedNote);
         }
     }
 }

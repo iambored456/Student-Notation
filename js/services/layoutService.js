@@ -43,18 +43,17 @@ function recalcAndApplyLayout() {
         return;
     }
 
-    // --- ADD LOGS HERE ---
     console.log(`[LayoutService] recalcAndApplyLayout triggered. pitchGridWrapper.clientHeight: ${pitchGridWrapper.clientHeight}`);
 
     viewportHeight = pitchGridWrapper.clientHeight;
     const viewportWidth = pitchGridWrapper.clientWidth;
 
-    store.state.cellHeight = (viewportHeight / DEFAULT_VISIBLE_SEMITONES) * 2;
+    // FIXED: Apply zoom level to the cell dimensions
+    const baseHeight = (viewportHeight / DEFAULT_VISIBLE_SEMITONES) * 2;
+    store.state.cellHeight = baseHeight * currentZoomLevel;
     store.state.cellWidth = store.state.cellHeight * 0.5;
 
-    // --- AND HERE ---
-    console.log(`[LayoutService] Calculated Dimensions -> viewportHeight: ${viewportHeight}, cellHeight: ${store.state.cellHeight}, cellWidth: ${store.state.cellWidth}`);
-
+    console.log(`[LayoutService] Calculated Dimensions -> viewportHeight: ${viewportHeight}, cellHeight: ${store.state.cellHeight}, cellWidth: ${store.state.cellWidth}, zoomLevel: ${currentZoomLevel}`);
 
     const { macrobeatGroupings } = store.state;
     const placedTonicSigns = getPlacedTonicSigns(store.state);
@@ -134,6 +133,11 @@ const LayoutService = {
         recalcAndApplyLayout();
     },
     
+    resetZoom() {
+        currentZoomLevel = 1.0;
+        recalcAndApplyLayout();
+    },
+    
     scroll(deltaY) {
         const scrollAmount = (deltaY / viewportHeight);
         currentScrollPosition = Math.max(0, Math.min(1, currentScrollPosition + scrollAmount));
@@ -158,10 +162,9 @@ const LayoutService = {
             rowHeight: rowHeight,
             startRow: startRow,
             endRow: endRow,
-            scrollOffset: scrollOffset // THE FIX: Use this precise value
+            scrollOffset: scrollOffset
         };
 
-        // --- ADD LOG HERE ---
         console.log('[LayoutService] getViewportInfo returning:', info);
 
         return info;

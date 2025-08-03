@@ -12,6 +12,9 @@ export function drawPitchGrid(ctx, options) {
     // 1. Get the range of rows that are actually visible
     const { startRow, endRow } = getVisibleRowRange();
     
+    console.log(`[drawPitchGrid] Rendering rows ${startRow} to ${endRow}`);
+    console.log(`[drawPitchGrid] Total notes to check: ${options.placedNotes.length}`);
+    
     // 2. Pass the visible range to the renderers that draw row-based elements
     drawLegends(ctx, fullOptions, startRow, endRow);
     drawHorizontalLines(ctx, fullOptions, startRow, endRow);
@@ -26,17 +29,27 @@ export function drawPitchGrid(ctx, options) {
         sign.row >= startRow && sign.row <= endRow
     );
 
+    console.log(`[drawPitchGrid] Visible notes to draw: ${visibleNotes.length}`);
+    
+    // Draw each visible note
     visibleNotes.forEach(note => {
+        console.log(`[drawPitchGrid] Drawing note: shape=${note.shape}, row=${note.row}, col=${note.startColumnIndex}, color=${note.color}`);
+        
         // The note drawing functions use getRowY, so they will automatically
         // draw in the correct virtualized position.
         if (note.shape === 'oval') {
             drawSingleColumnOvalNote(ctx, fullOptions, note, note.row);
-        } else {
+        } else if (note.shape === 'circle') {
             drawTwoColumnOvalNote(ctx, fullOptions, note, note.row);
+        } else {
+            console.warn(`[drawPitchGrid] Unknown note shape: ${note.shape}`);
         }
     });
 
+    // Draw tonic signs
     visibleTonicSigns.forEach(sign => {
         drawTonicShape(ctx, fullOptions, sign);
     });
+    
+    console.log(`[drawPitchGrid] Finished rendering`);
 }

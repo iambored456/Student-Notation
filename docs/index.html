@@ -10,8 +10,8 @@
 <link rel="manifest" href="/Student-Notation/site.webmanifest" />
 <meta name="theme-color" content="#ffffff" />
 <style id="print-style-rules"></style>
-  <script type="module" crossorigin src="/Student-Notation/assets/index-DRZ21OPd.js"></script>
-  <link rel="stylesheet" crossorigin href="/Student-Notation/assets/index-BhRoZLSo.css">
+  <script type="module" crossorigin src="/Student-Notation/assets/index-CxJqwg-O.js"></script>
+  <link rel="stylesheet" crossorigin href="/Student-Notation/assets/index-B3hxsNfW.css">
 </head>
 <body>
 <!-- Sidebar for File/App Actions -->
@@ -112,9 +112,14 @@
                     <h4>Harmonics & Filter</h4>
                     <div class="filter-top-controls"><div id="blend-slider-container"><div class="filter-blend-thumb" id="thumb-b" tabindex="0">B</div></div></div>
                     <div class="filter-main-panel">
-                       <div class="buffer-container"><canvas id="harmonic-multislider-canvas"></canvas><canvas id="filter-overlay-canvas"></canvas></div>
-                       <div class="filter-button-wrapper"><button id="filter-enable-toggle" class="toolkit-icon-button" aria-label="Toggle Filter"><svg class="filter-icon" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg"><path d="M6 24 H22 L30 16 L40 36" fill="none" stroke="currentColor" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/></svg></button></div>
-                    </div>
+                        <div class="buffer-container">
+                            <canvas id="harmonic-multislider-canvas"></canvas>
+                            <canvas id="filter-overlay-canvas"></canvas>
+                        </div>
+                        <div class="filter-button-wrapper">
+                            <!-- This will be populated by JavaScript with the vertical blend slider -->
+                        </div>
+                     </div>
                     <div id="cutoff-slider-container"><div class="filter-cutoff-thumb" id="thumb-c" tabindex="0">C</div></div>
                 </div>
                 <div class="control-section adsr-container">

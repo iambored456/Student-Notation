@@ -3,9 +3,11 @@ import store from '../../state/index.js';
 
 console.log("FilterControls: Module loaded.");
 
-let enableToggle, blendThumb, blendTrack, cutoffThumb, cutoffTrack, container;
+let blendThumb, blendTrack, cutoffThumb, cutoffTrack, container;
+let verticalBlendSlider, verticalBlendTrack;
 let isDraggingCutoff = false;
 let isDraggingBlend = false;
+let isDraggingVerticalBlend = false;
 let currentColor;
 
 const CUTOFF_MIN = 1;
@@ -19,23 +21,25 @@ function updateFromStore() {
     const timbre = store.state.timbres[currentColor];
     if (!timbre || !timbre.filter) return;
 
-    const { enabled, cutoff, blend } = timbre.filter;
+    const { cutoff, blend } = timbre.filter;
     
-    if(enableToggle) enableToggle.classList.toggle('active', enabled);
-    if(container) container.classList.toggle('filter-disabled', !enabled);
-
+    // Update horizontal blend slider
     if(blendThumb && blendTrack) {
-        // This calculation is inverted because 0 blend = 100% left on the slider
         const blendPercent = (BLEND_MAX - blend) / (BLEND_MAX - BLEND_MIN);
         blendThumb.style.left = `${blendPercent * 100}%`;
-        // NEW: Update the track's progress variable
         blendTrack.style.setProperty('--progress', `${blendPercent * 100}%`);
+    }
+    
+    // Update vertical blend slider
+    if (verticalBlendSlider && verticalBlendTrack) {
+        const blendPercent = blend / BLEND_MAX; // 0 to 1
+        verticalBlendSlider.style.bottom = `${blendPercent * 100}%`;
+        verticalBlendTrack.style.setProperty('--blend-progress', `${blendPercent * 100}%`);
     }
     
     if(cutoffThumb && cutoffTrack) {
         const cutoffPercent = (cutoff - CUTOFF_MIN) / (CUTOFF_MAX - CUTOFF_MIN);
         cutoffThumb.style.left = `${cutoffPercent * 100}%`;
-        // NEW: Update the track's progress variable
         cutoffTrack.style.setProperty('--progress', `${cutoffPercent * 100}%`);
     }
     
@@ -64,26 +68,32 @@ function handleBlendDrag(e) {
     store.setFilterSettings(currentColor, { blend: value });
 }
 
+function handleVerticalBlendDrag(e) {
+    if (!isDraggingVerticalBlend) return;
+    const rect = verticalBlendTrack.getBoundingClientRect();
+    const y = e.clientY - rect.top;
+    const h = rect.height;
+    let percent = 1 - (y / h); // Invert because bottom is 100%
+    percent = Math.max(0, Math.min(1, percent));
+    const value = percent * BLEND_MAX;
+    store.setFilterSettings(currentColor, { blend: value });
+}
+
 export function initFilterControls() {
     container = document.querySelector('.multislider-container');
-    enableToggle = document.getElementById('filter-enable-toggle');
     blendThumb = document.getElementById('thumb-b');
     blendTrack = document.getElementById('blend-slider-container');
     cutoffThumb = document.getElementById('thumb-c');
     cutoffTrack = document.getElementById('cutoff-slider-container');
 
-    if (!container || !enableToggle || !blendThumb || !cutoffThumb) {
+    if (!container || !blendThumb || !cutoffThumb) {
         console.error("FilterControls: Could not find one or more required filter UI elements.");
         return;
     }
     
-    enableToggle.addEventListener('click', () => {
-        // Guard against clicks when no color is selected.
-        if (!currentColor) return;
-        const isEnabled = !store.state.timbres[currentColor].filter.enabled;
-        store.setFilterSettings(currentColor, { enabled: isEnabled });
-        store.recordState();
-    });
+    // Remove the old filter toggle button logic
+    // Create the vertical blend slider instead
+    createVerticalBlendSlider();
 
     blendThumb.addEventListener('mousedown', e => {
         e.preventDefault();
@@ -117,7 +127,6 @@ export function initFilterControls() {
         window.addEventListener('mouseup', onUp);
     });
 
-    // THE FIX: Listen to 'noteChanged' to get color updates.
     store.on('noteChanged', ({ newNote }) => {
         if (newNote.color && newNote.color !== currentColor) {
             currentColor = newNote.color;
@@ -131,9 +140,65 @@ export function initFilterControls() {
         }
     });
 
-    // THE FIX: Get the initial color from the correct state property.
     currentColor = store.state.selectedNote.color;
     updateFromStore();
 
-    console.log("FilterControls: Initialized.");
+    console.log("FilterControls: Initialized with vertical blend slider.");
+}
+
+function createVerticalBlendSlider() {
+    // Find the filter button wrapper and replace it
+    const filterButtonWrapper = document.querySelector('.filter-button-wrapper');
+    if (!filterButtonWrapper) return;
+    
+    // Clear the wrapper and create new vertical slider
+    filterButtonWrapper.innerHTML = '';
+    filterButtonWrapper.className = 'vertical-blend-wrapper';
+    
+    // Create the vertical track
+    verticalBlendTrack = document.createElement('div');
+    verticalBlendTrack.id = 'vertical-blend-track';
+    verticalBlendTrack.className = 'vertical-slider-track';
+    
+    // Create the thumb
+    verticalBlendSlider = document.createElement('div');
+    verticalBlendSlider.id = 'vertical-blend-thumb';
+    verticalBlendSlider.className = 'vertical-slider-thumb';
+    verticalBlendSlider.textContent = 'B';
+    verticalBlendSlider.title = 'Filter Blend: 0% to 100%';
+    
+    verticalBlendTrack.appendChild(verticalBlendSlider);
+    filterButtonWrapper.appendChild(verticalBlendTrack);
+    
+    // Add event listeners for the vertical slider
+    verticalBlendSlider.addEventListener('mousedown', e => {
+        e.preventDefault();
+        isDraggingVerticalBlend = true;
+        document.body.style.cursor = 'ns-resize';
+        
+        const onMove = (ev) => handleVerticalBlendDrag(ev);
+        const onUp = () => {
+            isDraggingVerticalBlend = false;
+            document.body.style.cursor = 'default';
+            window.removeEventListener('mousemove', onMove);
+            window.removeEventListener('mouseup', onUp);
+            store.recordState();
+        };
+        
+        window.addEventListener('mousemove', onMove);
+        window.addEventListener('mouseup', onUp);
+    });
+    
+    // Click on track to position slider
+    verticalBlendTrack.addEventListener('click', e => {
+        if (e.target === verticalBlendSlider) return;
+        const rect = verticalBlendTrack.getBoundingClientRect();
+        const y = e.clientY - rect.top;
+        const h = rect.height;
+        let percent = 1 - (y / h);
+        percent = Math.max(0, Math.min(1, percent));
+        const value = percent * BLEND_MAX;
+        store.setFilterSettings(currentColor, { blend: value });
+        store.recordState();
+    });
 }

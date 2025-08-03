@@ -1,7 +1,11 @@
 // js/state/initialState/timbres.js
 
 export const createDefaultFilterState = () => ({
-    enabled: false, blend: 2.0, cutoff: 16, resonance: 0, type: 'lowpass'
+    enabled: true, // CHANGED: Always enabled now
+    blend: 0.0, // CHANGED: Start at 0 (0% blend = dry signal)
+    cutoff: 16, 
+    resonance: 0, 
+    type: 'lowpass'
 });
 
 export const defaultColorPalette = {

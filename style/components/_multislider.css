@@ -50,3 +50,44 @@
     background-color: var(--c-border);
     color: var(--c-text);
 }
+
+.harmonic-phase-row {
+  display: flex;
+  justify-content: space-around;
+  align-items: flex-start;
+  margin-top: 4px;
+  padding: 0 4px; /* Add some padding to align with the sliders */
+}
+
+.phase-button-pair {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  flex: 1;
+  max-width: 40px; /* Limit the width to keep buttons small */
+}
+
+.phase-button {
+  font-size: 0.55rem; /* Slightly smaller font */
+  padding: 1px 2px;
+  min-width: 22px; /* Smaller minimum width */
+  width: 100%; /* Full width of the pair container */
+  line-height: 1.1;
+  background-color: var(--c-gridline);
+  color: var(--c-text-muted);
+  border: 1px solid var(--c-border);
+  border-radius: 3px;
+  margin: 0; /* Remove any default margins */
+}
+
+.phase-button:hover {
+  background-color: var(--c-border);
+  color: var(--c-text);
+}
+
+/* Ensure the phase row doesn't take too much vertical space */
+.harmonic-phase-row {
+  min-height: 40px; /* Enough for two small buttons stacked */
+  max-height: 50px;
+}

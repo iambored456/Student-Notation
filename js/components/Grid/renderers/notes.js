@@ -6,7 +6,7 @@ function drawScaleDegreeText(ctx, note, options, centerX, centerY, noteHeight) {
     const degreeStr = TonalService.getDegreeForNote(note, options);
     if (!degreeStr) return;
     
-    // THE FIX: Scale font size with zoom level for clarity.
+    // Scale font size with zoom level for clarity
     const fontSize = (note.shape === 'oval' ? noteHeight * 0.35 : noteHeight * 0.525) * options.zoomLevel;
     if (fontSize < 4) return; // Don't draw text if it's too small to read
 
@@ -23,9 +23,13 @@ export function drawTwoColumnOvalNote(ctx, options, note, rowIndex) {
     const xStart = getColumnX(note.startColumnIndex, options);
     const centerX = xStart + cellWidth;
     
-    // THE FIX: Scale all dimensions by the zoom level.
+    // Debug logging
+    console.log(`[drawTwoColumnOvalNote] Drawing circle note at row: ${rowIndex}, col: ${note.startColumnIndex}, y: ${y}, centerX: ${centerX}`);
+    
+    // Scale all dimensions by the zoom level
     const dynamicStrokeWidth = Math.max(1.5, cellWidth * 0.15 * zoomLevel);
 
+    // Draw the tail/extension line if the note extends beyond its starting column
     if (note.endColumnIndex > note.startColumnIndex) {
         const endX = getColumnX(note.endColumnIndex + 1, options);
         ctx.beginPath();
@@ -36,22 +40,41 @@ export function drawTwoColumnOvalNote(ctx, options, note, rowIndex) {
         ctx.stroke();
     }
 
+    // Calculate ellipse dimensions
     const rx = (cellWidth - (dynamicStrokeWidth / 2)) * zoomLevel;
     const ry = ((cellHeight / 2) - (dynamicStrokeWidth / 2)) * zoomLevel;
 
+    // Save context state for cleaner rendering
+    ctx.save();
+    
+    // Draw the circle/ellipse
     ctx.beginPath();
     ctx.ellipse(centerX, y, rx, ry, 0, 0, 2 * Math.PI);
+    
+    // Fill with white first (to ensure visibility)
+    ctx.fillStyle = '#FFFFFF';
+    ctx.fill();
+    
+    // Then stroke with the note color
     ctx.strokeStyle = note.color;
     ctx.lineWidth = dynamicStrokeWidth;
     ctx.shadowColor = note.color;
     ctx.shadowBlur = 1.5;
     ctx.stroke();
+    
+    // Reset shadow
     ctx.shadowBlur = 0;
     ctx.shadowColor = 'transparent';
+    
+    ctx.restore();
 
+    // Draw degree text if enabled
     if (options.degreeDisplayMode !== 'off') {
         drawScaleDegreeText(ctx, note, options, centerX, y, (cellHeight / 2));
     }
+    
+    // Debug logging
+    console.log(`[drawTwoColumnOvalNote] Finished drawing circle note with color: ${note.color}`);
 }
 
 export function drawSingleColumnOvalNote(ctx, options, note, rowIndex) {
@@ -60,22 +83,40 @@ export function drawSingleColumnOvalNote(ctx, options, note, rowIndex) {
     const x = getColumnX(note.startColumnIndex, options);
     const currentCellWidth = columnWidths[note.startColumnIndex] * cellWidth;
     
-    // THE FIX: Scale all dimensions by the zoom level.
+    // Debug logging
+    console.log(`[drawSingleColumnOvalNote] Drawing oval note at row: ${rowIndex}, col: ${note.startColumnIndex}`);
+    
+    // Scale all dimensions by the zoom level
     const dynamicStrokeWidth = Math.max(0.5, currentCellWidth * 0.15 * zoomLevel);
     const cx = x + currentCellWidth / 2;
     const rx = ((currentCellWidth / 2) - (dynamicStrokeWidth / 2)) * zoomLevel;
     const ry = ((cellHeight / 2) - (dynamicStrokeWidth / 2)) * zoomLevel;
 
+    // Save context state
+    ctx.save();
+    
+    // Draw the oval
     ctx.beginPath();
     ctx.ellipse(cx, y, rx, ry, 0, 0, 2 * Math.PI);
+    
+    // Fill with white first
+    ctx.fillStyle = '#FFFFFF';
+    ctx.fill();
+    
+    // Then stroke with the note color
     ctx.strokeStyle = note.color;
     ctx.lineWidth = dynamicStrokeWidth;
     ctx.shadowColor = note.color;
     ctx.shadowBlur = 1.5;
     ctx.stroke();
+    
+    // Reset shadow
     ctx.shadowBlur = 0;
     ctx.shadowColor = 'transparent';
+    
+    ctx.restore();
 
+    // Draw degree text if enabled
     if (options.degreeDisplayMode !== 'off') {
         drawScaleDegreeText(ctx, note, options, cx, y, (cellHeight / 2));
     }
@@ -86,7 +127,7 @@ export function drawTonicShape(ctx, options, tonicSign) {
     const y = getRowY(tonicSign.row, options);
     const x = getColumnX(tonicSign.columnIndex, options);
 
-    // THE FIX: Scale all dimensions by the zoom level.
+    // Scale all dimensions by the zoom level
     const width = cellWidth * 2;
     const centerX = x + width / 2;
     const radius = (Math.min(width, cellHeight) / 2 * 0.9) * zoomLevel;

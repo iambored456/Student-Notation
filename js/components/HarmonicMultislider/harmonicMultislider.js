@@ -144,13 +144,35 @@ function handlePointerEvent(e) {
     const { width, height } = ctx.canvas;
     const barW = (width - (BINS + 1) * 4) / BINS;
     const gap = 4;
-    const idx = Math.floor((x - gap) / (barW + gap)) + 1;
-    if (idx > 0 && idx < BINS) {
-        const newCoeffs = new Float32Array(
-            store.state.timbres[currentColor].coeffs
-        );
+    
+    // FIXED: Calculate the index correctly, accounting for the gap before the first bar
+    // The mouse position needs to account for the initial gap
+    const adjustedX = x - gap;
+    
+    // Calculate which bar we're over
+    let idx = Math.floor(adjustedX / (barW + gap));
+    
+    // Clamp the index to valid range (0 to BINS-1)
+    idx = Math.max(0, Math.min(BINS - 1, idx));
+    
+    // Debug logging
+    console.log(`[HarmonicMultislider] Mouse at x: ${x}, calculated idx: ${idx}`);
+    
+    // Check if we're actually within the bar's horizontal bounds
+    const barStartX = gap + idx * (barW + gap);
+    const barEndX = barStartX + barW;
+    
+    if (x >= barStartX && x <= barEndX) {
+        // Calculate the coefficient value based on Y position
         const v = (height - y) / (height * 0.95);
-        newCoeffs[idx] = Math.max(0, Math.min(1, v));
+        const clampedValue = Math.max(0, Math.min(1, v));
+        
+        // Update the coefficients
+        const newCoeffs = new Float32Array(store.state.timbres[currentColor].coeffs);
+        newCoeffs[idx] = clampedValue;
+        
+        console.log(`[HarmonicMultislider] Setting coefficient ${idx} (${idx === 0 ? 'F0' : 'H' + idx}) to ${clampedValue.toFixed(3)}`);
+        
         store.setHarmonicCoefficients(currentColor, newCoeffs);
     }
 }
@@ -219,9 +241,12 @@ export function initHarmonicMultislider() {
             phaseRow.style.display = 'flex';
             phaseRow.style.justifyContent = 'space-around';
             phaseRow.style.marginTop = '4px';
+            
             for (let i = 0; i < BINS; i++) {
                 const wrapper = document.createElement('div');
+                wrapper.className = 'phase-button-pair';
                 wrapper.style.display = 'flex';
+                wrapper.style.flexDirection = 'column'; // CHANGED: Stack vertically
                 wrapper.style.alignItems = 'center';
                 wrapper.style.flex = '1';
                 wrapper.style.justifyContent = 'center';
@@ -242,7 +267,7 @@ export function initHarmonicMultislider() {
                     phases = newPhases;
                     store.setHarmonicPhases(currentColor, newPhases);
                 });
-
+        
                 const polBtn = document.createElement('button');
                 polBtn.textContent = '+';
                 polBtn.className = 'phase-button';
@@ -258,7 +283,8 @@ export function initHarmonicMultislider() {
                     phases = newPhases;
                     store.setHarmonicPhases(currentColor, newPhases);
                 });
-
+        
+                // CHANGED: Order is now sin/cos on top, +/- on bottom
                 wrapper.appendChild(sincosBtn);
                 wrapper.appendChild(polBtn);
                 phaseRow.appendChild(wrapper);
