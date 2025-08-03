@@ -50,7 +50,12 @@ export const timbreActions = {
     applyPreset(color, preset) {
         if (!preset || !this.state.timbres[color]) return;
         this.state.timbres[color].adsr = preset.adsr;
-        this.state.timbres[color].coeffs = preset.coeffs;
+        this.state.timbres[color].coeffs = new Float32Array(preset.coeffs);
+        if (preset.phases) {
+            this.state.timbres[color].phases = new Float32Array(preset.phases);
+        } else {
+            this.state.timbres[color].phases = new Float32Array(this.state.timbres[color].coeffs.length).fill(0);
+        }
         this.state.timbres[color].activePresetName = preset.name;
         if (preset.filter) {
             this.state.timbres[color].filter = JSON.parse(JSON.stringify(preset.filter));

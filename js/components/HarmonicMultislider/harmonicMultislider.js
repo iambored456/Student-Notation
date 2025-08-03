@@ -44,6 +44,14 @@ let coeffs = new Float32Array(BINS).fill(0);
 let currentColor;
 let phases = new Float32Array(BINS).fill(0);
 const phaseControls = [];
+// Bottom portion of the canvas where pointer interactions snap the value to zero
+const SNAP_TO_ZERO_RATIO = 0.1;
+// Any coefficient below this value is considered zero
+const COEFF_ZERO_THRESHOLD = 0.1;
+let isAuditioning = false;
+// Delay updating the synth's coefficients when snapping to zero so the
+// currently auditioned note can release smoothly without clicks.
+const zeroUpdateTimeouts = new Array(BINS).fill(null);
 
 function getFilterAmplitudeAt(norm_pos, filterSettings) {
     const { blend, cutoff, resonance } = filterSettings;
@@ -73,31 +81,32 @@ function draw() {
     if (width === 0 || height === 0) return;
     const barW = (width - (BINS + 1) * 4) / BINS;
     const gap = 4;
-    const maxBarHeight = height * 0.95;
+    const snapZoneHeight = height * SNAP_TO_ZERO_RATIO;
+    const usableHeight = height - snapZoneHeight;
+    const maxBarHeight = usableHeight * 0.95;
+    const barBaseY = height - snapZoneHeight;
     const barColor = shadeHexColor(currentColor, -0.1);
 
     overlayCtx.clearRect(0, 0, width, height);
     ctx.fillStyle = '#FFFFFF';
     ctx.fillRect(0, 0, width, height);
 
+    // indicate the snap-to-zero zone along the bottom
+    ctx.fillStyle = '#f7f7f7';
+    ctx.fillRect(0, height - snapZoneHeight, width, snapZoneHeight);
+
     coeffs.forEach((c, i) => {
         const x = gap + i * (barW + gap);
-        let barHeight = c * maxBarHeight;
-        let fillStyle;
-        let strokeStyle;
-        if (c <= 0.001) {
-            barHeight = 2;
-            fillStyle = shadeHexColor(currentColor, 0.4);
-            strokeStyle = shadeHexColor(currentColor, 0.3);
-        } else {
-            fillStyle = barColor;
-            strokeStyle = barColor;
-        }
-        ctx.fillStyle = fillStyle;
-        ctx.fillRect(x, height - barHeight, barW, barHeight);
-        ctx.strokeStyle = strokeStyle;
+        const val = c < COEFF_ZERO_THRESHOLD ? 0 : c;
+        const barHeight = val * maxBarHeight;
+
+        if (barHeight === 0) return;
+
+        ctx.fillStyle = barColor;
+        ctx.fillRect(x, barBaseY - barHeight, barW, barHeight);
+        ctx.strokeStyle = barColor;
         ctx.lineWidth = 1;
-        ctx.strokeRect(x + 0.5, height - barHeight + 0.5, barW - 1, barHeight - 1);
+        ctx.strokeRect(x + 0.5, barBaseY - barHeight + 0.5, barW - 1, barHeight - 1);
     });
 
     const filterSettings = store.state.timbres[currentColor]?.filter;
@@ -107,7 +116,7 @@ function draw() {
         for (let x = 0; x <= width; x += step) {
             const norm_pos = x / width;
             const amp = getFilterAmplitudeAt(norm_pos, filterSettings);
-            const y = height - amp * maxBarHeight;
+            const y = barBaseY - amp * maxBarHeight;
             if (x === 0) {
                 overlayCtx.moveTo(x, y);
             } else {
@@ -117,8 +126,8 @@ function draw() {
         overlayCtx.strokeStyle = shadeHexColor(currentColor, -0.3);
         overlayCtx.lineWidth = 2.5;
         overlayCtx.stroke();
-        overlayCtx.lineTo(width, height);
-        overlayCtx.lineTo(0, height);
+        overlayCtx.lineTo(width, barBaseY);
+        overlayCtx.lineTo(0, barBaseY);
         overlayCtx.closePath();
         overlayCtx.fillStyle = hexToRgba(currentColor, 0.2);
         overlayCtx.fill();
@@ -145,35 +154,78 @@ function handlePointerEvent(e) {
     const barW = (width - (BINS + 1) * 4) / BINS;
     const gap = 4;
     
-    // FIXED: Calculate the index correctly, accounting for the gap before the first bar
-    // The mouse position needs to account for the initial gap
+    // Calculate the index correctly, accounting for the gap before the first bar
     const adjustedX = x - gap;
     
-    // Calculate which bar we're over
+    // Determine which bar the pointer is over
     let idx = Math.floor(adjustedX / (barW + gap));
     
-    // Clamp the index to valid range (0 to BINS-1)
+    // Clamp the index to the valid range (0 to BINS - 1)
     idx = Math.max(0, Math.min(BINS - 1, idx));
-    
-    // Debug logging
-    console.log(`[HarmonicMultislider] Mouse at x: ${x}, calculated idx: ${idx}`);
-    
+
     // Check if we're actually within the bar's horizontal bounds
     const barStartX = gap + idx * (barW + gap);
     const barEndX = barStartX + barW;
     
     if (x >= barStartX && x <= barEndX) {
-        // Calculate the coefficient value based on Y position
-        const v = (height - y) / (height * 0.95);
-        const clampedValue = Math.max(0, Math.min(1, v));
-        
-        // Update the coefficients
-        const newCoeffs = new Float32Array(store.state.timbres[currentColor].coeffs);
-        newCoeffs[idx] = clampedValue;
-        
-        console.log(`[HarmonicMultislider] Setting coefficient ${idx} (${idx === 0 ? 'F0' : 'H' + idx}) to ${clampedValue.toFixed(3)}`);
-        
-        store.setHarmonicCoefficients(currentColor, newCoeffs);
+        // Calculate the coefficient value based on Y position with snap-to-zero zone
+        const snapZoneHeight = height * SNAP_TO_ZERO_RATIO;
+        const usableHeight = height - snapZoneHeight;
+        const previous = coeffs[idx];
+        let clampedValue;
+        if (y >= usableHeight) {
+            clampedValue = 0;
+        } else {
+            const v = (usableHeight - y) / (usableHeight * 0.95);
+            clampedValue = Math.max(0, Math.min(1, v));
+        }
+
+        if (clampedValue < COEFF_ZERO_THRESHOLD) {
+            clampedValue = 0;
+        }
+
+        coeffs[idx] = clampedValue;
+        const releaseDelay =
+            (store.state.timbres[currentColor]?.adsr?.release || 0) * 1000;
+
+        if (clampedValue === 0) {
+            if (previous > 0 && isAuditioning) {
+                SynthEngine.triggerRelease('C4', currentColor);
+                store.emit('spacebarPlayback', { color: currentColor, isPlaying: false });
+                isAuditioning = false;
+            }
+
+            if (zeroUpdateTimeouts[idx]) {
+                clearTimeout(zeroUpdateTimeouts[idx]);
+            }
+            zeroUpdateTimeouts[idx] = setTimeout(() => {
+                const newCoeffs = new Float32Array(
+                    store.state.timbres[currentColor].coeffs
+                );
+                newCoeffs[idx] = 0;
+                store.setHarmonicCoefficients(currentColor, newCoeffs);
+                zeroUpdateTimeouts[idx] = null;
+            }, releaseDelay);
+        } else {
+            if (zeroUpdateTimeouts[idx]) {
+                clearTimeout(zeroUpdateTimeouts[idx]);
+                zeroUpdateTimeouts[idx] = null;
+            }
+
+            if (!isAuditioning) {
+                SynthEngine.triggerAttack('C4', currentColor);
+                store.emit('spacebarPlayback', { color: currentColor, isPlaying: true });
+                isAuditioning = true;
+            }
+
+            const newCoeffs = new Float32Array(
+                store.state.timbres[currentColor].coeffs
+            );
+            newCoeffs[idx] = clampedValue;
+            store.setHarmonicCoefficients(currentColor, newCoeffs);
+        }
+
+        draw();
     }
 }
 
@@ -183,6 +235,11 @@ function updateForNewColor(color) {
     const timbre = store.state.timbres[color];
     if (timbre) {
         coeffs = new Float32Array(timbre.coeffs);
+        for (let i = 0; i < coeffs.length; i++) {
+            if (coeffs[i] < COEFF_ZERO_THRESHOLD) {
+                coeffs[i] = 0;
+            }
+        }
         phases = new Float32Array(timbre.phases || coeffs.length);
         phaseControls.forEach(({ sincosBtn, polBtn }, i) => {
             if (!sincosBtn || !polBtn) return;
@@ -303,6 +360,7 @@ export function initHarmonicMultislider() {
         // Start live auditioning
         SynthEngine.triggerAttack('C4', currentColor);
         store.emit('spacebarPlayback', { color: currentColor, isPlaying: true });
+        isAuditioning = true;
         
         handlePointerEvent(e);
         const onMove = (ev) => handlePointerEvent(ev);
@@ -314,6 +372,7 @@ export function initHarmonicMultislider() {
             // Stop live auditioning
             SynthEngine.triggerRelease('C4', currentColor);
             store.emit('spacebarPlayback', { color: currentColor, isPlaying: false });
+            isAuditioning = true;
         };
         window.addEventListener('pointermove', onMove);
         window.addEventListener('pointerup', stopDrag);

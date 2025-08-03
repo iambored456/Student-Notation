@@ -1,7 +1,7 @@
 /* style/components/_multislider.css */
 
 .multislider-container {
-  border-radius: var(--border-radius-md);
+  border-radius: var(--border-radius-md());
   /* Added to make the accent color apply to filter controls */
   flex-direction: column;
   justify-content: flex-start;
@@ -65,7 +65,7 @@
   align-items: center;
   gap: 2px;
   flex: 1;
-  max-width: 40px; /* Limit the width to keep buttons small */
+  max-width: 1.2em; /* Limit the width to keep buttons small */
 }
 
 .phase-button {
@@ -88,6 +88,6 @@
 
 /* Ensure the phase row doesn't take too much vertical space */
 .harmonic-phase-row {
-  min-height: 40px; /* Enough for two small buttons stacked */
-  max-height: 50px;
+  min-height: 1em; /* Enough for two small buttons stacked */
+  max-height: 1.2em;
 }

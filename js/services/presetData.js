@@ -1,122 +1,177 @@
 // js/services/presetData.js
+// ------------------------------------------------------------
+// Preset spectra and ADSR data for Student Notation
+// ------------------------------------------------------------
 import { HARMONIC_BINS } from '../constants.js';
-
-console.log("PresetData: Module loaded.");
 
 const BINS = HARMONIC_BINS;
 
-// Helper to create a default filter state for presets
+/*─────────────────────────────────────────────────────────────
+  Default filter shape (can be overridden per preset)
+─────────────────────────────────────────────────────────────*/
 const defaultFilter = {
-    blend: 2.0,
-    cutoff: 31,
-    resonance: 0,
-    type: 'lowpass'
+  blend: 2.0,
+  cutoff: 31,
+  resonance: 0,
+  type: 'lowpass'
 };
 
-// --- Private Helper Functions for Generating Coefficients ---
-function generateSineCoeffs() {
-    const coeffs = new Float32Array(BINS).fill(0);
-    coeffs[1] = 1;
-    return coeffs;
+/*─────────────────────────────────────────────────────────────
+  Utility helpers
+─────────────────────────────────────────────────────────────*/
+function createEmptySpectrum() {
+  return {
+    coeffs:  new Float32Array(BINS).fill(0),
+    phases:  new Float32Array(BINS).fill(0)
+  };
 }
 
-function generateSquareCoeffs() {
-    const coeffs = new Float32Array(BINS).fill(0);
-    for (let n = 1; n < BINS; n += 2) {
-        coeffs[n] = 1 / n;
-    }
-    return coeffs;
+/* Analytic waves ------------------------------------------------*/
+function generateSine() {
+  const spec = createEmptySpectrum();
+  spec.coeffs[0] = 1;           // only fundamental (sin +)
+  return spec;
 }
 
-function generateTriangleCoeffs() {
-    const coeffs = new Float32Array(BINS).fill(0);
-    for (let n = 1; n < BINS; n += 2) {
-        coeffs[n] = 1 / (n * n);
-    }
-    return coeffs;
+function generateSquare() {
+  const spec = createEmptySpectrum();
+  for (let n = 1; n <= BINS; n += 2) {
+    const i        = n - 1;     // zero-based bin
+    spec.coeffs[i] = 1 / n;     // 1, 1/3, 1/5, …
+    // Alternate polarity: + for n = 1,5,9…  – for n = 3,7,11…
+    spec.phases[i] = (n % 4 === 1) ? 0 : Math.PI;
+  }
+  return spec;
 }
 
-function generateSawtoothCoeffs() {
-    const coeffs = new Float32Array(BINS).fill(0);
-    for (let n = 1; n < BINS; n++) {
-        coeffs[n] = 1 / n;
-    }
-    return coeffs;
+function generateTriangle() {
+  const spec = createEmptySpectrum();
+  for (let n = 1; n <= BINS; n += 2) {
+    const i        = n - 1;
+    spec.coeffs[i] = 1 / (n * n);  // 1, 1/9, 1/25, …
+    // cos +/– :     +π/2 for bins 0,4,8…   –π/2 (3π/2) for 2,6,10…
+    const evenPair = ((n - 1) >> 1) & 1;    // 0,0,1,1,0,0…
+    spec.phases[i] = evenPair ? (3 * Math.PI) / 2 : Math.PI / 2;
+  }
+  return spec;
 }
 
-// --- Public Preset Definitions ---
+function generateSawtooth() {
+  const spec = createEmptySpectrum();
+  for (let n = 1; n <= BINS; n++) {
+    const i        = n - 1;
+    spec.coeffs[i] = 1 / n;
+    // sin +/– :     0 for odd n,  π for even n
+    spec.phases[i] = (n & 1) ? 0 : Math.PI;
+  }
+  return spec;
+}
+
+/*─────────────────────────────────────────────────────────────
+  Fixed spectra copied (or inferred) from the meettechniek demo.
+  Each array lists up to 12 partials (fundamental = index 0).
+─────────────────────────────────────────────────────────────*/
+const RAW_SPECTRA = {
+  violin: {
+    amps:   [0.995, 0.940, 0.425, 0.480, 0.000, 0.365,
+             0.040, 0.085, 0.000, 0.090, 0.000, 0.000],
+    phases: [0, Math.PI/2, 0, Math.PI/2, 0, Math.PI/2,
+             0, Math.PI/2, 0, Math.PI/2, 0, 0]
+  },
+  piano: {
+    amps:   [1.000, 0.700, 0.600, 0.500, 0.400, 0.320,
+             0.250, 0.200, 0.170, 0.140, 0.120, 0.100],
+    phases: Array(12).fill(0)
+  },
+  marimba: {
+    // Strong 4th partial, otherwise sparse
+    amps:   [1.000, 0.200, 0.150, 0.700, 0.050, 0.180,
+             0.030, 0.050, 0.020, 0.010, 0.000, 0.000],
+    phases: Array(12).fill(0)
+  },
+  woodwind: {
+    // Clarinet-like (odd > even)
+    amps:   [1.000, 0.050, 0.500, 0.050, 0.300, 0.050,
+             0.200, 0.050, 0.120, 0.050, 0.080, 0.050],
+    phases: Array(12).fill(0)
+  }
+};
+
+/* Copy helper ­­­------------------------------------------------*/
+function makeSpectrum(key) {
+  const spec   = createEmptySpectrum();
+  const src    = RAW_SPECTRA[key];
+  const limit  = Math.min(BINS, src.amps.length);
+  for (let i = 0; i < limit; i++) {
+    spec.coeffs[i] = src.amps[i]   || 0;
+    spec.phases[i] = src.phases[i] || 0;
+  }
+  return spec;
+}
+
+/*─────────────────────────────────────────────────────────────
+  Preset catalogue
+─────────────────────────────────────────────────────────────*/
 const basicWaveADSR = { attack: 0.1, decay: 0.2, sustain: 0.8, release: 0.3 };
 
 export const PRESETS = {
-    // Basic Waveforms
-    sine: {
-        name: 'sine',
-        gain: 1.0, // Sine is our quietest baseline, so no reduction.
-        adsr: basicWaveADSR,
-        coeffs: generateSineCoeffs(),
-        filter: { ...defaultFilter }
-    },
-    triangle: {
-        name: 'triangle',
-        gain: 0.8, // Triangle is a bit louder than sine.
-        adsr: basicWaveADSR,
-        coeffs: generateTriangleCoeffs(),
-        filter: { ...defaultFilter }
-    },
-    square: {
-        name: 'square',
-        gain: 0.4, // Square waves are significantly louder.
-        adsr: basicWaveADSR,
-        coeffs: generateSquareCoeffs(),
-        filter: { ...defaultFilter }
-    },
-    sawtooth: {
-        name: 'sawtooth',
-        gain: 0.5, // Sawtooth is also very loud.
-        adsr: basicWaveADSR,
-        coeffs: generateSawtoothCoeffs(),
-        filter: { ...defaultFilter }
-    },
+  /* Classic analytic waves (procedurally generated) */
+  sine: {
+    name: 'sine',
+    gain: 1.0,
+    adsr: basicWaveADSR,
+    ...generateSine(),
+    filter: { ...defaultFilter }
+  },
+  triangle: {
+    name: 'triangle',
+    gain: 0.8,
+    adsr: basicWaveADSR,
+    ...generateTriangle(),
+    filter: { ...defaultFilter }
+  },
+  square: {
+    name: 'square',
+    gain: 0.4,
+    adsr: basicWaveADSR,
+    ...generateSquare(),
+    filter: { ...defaultFilter }
+  },
+  sawtooth: {
+    name: 'sawtooth',
+    gain: 0.5,
+    adsr: basicWaveADSR,
+    ...generateSawtooth(),
+    filter: { ...defaultFilter }
+  },
 
-    // Instrument Presets
-    piano: {
-        name: 'piano',
-        gain: 0.8, // Piano has a sharp attack but decays, so can be reasonably loud.
-        adsr: { attack: 0.01, decay: 0.8, sustain: 0.1, release: 1.0 },
-        coeffs: (() => {
-            const c = new Float32Array(BINS).fill(0);
-            for (let n = 1; n < 20; n++) {
-                c[n] = (1 / (n * n)) * Math.pow(0.85, n);
-            }
-            return c;
-        })(),
-        filter: { ...defaultFilter, cutoff: 28 } // Slightly closed filter for piano
-    },
-    strings: {
-        name: 'strings',
-        gain: 0.5, // Based on a sawtooth, so needs reduction.
-        adsr: { attack: 0.4, decay: 0.1, sustain: 0.9, release: 0.5 },
-        coeffs: generateSawtoothCoeffs(),
-        filter: { ...defaultFilter }
-    },
-    woodwind: {
-        name: 'woodwind',
-        gain: 0.6, // Based on a square wave, needs reduction.
-        adsr: { attack: 0.1, decay: 0.2, sustain: 0.8, release: 0.3 },
-        coeffs: generateSquareCoeffs(),
-        filter: { ...defaultFilter }
-    },
-    marimba: {
-        name: 'marimba',
-        gain: 0.9, // Percussive and sine-like, can be loud at the start.
-        adsr: { attack: 0.01, decay: 0.8, sustain: 0, release: 0.8 },
-        coeffs: (() => {
-            const c = new Float32Array(BINS).fill(0);
-            c[1] = 1;
-            c[4] = 0.5;
-            c[9] = 0.2;
-            return c;
-        })(),
-        filter: { ...defaultFilter, cutoff: 25 }
-    }
+  /* Instrument-style presets (fixed spectra) */
+  violin: {
+    name: 'violin',
+    gain: 0.6,
+    adsr: { attack: 0.03, decay: 0.40, sustain: 0.70, release: 0.50 },
+    ...makeSpectrum('violin'),
+    filter: { ...defaultFilter, cutoff: 28 }
+  },
+  piano: {
+    name: 'piano',
+    gain: 0.8,
+    adsr: { attack: 0.01, decay: 0.80, sustain: 0.10, release: 1.00 },
+    ...makeSpectrum('piano'),
+    filter: { ...defaultFilter, cutoff: 28 }
+  },
+  marimba: {
+    name: 'marimba',
+    gain: 0.9,
+    adsr: { attack: 0.01, decay: 0.80, sustain: 0.00, release: 0.80 },
+    ...makeSpectrum('marimba'),
+    filter: { ...defaultFilter, cutoff: 25 }
+  },
+  woodwind: {
+    name: 'woodwind',
+    gain: 0.6,
+    adsr: { attack: 0.10, decay: 0.20, sustain: 0.80, release: 0.30 },
+    ...makeSpectrum('woodwind'),
+    filter: { ...defaultFilter }
+  }
 };

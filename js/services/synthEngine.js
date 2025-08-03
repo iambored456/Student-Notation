@@ -116,7 +116,7 @@ const SynthEngine = {
                 polyphony: 8,
                 voice: FilteredVoice,
                 options: {
-                    oscillator: { type: 'custom', partials: Array.from(timbre.coeffs).slice(1) },
+                    oscillator: { type: 'custom', partials: Array.from(timbre.coeffs) },
                     envelope: timbre.adsr,
                     filter: timbre.filter,
                     gain: store.state.timbres[color].activePresetName ? PRESETS[store.state.timbres[color].activePresetName].gain : 0.7 // Pass initial gain
@@ -145,7 +145,7 @@ const SynthEngine = {
         console.log(`[SYNTH] Updating timbre for color ${color}`);
         
         synth.set({
-            oscillator: { partials: Array.from(timbre.coeffs).slice(1) },
+            oscillator: { partials: Array.from(timbre.coeffs) },
             envelope: timbre.adsr
         });
 
