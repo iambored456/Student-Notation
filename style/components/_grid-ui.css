@@ -2,7 +2,8 @@
 
 #grid-controls-container {
   position: relative;
-  height: 30px;
+  height: 2em;
+  /* background is already transparent, which is good */
   margin-block-end: var(--space-1);
 }
 #time-signature-display {
@@ -11,7 +12,8 @@
   position: relative;
 }
 .rhythm-ui-button {
-  background-color: rgba(255, 255, 255, 0.8);
+  /* THE FIX: Changed to semi-transparent white */
+  background-color: rgba(255, 255, 255, 0.5);
   color: var(--c-text);
   border: 1px solid var(--c-border);
   border-radius: 50%;
@@ -23,13 +25,15 @@
   z-index: 10;
   position: absolute;
   transform: translateX(-50%);
+  backdrop-filter: blur(2px); /* Optional: Adds a nice frosted glass effect */
 }
 .rhythm-ui-button:hover { 
   background-color: var(--c-surface); 
   border-color: var(--c-text); 
 }
 .time-signature-label {
-  background: var(--c-bg);
+  /* THE FIX: Changed to semi-transparent white */
+  background: rgba(255, 255, 255, 0.5);
   padding-block: 2px;
   padding-inline: var(--space-2);
   border-radius: var(--border-radius-sm);
@@ -38,6 +42,7 @@
   user-select: none;
   position: absolute;
   transform: translateX(-50%);
+  backdrop-filter: blur(2px); /* Optional: Adds a nice frosted glass effect */
 }
 .time-signature-label.anacrusis-label { 
   color: var(--c-border); 

@@ -3,12 +3,14 @@ import { getColumnX, getRowY } from './rendererUtils.js';
 import TonalService from '../../../services/tonalService.js';
 
 function drawScaleDegreeText(ctx, note, options, centerX, centerY, noteHeight) {
-    // Pass the entire state ('options' in this context) to the service
     const degreeStr = TonalService.getDegreeForNote(note, options);
     if (!degreeStr) return;
     
+    // THE FIX: Scale font size with zoom level for clarity.
+    const fontSize = (note.shape === 'oval' ? noteHeight * 0.35 : noteHeight * 0.525) * options.zoomLevel;
+    if (fontSize < 4) return; // Don't draw text if it's too small to read
+
     ctx.fillStyle = '#212529';
-    const fontSize = note.shape === 'oval' ? noteHeight * 0.35 : noteHeight * 0.525;
     ctx.font = `bold ${fontSize}px 'Atkinson Hyperlegible', sans-serif`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
@@ -16,12 +18,13 @@ function drawScaleDegreeText(ctx, note, options, centerX, centerY, noteHeight) {
 }
 
 export function drawTwoColumnOvalNote(ctx, options, note, rowIndex) {
-    const { cellWidth, cellHeight } = options;
+    const { cellWidth, cellHeight, zoomLevel } = options;
     const y = getRowY(rowIndex, options);
     const xStart = getColumnX(note.startColumnIndex, options);
     const centerX = xStart + cellWidth;
     
-    const dynamicStrokeWidth = Math.max(1.5, cellWidth * 0.15);
+    // THE FIX: Scale all dimensions by the zoom level.
+    const dynamicStrokeWidth = Math.max(1.5, cellWidth * 0.15 * zoomLevel);
 
     if (note.endColumnIndex > note.startColumnIndex) {
         const endX = getColumnX(note.endColumnIndex + 1, options);
@@ -29,12 +32,12 @@ export function drawTwoColumnOvalNote(ctx, options, note, rowIndex) {
         ctx.moveTo(centerX, y);
         ctx.lineTo(endX, y);
         ctx.strokeStyle = note.color;
-        ctx.lineWidth = Math.max(1, cellWidth * 0.2);
+        ctx.lineWidth = Math.max(1, cellWidth * 0.2 * zoomLevel);
         ctx.stroke();
     }
 
-    const rx = cellWidth - (dynamicStrokeWidth / 2);
-    const ry = (cellHeight / 2) - (dynamicStrokeWidth / 2);
+    const rx = (cellWidth - (dynamicStrokeWidth / 2)) * zoomLevel;
+    const ry = ((cellHeight / 2) - (dynamicStrokeWidth / 2)) * zoomLevel;
 
     ctx.beginPath();
     ctx.ellipse(centerX, y, rx, ry, 0, 0, 2 * Math.PI);
@@ -47,19 +50,21 @@ export function drawTwoColumnOvalNote(ctx, options, note, rowIndex) {
     ctx.shadowColor = 'transparent';
 
     if (options.degreeDisplayMode !== 'off') {
-        drawScaleDegreeText(ctx, note, options, centerX, y, (ry * 2));
+        drawScaleDegreeText(ctx, note, options, centerX, y, (cellHeight / 2));
     }
 }
 
 export function drawSingleColumnOvalNote(ctx, options, note, rowIndex) {
-    const { columnWidths, cellWidth, cellHeight } = options;
+    const { columnWidths, cellWidth, cellHeight, zoomLevel } = options;
     const y = getRowY(rowIndex, options);
     const x = getColumnX(note.startColumnIndex, options);
     const currentCellWidth = columnWidths[note.startColumnIndex] * cellWidth;
-    const dynamicStrokeWidth = Math.max(0.5, currentCellWidth * 0.15);
+    
+    // THE FIX: Scale all dimensions by the zoom level.
+    const dynamicStrokeWidth = Math.max(0.5, currentCellWidth * 0.15 * zoomLevel);
     const cx = x + currentCellWidth / 2;
-    const rx = (currentCellWidth / 2) - (dynamicStrokeWidth / 2);
-    const ry = (cellHeight / 2) - (dynamicStrokeWidth / 2);
+    const rx = ((currentCellWidth / 2) - (dynamicStrokeWidth / 2)) * zoomLevel;
+    const ry = ((cellHeight / 2) - (dynamicStrokeWidth / 2)) * zoomLevel;
 
     ctx.beginPath();
     ctx.ellipse(cx, y, rx, ry, 0, 0, 2 * Math.PI);
@@ -72,27 +77,33 @@ export function drawSingleColumnOvalNote(ctx, options, note, rowIndex) {
     ctx.shadowColor = 'transparent';
 
     if (options.degreeDisplayMode !== 'off') {
-        drawScaleDegreeText(ctx, note, options, cx, y, (ry * 2));
+        drawScaleDegreeText(ctx, note, options, cx, y, (cellHeight / 2));
     }
 }
 
 export function drawTonicShape(ctx, options, tonicSign) {
-    const { cellWidth, cellHeight } = options;
-    const x = getColumnX(tonicSign.columnIndex, options);
+    const { cellWidth, cellHeight, zoomLevel } = options;
     const y = getRowY(tonicSign.row, options);
+    const x = getColumnX(tonicSign.columnIndex, options);
+
+    // THE FIX: Scale all dimensions by the zoom level.
     const width = cellWidth * 2;
     const centerX = x + width / 2;
-    const radius = Math.min(width, cellHeight) / 2 * 0.9;
-    
+    const radius = (Math.min(width, cellHeight) / 2 * 0.9) * zoomLevel;
+    if (radius < 2) return; // Don't draw if too small
+
     ctx.beginPath();
     ctx.arc(centerX, y, radius, 0, 2 * Math.PI);
     ctx.strokeStyle = '#212529';
-    ctx.lineWidth = 2;
+    ctx.lineWidth = 2 * zoomLevel;
     ctx.stroke();
     
     const numberText = tonicSign.tonicNumber.toString();
+    const fontSize = radius * 1.5;
+    if (fontSize < 6) return; // Don't draw text if too small
+
     ctx.fillStyle = '#212529';
-    ctx.font = `bold ${radius * 1.5}px 'Atkinson Hyperlegible', sans-serif`;
+    ctx.font = `bold ${fontSize}px 'Atkinson Hyperlegible', sans-serif`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillText(numberText, centerX, y);

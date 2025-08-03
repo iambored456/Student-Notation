@@ -44,9 +44,6 @@ let coeffs = new Float32Array(BINS).fill(0);
 let currentColor;
 let phases = new Float32Array(BINS).fill(0);
 const phaseControls = [];
-let oscilloCanvas;
-let oscilloCtx;
-let oscilloAnimationId = null;
 
 function getFilterAmplitudeAt(norm_pos, filterSettings) {
     const { blend, cutoff, resonance } = filterSettings;
@@ -98,7 +95,6 @@ function draw() {
         }
         ctx.fillStyle = fillStyle;
         ctx.fillRect(x, height - barHeight, barW, barHeight);
-        // Draw a thin border to make each bar stand out
         ctx.strokeStyle = strokeStyle;
         ctx.lineWidth = 1;
         ctx.strokeRect(x + 0.5, height - barHeight + 0.5, barW - 1, barHeight - 1);
@@ -129,32 +125,6 @@ function draw() {
     }
 }
 
-function drawOscilloscope() {
-    if (!oscilloCtx || !oscilloCanvas) return;
-    const analyser = SynthEngine.getWaveformForColor(currentColor);
-    const width = oscilloCanvas.width;
-    const height = oscilloCanvas.height;
-    oscilloCtx.clearRect(0, 0, width, height);
-    if (analyser) {
-        const values = analyser.getValue();
-        const len = values.length;
-        oscilloCtx.beginPath();
-        for (let i = 0; i < len; i++) {
-            const x = (i / (len - 1)) * width;
-            const y = height * 0.5 - values[i] * height * 0.5;
-            if (i === 0) {
-                oscilloCtx.moveTo(x, y);
-            } else {
-                oscilloCtx.lineTo(x, y);
-            }
-        }
-        oscilloCtx.strokeStyle = '#007AFF';
-        oscilloCtx.lineWidth = 1;
-        oscilloCtx.stroke();
-    }
-    oscilloAnimationId = requestAnimationFrame(drawOscilloscope);
-}
-
 function sizeCanvas() {
     if (!bufferContainer || !canvas || !overlayCanvas) return;
     const { clientWidth, clientHeight } = bufferContainer;
@@ -164,14 +134,6 @@ function sizeCanvas() {
         overlayCanvas.width = clientWidth;
         overlayCanvas.height = clientHeight;
         draw();
-    }
-    if (oscilloCanvas) {
-        const cw = oscilloCanvas.clientWidth;
-        const ch = oscilloCanvas.clientHeight;
-        if (oscilloCanvas.width !== cw || oscilloCanvas.height !== ch) {
-            oscilloCanvas.width = cw;
-            oscilloCanvas.height = ch;
-        }
     }
 }
 
@@ -213,71 +175,61 @@ function updateForNewColor(color) {
             polBtn.textContent = isNeg ? '-' : '+';
         });
         draw();
-        if (oscilloAnimationId !== null) {
-            cancelAnimationFrame(oscilloAnimationId);
-            oscilloAnimationId = null;
-        }
-        if (oscilloCanvas) {
-            oscilloCanvas.width = oscilloCanvas.clientWidth;
-            oscilloCanvas.height = oscilloCanvas.clientHeight;
-        }
-        drawOscilloscope();
     }
 }
 
 export function initHarmonicMultislider() {
-    bufferContainer = document.querySelector(
-        '.multislider-container .buffer-container'
-    );
+    bufferContainer = document.querySelector('.multislider-container .buffer-container');
     canvas = document.getElementById('harmonic-multislider-canvas');
     overlayCanvas = document.getElementById('filter-overlay-canvas');
     if (!canvas || !bufferContainer || !overlayCanvas) return;
     ctx = canvas.getContext('2d');
     overlayCtx = overlayCanvas.getContext('2d');
 
-    // Guarantee the buffer container has a visible height.  Without this,
-    // flexbox layouts may collapse it, resulting in a zero-height canvas.
-    if (
-        bufferContainer &&
-        !bufferContainer.style.height &&
-        !bufferContainer.style.minHeight
-    ) {
+    if (bufferContainer && !bufferContainer.style.height && !bufferContainer.style.minHeight) {
         bufferContainer.style.minHeight = '80px';
     }
 
-    // Insert the label/phase control row above the filter main panel
-    {
-        const multisliderContainer = document.querySelector(
-            '.multislider-container'
-        );
-        const filterMainPanel = multisliderContainer
-            ? multisliderContainer.querySelector('.filter-main-panel')
-            : null;
-        if (
-            multisliderContainer &&
-            filterMainPanel &&
-            !multisliderContainer.querySelector('.harmonic-label-row')
-        ) {
+    const multisliderContainer = document.querySelector('.multislider-container');
+    const filterMainPanel = multisliderContainer?.querySelector('.filter-main-panel');
+
+    if (multisliderContainer && filterMainPanel) {
+        // 1. Create Label Row (Top)
+        if (!multisliderContainer.querySelector('.harmonic-label-row')) {
             const labelRow = document.createElement('div');
             labelRow.className = 'harmonic-label-row';
             labelRow.style.display = 'flex';
-            labelRow.style.justifyContent = 'space-between';
+            labelRow.style.justifyContent = 'space-around';
             labelRow.style.marginBottom = '4px';
             for (let i = 0; i < BINS; i++) {
-                const wrapper = document.createElement('div');
-                wrapper.style.display = 'flex';
-                wrapper.style.flexDirection = 'column';
-                wrapper.style.alignItems = 'center';
-                wrapper.style.flex = '1';
                 const label = document.createElement('span');
                 label.textContent = i === 0 ? 'F0' : `H${i}`;
                 label.style.fontSize = '0.7rem';
-                label.style.marginBottom = '2px';
+                label.style.flex = '1';
+                label.style.textAlign = 'center';
+                labelRow.appendChild(label);
+            }
+            multisliderContainer.insertBefore(labelRow, filterMainPanel);
+        }
+
+        // 2. Create Phase Control Row (Bottom)
+        if (!multisliderContainer.querySelector('.harmonic-phase-row')) {
+            const phaseRow = document.createElement('div');
+            phaseRow.className = 'harmonic-phase-row';
+            phaseRow.style.display = 'flex';
+            phaseRow.style.justifyContent = 'space-around';
+            phaseRow.style.marginTop = '4px';
+            for (let i = 0; i < BINS; i++) {
+                const wrapper = document.createElement('div');
+                wrapper.style.display = 'flex';
+                wrapper.style.alignItems = 'center';
+                wrapper.style.flex = '1';
+                wrapper.style.justifyContent = 'center';
+                wrapper.style.gap = '2px';
+                
                 const sincosBtn = document.createElement('button');
                 sincosBtn.textContent = 'sin';
-                sincosBtn.style.fontSize = '0.6rem';
-                sincosBtn.style.padding = '1px 4px';
-                sincosBtn.style.marginBottom = '2px';
+                sincosBtn.className = 'phase-button';
                 sincosBtn.addEventListener('click', () => {
                     const newPhases = new Float32Array(phases);
                     if (sincosBtn.textContent === 'sin') {
@@ -290,10 +242,10 @@ export function initHarmonicMultislider() {
                     phases = newPhases;
                     store.setHarmonicPhases(currentColor, newPhases);
                 });
+
                 const polBtn = document.createElement('button');
                 polBtn.textContent = '+';
-                polBtn.style.fontSize = '0.6rem';
-                polBtn.style.padding = '1px 4px';
+                polBtn.className = 'phase-button';
                 polBtn.addEventListener('click', () => {
                     const newPhases = new Float32Array(phases);
                     if (polBtn.textContent === '+') {
@@ -306,35 +258,13 @@ export function initHarmonicMultislider() {
                     phases = newPhases;
                     store.setHarmonicPhases(currentColor, newPhases);
                 });
-                wrapper.appendChild(label);
+
                 wrapper.appendChild(sincosBtn);
                 wrapper.appendChild(polBtn);
-                labelRow.appendChild(wrapper);
+                phaseRow.appendChild(wrapper);
                 phaseControls.push({ sincosBtn, polBtn });
             }
-            multisliderContainer.insertBefore(labelRow, filterMainPanel);
-        }
-    }
-
-    // Insert the oscilloscope canvas below the harmonic bars and above the cutoff slider
-    {
-        const container = document.querySelector('.multislider-container');
-        if (container && !oscilloCanvas) {
-            oscilloCanvas = document.createElement('canvas');
-            oscilloCanvas.id = 'oscilloscope-canvas';
-            oscilloCanvas.style.width = '100%';
-            oscilloCanvas.style.height = '80px';
-            oscilloCanvas.style.display = 'block';
-            oscilloCanvas.style.marginTop = '4px';
-            oscilloCtx = oscilloCanvas.getContext('2d');
-            const cutoffContainer = container.querySelector(
-                '#cutoff-slider-container'
-            );
-            if (cutoffContainer) {
-                container.insertBefore(oscilloCanvas, cutoffContainer);
-            } else {
-                container.appendChild(oscilloCanvas);
-            }
+            filterMainPanel.parentNode.insertBefore(phaseRow, filterMainPanel.nextSibling);
         }
     }
 
@@ -343,12 +273,21 @@ export function initHarmonicMultislider() {
 
     canvas.addEventListener('pointerdown', (e) => {
         e.preventDefault();
+        
+        // Start live auditioning
+        SynthEngine.triggerAttack('C4', currentColor);
+        store.emit('spacebarPlayback', { color: currentColor, isPlaying: true });
+        
         handlePointerEvent(e);
         const onMove = (ev) => handlePointerEvent(ev);
         const stopDrag = () => {
             window.removeEventListener('pointermove', onMove);
             window.removeEventListener('pointerup', stopDrag);
             store.recordState();
+            
+            // Stop live auditioning
+            SynthEngine.triggerRelease('C4', currentColor);
+            store.emit('spacebarPlayback', { color: currentColor, isPlaying: false });
         };
         window.addEventListener('pointermove', onMove);
         window.addEventListener('pointerup', stopDrag);
@@ -357,18 +296,16 @@ export function initHarmonicMultislider() {
     store.on('timbreChanged', (color) => {
         if (color === currentColor) {
             coeffs = new Float32Array(store.state.timbres[color].coeffs);
-            phases = new Float32Array(
-                store.state.timbres[color].phases || coeffs.length
-            );
+            phases = new Float32Array(store.state.timbres[color].phases || coeffs.length);
             phaseControls.forEach(({ sincosBtn, polBtn }, i) => {
+                if (!sincosBtn || !polBtn) return;
                 const phase = phases[i] || 0;
                 let p = phase % (2 * Math.PI);
                 if (p < 0) p += 2 * Math.PI;
                 const isCos =
                     (p > Math.PI * 0.25 && p < Math.PI * 0.75) ||
                     (p > Math.PI * 1.25 && p < Math.PI * 1.75);
-                const isNeg =
-                    p > Math.PI * 0.75 && p < Math.PI * 1.25;
+                const isNeg = p > Math.PI * 0.75 && p < Math.PI * 1.25;
                 sincosBtn.textContent = isCos ? 'cos' : 'sin';
                 polBtn.textContent = isNeg ? '-' : '+';
             });
@@ -382,14 +319,8 @@ export function initHarmonicMultislider() {
         }
     });
 
-    if (oscilloCanvas) {
-        oscilloCanvas.width = oscilloCanvas.clientWidth;
-        oscilloCanvas.height = oscilloCanvas.clientHeight;
-        drawOscilloscope();
-    }
-
     new ResizeObserver(sizeCanvas).observe(bufferContainer);
     sizeCanvas();
 
-    console.log('HarmonicMultislider: Initialized.');
+    console.log('HarmonicMultislider: Initialized with new layout and auditioning.');
 }

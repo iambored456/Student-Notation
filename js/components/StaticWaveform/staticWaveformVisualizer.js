@@ -78,6 +78,23 @@ class StaticWaveformVisualizer {
                 this.generateWaveform();
             }
         });
+        // Listen for playback state changes to toggle live visualization
+        store.on('playbackStateChanged', ({ isPlaying, isPaused }) => {
+            if (isPlaying && !isPaused) {
+                this.startLiveVisualization();
+            } else {
+                this.stopLiveVisualization();
+            }
+        });
+
+        // Listen for spacebar-triggered audition of a single note
+        store.on('spacebarPlayback', ({ color, isPlaying }) => {
+            if (isPlaying) {
+                this.startSingleNoteVisualization(color);
+            } else {
+                this.stopLiveVisualization();
+            }
+        });
     }
 
     generateWaveform() {
@@ -87,6 +104,7 @@ class StaticWaveformVisualizer {
         if (!timbre || !timbre.coeffs) return;
 
         const coeffs = timbre.coeffs;
+        const phases = timbre.phases || [];
         const numSamples = this.waveformData.length;
         
         // Clear the waveform data
@@ -97,11 +115,12 @@ class StaticWaveformVisualizer {
             const phase = (sample / numSamples) * 2 * Math.PI;
             let amplitude = 0;
 
-            // Add each harmonic
-            for (let harmonic = 1; harmonic < HARMONIC_BINS; harmonic++) {
-                const coeff = coeffs[harmonic] || 0;
+            // Add each harmonic including fundamental
+            for (let i = 0; i < HARMONIC_BINS; i++) {
+                const coeff = coeffs[i] || 0;
                 if (coeff > 0.001) { // Skip very small coefficients for performance
-                    amplitude += coeff * Math.sin(harmonic * phase);
+                    const phaseOffset = phases[i] || 0;
+                    amplitude += coeff * Math.sin((i + 1) * phase + phaseOffset);
                 }
             }
 
@@ -240,7 +259,8 @@ class StaticWaveformVisualizer {
             // Single color - draw normal waveform
             const color = colors[0];
             const waveform = this.liveWaveforms.get(color);
-            this.drawSingleLiveWaveform(waveform, color, width, centerY, amplitude);
+            // We can use a slightly larger amplitude when only one sound is playing
+            this.drawSingleLiveWaveform(waveform, color, width, centerY, amplitude * 1.1);
         } else if (colors.length > 1) {
             // Multiple colors - draw layered waveforms with transparency
             colors.forEach((color, index) => {
@@ -262,9 +282,9 @@ class StaticWaveformVisualizer {
         for (let x = 0; x < width; x++) {
             const sampleIndex = Math.floor(x * samplesPerPixel);
             const sample = waveform[sampleIndex] || 0;
-            // Convert from -1 to 1 range to pixel coordinates
-            const normalizedSample = sample / 128 - 1; // Assuming 8-bit audio data
-            const y = centerY - (normalizedSample * amplitude);
+            
+            // FIX: Removed the incorrect normalization. The sample is already a float from -1 to 1.
+            const y = centerY - (sample * amplitude);
 
             if (x === 0) {
                 this.ctx.moveTo(x, y);
@@ -279,9 +299,8 @@ class StaticWaveformVisualizer {
     drawLayeredLiveWaveform(waveform, color, width, centerY, amplitude, totalLayers) {
         if (!waveform || waveform.length === 0) return;
 
-        // Make each layer more transparent when there are multiple
         const alpha = Math.max(0.4, 1.0 / totalLayers);
-        const strokeColor = this.hexToRgba(color, alpha * 2); // Slightly more opaque for stroke
+        const strokeColor = this.hexToRgba(color, alpha * 2); 
         const fillColor = this.hexToRgba(color, alpha * 0.5);
 
         this.ctx.strokeStyle = strokeColor;
@@ -293,8 +312,9 @@ class StaticWaveformVisualizer {
         for (let x = 0; x < width; x++) {
             const sampleIndex = Math.floor(x * samplesPerPixel);
             const sample = waveform[sampleIndex] || 0;
-            const normalizedSample = sample / 128 - 1;
-            const y = centerY - (normalizedSample * amplitude * 0.7); // Slightly reduce amplitude for layering
+
+            // FIX: Removed the incorrect normalization here as well.
+            const y = centerY - (sample * amplitude * 0.7); // Still reduce amplitude for layering
 
             if (x === 0) {
                 this.ctx.moveTo(x, y);

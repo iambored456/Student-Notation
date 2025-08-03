@@ -12,6 +12,7 @@
 @import url('style/_sidebar.css');
 @import url('style/_modal.css');
 @import url('style/_print.css');
+@import url('style/_harmony.css');
 
 /* --- Component-Specific Styles --- */
 @import url('style/components/_sliders.css');
@@ -24,3 +25,4 @@
 @import url('style/components/_filter-controls.css');
 @import url('style/components/_paint.css');
 @import url('style/components/_ui-states.css');
+@import url('style/waveform-visualizer.css');

@@ -1,194 +1,172 @@
 // js/services/layoutService.js
 import store from '../state/index.js';
 import { getPlacedTonicSigns } from '../state/selectors.js';
-import { RESIZE_DEBOUNCE_DELAY, MIN_VISUAL_ROWS } from '../constants.js';
-import GridManager from '../components/Grid/gridManager.js';
-import Toolbar from '../components/Toolbar/Toolbar.js';
-import Harmony from '../components/Harmony/Harmony.js';
+import { RESIZE_DEBOUNCE_DELAY } from '../constants.js';
+import { Note } from 'tonal';
 
-console.log("LayoutService: Module loaded.");
+console.log("LayoutService: Module loaded for viewport virtualization.");
 
-const INITIAL_TOP_NOTE = 'C5';
-const INITIAL_BOTTOM_NOTE = 'G3';
+const DEFAULT_VISIBLE_SEMITONES = 24;
 
+let currentZoomLevel = 1.0;
+let currentScrollPosition = 0.4;
+let viewportHeight = 0;
+
+let gridContainer, pitchGridWrapper, canvas, ctx, drumGridWrapper, drumCanvas, drumCtx, playheadCanvas, hoverCanvas, harmonyContainer, harmonyCanvas, drumHoverCanvas;
 let resizeTimeout;
-// REMOVED: rightSideContainer variable
-let gridContainer, canvas, ctx, drumCanvas, drumCtx, playheadCanvas, hoverCanvas, drumHoverCanvas, pitchCanvasWrapper, drumGridWrapper, gridContainerWrapper, bottomContentWrapper, harmonyContainer, harmonyCanvas;
-let isInitialLayoutDone = false;
 
 function initDOMElements() {
-    gridContainerWrapper = document.getElementById('grid-container-wrapper'); 
     gridContainer = document.getElementById('grid-container');
-    pitchCanvasWrapper = document.getElementById('pitch-canvas-wrapper');
+    pitchGridWrapper = document.getElementById('pitch-grid-wrapper'); 
     canvas = document.getElementById('notation-grid');
+    drumGridWrapper = document.getElementById('drum-grid-wrapper');
     drumCanvas = document.getElementById('drum-grid');
     playheadCanvas = document.getElementById('playhead-canvas');
     hoverCanvas = document.getElementById('hover-canvas');
     drumHoverCanvas = document.getElementById('drum-hover-canvas');
-    bottomContentWrapper = document.getElementById('bottom-content-wrapper');
-    drumGridWrapper = document.getElementById('drum-grid-wrapper'); 
     harmonyContainer = document.getElementById('harmony-container');
     harmonyCanvas = document.getElementById('harmony-analysis-canvas');
-    // REMOVED: Initialization of rightSideContainer
     
-    if (!gridContainerWrapper) console.error("FATAL: gridContainerWrapper not found");
+    if (!pitchGridWrapper || !canvas) {
+        console.error("LayoutService FATAL: Could not find essential canvas elements.");
+        return {};
+    }
     
     ctx = canvas.getContext('2d');
     drumCtx = drumCanvas.getContext('2d');
     return { ctx, drumCtx };
 }
 
-function recalcGridColumns() {
+function recalcAndApplyLayout() {
+    if (!pitchGridWrapper || pitchGridWrapper.clientHeight === 0) {
+        requestAnimationFrame(recalcAndApplyLayout);
+        return;
+    }
+
+    // --- ADD LOGS HERE ---
+    console.log(`[LayoutService] recalcAndApplyLayout triggered. pitchGridWrapper.clientHeight: ${pitchGridWrapper.clientHeight}`);
+
+    viewportHeight = pitchGridWrapper.clientHeight;
+    const viewportWidth = pitchGridWrapper.clientWidth;
+
+    store.state.cellHeight = (viewportHeight / DEFAULT_VISIBLE_SEMITONES) * 2;
+    store.state.cellWidth = store.state.cellHeight * 0.5;
+
+    // --- AND HERE ---
+    console.log(`[LayoutService] Calculated Dimensions -> viewportHeight: ${viewportHeight}, cellHeight: ${store.state.cellHeight}, cellWidth: ${store.state.cellWidth}`);
+
+
     const { macrobeatGroupings } = store.state;
     const placedTonicSigns = getPlacedTonicSigns(store.state);
-    
     const newColumnWidths = [3, 3];
     const sortedTonicSigns = [...placedTonicSigns].sort((a, b) => a.preMacrobeatIndex - b.preMacrobeatIndex);
     let tonicSignCursor = 0;
     
     const addTonicSignsForIndex = (mbIndex) => {
+        let uuid = sortedTonicSigns[tonicSignCursor]?.uuid;
         while (sortedTonicSigns[tonicSignCursor] && sortedTonicSigns[tonicSignCursor].preMacrobeatIndex === mbIndex) {
             newColumnWidths.push(2);
-            const uuid = sortedTonicSigns[tonicSignCursor].uuid;
-            store.state.tonicSignGroups[uuid].forEach(sign => {
-                sign.columnIndex = newColumnWidths.length - 1;
-            });
             while(sortedTonicSigns[tonicSignCursor] && sortedTonicSigns[tonicSignCursor].uuid === uuid) {
                 tonicSignCursor++;
             }
+            uuid = sortedTonicSigns[tonicSignCursor]?.uuid;
         }
     };
 
     addTonicSignsForIndex(-1);
     macrobeatGroupings.forEach((group, mbIndex) => {
-        for (let i = 0; i < group; i++) {
-            newColumnWidths.push(1);
-        }
+        for (let i = 0; i < group; i++) newColumnWidths.push(1);
         addTonicSignsForIndex(mbIndex);
     });
     newColumnWidths.push(3, 3);
     store.state.columnWidths = newColumnWidths;
-}
 
-function applyDimensions() {
-    if (!isInitialLayoutDone) return;
+    const totalWidthUnits = newColumnWidths.reduce((sum, w) => sum + w, 0);
+    const totalCanvasWidth = totalWidthUnits * store.state.cellWidth;
 
-    const { cellWidth, cellHeight, columnWidths } = store.state;
-    const totalWidthUnits = columnWidths.reduce((sum, w) => sum + w, 0);
-    const canvasWidth = cellWidth * totalWidthUnits;
-    const totalLogicRows = store.state.fullRowData.length;
-    const canvasHeight = (totalLogicRows / 2) * cellHeight;
+    if (gridContainer) gridContainer.style.width = `${totalCanvasWidth}px`;
     
-    [canvas, playheadCanvas, hoverCanvas].forEach(c => { if(c) { c.width = canvasWidth; c.height = canvasHeight; } });
-    if(pitchCanvasWrapper) pitchCanvasWrapper.style.height = `${canvasHeight}px`;
+    [canvas, playheadCanvas, hoverCanvas, drumCanvas, drumHoverCanvas, harmonyCanvas].forEach(c => { 
+        if(c) { c.width = totalCanvasWidth; }
+    });
     
-    // REMOVED: Logic that tried to style the non-existent rightSideContainer
-    
-    const drumCanvasWidth = canvasWidth;
-    const pitchRowHeight = 0.5 * cellHeight;
-    const drumCanvasHeight = 3 * pitchRowHeight;
-    
-    [drumCanvas, drumHoverCanvas].forEach(c => { if(c) { c.width = drumCanvasWidth; c.height = drumCanvasHeight; } });
-    if(harmonyCanvas) harmonyCanvas.width = canvasWidth;
+    const drumRowHeight = 0.5 * store.state.cellHeight;
+    const drumCanvasHeight = 3 * drumRowHeight;
+    if (drumGridWrapper) drumGridWrapper.style.height = `${drumCanvasHeight}px`;
+    if (drumCanvas) drumCanvas.height = drumCanvasHeight;
+    if (drumHoverCanvas) drumHoverCanvas.height = drumCanvasHeight;
 
-    if(gridContainerWrapper) {
-        gridContainerWrapper.style.width = `${canvasWidth}px`;
-        gridContainerWrapper.style.setProperty('--cell-width-val', `${cellWidth}`);
+    [canvas, playheadCanvas, hoverCanvas].forEach(c => { 
+        if(c) { c.height = viewportHeight; } 
+    });
+
+    if (harmonyContainer) {
+        harmonyContainer.style.height = `${drumRowHeight}px`;
+        if(harmonyCanvas) harmonyCanvas.height = drumRowHeight;
     }
-    if(bottomContentWrapper) bottomContentWrapper.style.width = `${canvasWidth}px`;
-    if(harmonyContainer) harmonyContainer.style.width = `${canvasWidth}px`;
-    
+
     store.emit('layoutConfigChanged');
-}
-
-function calculateAndApplyLayout() {
-    const container = document.getElementById('grid-container-wrapper');
-    if (!container) return false;
-    
-    const containerHeight = container.offsetHeight;
-    if (containerHeight < 50) return false;
-    
-    let needsInitialRender = false;
-
-    if (!isInitialLayoutDone) {
-        const topNoteIndex = store.state.fullRowData.findIndex(row => row.toneNote === INITIAL_TOP_NOTE);
-        const bottomNoteIndex = store.state.fullRowData.findIndex(row => row.toneNote === INITIAL_BOTTOM_NOTE);
-        
-        if (topNoteIndex !== -1 && bottomNoteIndex !== -1) {
-            const rowsInRange = Math.abs(bottomNoteIndex - topNoteIndex) + 1;
-            const visualRows = Math.ceil(rowsInRange / 2);
-            
-            store.state.visualRows = visualRows;
-            store.state.logicRows = visualRows * 2;
-            store.state.gridPosition = topNoteIndex;
-        } else {
-            store.state.visualRows = 10;
-            store.state.logicRows = 20;
-            store.state.gridPosition = store.state.fullRowData.findIndex(r => r.toneNote === 'C4');
-        }
-        
-        isInitialLayoutDone = true;
-        needsInitialRender = true;
-    }
-    
-    const cellHeight = containerHeight / store.state.visualRows;
-    store.state.cellWidth = cellHeight / 2;
-    store.state.cellHeight = cellHeight;
-    
-    recalcGridColumns();
-    applyDimensions();
-
-    if (needsInitialRender) {
-        Toolbar.renderRhythmUI();
-        GridManager.renderPitchGrid();
-        GridManager.renderDrumGrid();
-        Harmony.render();
-    }
-    
-    return true;
-}
-
-function resizeCanvas() {
-    clearTimeout(resizeTimeout);
-    resizeTimeout = setTimeout(() => {
-        const container = document.getElementById('grid-container-wrapper');
-        if (!container) return;
-        const containerHeight = container.offsetHeight;
-        const cellHeight = containerHeight / store.state.visualRows;
-        store.state.cellWidth = cellHeight / 2;
-        store.state.cellHeight = cellHeight;
-        applyDimensions();
-    }, RESIZE_DEBOUNCE_DELAY);
 }
 
 const LayoutService = {
     init() {
         const contexts = initDOMElements();
-        const observer = new ResizeObserver(entries => {
-            if (!gridContainerWrapper) return;
-            const entry = entries[0];
-            if (entry.contentRect.height > 50 && !isInitialLayoutDone) {
-                if (calculateAndApplyLayout()) {
-                    observer.disconnect();
-                }
-            }
-        });
-
-        if (gridContainerWrapper) {
-            observer.observe(gridContainerWrapper);
-        }
-
-        window.addEventListener('resize', resizeCanvas);
-        window.addEventListener('orientationchange', resizeCanvas);
-
-        store.on('rhythmStructureChanged', () => {
-            recalcGridColumns();
-            applyDimensions(); 
+        requestAnimationFrame(recalcAndApplyLayout);
+       
+        const observer = new ResizeObserver(() => {
+            clearTimeout(resizeTimeout);
+            resizeTimeout = setTimeout(recalcAndApplyLayout, RESIZE_DEBOUNCE_DELAY);
         });
         
+        if (pitchGridWrapper) {
+            observer.observe(pitchGridWrapper);
+        }
         return contexts;
     },
+    
+    zoomIn() {
+        currentZoomLevel = Math.min(8.0, currentZoomLevel * 1.25);
+        recalcAndApplyLayout();
+    },
 
+    zoomOut() {
+        currentZoomLevel = Math.max(0.25, currentZoomLevel * 0.8);
+        recalcAndApplyLayout();
+    },
+    
+    scroll(deltaY) {
+        const scrollAmount = (deltaY / viewportHeight);
+        currentScrollPosition = Math.max(0, Math.min(1, currentScrollPosition + scrollAmount));
+        store.emit('layoutConfigChanged');
+    },
+    
+    getViewportInfo() {
+        const totalRows = store.state.fullRowData.length;
+        const rowHeight = store.state.cellHeight * 0.5;
+        const fullVirtualHeight = totalRows * rowHeight;
+        
+        const scrollableDist = Math.max(0, fullVirtualHeight - (viewportHeight / currentZoomLevel));
+        const scrollOffset = scrollableDist * currentScrollPosition;
+
+        const startRow = Math.max(0, Math.floor(scrollOffset / rowHeight) - 5);
+        const visibleRowCount = (viewportHeight / currentZoomLevel) / rowHeight;
+        const endRow = Math.min(totalRows - 1, Math.ceil(startRow + visibleRowCount + 10));
+
+        const info = {
+            zoomLevel: currentZoomLevel,
+            viewportHeight: viewportHeight,
+            rowHeight: rowHeight,
+            startRow: startRow,
+            endRow: endRow,
+            scrollOffset: scrollOffset // THE FIX: Use this precise value
+        };
+
+        // --- ADD LOG HERE ---
+        console.log('[LayoutService] getViewportInfo returning:', info);
+
+        return info;
+    },
+    
     getMacrobeatWidthPx(state, grouping) {
         return grouping * state.cellWidth;
     },
@@ -196,34 +174,13 @@ const LayoutService = {
     getColumnX(index) {
         let x = 0;
         for (let i = 0; i < index; i++) {
-            const widthMultiplier = store.state.columnWidths[i] || 0;
-            x += widthMultiplier * store.state.cellWidth;
+            x += (store.state.columnWidths[i] || 0) * store.state.cellWidth;
         }
         return x;
     },
 
     getCanvasWidth() {
-        const { cellWidth, columnWidths } = store.state;
-        return columnWidths.reduce((sum, w) => sum + w, 0) * cellWidth;
-    },
-    
-    zoomIn() {
-        if (!isInitialLayoutDone) return;
-        if (store.state.visualRows > MIN_VISUAL_ROWS) {
-            store.state.visualRows--;
-            store.state.logicRows = store.state.visualRows * 2;
-            resizeCanvas();
-        }
-    },
-
-    zoomOut() {
-        if (!isInitialLayoutDone) return;
-        const maxVisualRows = Math.floor(store.state.fullRowData.length / 2);
-        if (store.state.visualRows < maxVisualRows) {
-            store.state.visualRows++;
-            store.state.logicRows = store.state.visualRows * 2;
-            resizeCanvas();
-        }
+        return (store.state.columnWidths.reduce((sum, w) => sum + w, 0)) * store.state.cellWidth;
     }
 };
 

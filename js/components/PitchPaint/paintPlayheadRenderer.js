@@ -1,6 +1,7 @@
 // js/components/PitchPaint/paintPlayheadRenderer.js
 import store from '../../state/index.js';
 import LayoutService from '../../services/layoutService.js';
+import GridCoordsService from '../../services/gridCoordsService.js';
 import { getPitchColor } from '../../utils/chromaticColors.js';
 import PaintCanvas from './paintCanvas.js';
 import * as Tone from 'tone';
@@ -107,15 +108,15 @@ class PaintPlayheadRenderer {
       this.ctx.lineWidth = 2;
       this.ctx.stroke();
     } else {
-      // Draw the stationary playhead in the vertical center of the *visible* area
-      const { gridPosition, logicRows, cellHeight } = store.state;
-      const visibleCenterY = (gridPosition * (cellHeight * 0.5)) + (logicRows * (cellHeight * 0.5) / 2);
+      // UPDATED: Draw the stationary playhead in the center of the current viewport
+      const viewportInfo = LayoutService.getViewportInfo();
+      const centerY = viewportInfo.viewportHeight / 2;
 
       this.ctx.strokeStyle = 'rgba(74, 144, 226, 0.8)';
       this.ctx.lineWidth = 2;
       this.ctx.setLineDash([4, 4]);
       this.ctx.beginPath();
-      this.ctx.arc(startX, visibleCenterY, 10, 0, 2 * Math.PI);
+      this.ctx.arc(startX, centerY, 10, 0, 2 * Math.PI);
       this.ctx.stroke();
       this.ctx.setLineDash([]);
     }
@@ -125,6 +126,7 @@ class PaintPlayheadRenderer {
     const xPos = this.calculateXFromTime(Tone.Transport.seconds);
     if (xPos === null) return;
 
+    // UPDATED: Draw playhead line across the full canvas height
     this.ctx.strokeStyle = '#FF6B35';
     this.ctx.lineWidth = 3;
     this.ctx.shadowColor = '#FF6B35';
@@ -188,38 +190,45 @@ class PaintPlayheadRenderer {
     return null;
   }
   
-  // THE REFACTORED FUNCTION, ADAPTED FROM PITCH VISUALIZER
+  /**
+   * UPDATED: Convert MIDI to absolute canvas Y coordinate (not viewport-relative)
+   * The transform system will handle the viewport positioning
+   */
   midiToY(midiValue) {
     if (midiValue === 0) return null;
 
     const { fullRowData, cellHeight } = store.state;
     if (!fullRowData || fullRowData.length === 0 || cellHeight === 0) return null;
 
-    // 1. Define the absolute MIDI boundaries of the entire grid.
-    const topNoteMidi = Note.midi(fullRowData[0].toneNote); // e.g., C8 = 108
-    const bottomNoteMidi = Note.midi(fullRowData[fullRowData.length - 1].toneNote); // e.g., C1 = 24
-    const totalMidiRange = topNoteMidi - bottomNoteMidi;
+    // Find the row for this MIDI value
+    const rowIndex = fullRowData.findIndex(row => {
+      const rowMidi = Note.midi(row.toneNote);
+      return Math.abs(rowMidi - midiValue) < 0.5; // Allow for slight pitch variations
+    });
 
-    // 2. Define the absolute pixel boundaries of the entire canvas.
+    if (rowIndex === -1) return null;
+
+    // Return absolute canvas Y coordinate
     const visualRowHeight = cellHeight * 0.5;
-    const totalCanvasHeight = fullRowData.length * visualRowHeight;
+    return rowIndex * visualRowHeight;
+  }
 
-    if (totalMidiRange <= 0) return null;
+  /**
+   * NEW: Convert absolute canvas Y coordinate to current viewport Y
+   * Useful for UI elements that need to know where things appear on screen
+   */
+  canvasYToViewportY(canvasY) {
+    const viewportInfo = LayoutService.getViewportInfo();
+    return GridCoordsService.canvasToViewportY(canvasY, viewportInfo);
+  }
 
-    // 3. Normalize the incoming pitch within the total MIDI range.
-    // A value of 0.0 means the pitch is at the very top (C8).
-    // A value of 1.0 means it's at the very bottom (C1).
-    const normalizedPosition = (topNoteMidi - midiValue) / totalMidiRange;
-    
-    // 4. Map this normalized position to the total pixel height of the canvas.
-    const y = normalizedPosition * totalCanvasHeight;
-
-    // Return null if the pitch is outside the drawable range of the grid.
-    if (y < 0 || y > totalCanvasHeight) {
-        return null;
-    }
-
-    return y;
+  /**
+   * NEW: Check if a canvas Y coordinate is currently visible
+   */
+  isCanvasYVisible(canvasY) {
+    const viewportY = this.canvasYToViewportY(canvasY);
+    const viewportInfo = LayoutService.getViewportInfo();
+    return viewportY >= 0 && viewportY <= viewportInfo.viewportHeight;
   }
 }
 

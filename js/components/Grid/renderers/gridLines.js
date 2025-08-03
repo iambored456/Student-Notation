@@ -1,60 +1,49 @@
 // js/components/Grid/renderers/gridLines.js
 import { getColumnX, getRowY, getPitchClass, getLineStyleFromPitchClass } from './rendererUtils.js';
 
-function drawHorizontalMusicLines(ctx, options) {
-    const { fullRowData, cellHeight, placedTonicSigns } = options;
-
-    const tonicColumnXCoords = placedTonicSigns.map(ts => {
-        const startX = getColumnX(ts.columnIndex, options);
-        const endX = startX + options.cellWidth * 2;
-        return { start: startX, end: endX };
-    }).sort((a,b) => a.start - b.start);
-
+function drawHorizontalMusicLines(ctx, options, startRow, endRow) {
     const musicAreaStartX = getColumnX(2, options);
     const musicAreaEndX = getColumnX(options.columnWidths.length - 2, options);
 
-    fullRowData.forEach((row, rowIndex) => {
+    for (let rowIndex = startRow; rowIndex <= endRow; rowIndex++) {
+        const row = options.fullRowData[rowIndex];
+        if (!row) continue;
+
         const y = getRowY(rowIndex, options);
+        // Add a small buffer to prevent lines from disappearing at the very edge
+        if (y < -10 || y > options.viewportHeight + 10) continue;
+
         const pitchClass = getPitchClass(row.pitch);
         const style = getLineStyleFromPitchClass(pitchClass);
-        if (!style) return;
+        
+        // If style is null, it's a pitch that shouldn't have a line (F, A, etc.)
+        if (!style) continue;
 
-        let lastX = musicAreaStartX;
-
-        tonicColumnXCoords.forEach(coords => {
-            drawSegment(lastX, coords.start, y, style, cellHeight, ctx);
-            lastX = coords.end;
-        });
-        drawSegment(lastX, musicAreaEndX, y, style, cellHeight, ctx);
-    });
-}
-
-function drawSegment(startX, endX, y, style, cellHeight, ctx) {
-    if (startX >= endX) return;
-    const width = endX - startX;
-
-    if (style.color === '#f8f9fa') { // G line background fill
-        ctx.fillStyle = style.color;
-        ctx.fillRect(startX, y - (cellHeight / 2), width, cellHeight);
-    } else {
-        ctx.beginPath();
-        ctx.moveTo(startX, y);
-        ctx.lineTo(endX, y);
-        ctx.lineWidth = style.lineWidth;
-        ctx.strokeStyle = style.color;
-        ctx.setLineDash(style.dash);
-        ctx.stroke();
-        ctx.setLineDash([]);
+        // THE FIX: Check if the color is the special fill color for the G-line
+        if (style.color === '#f8f9fa') { 
+            ctx.fillStyle = style.color;
+            const scaledRowHeight = options.rowHeight * options.zoomLevel;
+            ctx.fillRect(musicAreaStartX, y - scaledRowHeight / 2, musicAreaEndX - musicAreaStartX, scaledRowHeight);
+        } else {
+            // Otherwise, draw a normal line
+            ctx.beginPath();
+            ctx.moveTo(musicAreaStartX, y);
+            ctx.lineTo(musicAreaEndX, y);
+            ctx.lineWidth = style.lineWidth;
+            ctx.strokeStyle = style.color;
+            ctx.setLineDash(style.dash);
+            ctx.stroke();
+            ctx.setLineDash([]);
+        }
     }
 }
 
-export function drawHorizontalLines(ctx, options) {
-    // This function now only draws lines in the main music area.
-    // Legend lines are handled by the legend renderer itself.
-    drawHorizontalMusicLines(ctx, options);
+export function drawHorizontalLines(ctx, options, startRow, endRow) {
+    drawHorizontalMusicLines(ctx, options, startRow, endRow);
 }
 
 export function drawVerticalLines(ctx, options) {
+    // This function remains correct and does not need changes.
     const { columnWidths, macrobeatGroupings, macrobeatBoundaryStyles, placedTonicSigns } = options;
     const totalColumns = columnWidths.length;
     let macrobeatBoundaries = [];

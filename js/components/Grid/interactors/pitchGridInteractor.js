@@ -5,6 +5,7 @@ import SynthEngine from '../../../services/synthEngine.js';
 import GridCoordsService from '../../../services/gridCoordsService.js';
 import LayoutService from '../../../services/layoutService.js';
 import { drawSingleColumnOvalNote, drawTwoColumnOvalNote, drawTonicShape } from '../renderers/notes.js';
+import { getRowY } from '../renderers/rendererUtils.js';
 import GlobalService from '../../../services/globalService.js';
 import { Note } from 'tonal';
 
@@ -61,9 +62,14 @@ function getChordNotesFromIntervals(rootNote) {
 
 // --- Hover Drawing Logic ---
 function drawHoverHighlight(colIndex, rowIndex, color) {
+    console.log(`[Interactor] drawHoverHighlight called with col: ${colIndex}, row: ${rowIndex}`);
     if (!pitchHoverCtx) return;
+
     const x = LayoutService.getColumnX(colIndex);
-    const y = rowIndex * 0.5 * store.state.cellHeight - store.state.cellHeight / 2;
+    // CORRECTED Y CALCULATION
+    const centerY = getRowY(rowIndex, store.state);
+    const y = centerY - (store.state.cellHeight / 2);
+
     const toolType = store.state.selectedTool;
     let highlightWidth = store.state.columnWidths[colIndex] * store.state.cellWidth;
     
@@ -179,13 +185,17 @@ function handleMouseMove(e) {
     const rect = e.target.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
+    console.log(`[Interactor] handleMouseMove: Canvas Coords (x: ${x.toFixed(2)}, y: ${y.toFixed(2)})`);
     const colIndex = GridCoordsService.getColumnIndex(x);
     const rowIndex = GridCoordsService.getPitchRowIndex(y);
+    console.log(`[Interactor] handleMouseMove: Grid Coords (col: ${colIndex}, row: ${rowIndex})`);
+
 
     if (!pitchHoverCtx) return;
     pitchHoverCtx.clearRect(0, 0, pitchHoverCtx.canvas.width, pitchHoverCtx.canvas.height);
 
     if (colIndex < 2 || colIndex >= store.state.columnWidths.length - 2 || getPitchForRow(rowIndex) === null) {
+        console.log('[Interactor] Condition met to EXIT hover logic.');
         lastHoveredTonicPoint = null;
         lastHoveredOctaveRows = [];
         return;

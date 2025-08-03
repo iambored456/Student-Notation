@@ -44,6 +44,14 @@
             <button class="toolkit-icon-button" id="grid-zoom-in" title="Zoom In">🔍</button>
             <button class="toolkit-icon-button" id="grid-zoom-out" title="Zoom Out">🔎</button>
         </div>
+        <div class="tool-subcontainer">
+            <button class="toolkit-button" id="clear-button">Clear</button>
+            <button class="toolkit-button" id="undo-button">Undo</button>
+            <button class="toolkit-button" id="redo-button">Redo</button>
+            <button class="toolkit-icon-button eraser-button" id="eraser-tool-button" title="Eraser">
+                <img src="/assets/icons/Eraser.png" alt="Eraser" class="eraser-icon">
+            </button>
+        </div>
         <div class="tool-subcontainer" id="note-bank-container">
             <div class="note-bank-row">
                 <div class="note-pair" data-color="#4a90e2"><div class="note circle-note" data-type="circle"></div><div class="note oval-note" data-type="oval"></div></div>
@@ -53,44 +61,17 @@
                 <div class="note-pair" data-color="#d66573"><div class="note circle-note" data-type="circle"></div><div class="note oval-note" data-type="oval"></div></div>
                 <div class="note-pair" data-color="#68a03f"><div class="note circle-note" data-type="circle"></div><div class="note oval-note" data-type="oval"></div></div>
             </div>
+
         </div>
+        <!-- ** NEW LOCATION FOR PLAYBACK CONTROLS ** -->
         <div class="tool-subcontainer">
-            <button class="toolkit-button" id="clear-button">Clear</button>
-            <button class="toolkit-button" id="undo-button">Undo</button>
-            <button class="toolkit-button" id="redo-button">Redo</button>
-            <!-- REVISED ERASER BUTTON -->
-            <button class="toolkit-icon-button eraser-button" id="eraser-tool-button" title="Eraser">
-                <img src="/assets/icons/Eraser.png" alt="Eraser" class="eraser-icon">
-            </button>
+            <div class="playback-row">
+                <button class="toolkit-button" id="loop-button">🔁</button>
+                <button class="toolkit-button" id="stop-button">⏹</button>
+                <button class="toolkit-button" id="play-button">⏵</button>
+            </div>
         </div>
     </div>
-
-    <!-- Container 2: Playback Controls -->
-    <div id="container-2">
-        <div class="tempo-row">
-            <div class="tempo-input-group">
-                <img src="/assets/icons/8thNote.svg" alt="Eighth Note Tempo" class="tempo-label-icon">
-                <input type="number" class="tempo-input" id="eighth-note-tempo" value="180">
-            </div>
-            <div class="tempo-input-group">
-                <img src="/assets/icons/QuarterNote.svg" alt="Quarter Note Tempo" class="tempo-label-icon">
-                <input type="number" class="tempo-input" id="quarter-note-tempo" value="90">
-            </div>
-            <div class="tempo-input-group">
-                <img src="/assets/icons/DottedQuarterNote.svg" alt="Dotted Quarter Note Tempo" class="tempo-label-icon">
-                <input type="number" class="tempo-input" id="dotted-quarter-tempo" value="60">
-            </div>
-        </div>
-        <div class="tempo-slider-row">
-            <input type="range" id="tempo-slider" min="30" max="240" value="90">
-        </div>
-        <div class="playback-row">
-            <button class="toolkit-button" id="play-button">⏵</button>
-            <button class="toolkit-button" id="stop-button">⏹</button>
-            <button class="toolkit-button" id="loop-button">🔁</button>
-        </div>
-    </div>
-
     <!-- Container 3: Tabbed Interface -->
     <div id="container-3">
         <div class="tab-sidebar">
@@ -119,7 +100,6 @@
                     </div>
                 </div>
                 
-                <!-- NEW: Waveform Preview Section -->
                 <div class="control-section static-waveform-container">
                     <h4>Waveform Preview</h4>
                     <div class="waveform-display-wrapper">
@@ -165,8 +145,7 @@
                         <button id="sharp-toggle-btn" class="accidental-button active" aria-pressed="true">♯</button>
                     </div>
                 </div>
-
-                <!-- PITCH PAINTING SECTION -->
+                
                 <div class="control-section" id="pitch-paint-container">
                     <h4>Pitch Painting</h4>
                     <div class="paint-main-controls">
@@ -218,22 +197,60 @@
                     <h4>Macrobeat Structure</h4>
                     <div class="macrobeat-adjust-group"><button class="toolkit-button" id="macrobeat-increase">+</button><button class="toolkit-button" id="macrobeat-decrease">–</button></div>
                 </div>
+                <div class="control-section">
+                    <h4>Tempo</h4>
+                    <div class="tempo-row">
+                        <div class="tempo-input-group">
+                            <img src="/assets/icons/8thNote.svg" alt="Eighth Note Tempo" class="tempo-label-icon">
+                            <input type="number" class="tempo-input" id="eighth-note-tempo" value="180">
+                        </div>
+                        <div class="tempo-input-group">
+                            <img src="/assets/icons/QuarterNote.svg" alt="Quarter Note Tempo" class="tempo-label-icon">
+                            <input type="number" class="tempo-input" id="quarter-note-tempo" value="90">
+                        </div>
+                        <div class="tempo-input-group">
+                            <img src="/assets/icons/DottedQuarterNote.svg" alt="Dotted Quarter Note Tempo" class="tempo-label-icon">
+                            <input type="number" class="tempo-input" id="dotted-quarter-tempo" value="60">
+                        </div>
+                    </div>
+                    <div class="tempo-slider-row">
+                        <input type="range" id="tempo-slider" min="30" max="240" value="90">
+                    </div>
+                </div>
             </div>
         </div>
     </div>
   </div>
-  <!-- End New Unified Toolbar -->
 
-  <!-- Middle Section (Grid and Canvases) -->
   <div id="middle-section">
-    <div id="grid-container-wrapper">
-      <div id="time-signature-display"></div>
-      <div id="grid-controls-container"><div id="beat-line-controls"></div></div>
-      <div id="pitch-grid-container"><div id="grid-container"><div id="pitch-canvas-wrapper"><canvas id="notation-grid"></canvas><canvas id="pitch-paint-canvas"></canvas><canvas id="playhead-canvas"></canvas><canvas id="hover-canvas"></canvas></div></div></div>
+    <!-- NEW: Stable container for the entire grid system -->
+    <div id="grid-and-harmony-container">
+        <div id="pitch-grid-wrapper">
+            <div id="time-signature-display"></div>
+            <div id="grid-controls-container"><div id="beat-line-controls"></div></div>
+            <div id="pitch-grid-container">
+                <div id="grid-container">
+                    <div id="pitch-canvas-wrapper">
+                        <canvas id="notation-grid"></canvas>
+                        <canvas id="pitch-paint-canvas"></canvas>
+                        <canvas id="playhead-canvas"></canvas>
+                        <canvas id="hover-canvas"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="harmony-container"><canvas id="harmony-analysis-canvas"></canvas></div>
+        <div id="drum-grid-wrapper">
+            <canvas id="drum-grid"></canvas>
+            <canvas id="drum-hover-canvas"></canvas>
+        </div>
     </div>
+</div>
     <div id="harmony-container"><canvas id="harmony-analysis-canvas"></canvas></div>
-    <div id="bottom-content-wrapper">
-        <div id="drum-grid-wrapper"><canvas id="drum-grid"></canvas><canvas id="drum-hover-canvas"></canvas></div>
+    <!-- RENAMED: from bottom-content-wrapper, and it's now a direct child -->
+    <div id="drum-grid-wrapper">
+        <canvas id="drum-grid"></canvas>
+        <canvas id="drum-hover-canvas"></canvas>
     </div>
   </div>
 
@@ -245,7 +262,7 @@
 
 </div>
 
-<!-- Print Preview Modal and Staging Area -->
+<!-- ... (Print Preview Modal remains the same) ... -->
 <div id="print-preview-overlay" class="hidden">
     <div id="print-preview-modal">
         <div class="print-preview-header">

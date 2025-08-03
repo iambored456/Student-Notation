@@ -1,16 +1,20 @@
 // js/components/Grid/renderers/rendererUtils.js
+import LayoutService from '../../../services/layoutService.js';
 
-export function getColumnX(index, { columnWidths, cellWidth }) {
+export function getColumnX(index, options) {
     let x = 0;
     for (let i = 0; i < index; i++) {
-        const widthMultiplier = columnWidths[i] || 0;
-        x += widthMultiplier * cellWidth;
+        const widthMultiplier = options.columnWidths[i] || 0;
+        x += widthMultiplier * options.cellWidth;
     }
     return x;
 }
 
-export function getRowY(rowIndex, { cellHeight }) {
-    return rowIndex * 0.5 * cellHeight;
+export function getRowY(rowIndex, options) {
+    const viewportInfo = LayoutService.getViewportInfo();
+    const absoluteY = rowIndex * viewportInfo.rowHeight;
+    // THE FIX: Use the precise scrollOffset for positioning
+    return (absoluteY - viewportInfo.scrollOffset) * viewportInfo.zoomLevel;
 }
 
 export function getPitchClass(pitchWithOctave) {
@@ -24,10 +28,17 @@ export function getLineStyleFromPitchClass(pc) {
         case 'C': return { lineWidth: 2, dash: [], color: '#dee2e6' };
         case 'E': return { lineWidth: 1, dash: [10, 10], color: '#dee2e6' };
         case 'G': return { lineWidth: 1, dash: [], color: '#f8f9fa' };
-        // We explicitly return null for these because they have no line or fill.
-        // Their "line" is simply the border of their colored legend cell.
-        case 'D♭/C♯': case 'E♭/D♯': case 'F': case 'A': case 'B': return null;
-        // The default case handles all other notes (D, F#, G#, A#, etc.)
+        case 'D♭/C♯':
+        case 'E♭/D♯':
+        case 'F':
+        case 'A':
+        case 'B':
+            return null;
         default: return { lineWidth: 1, dash: [], color: '#e9ecef' };
     }
+}
+
+export function getVisibleRowRange() {
+    const { startRow, endRow } = LayoutService.getViewportInfo();
+    return { startRow, endRow };
 }

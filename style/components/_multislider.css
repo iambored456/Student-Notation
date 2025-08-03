@@ -35,3 +35,18 @@
   pointer-events: none; /* Allows clicks to pass through to the multislider */
   z-index: 2;
 }
+
+.phase-button {
+    font-size: 0.6rem;
+    padding: 1px 4px;
+    min-width: 25px; /* Give them a consistent minimum width */
+    line-height: 1.2;
+    background-color: var(--c-gridline);
+    color: var(--c-text-muted);
+    border: 1px solid var(--c-border);
+}
+
+.phase-button:hover {
+    background-color: var(--c-border);
+    color: var(--c-text);
+}
