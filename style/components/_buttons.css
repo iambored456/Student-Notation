@@ -24,7 +24,6 @@
     margin-right: -1px; /* Pull over the sidebar's left border */
     position: relative;
     z-index: 1; /* Ensure this tab is on top */
-    /* THE FIX: Apply borders to top, left, and bottom, but make the right border transparent */
     border-color: var(--c-border);
     border-right-color: transparent;
     border-top-right-radius: 0;
@@ -34,12 +33,46 @@
 /* --- General Toolkit Buttons --- */
 .toolkit-button { line-height: 1.2; padding: var(--space-2); }
 .toolkit-icon-button {
-    font-size: 16px; width: 36px; height: 36px; padding: 0;
+    font-size: 16px; 
+    width: 42px; 
+    height: 42px; 
+    padding: var(--space-1); 
     display: flex; align-items: center; justify-content: center;
-    background-color: transparent; border: 1px solid var(--c-border);
-    color: var(--c-text-muted); border-radius: var(--border-radius-sm);
+    background-color: transparent; 
+    border: none; 
+    color: var(--c-text-muted); 
+    border-radius: var(--border-radius-md);
+}
+.toolkit-icon-button img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
 }
 .toolkit-icon-button:hover { background-color: var(--c-gridline); }
+
+/* --- Sidebar Buttons --- */
+.sidebar-button {
+    background-color: transparent;
+    border: none;
+    border-radius: var(--border-radius-md);
+    width: 48px;
+    height: 48px;
+    padding: var(--space-2);
+    margin-bottom: var(--space-2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.sidebar-button:hover {
+    background-color: var(--c-gridline);
+}
+.sidebar-button img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    display: block;
+    margin: 0 auto;
+}
 
 /* --- Preset Voice Buttons --- */
 .preset-grid { display: flex; gap: var(--space-2); }
@@ -59,10 +92,10 @@
     align-items: stretch;
     justify-content: center;
     gap: var(--space-2);
-    padding: var(1em);
+    padding: var(--space-1);
 }
 
-.playback-row .toolkit-button {
+.playback-row .toolkit-icon-button {
     flex: 1;
     text-align: center;
     justify-content: center;
@@ -89,12 +122,14 @@
 }
 .sidebar-toggle-button:not(.active):hover { background-color: var(--c-border); }
 
-/* --- Dropdown Container Styles --- */
 .dropdown-container { position: relative; display: inline-block; }
 .tonic-dropdown-toggle, .degree-dropdown-toggle {
     display: flex; align-items: center; gap: var(--space-2);
     justify-content: center; background-color: var(--c-surface);
     color: var(--c-text); border: 1px solid var(--c-border);
+}
+.tonic-dropdown-toggle {
+    padding: var(--space-1) var(--space-2);
 }
 .dropdown-arrow { font-size: 10px; transition: transform 0.2s ease; }
 .dropdown-container.open .dropdown-arrow { transform: rotate(180deg); }
@@ -104,10 +139,24 @@
     border: 1px solid var(--c-border); border-radius: var(--border-radius-md);
     box-shadow: var(--box-shadow-md); z-index: 100;
     padding: var(--space-1); flex-direction: column; gap: var(--space-1);
-    margin-top: var(--space-1); max-height: 110px; overflow-y: auto;
+    margin-top: var(--space-1); max-height: 200px; overflow-y: auto;
 }
 .dropdown-container.open .dropdown-menu { display: flex; }
-.dropdown-menu .tonic-sign-button { width: 100%; border: 1px solid transparent; }
+.tonic-sign-button {
+    background: transparent;
+    border: none;
+    padding: 0;
+}
+.tonic-shape-icon {
+    width: 28px;
+    height: 28px;
+    object-fit: contain;
+    display: block;
+}
+.dropdown-menu .tonic-shape-icon {
+    width: 32px;
+    height: 32px;
+}
 .tonic-dropdown-toggle.selected, #degree-dropdown-menu .toolkit-button.active {
     border-color: var(--c-accent); box-shadow: 0 0 5px var(--c-accent);
 }

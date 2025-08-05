@@ -1,8 +1,8 @@
 // js/services/printService.js
 import store from '../state/index.js';
 import { getPlacedTonicSigns } from '../state/selectors.js';
-import { drawPitchGrid } from '../components/Grid/renderers/pitchGridRenderer.js';
-import { drawDrumGrid } from '../components/Grid/renderers/drumGridRenderer.js';
+import { drawPitchGrid } from '../components/Canvas/PitchGrid/renderers/pitchGridRenderer.js';
+import { drawDrumGrid } from '../components/Canvas/DrumGrid/drumGridRenderer.js';
 
 console.log("PrintService: Module loaded.");
 

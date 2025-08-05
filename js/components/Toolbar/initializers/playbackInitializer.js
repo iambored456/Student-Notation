@@ -1,4 +1,3 @@
-// js/components/Toolbar/initializers/playbackInitializer.js
 import store from '../../../state/index.js';
 import TransportService from '../../../services/transportService.js';
 
@@ -31,14 +30,20 @@ export function initPlaybackControls() {
         TransportService.stop();
     });
     
-    if(clearBtn) clearBtn.addEventListener('click', () => store.clearAllNotes());
+    if(clearBtn) clearBtn.addEventListener('click', () => {
+        clearBtn.classList.add('flash');
+        setTimeout(() => clearBtn.classList.remove('flash'), 300);
+        store.clearAllNotes();
+    });
     if(loopBtn) loopBtn.addEventListener('click', () => store.setLooping(!store.state.isLooping));
     if(undoBtn) undoBtn.addEventListener('click', () => store.undo());
     if(redoBtn) redoBtn.addEventListener('click', () => store.redo());
 
     store.on('playbackStateChanged', ({ isPlaying, isPaused }) => {
         if (playBtn) {
-            playBtn.textContent = (isPlaying && !isPaused) ? "⏸" : "⏵";
+            const playIcon = '<img src="/assets/icons/Play.svg" alt="Play">';
+            const pauseIcon = '<img src="/assets/icons/Pause.svg" alt="Pause">';
+            playBtn.innerHTML = (isPlaying && !isPaused) ? pauseIcon : playIcon;
             playBtn.classList.toggle("active", isPlaying && !isPaused);
         }
     });

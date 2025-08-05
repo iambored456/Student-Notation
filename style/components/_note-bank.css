@@ -1,52 +1,48 @@
 /* style/components/_note-bank.css */
-
 #note-bank-container {
-  display: flex;
-  flex-direction: column; 
-  align-items: center;
-  justify-content: center;
-  gap: var(--space-2);
+display: flex;
+flex-direction: column;
+align-items: center;
+justify-content: center;
+gap: var(--space-2);
 }
 .note-bank-row {
-    display: flex;
-    flex-direction: row; 
-    gap: var(--space-2);
+display: flex;
+flex-direction: row;
+gap: var(--space-2);
 }
 .note-pair {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  gap: var(--space-1);
-  padding: 3px;
-  border-radius: var(--border-radius-md);
-  border: 2px solid transparent; 
+display: flex;
+flex-direction: row;
+align-items: center;
+gap: var(--space-1);
+padding: 3px;
+border-radius: var(--border-radius-md);
+border: 2px solid transparent;
 }
 .note {
-  width: var(--note-size);
-  height: var(--note-size);
-  margin: 0;
-  cursor: pointer;
-  border-radius: 50%;
-  transition: all 0.2s;
-  background-color: transparent;
-  border: 4px solid var(--note-color);
+width: var(--note-size);
+height: var(--note-size);
+margin: 0;
+cursor: pointer;
+border-radius: 50%;
+transition: all 0.2s;
+background-color: transparent;
+border: 4px solid var(--note-color);
 }
 .note:hover {
-  transform: scale(1.1);
+transform: scale(1.1);
 }
 .oval-note {
-    width: calc(var(--note-size) * 0.7);
+width: calc(var(--note-size) * 0.7);
 }
-
 .note-pair[data-color="#4a90e2"] .note { --note-color: #4a90e2; }
 .note-pair[data-color="#2d2d2d"] .note { --note-color: #2d2d2d; }
 .note-pair[data-color="#d66573"] .note { --note-color: #d66573; }
 .note-pair[data-color="#68a03f"] .note { --note-color: #68a03f; }
-
-/* NEW: Styles for the eraser icon image */
+/* Styles for the eraser icon image */
 .eraser-icon {
-    width: 2.2em;
-    height: 2.2em;
-    filter: none; 
+width: 24px;
+height: 24px;
+object-fit: contain;
 }
-

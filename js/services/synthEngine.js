@@ -2,8 +2,9 @@
 import * as Tone from 'tone';
 import store from '../state/index.js';
 import { PRESETS } from './presetData.js';
+import logger from '../utils/logger.js';
 
-console.log("SynthEngine: Module loaded");
+logger.moduleLoaded('SynthEngine');
 
 let synths = {};
 let volumeControl;

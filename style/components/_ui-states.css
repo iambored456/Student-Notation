@@ -5,16 +5,22 @@
   background-color: var(--note-color, #000);
 }
 .note-pair.selected {
-  border-color: var(--c-accent) !important;
-  box-shadow: 0 0 8px var(--c-accent);
+  border-color: var(--note-color) !important;
+  box-shadow: 0 0 8px var(--note-color);
 }
 
+/* Ensure note-pair inherits the color from its note children */
+.note-pair[data-color="#4a90e2"].selected { --note-color: #4a90e2; }
+.note-pair[data-color="#2d2d2d"].selected { --note-color: #2d2d2d; }
+.note-pair[data-color="#d66573"].selected { --note-color: #d66573; }
+.note-pair[data-color="#68a03f"].selected { --note-color: #68a03f; }
+
 /* --- Button Selection States --- */
-/* NEW: Specific style for the selected eraser tool */
+/* Specific style for the selected eraser tool */
 .eraser-button.selected { 
   background-color: rgba(220, 53, 69, 0.2); /* Light red fill */
-  border: 1px solid var(--c-danger) !important;
-  box-shadow: 0 0 5px var(--c-danger);
+  border: none !important;
+  box-shadow: 0 0 8px var(--c-danger);
   color: var(--c-danger); /* Darker red emoji */
 }
 
@@ -22,6 +28,24 @@
 .eraser-button.erasing-active {
     background-color: var(--c-danger);
     color: var(--c-surface); /* Make emoji white */
+}
+
+/* --- Clear Button States --- */
+.toolkit-icon-button.flash {
+    background-color: rgba(220, 53, 69, 0.3);
+    box-shadow: 0 0 8px var(--c-danger);
+    animation: clearFlash 0.3s ease-out;
+}
+
+@keyframes clearFlash {
+    0% {
+        background-color: rgba(220, 53, 69, 0.6);
+        box-shadow: 0 0 12px var(--c-danger);
+    }
+    100% {
+        background-color: transparent;
+        box-shadow: none;
+    }
 }
 
 .preset-button.selected {

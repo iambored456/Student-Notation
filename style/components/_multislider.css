@@ -1,84 +1,99 @@
 /* style/components/_multislider.css */
 
 .multislider-container {
-  border-radius: var(--border-radius-md());
-  /* Added to make the accent color apply to filter controls */
   flex-direction: column;
   justify-content: flex-start;
 }
 
-.multislider-container .buffer-container {
-  flex-grow: 1; /* Make it fill the available horizontal space */
-  min-width: 0; /* A good practice to prevent flex item overflow */
-  height: 100%;
-  padding: 0;
-  margin: 0;
-  box-sizing: border-box;
-  /* Make this a positioning context for the overlay */
-  position: relative; 
-}
-
-#harmonic-multislider-canvas {
-  display: block;
-  width: 100%;
-  height: 100%;
-  position: relative; /* Ensure it's in the stacking context */
-  z-index: 1;
-}
-
-#filter-overlay-canvas {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none; /* Allows clicks to pass through to the multislider */
-  z-index: 2;
-}
-
-.phase-button {
-    font-size: 0.6rem;
-    padding: 1px 4px;
-    min-width: 25px; /* Give them a consistent minimum width */
-    line-height: 1.2;
-    background-color: var(--c-gridline);
-    color: var(--c-text-muted);
-    border: 1px solid var(--c-border);
-}
-
-.phase-button:hover {
-    background-color: var(--c-border);
-    color: var(--c-text);
-}
-
-.harmonic-phase-row {
+/* New columnar grid structure */
+.multislider-grid {
   display: flex;
-  justify-content: space-around;
-  align-items: flex-start;
-  margin-top: 4px;
-  padding: 0 4px; /* Add some padding to align with the sliders */
+  flex-direction: row;
+  flex-grow: 1;
+  min-height: 120px;
+  position: relative;
+  gap: 2px;
+  padding: 4px;
 }
 
-.phase-button-pair {
+/* Individual slider columns */
+.slider-column {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 2px;
   flex: 1;
-  max-width: 1.2em; /* Limit the width to keep buttons small */
+  align-items: center;
+  min-width: 0;
 }
 
+/* Harmonic labels */
+.harmonic-label {
+  font-size: 0.7rem;
+  color: var(--c-text-muted);
+  text-align: center;
+  margin-bottom: 4px;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Slider track container */
+.slider-track {
+  flex-grow: 1;
+  width: 100%;
+  background-color: #ffffff;
+  border: 1px solid var(--c-border);
+  border-radius: 2px;
+  position: relative;
+  cursor: pointer;
+  margin: 2px 0;
+  min-height: 60px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+}
+
+.slider-track:hover {
+  border-color: var(--c-text-muted);
+}
+
+/* Snap zone at bottom of slider */
+.slider-snap-zone {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 10%;
+  background-color: #f7f7f7;
+  border-top: 1px solid var(--c-border);
+}
+
+/* Slider fill (the colored bar) */
+.slider-fill {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background-color: transparent;
+  transition: height 0.1s ease;
+  border-radius: 0 0 1px 1px;
+}
+
+/* Phase buttons */
 .phase-button {
-  font-size: 0.55rem; /* Slightly smaller font */
-  padding: 1px 2px;
-  min-width: 22px; /* Smaller minimum width */
-  width: 100%; /* Full width of the pair container */
-  line-height: 1.1;
   background-color: var(--c-gridline);
   color: var(--c-text-muted);
   border: 1px solid var(--c-border);
   border-radius: 3px;
-  margin: 0; /* Remove any default margins */
+  margin-top: 4px;
+  padding: 2px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
 }
 
 .phase-button:hover {
@@ -86,8 +101,18 @@
   color: var(--c-text);
 }
 
-/* Ensure the phase row doesn't take too much vertical space */
-.harmonic-phase-row {
-  min-height: 1em; /* Enough for two small buttons stacked */
-  max-height: 1.2em;
+.phase-button svg {
+  width: 100%;
+  height: 100%;
+}
+
+/* Filter overlay canvas */
+.filter-overlay-canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 2;
 }

@@ -1,6 +1,4 @@
 // js/components/Toolbar/Toolbar.js
-import { renderRhythmUI } from './rhythmUI.js';
-import { renderTimeSignatureDisplay } from './timeSignatureDisplay.js';
 import { initSidebarAndVolume } from './initializers/sidebarInitializer.js';
 import { initFileActions } from './initializers/fileActionsInitializer.js';
 import { initToolSelectors } from './initializers/toolSelectorInitializer.js';
@@ -22,10 +20,6 @@ const Toolbar = {
         console.log("ToolbarComponent: All controls initialized.");
     },
 
-    renderRhythmUI() {
-        renderRhythmUI();
-        renderTimeSignatureDisplay();
-    }
 };
 
 export default Toolbar;

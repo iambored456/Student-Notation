@@ -6,30 +6,36 @@
   flex-direction: column;
   flex: 1;
   min-height: 0;
+  width: 100vw; /* Keep app container at viewport width */
+  overflow-x: visible; /* Allow children to overflow horizontally */
 }
 
-#middle-section { 
+#canvas-container { 
   height: 80vh; 
   display: flex; /* This remains a flex container */
   min-height: 0;
-  /* THE FIX: Remove overflow-x. Scrolling is now handled by the child. */
-  overflow-x: hidden; 
+  width: fit-content; /* Expand to fit content width */
+  min-width: 100%; /* But at least fill the viewport */
+  /* Allow horizontal overflow to bubble up to viewport */
+  overflow-x: visible; 
   padding: 0 var(--app-padding) var(--app-padding);
 }
 
 /* NEW: Stable Sizing Container */
-#grid-and-harmony-container {
+#canvas-content {
     display: flex;
     flex-direction: column;
-    flex: 1; /* Take all available space in #middle-section */
-    min-width: 0;
-    overflow-x: auto; /* THE FIX: Horizontal scrollbar is now here */
+    flex: 1; /* Take all available space in #canvas-container */
+    min-width: fit-content; /* Allow content to expand horizontally */
+    overflow-x: visible; /* Let horizontal overflow bubble up to viewport */
+    height: 100%; /* Constrain total height to prevent overflow */
 }
 
 /* ... (toolbar styles are unchanged) ... */
-#new-toolbar {
+#toolbar {
     height: 20vh;
     min-height: 170px;
+    width: fit-content; /* Shrink and expand to fit toolbar content only */
     display: flex;
     gap: var(--space-1);
     padding: 0.4em;
@@ -124,6 +130,8 @@
 .preset-container {
     align-items: center;
     justify-content: center;
+    flex: 0 0 auto; /* Don't grow/shrink, size to content */
+    width: fit-content; /* Shrink to necessary width */
 }
 
 .control-section h4 {
@@ -140,12 +148,13 @@
    ========================================================================= */
 /* RENAMED */
 #pitch-grid-wrapper {
-  width: 100%; 
+  width: fit-content; /* Expand to fit pitch grid content */
+  min-width: 100%; /* But at least fill the container */
   /* THE FIX: Make this a flex container */
   display: flex;
   flex-direction: column;
-  flex: 1; 
-  min-height: 0;
+  flex: 1 1 auto; /* More flexible - can shrink more easily to give space to fixed-size grids */
+  min-height: 200px; /* Minimum height to remain usable */
   overflow: hidden;
   border: 1px solid var(--c-border);
   border-bottom: none;
@@ -155,15 +164,17 @@
 }
 
 /* These are children of the flex container now */
-#time-signature-display, #grid-controls-container {
+#time-signature-display, #canvas-macrobeat-tools {
     flex-shrink: 0; /* Prevent them from shrinking */
 }
 
 #pitch-grid-container { 
   flex: 1; /* Take up all remaining vertical space */
   position: relative; 
-  width: 100%; 
-  overflow: hidden; 
+  width: fit-content; /* Expand to fit grid-container content */
+  min-width: 100%; /* But at least fill the parent */
+  overflow-x: visible; /* Let horizontal overflow bubble up to viewport */
+  overflow-y: hidden; /* Keep vertical overflow hidden */
   min-height: 0;
 }
 
@@ -171,7 +182,8 @@
 #grid-container {
   position: relative;
   height: 100%;
-  width: auto;
+  width: fit-content; /* Allow it to expand to needed width */
+  min-width: 100%; /* But at least fill the container */
 }
 
 #pitch-canvas-wrapper {
@@ -190,9 +202,11 @@
   pointer-events: none;
 }
 
-#harmony-container {
-  flex-shrink: 0;
-  width: 100%; 
+#harmonyAnalysisGrid {
+  flex: 0 0 auto; /* Fixed size - don't grow or shrink, priority over pitch grid */
+  width: fit-content; /* Expand to match pitch grid width */
+  min-width: 100%; /* But at least fill the container */
+  min-height: 40px; /* Minimum height but can grow with zoom */
   position: relative;
   background-color: var(--c-gridline);
   border-left: 1px solid var(--c-border);
@@ -205,8 +219,10 @@
 
 /* RENAMED */
 #drum-grid-wrapper {
-  flex-shrink: 0;
-  width: 100%;
+  flex: 0 0 auto; /* Fixed size - height set by JavaScript to fit content */
+  width: fit-content; /* Expand to match pitch grid width */
+  min-width: 100%; /* But at least fill the container */
+  min-height: 90px; /* TEMP: Fallback height in case JavaScript doesn't set it */
   overflow: hidden;
   position: relative;
   border: 1px solid var(--c-border);

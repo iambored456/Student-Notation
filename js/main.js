@@ -6,15 +6,18 @@ import LayoutService from './services/layoutService.js';
 import CanvasContextService from './services/canvasContextService.js';
 import SynthEngine from './services/synthEngine.js';
 import TransportService from './services/transportService.js';
+import domCache from './services/domCache.js';
+import logger from './utils/logger.js';
 import { initSpacebarHandler } from './services/spacebarHandler.js';
 import { initGridScrollHandler } from './services/gridScrollHandler.js';
 import { initKeyboardHandler } from './services/keyboardHandler.js';
 import Toolbar from './components/Toolbar/Toolbar.js';
-import GridManager from './components/Grid/gridManager.js';
-import Harmony from './components/Harmony/Harmony.js';
-import { initHarmonicMultislider } from './components/HarmonicMultislider/harmonicMultislider.js';
+import GridManager from './components/Canvas/PitchGrid/gridManager.js';
+import PitchGridController from './components/Canvas/PitchGrid/PitchGrid.js';
+import Harmony from './components/Canvas/HarmonyAnalysis/Harmony.js';
+import { initHarmonicMultislider } from './components/Harmonics-Filter/harmonicMultislider.js';
 import { initAdsrComponent } from './components/ADSR/adsrComponent.js';
-import { initFilterControls } from './components/FilterControls/filterControls.js';
+import { initFilterControls } from './components/Harmonics-Filter/filterControls.js';
 import PrintPreview from './components/PrintPreview.js';
 import { initStaticWaveformVisualizer } from './components/StaticWaveform/staticWaveformVisualizer.js';
 
@@ -23,37 +26,29 @@ import PaintCanvas from './components/PitchPaint/paintCanvas.js';
 import PaintPlayheadRenderer from './components/PitchPaint/paintPlayheadRenderer.js';
 import PaintControls from './components/PitchPaint/paintControls.js';
 
-// NEW: Zoom System Components
+// Zoom System Components
 import ZoomIndicator from './components/ZoomIndicator.js';
 
 console.log("Main.js: Application starting...");
 
-// Initialize the new zoom system
 function initializeNewZoomSystem() {
-    // Initialize the zoom indicator
     ZoomIndicator.initialize();
-    
-    // Add keyboard shortcuts for zoom
-    document.addEventListener('keydown', (e) => {
-        // Allow input fields to work normally
+        document.addEventListener('keydown', (e) => {
         const activeElement = document.activeElement.tagName.toLowerCase();
         if (['input', 'textarea'].includes(activeElement)) {
             return;
         }
 
-        // Ctrl/Cmd + Plus/Equals for zoom in
         if ((e.ctrlKey || e.metaKey) && (e.key === '+' || e.key === '=')) {
             e.preventDefault();
             store.emit('zoomIn');
         }
         
-        // Ctrl/Cmd + Minus for zoom out
         if ((e.ctrlKey || e.metaKey) && e.key === '-') {
             e.preventDefault();
             store.emit('zoomOut');
         }
         
-        // Ctrl/Cmd + 0 to reset zoom to default
         if ((e.ctrlKey || e.metaKey) && e.key === '0') {
             e.preventDefault();
             if (LayoutService.resetZoom) {
@@ -94,20 +89,21 @@ function setupDebugTools() {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-    console.log("Main.js: DOMContentLoaded event fired.");
-    console.log("========================================");
-    console.log("STARTING INITIALIZATION");
-    console.log("========================================");
+    logger.info('Main.js', 'DOMContentLoaded event fired');
+    logger.section('STARTING INITIALIZATION');
+    
+    // Initialize DOM cache first
+    domCache.init();
 
     const startAudio = async () => {
         try {
             await Tone.start();
-            console.log("AudioContext started successfully!");
+            logger.info('Main.js', 'AudioContext started successfully');
         } catch (e) {
-            console.error("Could not start AudioContext:", e);
+            logger.error('Main.js', 'Could not start AudioContext', e);
         }
     };
-    document.getElementById('app-container').addEventListener('click', startAudio, { once: true });
+    domCache.get('appContainer')?.addEventListener('click', startAudio, { once: true });
     document.getElementById('app-container').addEventListener('keydown', startAudio, { once: true });
 
     // Initialize core data and services
@@ -132,19 +128,19 @@ document.addEventListener("DOMContentLoaded", () => {
     PrintPreview.init();
 
     // Initialize static waveform visualizer
-    console.log("Main.js: Initializing Static Waveform Visualizer...");
+    logger.initStart('Static Waveform Visualizer');
     if (initStaticWaveformVisualizer()) {
-        console.log("Main.js: Static Waveform Visualizer initialized successfully.");
+        logger.initSuccess('Static Waveform Visualizer');
     } else {
-        console.warn("Main.js: Static Waveform Visualizer failed to initialize.");
+        logger.initFailed('Static Waveform Visualizer');
     }
 
     // Initialize Paint components
-    console.log("Main.js: Initializing Paint components...");
+    logger.initStart('Paint components');
     PaintCanvas.initialize();
     PaintPlayheadRenderer.initialize();
     PaintControls.initialize();
-    console.log("Main.js: Paint components initialized.");
+    logger.initSuccess('Paint components');
     
     // NEW: Initialize the enhanced zoom system
     console.log("Main.js: Initializing new zoom system...");
@@ -152,9 +148,7 @@ document.addEventListener("DOMContentLoaded", () => {
     setupDebugTools();
     console.log("Main.js: New zoom system initialized.");
     
-    console.log("----------------------------------------");
-    console.log("SETTING UP STATE SUBSCRIPTIONS");
-    console.log("----------------------------------------");
+    logger.section('SETTING UP STATE SUBSCRIPTIONS');
     
     const renderAll = () => {
         GridManager.renderPitchGrid();
@@ -166,12 +160,12 @@ document.addEventListener("DOMContentLoaded", () => {
     
     store.on('rhythmStructureChanged', () => {
         renderAll();
-        Toolbar.renderRhythmUI();
+        PitchGridController.renderMacrobeatTools();
     });
 
     store.on('layoutConfigChanged', () => {
         renderAll();
-        Toolbar.renderRhythmUI();
+        PitchGridController.renderMacrobeatTools();
     });
 
     // NEW: Enhanced zoom event handling
@@ -185,16 +179,12 @@ document.addEventListener("DOMContentLoaded", () => {
         LayoutService.zoomOut();
     });
 
-    console.log("========================================");
-    console.log("PERFORMING INITIAL RENDER");
-    console.log("========================================");
+    logger.section('PERFORMING INITIAL RENDER');
     
     store.setSelectedTool('note');
     store.setSelectedNote('circle', '#4a90e2');
     
-    console.log("========================================");
-    console.log("INITIALIZATION COMPLETE");
-    console.log("========================================");
+    logger.section('INITIALIZATION COMPLETE');
     
     // Log viewport info after initialization
     setTimeout(() => {

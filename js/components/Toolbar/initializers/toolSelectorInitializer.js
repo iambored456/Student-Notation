@@ -1,6 +1,7 @@
 // js/components/Toolbar/initializers/toolSelectorInitializer.js
 import store from '../../../state/index.js';
 import { Chord } from 'tonal';
+import domCache from '../../../services/domCache.js';
 
 const CHORD_SHAPES = {
     'X':      Chord.get("M").intervals,   'x':      Chord.get("m").intervals,
@@ -11,20 +12,18 @@ const CHORD_SHAPES = {
 };
 
 export function initToolSelectors() {
-    const noteBankContainer = document.getElementById('note-bank-container');
-    const eraserBtn = document.getElementById('eraser-tool-button');
-    const tonicDropdownContainer = document.getElementById('tonic-dropdown-container');
-    const tonicDropdownButton = document.getElementById('tonic-dropdown-button');
-    const tonicDropdownLabel = document.getElementById('tonic-dropdown-label');
-    const tonicDropdownMenu = document.getElementById('tonic-dropdown-menu');
-    const degreeDropdownWrapper = document.getElementById('degree-dropdown-wrapper');
-    const degreeDropdownButton = document.getElementById('degree-dropdown-button');
-    const diatonicBtn = document.getElementById('toggle-diatonic-degrees');
-    const modalBtn = document.getElementById('toggle-modal-degrees');
-    const flatBtn = document.getElementById('flat-toggle-btn');
-    const sharpBtn = document.getElementById('sharp-toggle-btn');
+    const {
+        noteBankContainer, eraserButton: eraserBtn, tonicDropdownContainer,
+        tonicDropdownButton, tonicDropdownLabel, tonicDropdownMenu,
+        degreeDropdownWrapper, degreeDropdownButton, diatonicBtn,
+        modalBtn, flatBtn, sharpBtn, harmonyContainerMain: harmonyContainer
+    } = domCache.getMultiple(
+        'noteBankContainer', 'eraserButton', 'tonicDropdownContainer',
+        'tonicDropdownButton', 'tonicDropdownLabel', 'tonicDropdownMenu',
+        'degreeDropdownWrapper', 'degreeDropdownButton', 'diatonicBtn',
+        'modalBtn', 'flatBtn', 'sharpBtn', 'harmonyContainerMain'
+    );
     const harmonyPresetGrid = document.querySelector('.harmony-preset-grid');
-    const harmonyContainer = document.getElementById('harmony-container-main');
 
     // --- Tool Click Listeners ---
     if (noteBankContainer) {
@@ -63,7 +62,9 @@ export function initToolSelectors() {
                 e.stopPropagation(); 
                 const tonicNumber = btn.getAttribute('data-tonic');
                 store.setSelectedTool('tonicization', tonicNumber);
-                if (tonicDropdownLabel) tonicDropdownLabel.textContent = btn.textContent;
+                if (tonicDropdownLabel) {
+                    tonicDropdownLabel.innerHTML = `<img src="/assets/icons/tonicShape_${tonicNumber}.svg" alt="Tonic ${tonicNumber}" class="tonic-shape-icon">`;
+                }
                 tonicDropdownContainer.classList.remove('open');
             });
         });
@@ -117,6 +118,11 @@ export function initToolSelectors() {
         if (harmonyContainer) {
             harmonyContainer.style.setProperty('--c-accent', newNote.color);
         }
+        // Update tab buttons to use the selected note color
+        const tabSidebar = document.querySelector('.tab-sidebar');
+        if (tabSidebar) {
+            tabSidebar.style.setProperty('--c-accent', newNote.color);
+        }
     });
 
     store.on('degreeDisplayModeChanged', (mode) => {
@@ -126,11 +132,15 @@ export function initToolSelectors() {
 
     store.on('accidentalModeChanged', ({ sharp, flat }) => {
         sharpBtn?.classList.toggle('active', sharp);
-        flatBtn?.classList.toggle('active', flat);
+        flatBtn?.classList.toggle('active', sharp);
     });
 
     // --- Initial sync with safety check ---
     if (harmonyContainer && store.state.selectedNote) {
         harmonyContainer.style.setProperty('--c-accent', store.state.selectedNote.color);
+    }
+    const tabSidebar = document.querySelector('.tab-sidebar');
+    if (tabSidebar && store.state.selectedNote) {
+        tabSidebar.style.setProperty('--c-accent', store.state.selectedNote.color);
     }
 }

@@ -52,9 +52,8 @@ class ZoomIndicator {
             if (viewportInfo.canSeeFullRange) {
                 visibilityText = ' (Full Range)';
             } else {
-                // Calculate approximate visible range
-                const cellHeight = store.state.cellHeight || 20;
-                const visibleSemitones = Math.floor(viewportInfo.viewportHeight / (cellHeight * 0.5 * viewportInfo.zoomLevel));
+                // Calculate approximate visible range using correct row height calculation
+                const visibleSemitones = Math.floor((viewportInfo.endRow - viewportInfo.startRow + 1));
                 visibilityText = ` (~${visibleSemitones} semitones)`;
             }
         }

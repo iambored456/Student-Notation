@@ -37,18 +37,13 @@ class PaintCanvas {
             this.stopRendering();
         }
     });
-    
-    const resizeObserver = new ResizeObserver(() => this.resize());
-    resizeObserver.observe(wrapper);
 
     this.resize();
     this.isInitialized = true;
-    console.log('PaintCanvas: Initialized');
   }
   
   startRendering() {
     if (this.animationFrameId) return;
-    console.log("[PaintCanvas] Starting render loop.");
     this.animationFrameId = requestAnimationFrame(() => this.animationLoop());
   }
 
@@ -56,7 +51,6 @@ class PaintCanvas {
     if (this.animationFrameId) {
         cancelAnimationFrame(this.animationFrameId);
         this.animationFrameId = null;
-        console.log("[PaintCanvas] Stopped render loop.");
     }
   }
 
@@ -75,7 +69,6 @@ class PaintCanvas {
     if (this.canvas.width !== wrapper.clientWidth || this.canvas.height !== wrapper.clientHeight) {
         this.canvas.width = wrapper.clientWidth;
         this.canvas.height = wrapper.clientHeight;
-        console.log(`PaintCanvas: Resized to ${this.canvas.width}x${this.canvas.height}`);
     }
     this.render();
   }

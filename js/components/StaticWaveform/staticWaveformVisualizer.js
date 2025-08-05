@@ -2,6 +2,7 @@
 import store from '../../state/index.js';
 import { HARMONIC_BINS } from '../../constants.js';
 import * as Tone from 'tone';
+import { hexToRgba } from '../../utils/colorUtils.js';
 
 console.log("StaticWaveformVisualizer: Module loaded.");
 
@@ -244,9 +245,9 @@ class StaticWaveformVisualizer {
         
         // Create gradient fill
         const gradient = this.ctx.createLinearGradient(0, centerY - amplitude, 0, centerY + amplitude);
-        gradient.addColorStop(0, this.hexToRgba(color, 0.3));
-        gradient.addColorStop(0.5, this.hexToRgba(color, 0.1));
-        gradient.addColorStop(1, this.hexToRgba(color, 0.3));
+        gradient.addColorStop(0, hexToRgba(color, 0.3));
+        gradient.addColorStop(0.5, hexToRgba(color, 0.1));
+        gradient.addColorStop(1, hexToRgba(color, 0.3));
         
         this.ctx.fillStyle = gradient;
         this.ctx.fill();
@@ -300,8 +301,8 @@ class StaticWaveformVisualizer {
         if (!waveform || waveform.length === 0) return;
 
         const alpha = Math.max(0.4, 1.0 / totalLayers);
-        const strokeColor = this.hexToRgba(color, alpha * 2); 
-        const fillColor = this.hexToRgba(color, alpha * 0.5);
+        const strokeColor = hexToRgba(color, alpha * 2); 
+        const fillColor = hexToRgba(color, alpha * 0.5);
 
         this.ctx.strokeStyle = strokeColor;
         this.ctx.lineWidth = 1.5;
@@ -464,14 +465,6 @@ class StaticWaveformVisualizer {
         this.ctx.fillText('+1.0', 5, 15);
         this.ctx.fillText('0.0', 5, height / 2 + 4);
         this.ctx.fillText('-1.0', 5, height - 8);
-    }
-
-    hexToRgba(hex, alpha) {
-        if (!hex) return `rgba(74, 144, 226, ${alpha})`;
-        const r = parseInt(hex.slice(1, 3), 16);
-        const g = parseInt(hex.slice(3, 5), 16);
-        const b = parseInt(hex.slice(5, 7), 16);
-        return `rgba(${r}, ${g}, ${b}, ${alpha})`;
     }
 
     dispose() {

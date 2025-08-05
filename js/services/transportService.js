@@ -5,8 +5,10 @@ import { getPlacedTonicSigns } from '../state/selectors.js';
 import LayoutService from './layoutService.js';
 import SynthEngine from './synthEngine.js';
 import GlobalService from './globalService.js';
+import domCache from './domCache.js';
+import logger from '../utils/logger.js';
 
-console.log("TransportService: Module loaded.");
+logger.moduleLoaded('TransportService');
 
 let playheadAnimationFrame;
 let drumPlayers;
@@ -19,7 +21,7 @@ function getMicrobeatDuration() {
 }
 
 function calculateTimeMap() {
-    console.log(`[transportService] calculateTimeMap: Recalculating with tempo ${store.state.tempo} BPM.`);
+    logger.debug('transportService', 'calculateTimeMap', { tempo: `${store.state.tempo} BPM` });
     timeMap = [];
     let currentTime = 0;
     const microbeatDuration = getMicrobeatDuration();
@@ -34,7 +36,7 @@ function calculateTimeMap() {
         }
     }
     timeMap.push(currentTime); 
-    console.log(`[transportService] calculateTimeMap: New total duration is ${currentTime.toFixed(2)} seconds.`);
+    logger.timing('transportService', 'calculateTimeMap', { totalDuration: `${currentTime.toFixed(2)}s` });
 }
 
 function getPitchForNote(note) {
@@ -47,7 +49,7 @@ function getPitchForNote(note) {
 }
 
 function scheduleNotes() {
-    console.log("[transportService] scheduleNotes: Clearing previous transport events and rescheduling all notes.");
+    logger.debug('transportService', 'scheduleNotes', 'Clearing previous transport events and rescheduling all notes');
     Tone.Transport.cancel();
     calculateTimeMap();
     GlobalService.adsrComponent?.playheadManager.clearAll();
@@ -72,7 +74,7 @@ function scheduleNotes() {
             const timbre = store.state.timbres[toolColor];
 
             if (!timbre) {
-                console.warn(`[transportService] Timbre not found for color ${toolColor}. Skipping note ${noteId}.`);
+                logger.warn('transportService', `Timbre not found for color ${toolColor}. Skipping note ${noteId}`);
                 return;
             }
             
@@ -88,11 +90,11 @@ function scheduleNotes() {
             }, startTime + duration);
         }
     });
-     console.log("[transportService] scheduleNotes: Finished scheduling.");
+     logger.debug('transportService', 'scheduleNotes', 'Finished scheduling');
 }
 
 function animatePlayhead() {
-    const playheadCanvas = document.getElementById('playhead-canvas');
+    const playheadCanvas = domCache.get('playheadCanvas');
     if (!playheadCanvas) return;
     const ctx = playheadCanvas.getContext('2d');
     const maxXPos = LayoutService.getColumnX(store.state.columnWidths.length - 2);
@@ -107,10 +109,10 @@ function animatePlayhead() {
         const currentTime = Tone.Transport.seconds;
         
         // NEW LOGS FOR DEBUGGING THE STOP ISSUE
-        console.log(`[animatePlayhead] Checking stop condition: currentTime=${currentTime.toFixed(3)}, musicalDuration=${musicalDuration.toFixed(3)}, isLooping=${isLooping}`);
+        logger.timing('animatePlayhead', 'stop condition check', { currentTime, musicalDuration, isLooping });
         
         if (!isLooping && currentTime >= musicalDuration) {
-            console.error(`[animatePlayhead] Playback reached end. Forcing stop.`);
+            logger.error('animatePlayhead', 'Playback reached end. Forcing stop');
             TransportService.stop();
             return; 
         }
@@ -294,7 +296,7 @@ const TransportService = {
         Tone.Transport.cancel();
         SynthEngine.releaseAll();
 
-        const playheadCanvas = document.getElementById('playhead-canvas');
+        const playheadCanvas = domCache.get('playheadCanvas');
         if (playheadCanvas) {
             const ctx = playheadCanvas.getContext('2d');
             ctx.clearRect(0, 0, playheadCanvas.width, playheadCanvas.height);

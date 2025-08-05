@@ -1,0 +1,52 @@
+/**
+ * Color utility functions for the Student Notation application
+ * Provides hex to rgba conversion and color shading operations
+ */
+import {
+    DEFAULT_GRAY_COLOR, HEX_COLOR_START_INDEX, HEX_RED_END_INDEX,
+    HEX_GREEN_END_INDEX, HEX_BLUE_END_INDEX, HEX_RADIX,
+    SHADE_BLACK_VALUE, SHADE_WHITE_VALUE
+} from '../constants.js';
+
+/**
+ * Converts a hex color to rgba format
+ * @param {string} hex - Hex color string (e.g., '#FF0000')
+ * @param {number} alpha - Alpha value between 0 and 1
+ * @returns {string} RGBA color string
+ */
+function hexToRgba(hex, alpha) {
+    if (!hex) return `rgba(204, 204, 204, ${alpha})`;
+    const r = parseInt(hex.slice(HEX_COLOR_START_INDEX, HEX_RED_END_INDEX), HEX_RADIX);
+    const g = parseInt(hex.slice(HEX_RED_END_INDEX, HEX_GREEN_END_INDEX), HEX_RADIX);
+    const b = parseInt(hex.slice(HEX_GREEN_END_INDEX, HEX_BLUE_END_INDEX), HEX_RADIX);
+    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
+
+/**
+ * Shades a hex color by a percentage (lighter or darker)
+ * @param {string} hex - Hex color string (e.g., '#FF0000')
+ * @param {number} percent - Percentage to shade (-1 to 1, negative for darker, positive for lighter)
+ * @returns {string} Shaded hex color string
+ */
+function shadeHexColor(hex, percent) {
+    if (!hex || typeof hex !== 'string') return DEFAULT_GRAY_COLOR;
+    const f = parseInt(hex.slice(HEX_COLOR_START_INDEX), HEX_RADIX);
+    const t = percent < 0 ? SHADE_BLACK_VALUE : SHADE_WHITE_VALUE;
+    const p = percent < 0 ? percent * -1 : percent;
+    const R = f >> 16;
+    const G = (f >> 8) & 0x00FF;
+    const B = f & 0x0000FF;
+    return (
+        "#" +
+        (
+            0x1000000 +
+            (Math.round((t - R) * p) + R) * 0x10000 +
+            (Math.round((t - G) * p) + G) * 0x100 +
+            (Math.round((t - B) * p) + B)
+        )
+            .toString(16)
+            .slice(1)
+    );
+}
+
+export { hexToRgba, shadeHexColor };

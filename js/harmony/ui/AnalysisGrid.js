@@ -9,7 +9,7 @@ let isDragging = false;
 let selectionRect = { startX: 0, endX: 0 };
 
 function getBeatIndexFromX(canvasX) {
-    const scrollLeft = document.getElementById('middle-section').scrollLeft;
+    const scrollLeft = document.getElementById('canvas-container').scrollLeft;
     return GridCoordsService.getColumnIndex(canvasX + scrollLeft);
 }
 

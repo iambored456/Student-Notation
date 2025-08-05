@@ -23,14 +23,13 @@
     border-color: var(--c-accent-hover);
 }
 
-/* --- REVISED SLIDER TRACKS --- */
 #blend-slider-container,
 #cutoff-slider-container {
     flex-grow: 1;
     position: relative;
     height: var(--space-2);
     border-radius: var(--border-radius-sm);
-    /* NEW: Use a linear gradient for the progress fill */
+
     background: linear-gradient(
       to right, 
       var(--c-accent) var(--progress, 0%), 
@@ -65,13 +64,13 @@
     flex-shrink: 0;
 }
 
-/* --- REVISED SLIDER THUMBS --- */
+
 .filter-cutoff-thumb,
 .filter-blend-thumb {
     position: absolute;
     top: 50%;
     transform: translate(-50%, -50%);
-    /* CHANGED: Matched size and font to ADSR thumbs */
+
     width: 20px;
     height: 20px;
     font-size: 12px;
@@ -108,14 +107,14 @@
     align-items: center;
     justify-content: center;
     padding-inline: var(--space-1);
-    width: 30px; /* Slightly wider for the vertical slider */
+    width: 30px; 
 }
 
 #vertical-blend-track {
     position: relative;
     width: var(--space-2);
     height: 100%;
-    min-height: 80px; /* Ensure minimum height */
+    min-height: 80px; 
     background: linear-gradient(
         to top,
         var(--c-accent) var(--blend-progress, 0%),
@@ -135,7 +134,7 @@
     border-radius: 50%;
     border: 2px solid var(--c-surface);
     box-shadow: var(--box-shadow-sm);
-    cursor: ns-resize; /* North-south resize cursor */
+    cursor: ns-resize; 
     color: var(--c-surface);
     font-size: 12px;
     font-weight: bold;
@@ -152,12 +151,12 @@
     transform: translate(-50%, 50%) scale(1.1);
 }
 
-/* Remove old filter toggle button styles */
+
 #filter-enable-toggle {
     display: none;
 }
 
-/* Update the disabled state styles */
+
 .multislider-container.filter-disabled {
-    display: none; /* Since we no longer have an on/off toggle */
+    display: none; 
 }

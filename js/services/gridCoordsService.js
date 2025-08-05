@@ -16,25 +16,16 @@ const GridCoordsService = {
     },
 
     getPitchRowIndex(y) {
-        // --- ADD LOGS HERE ---
-        console.log(`[GridCoords] getPitchRowIndex called with y: ${y.toFixed(2)}`);
         const viewportInfo = LayoutService.getViewportInfo();
-        console.log('[GridCoords] Fetched ViewportInfo:', viewportInfo);
-
-
-        if (!viewportInfo || viewportInfo.rowHeight === 0 || viewportInfo.zoomLevel === 0) {
-            // --- ADD LOG HERE ---
-            console.warn('[GridCoords] Invalid viewportInfo. Returning -1.');
+        
+        if (!viewportInfo || viewportInfo.rowHeight === 0) {
             return -1;
         }
         
-        const yInFullUnscaledCanvas = (y / viewportInfo.zoomLevel) + viewportInfo.scrollOffset;
-        const finalRowIndex = Math.floor(yInFullUnscaledCanvas / viewportInfo.rowHeight);
+        // Since rowHeight already includes zoom scaling, convert mouse Y directly
+        const yInVirtualSpace = y + viewportInfo.scrollOffset;
+        const finalRowIndex = Math.floor(yInVirtualSpace / viewportInfo.rowHeight);
         
-        // --- ADD LOGS HERE ---
-        console.log(`[GridCoords] yInFullUnscaledCanvas: ${yInFullUnscaledCanvas.toFixed(2)}`);
-        console.log(`[GridCoords] Returning finalRowIndex: ${finalRowIndex}`);
-
         return finalRowIndex;
     },
     
