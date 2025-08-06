@@ -1,6 +1,7 @@
 // js/services/gridCoordsService.js
 import store from '../state/index.js';
 import LayoutService from './layoutService.js';
+import { BASE_DRUM_ROW_HEIGHT, DRUM_HEIGHT_SCALE_FACTOR } from '../constants.js';
 
 const GridCoordsService = {
     getColumnIndex(x) {
@@ -30,9 +31,11 @@ const GridCoordsService = {
     },
     
     getDrumRowIndex(y) {
-        const pitchRowHeight = 0.5 * store.state.cellHeight;
-        if (pitchRowHeight === 0) return -1;
-        return Math.floor(y / pitchRowHeight);
+        // Use the same drum row height calculation as LayoutService
+        const drumRowHeight = Math.max(BASE_DRUM_ROW_HEIGHT, DRUM_HEIGHT_SCALE_FACTOR * store.state.cellHeight);
+        if (drumRowHeight === 0) return -1;
+        const rowIndex = Math.floor(y / drumRowHeight);
+        return rowIndex;
     }
 };
 

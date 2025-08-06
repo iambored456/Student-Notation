@@ -11,6 +11,7 @@ import logger from './utils/logger.js';
 import { initSpacebarHandler } from './services/spacebarHandler.js';
 import { initGridScrollHandler } from './services/gridScrollHandler.js';
 import { initKeyboardHandler } from './services/keyboardHandler.js';
+import scrollSyncService from './services/scrollSyncService.js';
 import Toolbar from './components/Toolbar/Toolbar.js';
 import GridManager from './components/Canvas/PitchGrid/gridManager.js';
 import PitchGridController from './components/Canvas/PitchGrid/PitchGrid.js';
@@ -117,6 +118,9 @@ document.addEventListener("DOMContentLoaded", () => {
     initSpacebarHandler();
     initGridScrollHandler(); // This will now work correctly
     initKeyboardHandler();
+    
+    // Initialize scroll synchronization after all grid components are ready
+    scrollSyncService.init();
     
     // Initialize UI components
     Toolbar.init();

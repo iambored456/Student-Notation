@@ -3,6 +3,7 @@ import store from '../../../state/index.js'; // <-- UPDATED PATH
 import GridCoordsService from '../../../services/gridCoordsService.js';
 import LayoutService from '../../../services/layoutService.js';
 import { drawDrumShape } from './drumGridRenderer.js';
+import { BASE_DRUM_ROW_HEIGHT, DRUM_HEIGHT_SCALE_FACTOR } from '../../../constants.js';
 
 // --- Interaction State ---
 let drumHoverCtx;
@@ -13,22 +14,24 @@ let rightClickActionTaken = false;
 function drawHoverHighlight(colIndex, rowIndex, color) {
     if (!drumHoverCtx) return;
     const x = LayoutService.getColumnX(colIndex);
-    const pitchRowHeight = 0.5 * store.state.cellHeight;
-    const y = rowIndex * pitchRowHeight;
+    // FIXED: Use same drum row height calculation as renderer and grid coords
+    const drumRowHeight = Math.max(BASE_DRUM_ROW_HEIGHT, DRUM_HEIGHT_SCALE_FACTOR * store.state.cellHeight);
+    const y = rowIndex * drumRowHeight;
     const cellWidth = store.state.columnWidths[colIndex] * store.state.cellWidth;
     drumHoverCtx.fillStyle = color;
-    drumHoverCtx.fillRect(x, y, cellWidth, pitchRowHeight);
+    drumHoverCtx.fillRect(x, y, cellWidth, drumRowHeight);
 }
 
 function drawGhostNote(colIndex, rowIndex) {
     if (!drumHoverCtx) return;
     const x = LayoutService.getColumnX(colIndex);
-    const pitchRowHeight = 0.5 * store.state.cellHeight;
-    const y = rowIndex * pitchRowHeight;
+    // FIXED: Use same drum row height calculation as renderer and grid coords
+    const drumRowHeight = Math.max(BASE_DRUM_ROW_HEIGHT, DRUM_HEIGHT_SCALE_FACTOR * store.state.cellHeight);
+    const y = rowIndex * drumRowHeight;
     const cellWidth = store.state.columnWidths[colIndex] * store.state.cellWidth;
     drumHoverCtx.globalAlpha = 0.4;
     drumHoverCtx.fillStyle = store.state.selectedTool.color || '#212529';
-    drawDrumShape(drumHoverCtx, rowIndex, x, y, cellWidth, pitchRowHeight);
+    drawDrumShape(drumHoverCtx, rowIndex, x, y, cellWidth, drumRowHeight);
     drumHoverCtx.globalAlpha = 1.0;
 }
 
@@ -37,8 +40,12 @@ function handleMouseMove(e) {
     const rect = e.target.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
-    const colIndex = GridCoordsService.getColumnIndex(x);
+    
+    // Account for horizontal scroll position like harmony analysis grid does
+    const scrollLeft = document.getElementById('canvas-container').scrollLeft;
+    const colIndex = GridCoordsService.getColumnIndex(x + scrollLeft);
     const rowIndex = GridCoordsService.getDrumRowIndex(y);
+    
 
     if (!drumHoverCtx || colIndex < 2 || colIndex >= store.state.columnWidths.length - 2 || rowIndex < 0 || rowIndex > 2) {
         handleMouseLeave();
@@ -70,7 +77,10 @@ function handleMouseDown(e) {
     const rect = e.target.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
-    const colIndex = GridCoordsService.getColumnIndex(x);
+    
+    // Account for horizontal scroll position like harmony analysis grid does
+    const scrollLeft = document.getElementById('canvas-container').scrollLeft;
+    const colIndex = GridCoordsService.getColumnIndex(x + scrollLeft);
     if (colIndex < 2 || colIndex >= store.state.columnWidths.length - 2) return;
     
     const drumRow = GridCoordsService.getDrumRowIndex(y);

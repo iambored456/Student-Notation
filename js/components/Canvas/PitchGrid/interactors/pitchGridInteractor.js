@@ -114,11 +114,14 @@ function handleMouseDown(e) {
     const rect = e.target.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
-    const colIndex = GridCoordsService.getColumnIndex(x);
+    
+    // Account for horizontal scroll position like drum grid does
+    const scrollLeft = document.getElementById('canvas-container').scrollLeft;
+    const colIndex = GridCoordsService.getColumnIndex(x + scrollLeft);
     const rowIndex = GridCoordsService.getPitchRowIndex(y);
     
     // Debug logging
-    console.log(`[PitchGridInteractor] Mouse down at col: ${colIndex}, row: ${rowIndex}`);
+    console.log(`[PitchGridInteractor] Mouse down at col: ${colIndex}, row: ${rowIndex} (scroll offset: ${scrollLeft})`);
     
     if (colIndex < 2 || colIndex >= store.state.columnWidths.length - 2 || !getPitchForRow(rowIndex)) return;
 
@@ -214,8 +217,12 @@ function handleMouseMove(e) {
     const rect = e.target.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
-    console.log(`[Interactor] handleMouseMove: Canvas Coords (x: ${x.toFixed(2)}, y: ${y.toFixed(2)})`);
-    const colIndex = GridCoordsService.getColumnIndex(x);
+    
+    // Account for horizontal scroll position like drum grid does
+    const scrollLeft = document.getElementById('canvas-container').scrollLeft;
+    console.log(`[Interactor] handleMouseMove: Canvas Coords (x: ${x.toFixed(2)}, y: ${y.toFixed(2)}) scrollLeft: ${scrollLeft}`);
+    
+    const colIndex = GridCoordsService.getColumnIndex(x + scrollLeft);
     const rowIndex = GridCoordsService.getPitchRowIndex(y);
     console.log(`[Interactor] handleMouseMove: Grid Coords (col: ${colIndex}, row: ${rowIndex})`);
 

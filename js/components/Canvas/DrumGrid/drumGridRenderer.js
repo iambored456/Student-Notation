@@ -1,4 +1,5 @@
 // js/components/Canvas/DrumGrid/drumGridRenderer.js
+import { BASE_DRUM_ROW_HEIGHT, DRUM_HEIGHT_SCALE_FACTOR } from '../../../constants.js';
 
 // --- Pure Helper Functions ---
 function getColumnX(index, { columnWidths, cellWidth }) {
@@ -92,9 +93,8 @@ export function drawDrumGrid(ctx, options) {
     
     ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
 
-    // Use zoom-dependent row height with minimum size
-    const baseDrumRowHeight = 30;
-    const drumRowHeight = Math.max(baseDrumRowHeight, 0.5 * cellHeight);
+    // Use zoom-dependent row height with minimum size - MUST match LayoutService and GridCoordsService
+    const drumRowHeight = Math.max(BASE_DRUM_ROW_HEIGHT, DRUM_HEIGHT_SCALE_FACTOR * cellHeight);
     const totalColumns = columnWidths.length;
     const drumLabels = ['H', 'M', 'L'];
     

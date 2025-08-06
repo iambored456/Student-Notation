@@ -19,6 +19,9 @@ let viewportHeight = 0;
 
 let gridContainer, pitchGridWrapper, canvas, ctx, drumGridWrapper, drumCanvas, drumCtx, playheadCanvas, hoverCanvas, harmonyContainer, harmonyCanvas, drumHoverCanvas;
 let resizeTimeout;
+let isRecalculating = false;
+let lastCalculatedWidth = 0;
+let lastCalculatedDrumHeight = 0;
 
 // DEBUG: Function to trace container width propagation
 function logContainerWidths() {
@@ -62,14 +65,17 @@ function initDOMElements() {
     harmonyContainer = document.getElementById('harmonyAnalysisGrid');
     harmonyCanvas = document.getElementById('harmony-analysis-canvas');
     
-    if (!pitchGridWrapper || !canvas) {
+    // NEW: Observe the stable top-level container instead
+    const canvasContainer = document.getElementById('canvas-container');
+    
+    if (!pitchGridWrapper || !canvas || !canvasContainer) {
         console.error("LayoutService FATAL: Could not find essential canvas elements.");
         return {};
     }
     
     ctx = canvas.getContext('2d');
     drumCtx = drumCanvas.getContext('2d');
-    return { ctx, drumCtx };
+    return { ctx, drumCtx, canvasContainer };
 }
 
 function recalcAndApplyLayout() {
@@ -78,14 +84,66 @@ function recalcAndApplyLayout() {
         return;
     }
 
-    viewportHeight = pitchGridWrapper.clientHeight;
-    const viewportWidth = pitchGridWrapper.clientWidth;
+    // Prevent recursive calls during recalculation
+    if (isRecalculating) {
+        console.log('⚠️ Skipping recalculation - already in progress');
+        return;
+    }
+    
+    isRecalculating = true;
+
+    const newViewportHeight = pitchGridWrapper.clientHeight;
+    const newViewportWidth = pitchGridWrapper.clientWidth;
+    
+    // Log viewport changes
+    const heightDiff = Math.abs(newViewportHeight - viewportHeight);
+    const widthDiff = Math.abs(newViewportWidth - (pitchGridWrapper._lastViewportWidth || 0));
+    
+    if (heightDiff > 0 || widthDiff > 0) {
+        console.log('📏 Viewport Size Change:', {
+            heightChange: `${viewportHeight} → ${newViewportHeight}`,
+            widthChange: `${pitchGridWrapper._lastViewportWidth || 'unknown'} → ${newViewportWidth}`,
+            heightDiff: newViewportHeight - viewportHeight,
+            widthDiff: newViewportWidth - (pitchGridWrapper._lastViewportWidth || 0),
+            significant: heightDiff > 3 || widthDiff > 3
+        });
+        
+        // Only update viewport dimensions for significant changes
+        // This helps prevent micro-adjustments from causing layout instability
+        if (heightDiff > 3 || viewportHeight === 0) {
+            viewportHeight = newViewportHeight;
+        }
+        if (widthDiff > 3 || !pitchGridWrapper._lastViewportWidth) {
+            pitchGridWrapper._lastViewportWidth = newViewportWidth;
+        }
+    }
+    
+    // Always use the current values for calculations
+    const viewportWidth = newViewportWidth;
 
     // FIXED: Maintain proper aspect ratio by scaling both dimensions independently
     const baseHeight = (viewportHeight / DEFAULT_VISIBLE_SEMITONES) * GRID_HEIGHT_MULTIPLIER;
     const baseWidth = baseHeight * GRID_WIDTH_RATIO;
-    store.state.cellHeight = baseHeight * currentZoomLevel;
-    store.state.cellWidth = baseWidth * currentZoomLevel;
+    const newCellHeight = baseHeight * currentZoomLevel;
+    const newCellWidth = baseWidth * currentZoomLevel;
+    
+    // Log cell size changes
+    if (store.state.cellWidth !== newCellWidth || store.state.cellHeight !== newCellHeight) {
+        console.log('📐 Cell Size Change:', {
+            heightChange: `${store.state.cellHeight} → ${newCellHeight}`,
+            widthChange: `${store.state.cellWidth} → ${newCellWidth}`,
+            baseHeight,
+            baseWidth,
+            viewportHeight,
+            zoomLevel: currentZoomLevel,
+            DEFAULT_VISIBLE_SEMITONES,
+            GRID_HEIGHT_MULTIPLIER,
+            GRID_WIDTH_RATIO
+        });
+    }
+    
+    store.state.cellHeight = newCellHeight;
+    store.state.cellWidth = newCellWidth;
 
 
     const { macrobeatGroupings } = store.state;
@@ -119,31 +177,51 @@ function recalcAndApplyLayout() {
     // Only update dimensions if they actually changed to prevent resize loops
     const totalCanvasWidthPx = Math.round(totalCanvasWidth);
     
-    // DEBUG: Log container width calculations
-    const currentWidth = parseFloat(gridContainer?.style.width) || 0;
-    const willUpdate = gridContainer && Math.abs(currentWidth - totalCanvasWidthPx) > 1;
-    
-    console.log('🔍 LayoutService Width Debug:', {
+    // EXPERIMENT: Remove width setting entirely - let CSS handle layout
+    console.log('🔍 LayoutService Width Debug (NO SETTING):', {
         zoomLevel: currentZoomLevel,
         cellWidth: store.state.cellWidth,
         totalWidthUnits,
         calculatedWidth: totalCanvasWidthPx,
-        currentGridWidth: gridContainer?.style.width || 'empty',
-        currentWidthParsed: currentWidth,
-        willUpdate
+        cssHandledWidth: 'CSS determines width'
     });
     
-    if (willUpdate) {
-        console.log('📏 Setting grid-container width to:', totalCanvasWidthPx + 'px');
-        gridContainer.style.width = `${totalCanvasWidthPx}px`;
+    // SET CONTAINER WIDTHS: Since containers collapsed to 0px, set them to canvas width
+    setTimeout(() => {
+        const pitchGridContainer = document.getElementById('pitch-grid-container');
+        const drumGridWrapper = document.getElementById('drum-grid-wrapper');
+        const harmonyAnalysisGrid = document.getElementById('harmonyAnalysisGrid');
+        const notationGrid = document.getElementById('notation-grid');
+        const drumGrid = document.getElementById('drum-grid');
+        const harmonyCanvas = document.getElementById('harmony-analysis-canvas');
         
-        // DEBUG: Log container expansion pipeline after width change
-        setTimeout(() => {
-            logContainerWidths();
-        }, 0);
-    } else {
-        console.log('⏭️ Skipping width update - no significant change needed');
-    }
+        // Set all containers to exactly match canvas width
+        const targetWidth = totalCanvasWidthPx + 'px';
+        
+        if (pitchGridContainer) {
+            pitchGridContainer.style.width = targetWidth;
+        }
+        if (drumGridWrapper) {
+            drumGridWrapper.style.width = targetWidth;
+        }
+        if (harmonyAnalysisGrid) {
+            harmonyAnalysisGrid.style.width = targetWidth;
+        }
+        
+        console.log('📊 Container Width Sync:', {
+            pitchGridContainer: pitchGridContainer?.clientWidth + 'px',
+            drumGridWrapper: drumGridWrapper?.clientWidth + 'px',
+            harmonyAnalysisGrid: harmonyAnalysisGrid?.clientWidth + 'px',
+            notationCanvas: notationGrid?.width + 'px',
+            drumCanvas: drumGrid?.width + 'px',
+            harmonyCanvas: harmonyCanvas?.width + 'px',
+            setTo: targetWidth,
+            allMatch: 'Containers now match canvas widths exactly'
+        });
+    }, 0);
+    
+    // Don't set grid-container width - let CSS and natural layout handle it
+    console.log('⏭️ Letting CSS handle grid-container width naturally');
     
     [canvas, playheadCanvas, hoverCanvas, drumCanvas, drumHoverCanvas, harmonyCanvas].forEach(c => { 
         if(c && Math.abs(c.width - totalCanvasWidthPx) > 1) { 
@@ -156,24 +234,22 @@ function recalcAndApplyLayout() {
     const drumCanvasHeight = DRUM_ROW_COUNT * drumRowHeight;
     const drumHeightPx = `${drumCanvasHeight}px`;
     
-    // DEBUG: Log drum grid height calculations
-    const currentDrumHeight = parseFloat(drumGridWrapper?.style.height) || 0;
-    const willUpdateDrumWrapper = drumGridWrapper && Math.abs(currentDrumHeight - drumCanvasHeight) > 1;
+    // DEFERRED: Set drum height after layout stabilizes to avoid ResizeObserver cascade
+    const drumHeightChanged = Math.abs(lastCalculatedDrumHeight - drumCanvasHeight) > 5;
+    const shouldUpdateDrumHeight = drumGridWrapper && (drumHeightChanged || lastCalculatedDrumHeight === 0);
     
-    console.log('🥁 Drum Grid Height Debug:', {
+    console.log('🥁 Drum Grid Height Debug (DEFERRED):', {
         drumRowHeight,
         drumCanvasHeight,
-        drumHeightPx,
-        currentWrapperHeight: drumGridWrapper?.style.height || 'empty',
-        currentHeightParsed: currentDrumHeight,
-        willUpdateWrapper: willUpdateDrumWrapper
+        lastCalculatedDrumHeight,
+        drumHeightChanged,
+        willUpdateDeferred: shouldUpdateDrumHeight
     });
     
-    if (willUpdateDrumWrapper) {
+    if (shouldUpdateDrumHeight) {
         console.log('📏 Setting drum-grid-wrapper height to:', drumHeightPx);
         drumGridWrapper.style.height = drumHeightPx;
-    } else {
-        console.log('⏭️ Skipping drum height update - no significant change needed');
+        lastCalculatedDrumHeight = drumCanvasHeight;
     }
     if (drumCanvas && Math.abs(drumCanvas.height - drumCanvasHeight) > 1) {
         drumCanvas.height = drumCanvasHeight;
@@ -198,22 +274,34 @@ function recalcAndApplyLayout() {
     }
 
     store.emit('layoutConfigChanged');
+    
+    // Reset the recalculation flag
+    isRecalculating = false;
 }
 
 const LayoutService = {
     init() {
-        const contexts = initDOMElements();
+        const { ctx, drumCtx, canvasContainer } = initDOMElements();
         requestAnimationFrame(recalcAndApplyLayout);
        
-        const observer = new ResizeObserver(() => {
+        // EXPERIMENTAL: Use window resize instead of ResizeObserver to avoid cascade
+        const handleWindowResize = () => {
+            // Only process if we're not already recalculating
+            if (isRecalculating) {
+                console.log('⚠️ Window resize: Skipping - recalculation in progress');
+                return;
+            }
+            
             clearTimeout(resizeTimeout);
-            resizeTimeout = setTimeout(recalcAndApplyLayout, RESIZE_DEBOUNCE_DELAY);
-        });
+            resizeTimeout = setTimeout(() => {
+                console.log('🔄 Window resize: Triggering layout recalculation after debounce');
+                recalcAndApplyLayout();
+            }, RESIZE_DEBOUNCE_DELAY);
+        };
         
-        if (pitchGridWrapper) {
-            observer.observe(pitchGridWrapper);
-        }
-        return contexts;
+        window.addEventListener('resize', handleWindowResize);
+        console.log('🔍 Layout trigger: Using window resize events instead of ResizeObserver');
+        return { ctx, drumCtx };
     },
     
     zoomIn() {
