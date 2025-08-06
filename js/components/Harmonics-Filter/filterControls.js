@@ -37,6 +37,7 @@ function updateFromStore() {
         verticalBlendTrack.style.setProperty('--blend-progress', `${blendPercent * 100}%`);
     }
     
+    
     if(cutoffThumb && cutoffTrack) {
         const cutoffPercent = (cutoff - CUTOFF_MIN) / (CUTOFF_MAX - CUTOFF_MIN);
         cutoffThumb.style.left = `${cutoffPercent * 100}%`;
@@ -79,6 +80,7 @@ function handleVerticalBlendDrag(e) {
     store.setFilterSettings(currentColor, { blend: value });
 }
 
+
 export function initFilterControls() {
     container = document.querySelector('.multislider-container');
     blendThumb = document.getElementById('thumb-b');
@@ -91,8 +93,7 @@ export function initFilterControls() {
         return;
     }
     
-    // Remove the old filter toggle button logic
-    // Create the vertical blend slider instead
+    // Create the vertical blend slider
     createVerticalBlendSlider();
 
     blendThumb.addEventListener('mousedown', e => {
@@ -164,8 +165,8 @@ function createVerticalBlendSlider() {
     verticalBlendSlider = document.createElement('div');
     verticalBlendSlider.id = 'vertical-blend-thumb';
     verticalBlendSlider.className = 'vertical-slider-thumb';
-    verticalBlendSlider.textContent = 'B';
-    verticalBlendSlider.title = 'Filter Blend: 0% to 100%';
+    verticalBlendSlider.textContent = 'M';
+    verticalBlendSlider.title = 'Filter Mix: 0% to 100%';
     
     verticalBlendTrack.appendChild(verticalBlendSlider);
     filterButtonWrapper.appendChild(verticalBlendTrack);
@@ -202,3 +203,4 @@ function createVerticalBlendSlider() {
         store.recordState();
     });
 }
+

@@ -65,7 +65,7 @@ function initDOMElements() {
     harmonyContainer = document.getElementById('harmonyAnalysisGrid');
     harmonyCanvas = document.getElementById('harmony-analysis-canvas');
     
-    // NEW: Observe the stable top-level container instead
+    // pitchGrid Assembly - contains time signature + tools + viewport
     const canvasContainer = document.getElementById('canvas-container');
     
     if (!pitchGridWrapper || !canvas || !canvasContainer) {
@@ -92,7 +92,8 @@ function recalcAndApplyLayout() {
     
     isRecalculating = true;
 
-    const newViewportHeight = pitchGridWrapper.clientHeight;
+    const pitchGridContainer = document.getElementById('pitch-grid-container');
+    const newViewportHeight = pitchGridContainer.clientHeight;
     const newViewportWidth = pitchGridWrapper.clientWidth;
     
     // Log viewport changes
@@ -258,11 +259,33 @@ function recalcAndApplyLayout() {
         drumHoverCanvas.height = drumCanvasHeight;
     }
 
-    [canvas, playheadCanvas, hoverCanvas].forEach(c => { 
-        if(c && Math.abs(c.height - viewportHeight) > 1) { 
-            c.height = viewportHeight; 
-        } 
-    });
+    // DEFER canvas height setting until containers stabilize
+    setTimeout(() => {
+        const finalPitchGridContainer = document.getElementById('pitch-grid-container');
+        const finalViewportHeight = finalPitchGridContainer.clientHeight;
+        
+        console.log('🎯 LayoutService Canvas Heights (DEFERRED):', {
+            oldViewportHeight: viewportHeight,
+            finalViewportHeight,
+            pitchGridContainer: finalPitchGridContainer?.clientHeight,
+            pitchGridWrapper: pitchGridWrapper?.clientHeight
+        });
+
+        [canvas, playheadCanvas, hoverCanvas].forEach((c, index) => { 
+            if(c && Math.abs(c.height - finalViewportHeight) > 1) { 
+                const canvasNames = ['notation-grid', 'playhead-canvas', 'hover-canvas'];
+                console.log(`📐 Setting ${canvasNames[index]} height (DEFERRED): ${c.height} → ${finalViewportHeight}`);
+                c.height = finalViewportHeight; 
+            } 
+        });
+        
+        // Trigger grid re-render after deferred canvas resize
+        // Use custom event to avoid circular dependencies
+        document.dispatchEvent(new CustomEvent('canvasResized', { 
+            detail: { source: 'layoutService-deferred' }
+        }));
+        console.log('🔄 Dispatched canvasResized event after deferred resize');
+    }, 25); // Allow DOM to settle
 
     // Harmony grid height scales with zoom but has minimum size
     const harmonyHeight = Math.max(BASE_HARMONY_HEIGHT, drumRowHeight);
@@ -274,6 +297,18 @@ function recalcAndApplyLayout() {
     }
 
     store.emit('layoutConfigChanged');
+    
+    // DEBUG: Final DOM state after layout complete
+    setTimeout(() => {
+        console.log('✅ Final Canvas Heights (after layout):', {
+            'pitch-grid-container': document.getElementById('pitch-grid-container')?.clientHeight,
+            'notation-grid': document.getElementById('notation-grid')?.height,
+            'pitch-paint-canvas': document.getElementById('pitch-paint-canvas')?.height,
+            'playhead-canvas': document.getElementById('playhead-canvas')?.height,
+            'hover-canvas': document.getElementById('hover-canvas')?.height,
+            'pitch-canvas-wrapper': document.getElementById('pitch-canvas-wrapper')?.clientHeight
+        });
+    }, 50); // Small delay to ensure DOM updates are complete
     
     // Reset the recalculation flag
     isRecalculating = false;
@@ -324,7 +359,7 @@ const LayoutService = {
     },
     
     scroll(deltaY) {
-        const scrollAmount = (deltaY / viewportHeight);
+        const scrollAmount = (deltaY / viewportHeight) / 4;
         currentScrollPosition = Math.max(0, Math.min(1, currentScrollPosition + scrollAmount));
         store.emit('layoutConfigChanged');
     },

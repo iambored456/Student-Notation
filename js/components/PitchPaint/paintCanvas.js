@@ -66,11 +66,29 @@ class PaintCanvas {
   resize() {
     if (!this.canvas) return;
     const wrapper = document.getElementById('pitch-canvas-wrapper');
-    if (this.canvas.width !== wrapper.clientWidth || this.canvas.height !== wrapper.clientHeight) {
-        this.canvas.width = wrapper.clientWidth;
-        this.canvas.height = wrapper.clientHeight;
-    }
-    this.render();
+    
+    // DEFER to get final measurements after layout settles
+    setTimeout(() => {
+        const pitchGridContainer = document.getElementById('pitch-grid-container');
+        const finalTargetHeight = pitchGridContainer ? pitchGridContainer.clientHeight : wrapper.clientHeight;
+        
+        // DEBUG: Log paint canvas height measurements
+        console.log('🎨 PaintCanvas Height Debug (DEFERRED):', {
+            canvasId: 'pitch-paint-canvas',
+            currentCanvasHeight: this.canvas.height,
+            pitchGridContainer: pitchGridContainer?.clientHeight,
+            pitchCanvasWrapper: wrapper?.clientHeight,
+            finalTargetHeight,
+            willResize: this.canvas.width !== wrapper.clientWidth || this.canvas.height !== finalTargetHeight
+        });
+        
+        if (this.canvas.width !== wrapper.clientWidth || this.canvas.height !== finalTargetHeight) {
+            console.log(`📐 Setting pitch-paint-canvas height (DEFERRED): ${this.canvas.height} → ${finalTargetHeight}`);
+            this.canvas.width = wrapper.clientWidth;
+            this.canvas.height = finalTargetHeight;
+            this.render();
+        }
+    }, 30); // Slightly longer delay than layoutService
   }
 
   render() {

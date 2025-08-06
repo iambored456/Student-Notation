@@ -146,7 +146,7 @@
 /* ==========================================================================
    GRID & CANVAS STYLES
    ========================================================================= */
-/* RENAMED */
+/* pitchGrid Assembly - contains time signature + tools + viewport */
 #pitch-grid-wrapper {
   width: fit-content; /* Expand to fit pitch grid content */
   min-width: 100%; /* But at least fill the container */
@@ -168,6 +168,7 @@
     flex-shrink: 0; /* Prevent them from shrinking */
 }
 
+/* pitchGrid Viewport - the scrollable/zoomable grid area */
 #pitch-grid-container { 
   flex: 1; /* Take up all remaining vertical space */
   position: relative; 

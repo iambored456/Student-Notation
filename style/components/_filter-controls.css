@@ -1,6 +1,6 @@
 /* style/components/_filter-controls.css */
 
-.filter-top-controls {
+.blend-slider-container {
     display: flex;
     align-items: center;
     width: 100%;
@@ -58,6 +58,7 @@
 
 #cutoff-slider-container {
     width: 100%;
+    height: 10px !important;
     margin-block-start: var(--space-2);
     align-self: flex-start;
     transition: opacity 0.2s;
@@ -65,7 +66,27 @@
 }
 
 
-.filter-cutoff-thumb,
+.filter-cutoff-thumb {
+    position: absolute;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: 20px;
+    height: 20px;
+    font-size: 12px;
+    background-color: var(--c-accent);
+    border-radius: 50%;
+    border: 2px solid var(--c-surface);
+    box-shadow: var(--box-shadow-sm);
+    cursor: grab;
+    color: var(--c-surface);
+    font-weight: bold;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    user-select: none;
+    z-index: 5;
+}
+
 .filter-blend-thumb {
     position: absolute;
     top: 50%;
@@ -157,6 +178,6 @@
 }
 
 
-.multislider-container.filter-disabled {
+.multislider-container.filter-disabled .filter-overlay-canvas {
     display: none; 
 }

@@ -102,7 +102,16 @@ function updateSliderVisuals() {
     drawFilterOverlay();
 }
 
-function handleSliderPointerEvent(e, sliderIndex) {
+function handleSliderPointerEvent(e, sliderIndex = null) {
+    // If no sliderIndex provided, determine from pointer position
+    if (sliderIndex === null) {
+        const gridRect = multisliderGrid.getBoundingClientRect();
+        const x = e.clientX - gridRect.left;
+        const binWidth = gridRect.width / BINS;
+        sliderIndex = Math.floor(x / binWidth);
+        sliderIndex = Math.max(0, Math.min(BINS - 1, sliderIndex));
+    }
+    
     const sliderTrack = sliderColumns[sliderIndex].sliderTrack;
     const rect = sliderTrack.getBoundingClientRect();
     const y = e.clientY - rect.top;
@@ -272,31 +281,32 @@ export function initHarmonicMultislider() {
         });
         phaseControls.push({ phaseBtn });
 
-        // Add pointer event handlers
-        sliderTrack.addEventListener('pointerdown', (e) => {
-            e.preventDefault();
-            
-            SynthEngine.triggerAttack('C4', currentColor);
-            store.emit('spacebarPlayback', { color: currentColor, isPlaying: true });
-            isAuditioning = true;
-            
-            handleSliderPointerEvent(e, i);
-            
-            const onMove = (ev) => handleSliderPointerEvent(ev, i);
-            const stopDrag = () => {
-                window.removeEventListener('pointermove', onMove);
-                window.removeEventListener('pointerup', stopDrag);
-                store.recordState();
-                
-                SynthEngine.triggerRelease('C4', currentColor);
-                store.emit('spacebarPlayback', { color: currentColor, isPlaying: false });
-                isAuditioning = false;
-            };
-            
-            window.addEventListener('pointermove', onMove);
-            window.addEventListener('pointerup', stopDrag);
-        });
     }
+
+    // Add cross-bin drag functionality to the entire grid
+    multisliderGrid.addEventListener('pointerdown', (e) => {
+        e.preventDefault();
+        
+        SynthEngine.triggerAttack('C4', currentColor);
+        store.emit('spacebarPlayback', { color: currentColor, isPlaying: true });
+        isAuditioning = true;
+        
+        handleSliderPointerEvent(e);
+        
+        const onMove = (ev) => handleSliderPointerEvent(ev);
+        const stopDrag = () => {
+            window.removeEventListener('pointermove', onMove);
+            window.removeEventListener('pointerup', stopDrag);
+            store.recordState();
+            
+            SynthEngine.triggerRelease('C4', currentColor);
+            store.emit('spacebarPlayback', { color: currentColor, isPlaying: false });
+            isAuditioning = false;
+        };
+        
+        window.addEventListener('pointermove', onMove);
+        window.addEventListener('pointerup', stopDrag);
+    });
 
     // Create filter overlay canvas
     overlayCanvas = document.createElement('canvas');
