@@ -11,8 +11,8 @@
     <link rel="manifest" href="/Student-Notation/site.webmanifest" />
     <meta name="theme-color" content="#ffffff" />
     <style id="print-style-rules"></style>
-      <script type="module" crossorigin src="/Student-Notation/assets/index-F8C2fb5u.js"></script>
-      <link rel="stylesheet" crossorigin href="/Student-Notation/assets/index-Cb5rd83B.css">
+      <script type="module" crossorigin src="/Student-Notation/assets/index-CtwWtFIJ.js"></script>
+      <link rel="stylesheet" crossorigin href="/Student-Notation/assets/index-C1L7qOtu.css">
     </head>
     <body>
     <!-- Sidebar for File/App Actions -->
@@ -30,9 +30,9 @@
     </div>
     <div id="app-container">
       <!-- =======================================================
-           NEW UNIFIED TOOLBAR
+            Toolbar Container
            ======================================================= -->
-      <div id="new-toolbar">
+      <div id="toolbar">
         <!-- Container 1: Tools & Actions -->
         <div id="container-1">
             <div class="tool-subcontainer">
@@ -48,8 +48,8 @@
             </div>
             <div class="tool-subcontainer">
                 <button class="toolkit-icon-button" id="clear-button" title="Clear"><img src="/Student-Notation/assets/icons/Clear.svg" alt="Clear"></button>
-                <button class="toolkit-icon-button" id="undo-button" title="Undo"><img src="/Student-Notation/assets/icons/Undo.svg" alt="Undo"></button>
                 <button class="toolkit-icon-button" id="redo-button" title="Redo"><img src="/Student-Notation/assets/icons/Redo.svg" alt="Redo"></button>
+                <button class="toolkit-icon-button" id="undo-button" title="Undo"><img src="/Student-Notation/assets/icons/Undo.svg" alt="Undo"></button>
                 <button class="toolkit-icon-button eraser-button" id="eraser-tool-button" title="Eraser">
                     <img src="/Student-Notation/assets/icons/Eraser.svg" alt="Eraser" class="eraser-icon">
                 </button>
@@ -65,7 +65,6 @@
                 </div>
     
             </div>
-            <!-- ** NEW LOCATION FOR PLAYBACK CONTROLS ** -->
             <div class="tool-subcontainer">
                 <div class="playback-row">
                     <button class="toolkit-icon-button" id="loop-button" title="Loop"><img src="/Student-Notation/assets/icons/Loop.svg" alt="Loop"></button>
@@ -110,12 +109,7 @@
                     <div class="control-section multislider-container">
                         <div class="filter-top-controls"><div id="blend-slider-container"><div class="filter-blend-thumb" id="thumb-b" tabindex="0">B</div></div></div>
                         <div class="filter-main-panel">
-                            <div class="buffer-container">
-                                <canvas id="harmonic-multislider-canvas"></canvas>
-                                <canvas id="filter-overlay-canvas"></canvas>
-                            </div>
                             <div class="filter-button-wrapper">
-                                <!-- This will be populated by JavaScript with the vertical blend slider -->
                             </div>
                          </div>
                         <div id="cutoff-slider-container"><div class="filter-cutoff-thumb" id="thumb-c" tabindex="0">C</div></div>
@@ -233,12 +227,11 @@
         </div>
       </div>
     
-      <div id="middle-section">
-        <!-- NEW: Stable container for the entire grid system -->
-        <div id="grid-and-harmony-container">
+      <div id="canvas-container">
+        <div id="canvas-content">
             <div id="pitch-grid-wrapper">
                 <div id="time-signature-display"></div>
-                <div id="grid-controls-container"><div id="beat-line-controls"></div></div>
+                <div id="canvas-macrobeat-tools"><div id="beat-line-controls"></div></div>
                 <div id="pitch-grid-container">
                     <div id="grid-container">
                         <div id="pitch-canvas-wrapper">
@@ -250,20 +243,13 @@
                     </div>
                 </div>
             </div>
-            <div id="harmony-container"><canvas id="harmony-analysis-canvas"></canvas></div>
+            <div id="harmonyAnalysisGrid"><canvas id="harmony-analysis-canvas"></canvas></div>
             <div id="drum-grid-wrapper">
                 <canvas id="drum-grid"></canvas>
                 <canvas id="drum-hover-canvas"></canvas>
             </div>
         </div>
     </div>
-        <div id="harmony-container"><canvas id="harmony-analysis-canvas"></canvas></div>
-        <!-- RENAMED: from bottom-content-wrapper, and it's now a direct child -->
-        <div id="drum-grid-wrapper">
-            <canvas id="drum-grid"></canvas>
-            <canvas id="drum-hover-canvas"></canvas>
-        </div>
-      </div>
     
       <!-- Chord Candidate Drop-up Menu -->
       <div id="chord-candidate-menu" class="hidden">
