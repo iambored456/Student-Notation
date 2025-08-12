@@ -9,5 +9,4 @@ Thumbs.db
 npm-debug.log*
 .claude
 .repoignore
-vite.config.js
 resourceOscillator.js
