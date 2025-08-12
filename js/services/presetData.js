@@ -72,7 +72,7 @@ function generateSawtooth() {
   Each array lists up to 12 partials (fundamental = index 0).
 ─────────────────────────────────────────────────────────────*/
 const RAW_SPECTRA = {
-  violin: {
+  strings: { // Renamed from violin to match the UI button
     amps:   [0.995, 0.940, 0.425, 0.480, 0.000, 0.365,
              0.040, 0.085, 0.000, 0.090, 0.000, 0.000],
     phases: [0, Math.PI/2, 0, Math.PI/2, 0, Math.PI/2,
@@ -145,12 +145,30 @@ export const PRESETS = {
     filter: { ...defaultFilter }
   },
 
+  /* NEW Presets from resourceOscillator.js */
+  trapezium: {
+    name: 'trapezium',
+    gain: 0.5,
+    adsr: basicWaveADSR,
+    coeffs: new Float32Array([0.993, 0, 0.314, 0, 0.168, 0, 0.101, 0, 0.06, 0, 0.033, 0]),
+    phases: new Float32Array(BINS).fill(0),
+    filter: { ...defaultFilter }
+  },
+  impulse: {
+    name: 'impulse',
+    gain: 0.18,
+    adsr: { attack: 0.01, decay: 0.3, sustain: 0.0, release: 0.2 },
+    coeffs: new Float32Array([1, 0.9, 0.8, 0.7, 0.6, 0.5, 0.4, 0.3, 0.2, 0.1, 0, 0]),
+    phases: new Float32Array([0, Math.PI * 1.5, Math.PI, Math.PI / 2, 0, Math.PI * 1.5, Math.PI, Math.PI / 2, 0, Math.PI * 1.5, Math.PI, 0]),
+    filter: { ...defaultFilter }
+  },
+
   /* Instrument-style presets (fixed spectra) */
-  violin: {
-    name: 'violin',
+  strings: { // Renamed from 'violin'
+    name: 'strings',
     gain: 0.6,
     adsr: { attack: 0.03, decay: 0.40, sustain: 0.70, release: 0.50 },
-    ...makeSpectrum('violin'),
+    ...makeSpectrum('strings'), // Use the renamed key
     filter: { ...defaultFilter, cutoff: 28 }
   },
   piano: {
