@@ -1,7 +1,6 @@
 # --- dependencies & build output ------------------------------------------
 node_modules/
 dist/
-docs/
 
 # --- local tooling / OS cruft ---------------------------------------------
 .vscode/
