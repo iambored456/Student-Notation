@@ -4,12 +4,10 @@ import CanvasContextService from '../../../services/canvasContextService.js';
 import { drawDrumGrid } from './drumGridRenderer.js';
 import { getDrumNotes, getPlacedTonicSigns } from '../../../state/selectors.js';
 
-console.log("DrumGridController: Module loaded.");
 
 function renderDrumGrid() {
     const ctx = CanvasContextService.getDrumContext();
     if (!ctx || !ctx.canvas) {
-        console.error("DrumGridController: Drum grid context not available for rendering.");
         return;
     }
     

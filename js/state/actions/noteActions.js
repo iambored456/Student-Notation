@@ -25,13 +25,37 @@ export const noteActions = {
 
     eraseInPitchArea(col, row, width = 1, record = true) {
         const eraseEndCol = col + width - 1;
+        const eraseStartRow = row - 1; // Eraser starts 1 row above
+        const eraseEndRow = row + 1; // Eraser covers 3 rows: row-1, row, row+1
         let wasErased = false;
     
         const initialNoteCount = this.state.placedNotes.length;
         this.state.placedNotes = this.state.placedNotes.filter(note => {
-            if (note.isDrum || note.row !== row) return true;
-            const noteOverlaps = note.startColumnIndex <= eraseEndCol && note.endColumnIndex >= col;
-            return !noteOverlaps;
+            if (note.isDrum) return true;
+            
+            // For circle notes, check if their 2×1 footprint intersects with eraser's 2×3 area
+            if (note.shape === 'circle') {
+                const noteEndCol = note.startColumnIndex + 1; // Circle notes span 2 columns
+                // Circle notes only span 1 row (note.row)
+                
+                // Check for any overlap between note's 2×1 area and eraser's 2×3 area
+                const horizontalOverlap = note.startColumnIndex <= eraseEndCol && noteEndCol >= col;
+                const verticalOverlap = note.row >= eraseStartRow && note.row <= eraseEndRow;
+                
+                if (horizontalOverlap && verticalOverlap) {
+                    return false; // Remove this note
+                }
+            } else {
+                // For non-circle notes, check if note overlaps with eraser's 2×3 coverage area
+                const noteInEraseArea = note.row >= eraseStartRow && note.row <= eraseEndRow &&
+                                       note.startColumnIndex <= eraseEndCol && note.endColumnIndex >= col;
+                
+                if (noteInEraseArea) {
+                    return false; // Remove this note
+                }
+            }
+            
+            return true; // Keep this note
         });
 
         if (this.state.placedNotes.length < initialNoteCount) {
@@ -59,25 +83,83 @@ export const noteActions = {
     },
 
     addTonicSignGroup(tonicSignGroup) {
+        console.log('[TonicPlacement] Starting addTonicSignGroup with:', tonicSignGroup);
+        
         const firstSign = tonicSignGroup[0];
         const { preMacrobeatIndex } = firstSign;
-        if (Object.values(this.state.tonicSignGroups).flat().some(ts => ts.preMacrobeatIndex === preMacrobeatIndex)) return;
+        console.log('[TonicPlacement] preMacrobeatIndex:', preMacrobeatIndex);
+        
+        if (Object.values(this.state.tonicSignGroups).flat().some(ts => ts.preMacrobeatIndex === preMacrobeatIndex)) {
+            console.log('[TonicPlacement] Tonic already exists at this preMacrobeatIndex, returning');
+            return;
+        }
+        
         const boundaryColumn = getMacrobeatInfo(this.state, preMacrobeatIndex + 1).startColumn;
+        console.log('[TonicPlacement] Boundary column for shifting notes:', boundaryColumn);
+        
+        const notesToShift = this.state.placedNotes.filter(note => note.startColumnIndex >= boundaryColumn);
+        console.log('[TonicPlacement] Notes that will be shifted:', notesToShift.map(n => `${n.startColumnIndex}-${n.endColumnIndex}`));
         
         this.state.placedNotes.forEach(note => {
             if (note.startColumnIndex >= boundaryColumn) {
-                note.startColumnIndex += 1;
-                note.endColumnIndex += 1;
+                const oldStart = note.startColumnIndex;
+                const oldEnd = note.endColumnIndex;
+                note.startColumnIndex += 2;
+                note.endColumnIndex += 2;
+                console.log(`[TonicPlacement] Shifted note from ${oldStart}-${oldEnd} to ${note.startColumnIndex}-${note.endColumnIndex}`);
             }
         });
 
         const uuid = generateUUID();
         const groupWithId = tonicSignGroup.map(sign => ({ ...sign, uuid }));
         this.state.tonicSignGroups[uuid] = groupWithId;
+        console.log('[TonicPlacement] Added tonic group with UUID:', uuid, 'at columns:', groupWithId.map(s => s.columnIndex));
         
+        console.log('[TonicPlacement] Emitting events: notesChanged, rhythmStructureChanged');
         this.emit('notesChanged'); 
         this.emit('rhythmStructureChanged');
         this.recordState();
+    },
+
+    /**
+     * Erases tonic sign at the specified column index
+     * @param {number} columnIndex - The column index to check for tonic signs
+     * @param {boolean} record - Whether to record the state change (default true)
+     * @returns {boolean} True if a tonic sign was erased
+     */
+    eraseTonicSignAt(columnIndex, record = true) {
+        // Find any tonic group that has a sign at this column
+        const tonicGroupToDelete = Object.entries(this.state.tonicSignGroups).find(([uuid, group]) =>
+            group.some(sign => sign.columnIndex === columnIndex)
+        );
+
+        if (!tonicGroupToDelete) {
+            return false; // No tonic sign found at this column
+        }
+
+        const [uuidToDelete, groupToDelete] = tonicGroupToDelete;
+        const preMacrobeatIndex = groupToDelete[0].preMacrobeatIndex;
+        const boundaryColumn = getMacrobeatInfo(this.state, preMacrobeatIndex + 1).startColumn;
+
+        // Remove the tonic group
+        delete this.state.tonicSignGroups[uuidToDelete];
+
+        // Shift all notes that come after the tonic column back by 2
+        this.state.placedNotes.forEach(note => {
+            if (note.startColumnIndex >= boundaryColumn) {
+                note.startColumnIndex -= 2;
+                note.endColumnIndex -= 2;
+            }
+        });
+
+        this.emit('notesChanged');
+        this.emit('rhythmStructureChanged');
+        
+        if (record) {
+            this.recordState();
+        }
+        
+        return true;
     },
     
     toggleDrumNote(drumHit) {

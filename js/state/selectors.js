@@ -12,12 +12,12 @@ export const getMacrobeatInfo = (state, macrobeatIndex) => {
     const placedTonicSigns = getPlacedTonicSigns(state);
     
     if (placedTonicSigns.some(ts => ts.preMacrobeatIndex === -1)) {
-        columnCursor += 1;
+        columnCursor += 2;  // Fixed: Each tonic adds 2 columns
     }
     for (let i = 0; i < macrobeatIndex; i++) {
         columnCursor += macrobeatGroupings[i];
         if (placedTonicSigns.some(ts => ts.preMacrobeatIndex === i)) {
-            columnCursor += 1;
+            columnCursor += 2;  // Fixed: Each tonic adds 2 columns
         }
     }
     const startColumn = columnCursor;

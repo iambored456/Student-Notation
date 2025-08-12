@@ -137,7 +137,6 @@ export function initDrumGridInteraction() {
     const hoverCanvas = document.getElementById('drum-hover-canvas');
 
     if (!drumCanvas || !hoverCanvas) {
-        console.error("DrumGridInteractor: Could not find required canvas elements for initialization.");
         return;
     }
     drumHoverCtx = hoverCanvas.getContext('2d');
@@ -148,6 +147,4 @@ export function initDrumGridInteraction() {
     drumCanvas.addEventListener('contextmenu', e => e.preventDefault());
     
     window.addEventListener('mouseup', handleGlobalMouseUp);
-
-    console.log("DrumGridInteractor: Initialized and event listeners attached.");
 }

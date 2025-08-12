@@ -8,29 +8,69 @@
   border-color: var(--note-color) !important;
   box-shadow: 0 0 8px var(--note-color);
 }
-
-/* Ensure note-pair inherits the color from its note children */
 .note-pair[data-color="#4a90e2"].selected { --note-color: #4a90e2; }
 .note-pair[data-color="#2d2d2d"].selected { --note-color: #2d2d2d; }
 .note-pair[data-color="#d66573"].selected { --note-color: #d66573; }
 .note-pair[data-color="#68a03f"].selected { --note-color: #68a03f; }
 
-/* --- Button Selection States --- */
-/* Specific style for the selected eraser tool */
-.eraser-button.selected { 
-  background-color: rgba(220, 53, 69, 0.2); /* Light red fill */
-  border: none !important;
-  box-shadow: 0 0 8px var(--c-danger);
-  color: var(--c-danger); /* Darker red emoji */
+
+/*******************************************************************************
+* REFINED BUTTON STATES
+* These rules address the hover vs. active state issue.
+******************************************************************************/
+
+/* --- Generic Style for "Selected" or "Active" Tools (Excluding One-Off Actions) --- */
+/* This rule now uses :not() to exclude the buttons you specified, but INCLUDES loop button for toggle behavior. */
+.toolkit-icon-button.selected,
+.toolkit-icon-button.active:not(#grid-zoom-in):not(#grid-zoom-out):not(#clear-button):not(#undo-button):not(#redo-button):not(#stop-button):not(#play-button) {
+    background-color: var(--c-accent);
+    color: var(--c-surface); /* Icon color will be white */
+}
+/* Invert icon color on active buttons for visibility (also excluding the one-off actions, but INCLUDING loop button) */
+.toolkit-icon-button.selected img,
+.toolkit-icon-button.active:not(#grid-zoom-in):not(#grid-zoom-out):not(#clear-button):not(#undo-button):not(#redo-button):not(#stop-button):not(#play-button) img {
+    filter: invert(1) brightness(2);
 }
 
-/* Style for when right-click drag is happening or active erasing */
+
+/* --- Specific Override for Eraser --- */
+/* The eraser tool uses a "danger" color scheme when selected. */
+.eraser-button.selected { 
+  background-color: var(--c-danger);
+  color: var(--c-surface);
+  box-shadow: none; /* Clears any other shadows */
+}
+/* Ensure eraser icon inverts correctly on its red background */
+.eraser-button.selected img {
+    filter: invert(1) brightness(2);
+}
+
+
+/* --- Hovering Over an Already Active/Selected Button --- */
+/* This selector is more specific than the default :hover, so it takes precedence. */
+.toolkit-icon-button.selected:hover,
+.toolkit-icon-button.active:hover {
+    background-color: var(--c-accent-hover); /* Use a darker shade of the accent color */
+    transform: scale(1); /* Disable momentary click-down scale effect */
+}
+
+/* Specific hover state for the selected eraser button */
+.eraser-button.selected:hover {
+    background-color: #a72836; /* A darker, more saturated red */
+}
+
+/* This state is for when the user is actively right-click-dragging to erase */
 .eraser-button.erasing-active {
     background-color: var(--c-danger);
-    color: var(--c-surface); /* Make emoji white */
+    color: var(--c-surface);
+    transform: scale(1);
+}
+.eraser-button.erasing-active img {
+    filter: invert(1) brightness(2);
 }
 
-/* --- Clear Button States --- */
+
+/* --- Clear Button Flash Animation --- */
 .toolkit-icon-button.flash {
     background-color: rgba(220, 53, 69, 0.3);
     box-shadow: 0 0 8px var(--c-danger);
@@ -48,6 +88,7 @@
     }
 }
 
+/* --- Preset and Other Active States --- */
 .preset-button.selected {
   background-color: var(--c-accent);
   color: var(--c-surface);
@@ -56,13 +97,4 @@
 }
 .preset-button.selected:hover {
     background-color: var(--c-accent-hover);
-}
-
-/* --- Playback Control States --- */
-#loop-button.active {
-  background-color: var(--c-accent-hover);
-  border-color: var(--c-accent);
-}
-#play-button.active {
-  color: #28a745; 
 }

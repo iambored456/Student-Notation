@@ -10,7 +10,6 @@ class ZoomIndicator {
     }
 
     initialize() {
-        // Create the zoom indicator element
         this.element = document.createElement('div');
         this.element.className = 'zoom-indicator';
         this.element.style.cssText = `
@@ -30,8 +29,6 @@ class ZoomIndicator {
         `;
 
         document.body.appendChild(this.element);
-
-        // Listen for zoom events
         store.on('zoomIn', () => this.show());
         store.on('zoomOut', () => this.show());
         
@@ -41,7 +38,6 @@ class ZoomIndicator {
     show() {
         if (!this.element) return;
 
-        // Get viewport info if available
         let zoomPercent = 100;
         let visibilityText = '';
         
@@ -52,7 +48,6 @@ class ZoomIndicator {
             if (viewportInfo.canSeeFullRange) {
                 visibilityText = ' (Full Range)';
             } else {
-                // Calculate approximate visible range using correct row height calculation
                 const visibleSemitones = Math.floor((viewportInfo.endRow - viewportInfo.startRow + 1));
                 visibilityText = ` (~${visibleSemitones} semitones)`;
             }

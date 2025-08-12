@@ -2,8 +2,6 @@
 import store from '../state/index.js'; // <-- UPDATED PATH
 import PrintService from '../services/printService.js';
 
-console.log("PrintPreview: Module loaded.");
-
 const PrintPreview = {
     init() {
         this.overlay = document.getElementById('print-preview-overlay');

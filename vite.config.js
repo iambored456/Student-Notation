@@ -3,7 +3,7 @@ import { defineConfig } from 'vite';
 
 export default defineConfig({
   
-  base: '/Student-Notation/',
+  base: process.env.NODE_ENV === 'production' ? '/Student-Notation/' : '/',
 
   server: {
     open: true,               // auto-opens default browser on `vite dev`

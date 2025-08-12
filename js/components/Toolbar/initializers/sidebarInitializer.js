@@ -40,7 +40,9 @@ export function initSidebarAndVolume() {
     if (volumeIconBtn && volumePopup && verticalVolumeSlider) {
         volumeIconBtn.addEventListener('click', (e) => {
             e.stopPropagation();
-            volumePopup.classList.toggle('visible');
+            const isVisible = volumePopup.classList.toggle('visible');
+            // Update the button's active state based on popup visibility
+            volumeIconBtn.classList.toggle('active', isVisible);
         });
 
         verticalVolumeSlider.addEventListener('input', function() {
@@ -52,6 +54,8 @@ export function initSidebarAndVolume() {
         document.addEventListener('click', (e) => {
             if (!volumePopup.contains(e.target) && e.target !== volumeIconBtn) {
                 volumePopup.classList.remove('visible');
+                // Remove active state when popup is closed
+                volumeIconBtn.classList.remove('active');
             }
         });
 

@@ -2,39 +2,40 @@
 import store from '../state/index.js'; 
 import SynthEngine from './synthEngine.js';
 import GlobalService from './globalService.js';
+import { Note } from 'tonal'; // NEW: Import Tonal for chord calculations
 
 console.log("SpacebarHandler: Module loaded.");
 
 let spacebarPressed = false;
-let currentSpacebarNote = null;
-let defaultSpacebarNote = 'C4'; // Default note for startup and when no notes are placed
+let currentSpacebarNote = 'C4';
 
 function getPitchForNote(note) {
     const rowData = store.state.fullRowData[note.row];
-    return rowData ? rowData.toneNote : defaultSpacebarNote;
+    return rowData ? rowData.toneNote : 'C4';
 }
 
 function updateSpacebarNote() {
-    // Find the last placed pitch note (non-drum)
     const lastPitchNote = store.state.placedNotes
         .slice()
         .reverse()
         .find(note => !note.isDrum);
     
-    if (lastPitchNote) {
-        currentSpacebarNote = getPitchForNote(lastPitchNote);
-        console.log(`[SpacebarHandler] Updated spacebar note to: ${currentSpacebarNote} (from last placed note)`);
-    } else {
-        currentSpacebarNote = defaultSpacebarNote;
-        console.log(`[SpacebarHandler] No pitch notes found, using default: ${currentSpacebarNote}`);
-    }
+    currentSpacebarNote = lastPitchNote ? getPitchForNote(lastPitchNote) : 'C4';
+}
+
+// NEW: Helper function to get chord notes based on the current active chord shape
+function getChordNotesFromIntervals(rootNote) {
+    const { activeChordIntervals } = store.state;
+    if (!rootNote || !activeChordIntervals || !activeChordIntervals.length) return [];
+    
+    return activeChordIntervals.map(interval => {
+        const transposedNote = Note.transpose(rootNote, interval);
+        return Note.simplify(transposedNote);
+    });
 }
 
 export function initSpacebarHandler() {
-    // Initialize the spacebar note on startup
     updateSpacebarNote();
-    
-    // Listen for note changes to update the spacebar note
     store.on('notesChanged', updateSpacebarNote);
     
     document.addEventListener('keydown', (e) => {
@@ -46,26 +47,31 @@ export function initSpacebarHandler() {
         e.preventDefault();
         spacebarPressed = true;
 
-        // Ensure we have the most current spacebar note
-        if (!currentSpacebarNote) {
-            updateSpacebarNote();
-        }
-
-        console.log(`[SpacebarHandler] Spacebar pressed - playing: ${currentSpacebarNote}`);
-        
         const toolColor = store.state.selectedNote.color;
         if (toolColor && currentSpacebarNote) {
-            SynthEngine.triggerAttack(currentSpacebarNote, toolColor);
+            const toolType = store.state.selectedTool;
+            let pitchesToPlay = [];
 
-            // Find the pitch color for the playhead
+            // If chord tool is active, get all chord notes
+            if (toolType === 'chord') {
+                pitchesToPlay = getChordNotesFromIntervals(currentSpacebarNote);
+            }
+            
+            // Fallback to single note for other tools or if chord generation fails
+            if (pitchesToPlay.length === 0) {
+                pitchesToPlay = [currentSpacebarNote];
+            }
+
+            pitchesToPlay.forEach(pitch => {
+                SynthEngine.triggerAttack(pitch, toolColor);
+            });
+
+            // ADSR and waveform visualizer will still use the root note for simplicity
             const rowData = store.state.fullRowData.find(row => row.toneNote === currentSpacebarNote);
             const pitchColor = rowData ? rowData.hex : '#888888';
             const adsr = store.state.timbres[toolColor].adsr;
 
-            // Trigger the visual playhead for the spacebar
             GlobalService.adsrComponent?.playheadManager.trigger('spacebar', 'attack', pitchColor, adsr);
-            
-            // NEW: Emit event for waveform visualizer
             store.emit('spacebarPlayback', { 
                 note: currentSpacebarNote, 
                 color: toolColor, 
@@ -83,35 +89,37 @@ export function initSpacebarHandler() {
         if (currentSpacebarNote) {
             const toolColor = store.state.selectedNote.color;
             if (toolColor) {
-                SynthEngine.triggerRelease(currentSpacebarNote, toolColor);
+                const toolType = store.state.selectedTool;
+                let pitchesToRelease = [];
 
-                // Find the pitch color for the playhead
+                if (toolType === 'chord') {
+                    pitchesToRelease = getChordNotesFromIntervals(currentSpacebarNote);
+                }
+                if (pitchesToRelease.length === 0) {
+                    pitchesToRelease = [currentSpacebarNote];
+                }
+
+                pitchesToRelease.forEach(pitch => {
+                    SynthEngine.triggerRelease(pitch, toolColor);
+                });
+                
                 const rowData = store.state.fullRowData.find(row => row.toneNote === currentSpacebarNote);
                 const pitchColor = rowData ? rowData.hex : '#888888';
                 const adsr = store.state.timbres[toolColor].adsr;
 
-                 // Trigger the release of the visual playhead
                 GlobalService.adsrComponent?.playheadManager.trigger('spacebar', 'release', pitchColor, adsr);
-                
-                // NEW: Emit event for waveform visualizer
                 store.emit('spacebarPlayback', { 
                     note: currentSpacebarNote, 
                     color: toolColor, 
                     isPlaying: false 
                 });
             }
-            console.log(`[SpacebarHandler] Spacebar released - stopping: ${currentSpacebarNote}`);
         }
     });
     
-    console.log("SpacebarHandler: Initialized with default note:", defaultSpacebarNote);
+    console.log("SpacebarHandler: Initialized with default note:", currentSpacebarNote);
 }
 
-// Export function to manually set the default spacebar note (useful for testing or configuration)
 export function setDefaultSpacebarNote(note) {
-    defaultSpacebarNote = note;
-    if (store.state.placedNotes.length === 0) {
-        currentSpacebarNote = defaultSpacebarNote;
-        console.log(`[SpacebarHandler] Default spacebar note changed to: ${defaultSpacebarNote}`);
-    }
+    currentSpacebarNote = note;
 }

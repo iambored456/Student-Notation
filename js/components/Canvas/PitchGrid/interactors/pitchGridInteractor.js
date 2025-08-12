@@ -9,11 +9,13 @@ import { getRowY } from '../renderers/rendererUtils.js';
 import GlobalService from '../../../../services/globalService.js';
 import domCache from '../../../../services/domCache.js';
 import { Note } from 'tonal';
+import { isNotePlayableAtColumn, isWithinTonicSpan } from '../../../../utils/tonicColumnUtils.js';
 
 // --- Interaction State ---
 let pitchHoverCtx;
 let isDragging = false;
 let activeNote = null;
+let activePreviewPitches = []; // NEW: To hold all pitches for audio preview
 let isRightClickActive = false;
 let previousTool = null;
 let lastHoveredTonicPoint = null;
@@ -57,17 +59,23 @@ function getChordNotesFromIntervals(rootNote) {
     
     return activeChordIntervals.map(interval => {
         const transposedNote = Note.transpose(rootNote, interval);
-        return Note.simplify(transposedNote, { preferSharps: false });
+        const simplifiedNote = Note.simplify(transposedNote);
+
+        if (simplifiedNote.includes('#')) {
+            const flatEquivalent = Note.enharmonic(simplifiedNote);
+            if (flatEquivalent.includes('b')) {
+                return flatEquivalent;
+            }
+        }
+        return simplifiedNote;
     });
 }
 
 // --- Hover Drawing Logic ---
 function drawHoverHighlight(colIndex, rowIndex, color) {
-    console.log(`[Interactor] drawHoverHighlight called with col: ${colIndex}, row: ${rowIndex}`);
     if (!pitchHoverCtx) return;
 
     const x = LayoutService.getColumnX(colIndex);
-    // CORRECTED Y CALCULATION
     const centerY = getRowY(rowIndex, store.state);
     const y = centerY - (store.state.cellHeight / 2);
 
@@ -75,7 +83,7 @@ function drawHoverHighlight(colIndex, rowIndex, color) {
     let highlightWidth = store.state.columnWidths[colIndex] * store.state.cellWidth;
     
     if (toolType === 'eraser' || isRightClickActive) {
-        highlightWidth = store.state.cellWidth * 2; 
+        highlightWidth = store.state.cellWidth * 2;
     } else if (toolType === 'note' && store.state.selectedNote.shape === 'circle') {
         highlightWidth = store.state.cellWidth * 2;
     } else if (toolType === 'tonicization') {
@@ -107,21 +115,14 @@ function drawGhostNote(colIndex, rowIndex, isFaint = false) {
 }
 
 // --- Event Handlers ---
-// js/components/Canvas/PitchGrid/interactors/pitchGridInteractor.js (partial fix)
-// This shows the corrected handleMouseDown function
-
 function handleMouseDown(e) {
     const rect = e.target.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
     
-    // Account for horizontal scroll position like drum grid does
     const scrollLeft = document.getElementById('canvas-container').scrollLeft;
     const colIndex = GridCoordsService.getColumnIndex(x + scrollLeft);
     const rowIndex = GridCoordsService.getPitchRowIndex(y);
-    
-    // Debug logging
-    console.log(`[PitchGridInteractor] Mouse down at col: ${colIndex}, row: ${rowIndex} (scroll offset: ${scrollLeft})`);
     
     if (colIndex < 2 || colIndex >= store.state.columnWidths.length - 2 || !getPitchForRow(rowIndex)) return;
 
@@ -134,9 +135,12 @@ function handleMouseDown(e) {
             store.setSelectedTool('eraser');
         }
         domCache.get('eraserButton')?.classList.add('erasing-active');
-        if (store.eraseInPitchArea(colIndex - 1, rowIndex, 2, false)) rightClickActionTaken = true;
+        
+        if (store.eraseInPitchArea(colIndex, rowIndex, 2, false)) rightClickActionTaken = true;
+        if (store.eraseTonicSignAt(colIndex, false)) rightClickActionTaken = true;
+        
         pitchHoverCtx.clearRect(0, 0, pitchHoverCtx.canvas.width, pitchHoverCtx.canvas.height);
-        drawHoverHighlight(colIndex - 1, rowIndex, 'rgba(220, 53, 69, 0.3)');
+        drawHoverHighlight(colIndex, rowIndex, 'rgba(220, 53, 69, 0.3)');
         return;
     }
 
@@ -144,11 +148,26 @@ function handleMouseDown(e) {
         const toolType = store.state.selectedTool;
 
         if (toolType === 'chord') {
+            if (!isNotePlayableAtColumn(colIndex, store.state)) {
+                return;
+            }
+            
             const rootNote = getPitchForRow(rowIndex);
             if (!rootNote) return;
             const chordNotes = getChordNotesFromIntervals(rootNote);
             const { shape, color } = store.state.selectedNote;
+
+            // NEW: Trigger audio preview for all notes in the chord
+            activePreviewPitches = [...chordNotes];
+            activePreviewPitches.forEach(pitch => {
+                SynthEngine.triggerAttack(pitch, color);
+            });
             
+            // Trigger ADSR visual for the root note
+            const pitchColor = store.state.fullRowData[rowIndex]?.hex || '#888888';
+            GlobalService.adsrComponent?.playheadManager.trigger('chord_preview', 'attack', pitchColor, store.state.timbres[color].adsr);
+
+            // Placement logic remains the same (places on click)
             chordNotes.forEach(noteName => {
                 const noteRow = store.state.fullRowData.findIndex(r => r.toneNote === noteName);
                 if (noteRow !== -1) {
@@ -162,7 +181,12 @@ function handleMouseDown(e) {
         
         if (toolType === 'tonicization') {
             if (lastHoveredTonicPoint && lastHoveredOctaveRows.length > 0) {
-                const newTonicGroup = lastHoveredOctaveRows.map(rowIdx => ({ row: rowIdx, tonicNumber: store.state.selectedToolTonicNumber, preMacrobeatIndex: lastHoveredTonicPoint.preMacrobeatIndex }));
+                const newTonicGroup = lastHoveredOctaveRows.map(rowIdx => ({ 
+                    row: rowIdx, 
+                    tonicNumber: store.state.selectedToolTonicNumber, 
+                    preMacrobeatIndex: lastHoveredTonicPoint.preMacrobeatIndex,
+                    columnIndex: lastHoveredTonicPoint.drawColumn
+                }));
                 store.addTonicSignGroup(newTonicGroup);
                 lastHoveredTonicPoint = null; 
                 lastHoveredOctaveRows = [];
@@ -171,44 +195,34 @@ function handleMouseDown(e) {
         }
 
         if (toolType === 'eraser') {
-            store.eraseInPitchArea(colIndex - 1, rowIndex, 2, true);
+            store.eraseInPitchArea(colIndex, rowIndex, 2, true);
             return;
         }
         
         if (toolType === 'note') {
+            if (!isNotePlayableAtColumn(colIndex, store.state)) {
+                return;
+            }
+            
             const { shape, color } = store.state.selectedNote;
-            
-            // Debug logging
-            console.log(`[PitchGridInteractor] Creating note with shape: ${shape}, color: ${color}`);
-            
-            const newNote = { 
-                row: rowIndex, 
-                startColumnIndex: colIndex, 
-                endColumnIndex: colIndex, 
-                color, 
-                shape, 
-                isDrum: false 
-            };
-            
+            const newNote = { row: rowIndex, startColumnIndex: colIndex, endColumnIndex: colIndex, color, shape, isDrum: false };
             const addedNote = store.addNote(newNote); 
             activeNote = addedNote;
             
-            // For circle notes, enable dragging to extend the duration
             isDragging = (shape === 'circle');
 
             if (!isDragging) {
-                store.recordState(); // Record history for single-click ovals
+                store.recordState();
             }
 
             const pitch = getPitchForRow(rowIndex);
             if (pitch) {
+                // MODIFIED: Store the pitch for unified release on mouseup
+                activePreviewPitches = [pitch]; 
                 SynthEngine.triggerAttack(pitch, activeNote.color);
                 const pitchColor = store.state.fullRowData[rowIndex]?.hex || '#888888';
                 GlobalService.adsrComponent?.playheadManager.trigger(activeNote.uuid, 'attack', pitchColor, store.state.timbres[activeNote.color].adsr);
             }
-            
-            // Debug logging
-            console.log(`[PitchGridInteractor] Note added:`, addedNote);
         }
     }
 }
@@ -218,20 +232,14 @@ function handleMouseMove(e) {
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
     
-    // Account for horizontal scroll position like drum grid does
     const scrollLeft = document.getElementById('canvas-container').scrollLeft;
-    console.log(`[Interactor] handleMouseMove: Canvas Coords (x: ${x.toFixed(2)}, y: ${y.toFixed(2)}) scrollLeft: ${scrollLeft}`);
-    
     const colIndex = GridCoordsService.getColumnIndex(x + scrollLeft);
     const rowIndex = GridCoordsService.getPitchRowIndex(y);
-    console.log(`[Interactor] handleMouseMove: Grid Coords (col: ${colIndex}, row: ${rowIndex})`);
-
 
     if (!pitchHoverCtx) return;
     pitchHoverCtx.clearRect(0, 0, pitchHoverCtx.canvas.width, pitchHoverCtx.canvas.height);
 
     if (colIndex < 2 || colIndex >= store.state.columnWidths.length - 2 || getPitchForRow(rowIndex) === null) {
-        console.log('[Interactor] Condition met to EXIT hover logic.');
         lastHoveredTonicPoint = null;
         lastHoveredOctaveRows = [];
         return;
@@ -261,8 +269,9 @@ function handleMouseMove(e) {
     }
     
     if (isRightClickActive) {
-        if (store.eraseInPitchArea(colIndex - 1, rowIndex, 2, false)) rightClickActionTaken = true;
-        drawHoverHighlight(colIndex - 1, rowIndex, 'rgba(220, 53, 69, 0.3)');
+        if (store.eraseInPitchArea(colIndex, rowIndex, 2, false)) rightClickActionTaken = true;
+        if (store.eraseTonicSignAt(colIndex, false)) rightClickActionTaken = true;
+        drawHoverHighlight(colIndex, rowIndex, 'rgba(220, 53, 69, 0.3)');
         return;
     } 
     
@@ -276,12 +285,46 @@ function handleMouseMove(e) {
     }
 
     if (store.state.selectedTool === 'tonicization') {
-        // ... (this logic is unchanged)
+        const snapPoint = findMeasureSnapPoint(colIndex);
+        if (snapPoint) {
+            const basePitch = getPitchForRow(rowIndex);
+            if (basePitch) {
+                const octaveRows = store.state.fullRowData
+                    .map((rowData, index) => ({ ...rowData, index }))
+                    .filter(rowData => rowData.toneNote && rowData.toneNote.replace(/\d+$/, '') === basePitch.replace(/\d+$/, ''))
+                    .map(rowData => rowData.index);
+
+                lastHoveredTonicPoint = snapPoint;
+                lastHoveredOctaveRows = octaveRows;
+
+                pitchHoverCtx.globalAlpha = 0.5;
+                octaveRows.forEach(rowIdx => {
+                    const ghostTonic = { row: rowIdx, columnIndex: snapPoint.drawColumn, tonicNumber: store.state.selectedToolTonicNumber };
+                    drawTonicShape(pitchHoverCtx, store.state, ghostTonic);
+                });
+                pitchHoverCtx.globalAlpha = 1.0;
+            }
+        } else {
+            lastHoveredTonicPoint = null;
+            lastHoveredOctaveRows = [];
+        }
     } else { 
-        const highlightColor = store.state.selectedTool === 'eraser' ? 'rgba(220, 53, 69, 0.3)' : 'rgba(74, 144, 226, 0.2)';
-        const highlightStartCol = store.state.selectedTool === 'eraser' ? colIndex - 1 : colIndex;
+        const canPlaceNote = (store.state.selectedTool === 'note' || store.state.selectedTool === 'chord') 
+            ? isNotePlayableAtColumn(colIndex, store.state) 
+            : true;
+        
+        const highlightColor = store.state.selectedTool === 'eraser' 
+            ? 'rgba(220, 53, 69, 0.3)' 
+            : canPlaceNote 
+                ? 'rgba(74, 144, 226, 0.2)'
+                : 'rgba(220, 53, 69, 0.15)';
+                
+        const highlightStartCol = colIndex;
         drawHoverHighlight(highlightStartCol, rowIndex, highlightColor);
-        drawGhostNote(colIndex, rowIndex);
+        
+        if (canPlaceNote) {
+            drawGhostNote(colIndex, rowIndex);
+        }
     }
 }
 
@@ -294,19 +337,35 @@ function handleMouseLeave() {
 }
 
 function handleGlobalMouseUp() {
-    if (activeNote) {
-        const pitch = getPitchForRow(activeNote.row);
-        if (pitch) {
-            SynthEngine.triggerRelease(pitch, activeNote.color);
+    // MODIFIED: Release any pitches that were triggered for preview
+    if (activePreviewPitches.length > 0) {
+        const color = store.state.selectedNote.color;
+        activePreviewPitches.forEach(pitch => {
+            SynthEngine.triggerRelease(pitch, color);
+        });
+
+        // Determine which ADSR visual to release
+        const wasSingleNote = !!activeNote;
+        if (wasSingleNote) {
             const pitchColor = store.state.fullRowData[activeNote.row]?.hex || '#888888';
-            GlobalService.adsrComponent?.playheadManager.trigger(activeNote.uuid, 'release', pitchColor, store.state.timbres[activeNote.color].adsr);
+            GlobalService.adsrComponent?.playheadManager.trigger(activeNote.uuid, 'release', pitchColor, store.state.timbres[color].adsr);
+        } else { // It was a chord preview
+            const rootPitch = activePreviewPitches[0];
+            const rootRow = store.state.fullRowData.find(row => row.toneNote === rootPitch);
+            if (rootRow) {
+                const pitchColor = rootRow.hex;
+                GlobalService.adsrComponent?.playheadManager.trigger('chord_preview', 'release', pitchColor, store.state.timbres[color].adsr);
+            }
         }
+        activePreviewPitches = [];
     }
+
     if (isDragging) {
         store.recordState();
     }
     isDragging = false;
     activeNote = null;
+
     if (isRightClickActive) {
         if (rightClickActionTaken) store.recordState();
         isRightClickActive = false;

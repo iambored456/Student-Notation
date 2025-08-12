@@ -29,7 +29,6 @@ export function getInterpolatedColor(midiValue) {
   const midiFloor = Math.floor(midiValue);
   const fraction = midiValue - midiFloor;
   
-  // Prevent potential errors if midiValue is negative
   if (fraction < 0 || fraction >= 1) {
     return getPitchColor(midiValue);
   }

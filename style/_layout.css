@@ -6,36 +6,35 @@
   flex-direction: column;
   flex: 1;
   min-height: 0;
-  width: 100vw; /* Keep app container at viewport width */
-  overflow-x: visible; /* Allow children to overflow horizontally */
+  width: 100vw;
+  overflow-x: visible;
 }
-
 #canvas-container { 
   height: 80vh; 
-  display: flex; /* This remains a flex container */
+  display: flex;
   min-height: 0;
-  width: fit-content; /* Expand to fit content width */
-  min-width: 100%; /* But at least fill the viewport */
-  /* Allow horizontal overflow to bubble up to viewport */
+  width: fit-content;
+  min-width: 100%;
   overflow-x: visible; 
   padding: 0 var(--app-padding) var(--app-padding);
+
+  position: relative;
+  z-index: 1;
 }
 
-/* NEW: Stable Sizing Container */
 #canvas-content {
     display: flex;
     flex-direction: column;
-    flex: 1; /* Take all available space in #canvas-container */
-    min-width: fit-content; /* Allow content to expand horizontally */
-    overflow-x: visible; /* Let horizontal overflow bubble up to viewport */
-    height: 100%; /* Constrain total height to prevent overflow */
+    flex: 1;
+    min-width: fit-content;
+    overflow-x: visible;
+    height: 100%; 
 }
 
-/* ... (toolbar styles are unchanged) ... */
 #toolbar {
     height: 20vh;
     min-height: 170px;
-    width: fit-content; /* Shrink and expand to fit toolbar content only */
+    width: fit-content;
     display: flex;
     gap: var(--space-1);
     padding: 0.4em;
@@ -45,13 +44,15 @@
     box-shadow: none;
     flex-shrink: 0;
     margin-bottom: 0;
+    position: relative;
+    z-index: 2;
 }
 
 #container-1, #container-2, #container-3 {
     display: flex;
     border: 1px solid var(--c-border);
     border-radius: var(--border-radius-md);
-    background-color: var(--c-bg); /* Lighter off-white for all containers */
+    background-color: var(--c-bg);
 }
 
 #container-1 {
@@ -82,18 +83,15 @@
     height: 100%;
     justify-content: center;
 }
-
 .tool-subcontainer:last-child, .control-section:last-child {
     border-right: none;
 }
-
 #container-3 {
     flex: 1 1 0; 
-    overflow: hidden;
+    overflow: visible; 
     min-width: 0;
     padding: 0; 
 }
-
 .tab-sidebar {
     flex: 0 0 100px;
     display: flex;
@@ -101,39 +99,35 @@
     background-color: var(--c-gridline);
     border-right: 1px solid var(--c-border);
 }
-
 .tab-content {
     flex: 1;
     padding: 0.1em;
     background-color: var(--c-bg);
-    overflow: hidden;
+    overflow: visible;
     min-width: 0;
 }
-
 .tab-panel { display: none; height: 100%; align-items: stretch; }
 .tab-panel.active { 
     display: flex;
     gap: var(--space-2);
 }
-
 .control-section {
-    flex: 1;
+    flex: 0 1 auto;
     padding: 0.2em;
     background-color: transparent;
     border-right: none;
     display: flex;
     flex-direction: column;
-    min-width: 0;
+    min-width: fit-content;
+    width: fit-content;
     border-radius: 0;
 }
-
 .preset-container {
     align-items: center;
     justify-content: center;
-    flex: 0 0 auto; /* Don't grow/shrink, size to content */
-    width: fit-content; /* Shrink to necessary width */
+    flex: 0 0 auto;
+    width: fit-content;
 }
-
 .control-section h4 {
     margin: 0 0 var(--space-1) 0;
     color: var(--c-text-muted);
@@ -146,15 +140,13 @@
 /* ==========================================================================
    GRID & CANVAS STYLES
    ========================================================================= */
-/* pitchGrid Assembly - contains time signature + tools + viewport */
 #pitch-grid-wrapper {
-  width: fit-content; /* Expand to fit pitch grid content */
-  min-width: 100%; /* But at least fill the container */
-  /* THE FIX: Make this a flex container */
+  width: fit-content;
+  min-width: 100%;
   display: flex;
   flex-direction: column;
-  flex: 1 0 auto; /* FIXED: Prevent vertical shrinking - flex-shrink: 0 */
-  min-height: 200px; /* Minimum height to remain usable */
+  flex: 1 0 auto;
+  min-height: 200px;
   overflow: hidden;
   border: 1px solid var(--c-border);
   border-bottom: none;
@@ -162,31 +154,22 @@
   position: relative;
   background-color: var(--c-surface);
 }
-
-/* These are children of the flex container now */
 #time-signature-display, #canvas-macrobeat-tools {
-    flex-shrink: 0; /* Prevent them from shrinking */
+    flex-shrink: 0; 
 }
-
-/* pitchGrid Viewport - the scrollable/zoomable grid area */
 #pitch-grid-container { 
-  flex: 1; /* Take up all remaining vertical space */
+  flex: 1;
   position: relative; 
-  width: fit-content; /* Expand to fit grid-container content */
-  /* REMOVED min-width: 100% to allow shrinking when canvas is smaller */
-  overflow-x: visible; /* Let horizontal overflow bubble up to viewport */
-  overflow-y: hidden; /* Keep vertical overflow hidden */
+  width: fit-content; 
+  overflow-x: visible; 
+  overflow-y: hidden;
   min-height: 0;
 }
-
-/* ... the rest of the file is unchanged ... */
 #grid-container {
   position: relative;
   height: 100%;
-  width: fit-content; /* Allow it to expand to needed width */
-  /* REMOVED min-width: 100% to allow natural canvas sizing */
+  width: fit-content;
 }
-
 #pitch-canvas-wrapper {
   position: absolute;
   top: 0;
@@ -194,43 +177,34 @@
   width: 100%;
   height: 100%;
 }
-
 #notation-grid, #playhead-canvas, #hover-canvas, #pitch-paint-canvas {
   position: absolute; top: 0; left: 0; display: block;
 }
-
 #playhead-canvas, #hover-canvas, #drum-hover-canvas, #pitch-paint-canvas {
   pointer-events: none;
 }
-
 #harmonyAnalysisGrid {
-  flex: 0 0 auto; /* Fixed size - don't grow or shrink, priority over pitch grid */
-  width: fit-content; /* Expand to match pitch grid width */
-  /* REMOVED min-width: 100% to allow shrinking when canvas is smaller */
-  min-height: 40px; /* Minimum height but can grow with zoom */
+  flex: 0 0 auto;
+  width: fit-content;
+  min-height: 40px;
   position: relative;
   background-color: var(--c-gridline);
   border-left: 1px solid var(--c-border);
   border-right: 1px solid var(--c-border);
 }
-
 #harmony-analysis-canvas {
     position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none;
 }
-
-/* RENAMED */
 #drum-grid-wrapper {
-  flex: 0 0 auto; /* Fixed size - height set by JavaScript to fit content and stay on screen */
-  width: fit-content; /* Expand to match pitch grid width */
-  /* REMOVED min-width: 100% to allow shrinking when canvas is smaller */
-  min-height: 90px; /* Minimum usable height */
+  flex: 0 0 auto;
+  width: fit-content;
+  min-height: 90px; 
   overflow: hidden;
   position: relative;
   border: 1px solid var(--c-border);
   border-top: none;
   border-radius: 0 0 var(--border-radius-md) var(--border-radius-md);
 }
-
 #drum-grid, #drum-hover-canvas {
   display: block;
   position: absolute; top: 0; left: 0;

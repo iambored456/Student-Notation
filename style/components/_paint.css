@@ -16,14 +16,21 @@
     gap: var(--space-2);
 }
 
+/* NEW: Grid container for the two-column layout */
+.paint-layout-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr; /* Two equal-width columns */
+    gap: var(--space-3); /* Space between the columns */
+    align-items: start; /* Align content to the top of each column */
+}
+
+/* MODIFIED: This now defines the first column (buttons) */
 .paint-main-controls {
     display: flex;
-    /* THE FIX: Change flex-direction to row and add a gap */
-    flex-direction: row;
+    flex-direction: column; /* Stack buttons vertically */
     gap: var(--space-2);
 }
 
-/* THE FIX: Make buttons inside the container share the space */
 .paint-main-controls > .toolkit-button {
     flex: 1;
 }
@@ -42,14 +49,14 @@
     cursor: not-allowed;
 }
 
-/* Settings section for sliders */
+/* MODIFIED: This now defines the second column (sliders) */
 .paint-settings {
     display: flex;
     flex-direction: column;
     gap: var(--space-2);
-    margin-top: var(--space-2);
-    padding-top: var(--space-2);
-    border-top: 1px solid var(--c-border);
+    margin-top: 0; /* No longer needed */
+    padding-top: 0; /* No longer needed */
+    border-top: none; /* No longer needed */
 }
 
 .paint-setting-group {

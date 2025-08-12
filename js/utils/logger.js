@@ -1,16 +1,21 @@
-/**
- * Standardized Logging Utility for Student Notation
- * Provides consistent logging patterns across the application
- */
 
 class Logger {
     constructor() {
-        this.logLevel = 'DEBUG'; // DEBUG, INFO, WARN, ERROR
+        this.logLevel = 'INFO'; // Reduced from DEBUG to INFO
         this.enabledLevels = {
-            DEBUG: true,
+            DEBUG: false, 
             INFO: true,
             WARN: true,
             ERROR: true
+        };
+        
+        // Configuration for specific types of verbose logging
+        this.config = {
+            moduleLoading: false,    // Disable "Module loaded" spam
+            mouseMovement: false,    // Disable mouse movement logging
+            layoutDebug: false,      // Disable verbose layout debug
+            waveformDrawing: false,  // Disable frequent draw calls
+            initialization: false     // Keep important startup messages
         };
     }
 
@@ -45,7 +50,7 @@ class Logger {
      * @param {string} componentName - Name of the component/module
      */
     moduleLoaded(componentName) {
-        if (!this.enabledLevels.INFO) return;
+        if (!this.enabledLevels.INFO || !this.config.moduleLoading) return;
         console.log(`${componentName}: Module loaded.`);
     }
 

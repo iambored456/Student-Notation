@@ -79,7 +79,9 @@ function initDOMElements() {
 }
 
 function recalcAndApplyLayout() {
+    console.log('[Layout] recalcAndApplyLayout() called');
     if (!pitchGridWrapper || pitchGridWrapper.clientHeight === 0) {
+        console.log('[Layout] Deferring layout - pitchGridWrapper not ready');
         requestAnimationFrame(recalcAndApplyLayout);
         return;
     }
@@ -90,6 +92,7 @@ function recalcAndApplyLayout() {
         return;
     }
     
+    console.log('[Layout] Beginning layout recalculation');
     isRecalculating = true;
 
     const pitchGridContainer = document.getElementById('pitch-grid-container');
@@ -101,13 +104,7 @@ function recalcAndApplyLayout() {
     const widthDiff = Math.abs(newViewportWidth - (pitchGridWrapper._lastViewportWidth || 0));
     
     if (heightDiff > 0 || widthDiff > 0) {
-        console.log('📏 Viewport Size Change:', {
-            heightChange: `${viewportHeight} → ${newViewportHeight}`,
-            widthChange: `${pitchGridWrapper._lastViewportWidth || 'unknown'} → ${newViewportWidth}`,
-            heightDiff: newViewportHeight - viewportHeight,
-            widthDiff: newViewportWidth - (pitchGridWrapper._lastViewportWidth || 0),
-            significant: heightDiff > 3 || widthDiff > 3
-        });
+        console.log('[Layout] Viewport changed:', `${newViewportWidth}×${newViewportHeight}`);
         
         // Only update viewport dimensions for significant changes
         // This helps prevent micro-adjustments from causing layout instability
@@ -130,17 +127,7 @@ function recalcAndApplyLayout() {
     
     // Log cell size changes
     if (store.state.cellWidth !== newCellWidth || store.state.cellHeight !== newCellHeight) {
-        console.log('📐 Cell Size Change:', {
-            heightChange: `${store.state.cellHeight} → ${newCellHeight}`,
-            widthChange: `${store.state.cellWidth} → ${newCellWidth}`,
-            baseHeight,
-            baseWidth,
-            viewportHeight,
-            zoomLevel: currentZoomLevel,
-            DEFAULT_VISIBLE_SEMITONES,
-            GRID_HEIGHT_MULTIPLIER,
-            GRID_WIDTH_RATIO
-        });
+        console.log('[Layout] Cell size changed:', `${newCellWidth.toFixed(1)}×${newCellHeight.toFixed(1)}`);
     }
     
     store.state.cellHeight = newCellHeight;
@@ -149,14 +136,25 @@ function recalcAndApplyLayout() {
 
     const { macrobeatGroupings } = store.state;
     const placedTonicSigns = getPlacedTonicSigns(store.state);
+    const oldColumnWidths = [...(store.state.columnWidths || [])];
     const newColumnWidths = [SIDE_COLUMN_WIDTH, SIDE_COLUMN_WIDTH];
+    
+    console.log('[Layout] Starting layout recalculation');
+    console.log('[Layout] Placed tonic signs:', placedTonicSigns.map(ts => `col:${ts.columnIndex},mb:${ts.preMacrobeatIndex}`));
+    console.log('[Layout] Old columnWidths:', oldColumnWidths);
+    console.log('[Layout] Macrobeat groupings:', macrobeatGroupings);
     const sortedTonicSigns = [...placedTonicSigns].sort((a, b) => a.preMacrobeatIndex - b.preMacrobeatIndex);
     let tonicSignCursor = 0;
     
     const addTonicSignsForIndex = (mbIndex) => {
         let uuid = sortedTonicSigns[tonicSignCursor]?.uuid;
         while (sortedTonicSigns[tonicSignCursor] && sortedTonicSigns[tonicSignCursor].preMacrobeatIndex === mbIndex) {
-            newColumnWidths.push(TONIC_COLUMN_WIDTH);
+            console.log(`[Layout] Adding tonic columns for mbIndex ${mbIndex}, tonic at column ${sortedTonicSigns[tonicSignCursor].columnIndex}`);
+            // Add 2 columns of width=1 for each tonic (for grid consistency)
+            const columnCountBefore = newColumnWidths.length;
+            newColumnWidths.push(BEAT_COLUMN_WIDTH);
+            newColumnWidths.push(BEAT_COLUMN_WIDTH);
+            console.log(`[Layout] Added 2 columns (width=${BEAT_COLUMN_WIDTH} each), total columns: ${columnCountBefore} -> ${newColumnWidths.length}`);
             while(sortedTonicSigns[tonicSignCursor] && sortedTonicSigns[tonicSignCursor].uuid === uuid) {
                 tonicSignCursor++;
             }
@@ -170,6 +168,12 @@ function recalcAndApplyLayout() {
         addTonicSignsForIndex(mbIndex);
     });
     newColumnWidths.push(SIDE_COLUMN_WIDTH, SIDE_COLUMN_WIDTH);
+    
+    console.log('[Layout] Final newColumnWidths:', newColumnWidths);
+    console.log('[Layout] Width change:', `${oldColumnWidths.length} -> ${newColumnWidths.length} columns`);
+    console.log('[Layout] Old total width units:', oldColumnWidths.reduce((sum, w) => sum + w, 0));
+    console.log('[Layout] New total width units:', newColumnWidths.reduce((sum, w) => sum + w, 0));
+    
     store.state.columnWidths = newColumnWidths;
 
     const totalWidthUnits = newColumnWidths.reduce((sum, w) => sum + w, 0);
@@ -179,13 +183,8 @@ function recalcAndApplyLayout() {
     const totalCanvasWidthPx = Math.round(totalCanvasWidth);
     
     // EXPERIMENT: Remove width setting entirely - let CSS handle layout
-    console.log('🔍 LayoutService Width Debug (NO SETTING):', {
-        zoomLevel: currentZoomLevel,
-        cellWidth: store.state.cellWidth,
-        totalWidthUnits,
-        calculatedWidth: totalCanvasWidthPx,
-        cssHandledWidth: 'CSS determines width'
-    });
+    // Simplified width debug
+    console.log('[Layout] Grid width calculated:', `${totalCanvasWidthPx}px (${totalWidthUnits} units)`);
     
     // SET CONTAINER WIDTHS: Since containers collapsed to 0px, set them to canvas width
     setTimeout(() => {
@@ -222,7 +221,7 @@ function recalcAndApplyLayout() {
     }, 0);
     
     // Don't set grid-container width - let CSS and natural layout handle it
-    console.log('⏭️ Letting CSS handle grid-container width naturally');
+    // Let CSS handle grid-container width naturally
     
     [canvas, playheadCanvas, hoverCanvas, drumCanvas, drumHoverCanvas, harmonyCanvas].forEach(c => { 
         if(c && Math.abs(c.width - totalCanvasWidthPx) > 1) { 
@@ -318,6 +317,7 @@ const LayoutService = {
     init() {
         const { ctx, drumCtx, canvasContainer } = initDOMElements();
         requestAnimationFrame(recalcAndApplyLayout);
+       
        
         // EXPERIMENTAL: Use window resize instead of ResizeObserver to avoid cascade
         const handleWindowResize = () => {

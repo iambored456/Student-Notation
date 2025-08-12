@@ -10,8 +10,15 @@ export function initGridControls() {
     const increaseBtn = document.getElementById('macrobeat-increase');
     const decreaseBtn = document.getElementById('macrobeat-decrease');
 
-    if (zoomInBtn) zoomInBtn.addEventListener('click', () => store.emit('zoomIn'));
-    if (zoomOutBtn) zoomOutBtn.addEventListener('click', () => store.emit('zoomOut'));
+    if (zoomInBtn) zoomInBtn.addEventListener('click', () => {
+        store.emit('zoomIn');
+        zoomInBtn.blur(); // Remove focus to prevent lingering blue highlight
+    });
+    
+    if (zoomOutBtn) zoomOutBtn.addEventListener('click', () => {
+        store.emit('zoomOut');
+        zoomOutBtn.blur(); // Remove focus to prevent lingering blue highlight
+    });
     
     if (increaseBtn) increaseBtn.addEventListener('click', () => store.increaseMacrobeatCount());
     if (decreaseBtn) decreaseBtn.addEventListener('click', () => store.decreaseMacrobeatCount());

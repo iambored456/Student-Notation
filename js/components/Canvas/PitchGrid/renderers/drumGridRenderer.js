@@ -84,8 +84,8 @@ function drawVerticalGridLines(ctx, options) {
 
 /**
  * The "pure" drawing function for the entire drum grid.
- * @param {CanvasRenderingContext2D} ctx - The canvas context to draw on.
- * @param {object} options - An object with all necessary data for rendering.
+ * @param {CanvasRenderingContext2D} ctx 
+ * @param {object} options
  */
 export function drawDrumGrid(ctx, options) {
     const { placedNotes, columnWidths, cellWidth, cellHeight, placedTonicSigns } = options;

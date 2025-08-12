@@ -24,8 +24,6 @@
   border: 2px solid var(--c-accent);
   box-shadow: 0 0 5px var(--c-accent);
 }
-
-/* --- Chord Toolbar (Now part of the Tonic container) --- */
 #chord-toolbar-wrapper {
   background-color: var(--c-gridline);
   border: 1px solid var(--c-border);
@@ -145,7 +143,7 @@
     box-shadow: 0 0 5px var(--c-accent);
 }
 
-/* --- NEW: Degree Dropdown Styles --- */
+/* --- Degree Dropdown Styles --- */
 #degree-dropdown-wrapper {
     position: relative; 
 }

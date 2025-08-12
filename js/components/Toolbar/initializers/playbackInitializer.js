@@ -22,29 +22,45 @@ export function initPlaybackControls() {
                 store.setPlaybackState(true, false);
                 TransportService.start();
             }
+            // Remove focus to prevent lingering blue highlight
+            playBtn.blur();
         });
     }
 
     if(stopBtn) stopBtn.addEventListener('click', () => {
         store.setPlaybackState(false, false);
         TransportService.stop();
+        stopBtn.blur(); // Remove focus to prevent lingering blue highlight
     });
     
     if(clearBtn) clearBtn.addEventListener('click', () => {
         clearBtn.classList.add('flash');
         setTimeout(() => clearBtn.classList.remove('flash'), 300);
         store.clearAllNotes();
+        clearBtn.blur(); // Remove focus to prevent lingering blue highlight
     });
-    if(loopBtn) loopBtn.addEventListener('click', () => store.setLooping(!store.state.isLooping));
-    if(undoBtn) undoBtn.addEventListener('click', () => store.undo());
-    if(redoBtn) redoBtn.addEventListener('click', () => store.redo());
+    
+    if(loopBtn) loopBtn.addEventListener('click', () => {
+        store.setLooping(!store.state.isLooping);
+        // Don't blur the loop button since it should maintain its active state
+    });
+    
+    if(undoBtn) undoBtn.addEventListener('click', () => {
+        store.undo();
+        undoBtn.blur(); // Remove focus to prevent lingering blue highlight
+    });
+    
+    if(redoBtn) redoBtn.addEventListener('click', () => {
+        store.redo();
+        redoBtn.blur(); // Remove focus to prevent lingering blue highlight
+    });
 
     store.on('playbackStateChanged', ({ isPlaying, isPaused }) => {
         if (playBtn) {
             const playIcon = '<img src="/assets/icons/Play.svg" alt="Play">';
             const pauseIcon = '<img src="/assets/icons/Pause.svg" alt="Pause">';
             playBtn.innerHTML = (isPlaying && !isPaused) ? pauseIcon : playIcon;
-            playBtn.classList.toggle("active", isPlaying && !isPaused);
+            
         }
     });
     store.on('loopingChanged', isLooping => {

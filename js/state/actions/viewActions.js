@@ -19,11 +19,19 @@ export const viewActions = {
         this.emit('degreeDisplayModeChanged', this.state.degreeDisplayMode);
     },
 
-    // REVISED: This now only sets the tool type string
-    setSelectedTool(type) {
-        if (this.state.selectedTool !== type) {
+    // REVISED: This now sets the tool type and optional tonic number
+    setSelectedTool(type, tonicNumber) {
+        const stateChanged = this.state.selectedTool !== type || 
+                           (type === 'tonicization' && this.state.selectedToolTonicNumber !== tonicNumber);
+        
+        if (stateChanged) {
             const oldTool = this.state.selectedTool;
             this.state.selectedTool = type;
+            
+            if (type === 'tonicization' && tonicNumber) {
+                this.state.selectedToolTonicNumber = parseInt(tonicNumber, 10);
+            }
+            
             this.emit('toolChanged', { newTool: type, oldTool });
         }
     },

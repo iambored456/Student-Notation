@@ -58,9 +58,14 @@ const TonalService = {
         // The .roman property will correctly be "I", "ii", "V", etc.
         const roman = rn.roman;
         // The extension is whatever is left after removing the numeral part.
-        const ext = rn.name.replace(roman, '');
+        let ext = rn.name.replace(roman, '');
         // The root of the chord is available from the initial detection.
         const chordRoot = Chord.get(detectedChordName).tonic;
+
+        // FIX: Per user request, explicitly display "add6" for clarity instead of just "6".
+        if (ext === '6') {
+            ext = 'add6';
+        }
 
         return { roman, ext, root: chordRoot };
     }

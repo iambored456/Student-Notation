@@ -88,5 +88,6 @@ export function drawLegends(ctx, options) {
     }
 
     drawLegendColumn(0, ['B', 'A']);
+    console.log('[Legend] Drawing right legend at column:', columnWidths.length - 2, 'total columns:', columnWidths.length);
     drawLegendColumn(columnWidths.length - 2, ['A', 'B']);
 }

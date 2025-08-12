@@ -41,14 +41,31 @@ export const timbreActions = {
      */
     setHarmonicPhases(color, phases) {
         if (this.state.timbres[color]) {
+            console.log(`[TimbreActions] setHarmonicPhases called for ${color}`);
+            console.log(`[TimbreActions] Old phases:`, this.state.timbres[color].phases);
+            console.log(`[TimbreActions] New phases:`, phases);
+            console.log(`[TimbreActions] Coefficients before phase change:`, this.state.timbres[color].coeffs);
+            
             this.state.timbres[color].phases = phases;
             this.state.timbres[color].activePresetName = null;
+            
+            console.log(`[TimbreActions] Coefficients after phase change:`, this.state.timbres[color].coeffs);
+            console.log(`[TimbreActions] Emitting timbreChanged for phase change`);
+            
             this.emit('timbreChanged', color);
         }
     },
 
+    // REMOVED: setTimbreAmplitude (amplitude normalization feature removed)
+
     applyPreset(color, preset) {
         if (!preset || !this.state.timbres[color]) return;
+        
+        console.log(`[TimbreActions] applyPreset called for ${color}`);
+        console.log(`[TimbreActions] Preset name:`, preset.name);
+        console.log(`[TimbreActions] Preset coeffs:`, preset.coeffs);
+        console.log(`[TimbreActions] Old timbre coeffs:`, this.state.timbres[color].coeffs);
+        
         this.state.timbres[color].adsr = preset.adsr;
         this.state.timbres[color].coeffs = new Float32Array(preset.coeffs);
         if (preset.phases) {
@@ -62,6 +79,9 @@ export const timbreActions = {
         } else {
             this.state.timbres[color].filter = createDefaultFilterState();
         }
+        
+        console.log(`[TimbreActions] Applied preset - new coeffs:`, this.state.timbres[color].coeffs);
+        
         this.emit('timbreChanged', color);
         this.recordState();
     },

@@ -137,6 +137,8 @@ export function drawTonicShape(ctx, options, tonicSign) {
     ctx.lineWidth = 2 * zoomLevel;
     ctx.stroke();
     
+    // Safety check for tonicNumber
+    if (!tonicSign.tonicNumber) return;
     const numberText = tonicSign.tonicNumber.toString();
     const fontSize = radius * 1.5;
     if (fontSize < 6) return; // Don't draw text if too small

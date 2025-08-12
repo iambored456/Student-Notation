@@ -17,13 +17,12 @@ html, body {
   padding: 0;
   height: 100%;
   width: 100%;
-  overflow-x: auto; /* Allow horizontal scrolling at viewport level */
-  overflow-y: hidden; /* Prevent vertical scrolling */
+  overflow-x: auto;
+  overflow-y: hidden;
   font-family: var(--main-font);
-  /* THE FIX: Changed to the darker gray for the app's main background */
   background-color: var(--c-gridline);
   color: var(--c-text);
-  display: flex; /* UPDATED: Use flexbox for the root layout */
+  display: flex;
 }
 
 button {

@@ -23,6 +23,7 @@ export const initialState = {
 
     // --- UI & View State ---
     selectedTool: 'note', 
+    selectedToolTonicNumber: 1,
     selectedNote: { shape: 'circle', color: '#4a90e2' },
     activeChordId: null,
     activeChordIntervals: ["1P", "3M", "5P"],

@@ -13,8 +13,9 @@ function drawVerticalHarmonyLines(ctx, options) {
 
     let current_col = 2;
     for(let i=0; i<macrobeatGroupings.length; i++) {
+        // Skip over tonic columns when calculating macrobeat boundaries
         while(placedTonicSigns.some(ts => ts.columnIndex === current_col)) {
-            current_col++;
+            current_col += 2;  // Fixed: Each tonic spans 2 columns
         }
         current_col += macrobeatGroupings[i];
         macrobeatBoundaries.push(current_col);
@@ -24,10 +25,11 @@ function drawVerticalHarmonyLines(ctx, options) {
         const x = LayoutService.getColumnX(i);
         let style;
         const isBoundary = i === 2 || i === totalColumns - 2;
-        const isTonicCol = placedTonicSigns.some(ts => ts.columnIndex === i || ts.columnIndex + 1 === i);
+        const isTonicCol = placedTonicSigns.some(ts => ts.columnIndex === i);
+        const isTonicColumnEnd = placedTonicSigns.some(ts => i === ts.columnIndex + 2);
         const isMacrobeatEnd = macrobeatBoundaries.includes(i);
 
-        if (isBoundary || isTonicCol) {
+        if (isBoundary || isTonicCol || isTonicColumnEnd) {
             style = { lineWidth: 2, strokeStyle: '#dee2e6', dash: [] };
         } else if (isMacrobeatEnd) {
             const mbIndex = macrobeatBoundaries.indexOf(i);

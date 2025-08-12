@@ -53,7 +53,7 @@ class DOMCache {
         this.cacheElement('modalBtn', 'toggle-modal-degrees');
         this.cacheElement('flatBtn', 'flat-toggle-btn');
         this.cacheElement('sharpBtn', 'sharp-toggle-btn');
-        this.cacheElement('harmonyContainerMain', 'harmony-container-main');
+        this.cacheElement('harmonyContainerMain', 'chordShape-container');
 
         // Audio controls
         this.cacheElement('tempoSlider', 'tempo-slider');

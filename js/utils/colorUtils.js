@@ -9,10 +9,9 @@ import {
 } from '../constants.js';
 
 /**
- * Converts a hex color to rgba format
- * @param {string} hex - Hex color string (e.g., '#FF0000')
- * @param {number} alpha - Alpha value between 0 and 1
- * @returns {string} RGBA color string
+ * @param {string} hex
+ * @param {number} alpha 
+ * @returns {string}
  */
 function hexToRgba(hex, alpha) {
     if (!hex) return `rgba(204, 204, 204, ${alpha})`;
@@ -24,9 +23,9 @@ function hexToRgba(hex, alpha) {
 
 /**
  * Shades a hex color by a percentage (lighter or darker)
- * @param {string} hex - Hex color string (e.g., '#FF0000')
- * @param {number} percent - Percentage to shade (-1 to 1, negative for darker, positive for lighter)
- * @returns {string} Shaded hex color string
+ * @param {string} hex 
+ * @param {number} percent
+ * @returns {string}
  */
 function shadeHexColor(hex, percent) {
     if (!hex || typeof hex !== 'string') return DEFAULT_GRAY_COLOR;

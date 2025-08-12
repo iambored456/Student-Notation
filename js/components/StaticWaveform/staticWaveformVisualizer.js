@@ -20,6 +20,14 @@ class StaticWaveformVisualizer {
         this.liveAnalysers = new Map(); // Map of color -> analyser
         this.liveWaveforms = new Map(); // Map of color -> waveform data
         this.playbackAnimationId = null;
+        
+        // Phase transition animation
+        this.isTransitioning = false;
+        this.transitionStartTime = 0;
+        this.transitionDuration = 300; // milliseconds
+        this.fromWaveform = null;
+        this.toWaveform = null;
+        this.transitionAnimationId = null;
     }
 
     initialize() {
@@ -56,9 +64,18 @@ class StaticWaveformVisualizer {
         
         const { clientWidth, clientHeight } = container;
         
+        // If container is collapsed (hidden tab), don't resize to 0
+        // This prevents the canvas from collapsing when tabs are switched
+        if (clientWidth === 0 || clientHeight === 0) {
+            console.log('[StaticWaveformVisualizer] Skipping resize - container collapsed (likely hidden tab)');
+            return;
+        }
+        
         // Set canvas size
         this.canvas.width = clientWidth;
         this.canvas.height = clientHeight;
+        
+        console.log(`[StaticWaveformVisualizer] Resized canvas to ${clientWidth}x${clientHeight}`);
         
         // Redraw after resize
         this.draw();
@@ -96,9 +113,26 @@ class StaticWaveformVisualizer {
                 this.stopLiveVisualization();
             }
         });
+
+        // Listen for tab changes to handle resize when Timbre tab becomes visible
+        document.querySelectorAll('.tab-button').forEach(button => {
+            button.addEventListener('click', () => {
+                const tabId = button.dataset.tab;
+                if (tabId === 'timbre') {
+                    // Delay resize to allow tab to become fully visible
+                    setTimeout(() => {
+                        console.log('[StaticWaveformVisualizer] Timbre tab activated - checking resize');
+                        this.resize();
+                    }, 100);
+                }
+            });
+        });
     }
 
     generateWaveform() {
+        // Don't generate new waveform during transitions
+        if (this.isTransitioning) return;
+        
         if (!this.currentColor) return;
 
         const timbre = store.state.timbres[this.currentColor];
@@ -108,29 +142,141 @@ class StaticWaveformVisualizer {
         const phases = timbre.phases || [];
         const numSamples = this.waveformData.length;
         
+        // Use default amplitude (amplitude normalization feature removed)
+        const masterAmplitude = 1.0;
+        
+        // DEBUG: Log coefficient changes
+        console.log(`[StaticWaveformVisualizer] Generating waveform for color: ${this.currentColor}`);
+        console.log(`[StaticWaveformVisualizer] Master amplitude: ${masterAmplitude}`);
+        console.log(`[StaticWaveformVisualizer] Coefficients:`, coeffs);
+        const nonZeroCoeffs = [];
+        for (let i = 0; i < coeffs.length; i++) {
+            if (coeffs[i] > 0.001) {
+                nonZeroCoeffs.push(`${i === 0 ? 'F0' : 'H' + (i + 1)}: ${coeffs[i].toFixed(3)}`);
+            }
+        }
+        console.log(`[StaticWaveformVisualizer] Non-zero coefficients:`, nonZeroCoeffs);
+        
         // Clear the waveform data
         this.waveformData.fill(0);
 
         // Generate waveform using additive synthesis
+        let maxGeneratedAmp = 0;
         for (let sample = 0; sample < numSamples; sample++) {
-            const phase = (sample / numSamples) * 2 * Math.PI;
+            // Extend phase to cover 480 degrees (4/3 * 2π)
+            const phase = (sample / numSamples) * (4/3) * 2 * Math.PI;
             let amplitude = 0;
 
-            // Add each harmonic including fundamental
+            // Add each harmonic (H1, H2, H3, etc. - no fundamental F0 in harmonic bins)
             for (let i = 0; i < HARMONIC_BINS; i++) {
                 const coeff = coeffs[i] || 0;
                 if (coeff > 0.001) { // Skip very small coefficients for performance
                     const phaseOffset = phases[i] || 0;
-                    amplitude += coeff * Math.sin((i + 1) * phase + phaseOffset);
+                    // Harmonics are 1-based: H1=1, H2=2, H3=3, etc.
+                    const harmonicMultiplier = i + 1;
+                    amplitude += coeff * Math.sin(harmonicMultiplier * phase + phaseOffset);
                 }
             }
 
-            this.waveformData[sample] = amplitude;
+            // Apply master amplitude scaling
+            this.waveformData[sample] = amplitude * masterAmplitude;
+            maxGeneratedAmp = Math.max(maxGeneratedAmp, Math.abs(amplitude * masterAmplitude));
+        }
+        
+        console.log(`[StaticWaveformVisualizer] Max generated amplitude: ${maxGeneratedAmp}`);
+        console.log(`[StaticWaveformVisualizer] Waveform generated without normalization - preserving true amplitude`);
+
+        // Skip aggressive normalization to preserve true amplitude
+        this.draw();
+    }
+
+    // Start a phase transition animation
+    startPhaseTransition(fromPhases, toPhases, harmonicIndex) {
+        if (this.isTransitioning) {
+            // Cancel any existing transition
+            if (this.transitionAnimationId) {
+                cancelAnimationFrame(this.transitionAnimationId);
+            }
         }
 
-        // Normalize the waveform to prevent clipping
-        this.normalizeWaveform();
+        console.log(`[StaticWaveformVisualizer] Starting phase transition animation for H${harmonicIndex + 1}`);
+        
+        // Store current waveform as the starting point
+        this.fromWaveform = new Float32Array(this.waveformData);
+        
+        // Generate target waveform with new phase
+        this.generateTargetWaveform(toPhases);
+        this.toWaveform = new Float32Array(this.waveformData);
+        
+        // Restore original waveform for transition
+        this.waveformData = this.fromWaveform;
+        
+        // Start transition
+        this.isTransitioning = true;
+        this.transitionStartTime = performance.now();
+        this.animateTransition();
+    }
+
+    generateTargetWaveform(targetPhases) {
+        if (!this.currentColor) return;
+
+        const timbre = store.state.timbres[this.currentColor];
+        if (!timbre || !timbre.coeffs) return;
+
+        const coeffs = timbre.coeffs;
+        const numSamples = this.waveformData.length;
+        const masterAmplitude = 1.0;
+        
+        // Clear the waveform data
+        this.waveformData.fill(0);
+
+        for (let sample = 0; sample < numSamples; sample++) {
+            // Extend phase to cover 480 degrees (4/3 * 2π)
+            const phase = (sample / numSamples) * (4/3) * 2 * Math.PI;
+            let amplitude = 0;
+
+            for (let i = 0; i < HARMONIC_BINS; i++) {
+                const coeff = coeffs[i] || 0;
+                if (coeff > 0.001) {
+                    const phaseOffset = targetPhases[i] || 0;
+                    const harmonicMultiplier = i + 1;
+                    amplitude += coeff * Math.sin(harmonicMultiplier * phase + phaseOffset);
+                }
+            }
+
+            this.waveformData[sample] = amplitude * masterAmplitude;
+        }
+    }
+
+    animateTransition() {
+        if (!this.isTransitioning) return;
+
+        const elapsed = performance.now() - this.transitionStartTime;
+        const progress = Math.min(elapsed / this.transitionDuration, 1.0);
+        
+        // Smooth easing function (ease-out)
+        const easedProgress = 1 - Math.pow(1 - progress, 3);
+        
+        // Interpolate between from and to waveforms
+        for (let i = 0; i < this.waveformData.length; i++) {
+            this.waveformData[i] = this.fromWaveform[i] + 
+                (this.toWaveform[i] - this.fromWaveform[i]) * easedProgress;
+        }
+        
+        // Redraw with interpolated waveform
         this.draw();
+        
+        if (progress >= 1.0) {
+            // Transition complete
+            this.isTransitioning = false;
+            this.fromWaveform = null;
+            this.toWaveform = null;
+            this.transitionAnimationId = null;
+            console.log('[StaticWaveformVisualizer] Phase transition animation completed');
+        } else {
+            // Continue animation
+            this.transitionAnimationId = requestAnimationFrame(() => this.animateTransition());
+        }
     }
 
     normalizeWaveform() {
@@ -139,11 +285,14 @@ class StaticWaveformVisualizer {
             maxAmp = Math.max(maxAmp, Math.abs(this.waveformData[i]));
         }
         
+        console.log(`[StaticWaveformVisualizer] Max amplitude before normalization: ${maxAmp}`);
+        
         if (maxAmp > 0) {
-            const normalizer = 0.8 / maxAmp; // Leave some headroom
+            const normalizer = 0.9 / maxAmp; // Leave some headroom but use most of the display area
             for (let i = 0; i < this.waveformData.length; i++) {
                 this.waveformData[i] *= normalizer;
             }
+            console.log(`[StaticWaveformVisualizer] Applied normalizer: ${normalizer}`);
         }
     }
 
@@ -186,14 +335,19 @@ class StaticWaveformVisualizer {
         this.ctx.lineTo(width, centerY);
         this.ctx.stroke();
 
-        // Vertical grid lines (quarters)
-        for (let i = 1; i < 4; i++) {
+        // Vertical grid lines - now extended to show 480 degrees (5 sections)
+        for (let i = 1; i < 5; i++) {
             const x = (width / 4) * i;
             this.ctx.beginPath();
             this.ctx.moveTo(x, 0);
             this.ctx.lineTo(x, height);
             this.ctx.stroke();
         }
+
+        // Add the 360-480° shaded region
+        const deg360Position = (width / 480) * 360; // Position where 360° occurs
+        this.ctx.fillStyle = 'rgba(128, 128, 128, 0.15)'; // Light gray overlay
+        this.ctx.fillRect(deg360Position, 0, width - deg360Position, height);
 
         // Amplitude reference lines
         const ampLines = [0.25, 0.5, 0.75];
@@ -272,6 +426,34 @@ class StaticWaveformVisualizer {
     }
 
     drawSingleLiveWaveform(waveform, color, width, centerY, amplitude) {
+        // For single note audition, use the static waveform data for immediate response
+        // instead of waiting for live audio analysis to catch up
+        if (this.waveformData && this.waveformData.length > 0) {
+            console.log(`[StaticWaveformVisualizer] Using static waveform data for live single note visualization`);
+            
+            this.ctx.strokeStyle = color;
+            this.ctx.lineWidth = 2;
+            this.ctx.beginPath();
+
+            const samplesPerPixel = this.waveformData.length / width;
+
+            for (let x = 0; x < width; x++) {
+                const sampleIndex = Math.floor(x * samplesPerPixel);
+                const sample = this.waveformData[sampleIndex] || 0;
+                const y = centerY - (sample * amplitude);
+
+                if (x === 0) {
+                    this.ctx.moveTo(x, y);
+                } else {
+                    this.ctx.lineTo(x, y);
+                }
+            }
+
+            this.ctx.stroke();
+            return;
+        }
+
+        // Fallback to live audio data if static data isn't available
         if (!waveform || waveform.length === 0) return;
 
         this.ctx.strokeStyle = color;
@@ -453,8 +635,8 @@ class StaticWaveformVisualizer {
         this.ctx.font = '12px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
         this.ctx.textAlign = 'center';
 
-        // Cycle labels
-        const labels = ['0°', '90°', '180°', '270°', '360°'];
+        // Extended cycle labels to show 480 degrees
+        const labels = ['0°', '120°', '240°', '360°', '480°'];
         labels.forEach((label, i) => {
             const x = (width / 4) * i;
             this.ctx.fillText(label, x, height - 8);
@@ -475,6 +657,15 @@ class StaticWaveformVisualizer {
             this.animationFrameId = null;
         }
         
+        // Clean up transition animations
+        if (this.transitionAnimationId) {
+            cancelAnimationFrame(this.transitionAnimationId);
+            this.transitionAnimationId = null;
+        }
+        this.isTransitioning = false;
+        this.fromWaveform = null;
+        this.toWaveform = null;
+        
         this.isInitialized = false;
         console.log("StaticWaveformVisualizer: Disposed.");
     }
@@ -482,6 +673,9 @@ class StaticWaveformVisualizer {
 
 // Create singleton instance
 const staticWaveformVisualizer = new StaticWaveformVisualizer();
+
+// Make it globally accessible for phase transition animations
+window.staticWaveformVisualizer = staticWaveformVisualizer;
 
 export function initStaticWaveformVisualizer() {
     return staticWaveformVisualizer.initialize();

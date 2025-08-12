@@ -8,4 +8,5 @@ package-lock.json
 .gitignore
 vite.config.js
 Student-Notation.zip
+.claude/
 

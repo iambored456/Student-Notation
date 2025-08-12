@@ -1,5 +1,6 @@
 // js/components/Canvas/DrumGrid/drumGridRenderer.js
 import { BASE_DRUM_ROW_HEIGHT, DRUM_HEIGHT_SCALE_FACTOR } from '../../../constants.js';
+import { shouldDrawVerticalLineAtColumn, isTonicColumn } from '../../../utils/tonicColumnUtils.js';
 
 // --- Pure Helper Functions ---
 function getColumnX(index, { columnWidths, cellWidth }) {
@@ -47,21 +48,30 @@ function drawVerticalGridLines(ctx, options) {
     let current_col = 2;
     for(let i=0; i<macrobeatGroupings.length; i++) {
         while(placedTonicSigns.some(ts => ts.columnIndex === current_col)) {
-            current_col++;
+            current_col += 2;  // Fixed: Each tonic spans 2 columns
         }
         current_col += macrobeatGroupings[i];
         macrobeatBoundaries.push(current_col);
     }
 
 
+    
     for (let i = 0; i <= totalColumns; i++) {
         const x = getColumnX(i, options);
         let style;
         const isBoundary = i === 2 || i === totalColumns - 2;
-        const isTonicCol = placedTonicSigns.some(ts => ts.columnIndex === i || ts.columnIndex + 1 === i);
+        const isTonicColumnStart = isTonicColumn(i, placedTonicSigns);
+        const isTonicColumnEnd = placedTonicSigns.some(ts => i === ts.columnIndex + 2);
         const isMacrobeatEnd = macrobeatBoundaries.includes(i);
+        const shouldDraw = shouldDrawVerticalLineAtColumn(i, placedTonicSigns);
 
-        if (isBoundary || isTonicCol) {
+
+        // Skip drawing vertical lines in the middle of tonic shapes
+        if (!shouldDraw) {
+            continue;
+        }
+
+        if (isBoundary || isTonicColumnStart || isTonicColumnEnd) {
             style = { lineWidth: 2, strokeStyle: '#dee2e6', dash: [] };
         } else if (isMacrobeatEnd) {
             const mbIndex = macrobeatBoundaries.indexOf(i);
@@ -70,7 +80,9 @@ function drawVerticalGridLines(ctx, options) {
                 if (boundaryStyle === 'anacrusis') continue;
                 style = { lineWidth: 1, strokeStyle: '#dee2e6', dash: boundaryStyle === 'solid' ? [] : [5, 5] };
             } else { continue; }
-        } else { continue; }
+        } else { 
+            continue; 
+        }
         
         ctx.beginPath();
         ctx.moveTo(x, 0);

@@ -16,7 +16,7 @@ import Toolbar from './components/Toolbar/Toolbar.js';
 import GridManager from './components/Canvas/PitchGrid/gridManager.js';
 import PitchGridController from './components/Canvas/PitchGrid/PitchGrid.js';
 import Harmony from './components/Canvas/HarmonyAnalysis/Harmony.js';
-import { initHarmonicMultislider } from './components/Harmonics-Filter/harmonicMultislider.js';
+import { initHarmonicBins } from './components/Harmonics-Filter/harmonicBins.js';
 import { initAdsrComponent } from './components/ADSR/adsrComponent.js';
 import { initFilterControls } from './components/Harmonics-Filter/filterControls.js';
 import PrintPreview from './components/PrintPreview.js';
@@ -30,7 +30,6 @@ import PaintControls from './components/PitchPaint/paintControls.js';
 // Zoom System Components
 import ZoomIndicator from './components/ZoomIndicator.js';
 
-console.log("Main.js: Application starting...");
 
 function initializeNewZoomSystem() {
     ZoomIndicator.initialize();
@@ -58,10 +57,8 @@ function initializeNewZoomSystem() {
         }
     });
     
-    console.log('New zoom system initialized with keyboard shortcuts');
 }
 
-// Debug helper - add to window for console debugging
 function setupDebugTools() {
     window.debugZoom = {
         info: () => LayoutService.getViewportInfo ? LayoutService.getViewportInfo() : 'Viewport info not available',
@@ -127,7 +124,7 @@ document.addEventListener("DOMContentLoaded", () => {
     GridManager.init();
     Harmony.init();
     initAdsrComponent();
-    initHarmonicMultislider();
+    initHarmonicBins();
     initFilterControls();
     PrintPreview.init();
 
@@ -147,10 +144,8 @@ document.addEventListener("DOMContentLoaded", () => {
     logger.initSuccess('Paint components');
     
     // NEW: Initialize the enhanced zoom system
-    console.log("Main.js: Initializing new zoom system...");
     initializeNewZoomSystem();
     setupDebugTools();
-    console.log("Main.js: New zoom system initialized.");
     
     logger.section('SETTING UP STATE SUBSCRIPTIONS');
     
@@ -163,8 +158,11 @@ document.addEventListener("DOMContentLoaded", () => {
     store.on('notesChanged', renderAll);
     
     store.on('rhythmStructureChanged', () => {
+        console.log('[Main] rhythmStructureChanged event received, calling renderAll()');
         renderAll();
+        console.log('[Main] renderAll() completed, calling renderMacrobeatTools()');
         PitchGridController.renderMacrobeatTools();
+        console.log('[Main] rhythmStructureChanged handling complete');
     });
 
     store.on('layoutConfigChanged', () => {
@@ -193,7 +191,6 @@ document.addEventListener("DOMContentLoaded", () => {
     // Log viewport info after initialization
     setTimeout(() => {
         if (LayoutService.getViewportInfo) {
-            console.log("Initial viewport info:", LayoutService.getViewportInfo());
         }
     }, 1000);
 });

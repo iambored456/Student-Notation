@@ -15,7 +15,10 @@ export const harmonyActions = {
     setActiveChord(chordId) { /* ... existing code ... */ },
     setRegionContext(newRegion) { /* ... existing code ... */ },
     rebuildAllChords(newKey) { /* ... existing code ... */ },
-    setActiveChordIntervals(intervals) { /* ... existing code ... */ },
+    setActiveChordIntervals(intervals) {
+        this.state.activeChordIntervals = intervals;
+        this.emit('activeChordIntervalsChanged', intervals);
+    },
 
 
     // --- NEW ACTIONS FOR CHORD CANDIDATE MENU ---
