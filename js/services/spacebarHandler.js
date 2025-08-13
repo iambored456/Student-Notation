@@ -2,12 +2,13 @@
 import store from '../state/index.js'; 
 import SynthEngine from './synthEngine.js';
 import GlobalService from './globalService.js';
-import { Note } from 'tonal'; // NEW: Import Tonal for chord calculations
+import { Note } from 'tonal'; 
 
-console.log("SpacebarHandler: Module loaded.");
 
 let spacebarPressed = false;
 let currentSpacebarNote = 'C4';
+let ghostNotePosition = null; // { col, row } when cursor is on pitchGrid
+let triggeredNotes = []; // Store the actual notes that were triggered on keydown
 
 function getPitchForNote(note) {
     const rowData = store.state.fullRowData[note.row];
@@ -48,32 +49,53 @@ export function initSpacebarHandler() {
         spacebarPressed = true;
 
         const toolColor = store.state.selectedNote.color;
-        if (toolColor && currentSpacebarNote) {
+        
+        // Determine which note(s) to play based on cursor position
+        let noteToPlay, pitchesToPlay = [];
+        
+        if (ghostNotePosition && toolColor) {
+            // Case 1: Cursor is on pitchGrid - use ghost note position
+            const rowData = store.state.fullRowData[ghostNotePosition.row];
+            noteToPlay = rowData ? rowData.toneNote : currentSpacebarNote;
+            
             const toolType = store.state.selectedTool;
-            let pitchesToPlay = [];
-
-            // If chord tool is active, get all chord notes
+            if (toolType === 'chord') {
+                pitchesToPlay = getChordNotesFromIntervals(noteToPlay);
+            } else {
+                pitchesToPlay = [noteToPlay];
+            }
+        } else if (toolColor && currentSpacebarNote) {
+            // Case 2: Cursor is off pitchGrid - use current spacebar note (original behavior)
+            noteToPlay = currentSpacebarNote;
+            const toolType = store.state.selectedTool;
+            
             if (toolType === 'chord') {
                 pitchesToPlay = getChordNotesFromIntervals(currentSpacebarNote);
-            }
-            
-            // Fallback to single note for other tools or if chord generation fails
-            if (pitchesToPlay.length === 0) {
+            } else {
                 pitchesToPlay = [currentSpacebarNote];
             }
+        }
+
+        if (pitchesToPlay.length > 0) {
+            // Store the triggered notes and metadata for proper release
+            triggeredNotes = {
+                pitches: [...pitchesToPlay],
+                rootNote: noteToPlay,
+                color: toolColor
+            };
 
             pitchesToPlay.forEach(pitch => {
                 SynthEngine.triggerAttack(pitch, toolColor);
             });
 
             // ADSR and waveform visualizer will still use the root note for simplicity
-            const rowData = store.state.fullRowData.find(row => row.toneNote === currentSpacebarNote);
+            const rowData = store.state.fullRowData.find(row => row.toneNote === noteToPlay);
             const pitchColor = rowData ? rowData.hex : '#888888';
             const adsr = store.state.timbres[toolColor].adsr;
 
             GlobalService.adsrComponent?.playheadManager.trigger('spacebar', 'attack', pitchColor, adsr);
             store.emit('spacebarPlayback', { 
-                note: currentSpacebarNote, 
+                note: noteToPlay, 
                 color: toolColor, 
                 isPlaying: true 
             });
@@ -86,40 +108,38 @@ export function initSpacebarHandler() {
         e.preventDefault();
         spacebarPressed = false;
         
-        if (currentSpacebarNote) {
-            const toolColor = store.state.selectedNote.color;
-            if (toolColor) {
-                const toolType = store.state.selectedTool;
-                let pitchesToRelease = [];
+        // Release the exact notes that were triggered on keydown
+        if (triggeredNotes.pitches && triggeredNotes.pitches.length > 0) {
+            triggeredNotes.pitches.forEach(pitch => {
+                SynthEngine.triggerRelease(pitch, triggeredNotes.color);
+            });
+            
+            const rowData = store.state.fullRowData.find(row => row.toneNote === triggeredNotes.rootNote);
+            const pitchColor = rowData ? rowData.hex : '#888888';
+            const adsr = store.state.timbres[triggeredNotes.color].adsr;
 
-                if (toolType === 'chord') {
-                    pitchesToRelease = getChordNotesFromIntervals(currentSpacebarNote);
-                }
-                if (pitchesToRelease.length === 0) {
-                    pitchesToRelease = [currentSpacebarNote];
-                }
-
-                pitchesToRelease.forEach(pitch => {
-                    SynthEngine.triggerRelease(pitch, toolColor);
-                });
-                
-                const rowData = store.state.fullRowData.find(row => row.toneNote === currentSpacebarNote);
-                const pitchColor = rowData ? rowData.hex : '#888888';
-                const adsr = store.state.timbres[toolColor].adsr;
-
-                GlobalService.adsrComponent?.playheadManager.trigger('spacebar', 'release', pitchColor, adsr);
-                store.emit('spacebarPlayback', { 
-                    note: currentSpacebarNote, 
-                    color: toolColor, 
-                    isPlaying: false 
-                });
-            }
+            GlobalService.adsrComponent?.playheadManager.trigger('spacebar', 'release', pitchColor, adsr);
+            store.emit('spacebarPlayback', { 
+                note: triggeredNotes.rootNote, 
+                color: triggeredNotes.color, 
+                isPlaying: false 
+            });
+            
+            // Clear triggered notes
+            triggeredNotes = [];
         }
     });
     
-    console.log("SpacebarHandler: Initialized with default note:", currentSpacebarNote);
 }
 
 export function setDefaultSpacebarNote(note) {
     currentSpacebarNote = note;
+}
+
+export function setGhostNotePosition(col, row) {
+    ghostNotePosition = { col, row };
+}
+
+export function clearGhostNotePosition() {
+    ghostNotePosition = null;
 }

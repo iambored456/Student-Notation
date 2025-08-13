@@ -1,7 +1,6 @@
 // js/components/Harmonics-Filter/filterControls.js
 import store from '../../state/index.js';
 
-console.log("FilterControls: Module loaded.");
 
 let blendThumb, blendTrack, cutoffThumb, cutoffTrack, container;
 let verticalBlendSlider, verticalBlendTrack;
@@ -16,12 +15,31 @@ const BLEND_MIN = 0;
 const BLEND_MAX = 2;
 
 function updateFromStore() {
-    if (!currentColor) return;
+    if (!currentColor) {
+        return;
+    }
 
     const timbre = store.state.timbres[currentColor];
-    if (!timbre || !timbre.filter) return;
+    if (!timbre) {
+        return;
+    }
+    
+    // Fix: Ensure filter state is properly initialized
+    if (!timbre.filter) {
+        timbre.filter = { enabled: true, blend: 0.0, cutoff: 16, resonance: 0, type: 'lowpass', mix: 0 };
+    } else if (timbre.filter.enabled === undefined) {
+        timbre.filter.enabled = true;
+    }
 
-    const { cutoff, blend } = timbre.filter;
+    const { cutoff, blend, mix } = timbre.filter;
+    console.log('[FilterControls] updateFromStore:',
+         {
+        currentColor,
+        cutoff,
+        blend,
+        mix,
+        filterEnabled: timbre.filter.enabled
+    });
     
     // Update horizontal blend slider
     if(blendThumb && blendTrack) {
@@ -30,17 +48,19 @@ function updateFromStore() {
         blendTrack.style.setProperty('--progress', `${blendPercent * 100}%`);
     }
     
-    // Update vertical blend slider
+    // Update vertical mix slider (renamed from blend)
     if (verticalBlendSlider && verticalBlendTrack) {
-        const blendPercent = blend / BLEND_MAX; // 0 to 1
-        verticalBlendSlider.style.bottom = `${blendPercent * 100}%`;
-        verticalBlendTrack.style.setProperty('--blend-progress', `${blendPercent * 100}%`);
+        const mixPercent = (mix || 0) / 100; // 0 to 1
+        verticalBlendSlider.style.bottom = `${mixPercent * 100}%`;
+        verticalBlendTrack.style.setProperty('--blend-progress', `${mixPercent * 100}%`);
     }
     
     
     if(cutoffThumb && cutoffTrack) {
         const cutoffPercent = (cutoff - CUTOFF_MIN) / (CUTOFF_MAX - CUTOFF_MIN);
         cutoffThumb.style.left = `${cutoffPercent * 100}%`;
+        cutoffThumb.style.top = '50%'; // Ensure proper vertical centering
+        cutoffThumb.style.transform = 'translate(-50%, -50%)'; // Ensure proper positioning
         cutoffTrack.style.setProperty('--progress', `${cutoffPercent * 100}%`);
     }
     
@@ -76,21 +96,34 @@ function handleVerticalBlendDrag(e) {
     const h = rect.height;
     let percent = 1 - (y / h); // Invert because bottom is 100%
     percent = Math.max(0, Math.min(1, percent));
-    const value = percent * BLEND_MAX;
-    store.setFilterSettings(currentColor, { blend: value });
+    const value = percent * 100; // Mix is 0-100%
+    store.setFilterSettings(currentColor, { mix: value });
 }
 
 
 export function initFilterControls() {
-    container = document.querySelector('.multislider-container');
+    container = document.querySelector('.harmonic-bins-container');
     blendThumb = document.getElementById('thumb-b');
     blendTrack = document.getElementById('blend-slider-container');
     cutoffThumb = document.getElementById('thumb-c');
     cutoffTrack = document.getElementById('cutoff-slider-container');
 
     if (!container || !blendThumb || !cutoffThumb) {
-        console.error("FilterControls: Could not find one or more required filter UI elements.");
         return;
+    }
+    
+    
+    // Get the blend slider wrapper and inner elements
+    const blendWrapper = document.querySelector('.blend-slider-container');
+    if (blendWrapper && blendTrack) {
+        const wrapperRect = blendWrapper.getBoundingClientRect();
+        const trackRect = blendTrack.getBoundingClientRect();
+    }
+    
+    // Get cutoff slider dimensions
+    if (cutoffTrack) {
+        const cutoffRect = cutoffTrack.getBoundingClientRect();
+
     }
     
     // Create the vertical blend slider
@@ -144,7 +177,59 @@ export function initFilterControls() {
     currentColor = store.state.selectedNote.color;
     updateFromStore();
 
-    console.log("FilterControls: Initialized with vertical blend slider.");
+    // Log final dimensions after initialization
+    setTimeout(() => {
+        
+        const blendWrapper = document.querySelector('.blend-slider-container');
+        if (blendWrapper) {
+            const wrapperRect = blendWrapper.getBoundingClientRect();
+            
+            // Also check blend slider children for comparison
+            if (blendTrack) {
+                const blendChildren = Array.from(blendTrack.children);
+                console.log('[FilterControls] Blend slider children:', blendChildren.map(child => {
+                    const rect = child.getBoundingClientRect();
+                    const style = window.getComputedStyle(child);
+                    return {
+                        tagName: child.tagName,
+                        className: child.className,
+                        height: rect.height,
+                        width: rect.width,
+                        position: style.position,
+                        fontSize: style.fontSize,
+                        lineHeight: style.lineHeight,
+                        textContent: child.textContent
+                    };
+                }));
+            }
+        }
+        
+        if (cutoffTrack) {
+            const cutoffRect = cutoffTrack.getBoundingClientRect();
+            
+            // Check for any child elements that might be adding height
+            const children = Array.from(cutoffTrack.children);
+            console.log('[FilterControls] Cutoff slider children:', children.map(child => {
+                const rect = child.getBoundingClientRect();
+                const style = window.getComputedStyle(child);
+                return {
+                    tagName: child.tagName,
+                    className: child.className,
+                    height: rect.height,
+                    width: rect.width,
+                    position: style.position,
+                    top: style.top,
+                    transform: style.transform,
+                    fontSize: style.fontSize,
+                    lineHeight: style.lineHeight,
+                    padding: style.padding,
+                    margin: style.margin,
+                    textContent: child.textContent
+                };
+            }));
+        }
+    }, 100);
+
 }
 
 function createVerticalBlendSlider() {
@@ -198,8 +283,8 @@ function createVerticalBlendSlider() {
         const h = rect.height;
         let percent = 1 - (y / h);
         percent = Math.max(0, Math.min(1, percent));
-        const value = percent * BLEND_MAX;
-        store.setFilterSettings(currentColor, { blend: value });
+        const value = percent * 100; // Mix is 0-100%
+        store.setFilterSettings(currentColor, { mix: value });
         store.recordState();
     });
 }

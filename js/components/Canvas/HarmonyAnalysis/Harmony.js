@@ -2,6 +2,7 @@
 import store from '../../../state/index.js';
 import { drawHarmonyGrid } from './harmonyRenderer.js';
 import LayoutService from '../../../services/layoutService.js';
+import logger from '../../../utils/logger.js';
 
 let canvas, ctx;
 
@@ -31,7 +32,7 @@ const Harmony = {
     init() {
         canvas = document.getElementById('harmony-analysis-canvas');
         if (!canvas) {
-            console.error("Harmony: Could not find harmony canvas element.");
+            logger.error('Harmony', 'Could not find harmony canvas element', null, 'harmony');
             return;
         }
         ctx = canvas.getContext('2d');
@@ -40,7 +41,7 @@ const Harmony = {
         store.on('layoutConfigChanged', render);
         
         render(); // Initial render
-        console.log("Harmony: Initialized.");
+        logger.info('Harmony', 'Initialized', null, 'harmony');
     },
     render
 };

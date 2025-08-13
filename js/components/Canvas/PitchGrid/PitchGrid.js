@@ -6,13 +6,14 @@ import { renderRhythmUI } from '../MacrobeatTools/rhythmUI.js';
 import { renderTimeSignatureDisplay } from '../MacrobeatTools/timeSignatureDisplay.js';
 import { getPitchNotes, getPlacedTonicSigns } from '../../../state/selectors.js';
 import LayoutService from '../../../services/layoutService.js';
+import logger from '../../../utils/logger.js';
 
-console.log("PitchGridController: Module loaded.");
+logger.moduleLoaded('PitchGridController', 'grid');
 
 function renderPitchGrid() {
     const ctx = CanvasContextService.getPitchContext();
     if (!ctx || !ctx.canvas) {
-        console.error("PitchGridController: Pitch grid context not available for rendering.");
+        logger.error('PitchGridController', 'Pitch grid context not available for rendering', null, 'grid');
         return;
     }
     

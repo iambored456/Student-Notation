@@ -3,6 +3,7 @@ import store from '../../state/index.js';
 import { getInterpolatedColor } from '../../utils/chromaticColors.js';
 // We need the renderer to use its calculation methods
 import PaintPlayheadRenderer from './paintPlayheadRenderer.js';
+import logger from '../../utils/logger.js';
 
 class PaintCanvas {
   constructor() {
@@ -16,14 +17,14 @@ class PaintCanvas {
   initialize() {
     this.canvas = document.getElementById('pitch-paint-canvas');
     if (!this.canvas) {
-        console.error("PaintCanvas: Could not find #pitch-paint-canvas element.");
+        logger.error('PaintCanvas', 'Could not find #pitch-paint-canvas element', null, 'paint');
         return;
     }
     this.ctx = this.canvas.getContext('2d');
 
     const wrapper = document.getElementById('pitch-canvas-wrapper');
     if (!wrapper) {
-        console.error("PaintCanvas: Could not find #pitch-canvas-wrapper element.");
+        logger.error('PaintCanvas', 'Could not find #pitch-canvas-wrapper element', null, 'paint');
         return;
     }
 
@@ -73,17 +74,17 @@ class PaintCanvas {
         const finalTargetHeight = pitchGridContainer ? pitchGridContainer.clientHeight : wrapper.clientHeight;
         
         // DEBUG: Log paint canvas height measurements
-        console.log('🎨 PaintCanvas Height Debug (DEFERRED):', {
+        logger.debug('PaintCanvas', 'Height Debug (DEFERRED)', {
             canvasId: 'pitch-paint-canvas',
             currentCanvasHeight: this.canvas.height,
             pitchGridContainer: pitchGridContainer?.clientHeight,
             pitchCanvasWrapper: wrapper?.clientHeight,
             finalTargetHeight,
             willResize: this.canvas.width !== wrapper.clientWidth || this.canvas.height !== finalTargetHeight
-        });
+        }, 'paint');
         
         if (this.canvas.width !== wrapper.clientWidth || this.canvas.height !== finalTargetHeight) {
-            console.log(`📐 Setting pitch-paint-canvas height (DEFERRED): ${this.canvas.height} → ${finalTargetHeight}`);
+            logger.debug('PaintCanvas', `Setting pitch-paint-canvas height (DEFERRED): ${this.canvas.height} → ${finalTargetHeight}`, null, 'paint');
             this.canvas.width = wrapper.clientWidth;
             this.canvas.height = finalTargetHeight;
             this.render();

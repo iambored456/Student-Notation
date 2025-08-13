@@ -2,14 +2,12 @@
 import { BASE_DRUM_ROW_HEIGHT, DRUM_HEIGHT_SCALE_FACTOR } from '../../../constants.js';
 import { shouldDrawVerticalLineAtColumn, isTonicColumn } from '../../../utils/tonicColumnUtils.js';
 
+import LayoutService from '../../../services/layoutService.js';
+
 // --- Pure Helper Functions ---
-function getColumnX(index, { columnWidths, cellWidth }) {
-    let x = 0;
-    for (let i = 0; i < index; i++) {
-        const widthMultiplier = columnWidths[i] || 0;
-        x += widthMultiplier * cellWidth;
-    }
-    return x;
+function getColumnX(index, options) {
+    // Use LayoutService to get the column X position with horizontal offset
+    return LayoutService.getColumnX(index);
 }
 
 export function drawDrumShape(ctx, drumRow, x, y, width, height) {

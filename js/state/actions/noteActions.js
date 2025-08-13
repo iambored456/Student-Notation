@@ -1,5 +1,6 @@
 // js/state/actions/noteActions.js
 import { getMacrobeatInfo } from '../selectors.js';
+import logger from '../../utils/logger.js';
 
 function generateUUID() {
     return `uuid-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
@@ -20,6 +21,16 @@ export const noteActions = {
 
     updateNoteTail(note, newEndColumn) {
         note.endColumnIndex = newEndColumn;
+        this.emit('notesChanged');
+    },
+
+    updateMultipleNoteTails(notes, newEndColumn) {
+        console.log('[CHORD DEBUG] updateMultipleNoteTails called with:', notes.length, 'notes, newEndColumn:', newEndColumn);
+        notes.forEach((note, index) => {
+            console.log(`[CHORD DEBUG] Updating note ${index}: ${note.endColumnIndex} -> ${newEndColumn}`);
+            note.endColumnIndex = newEndColumn;
+        });
+        console.log('[CHORD DEBUG] Emitting notesChanged event');
         this.emit('notesChanged');
     },
 
@@ -83,22 +94,22 @@ export const noteActions = {
     },
 
     addTonicSignGroup(tonicSignGroup) {
-        console.log('[TonicPlacement] Starting addTonicSignGroup with:', tonicSignGroup);
+        logger.debug('TonicPlacement', 'Starting addTonicSignGroup', { tonicSignGroup }, 'state');
         
         const firstSign = tonicSignGroup[0];
         const { preMacrobeatIndex } = firstSign;
-        console.log('[TonicPlacement] preMacrobeatIndex:', preMacrobeatIndex);
+        logger.debug('TonicPlacement', 'preMacrobeatIndex', { preMacrobeatIndex }, 'state');
         
         if (Object.values(this.state.tonicSignGroups).flat().some(ts => ts.preMacrobeatIndex === preMacrobeatIndex)) {
-            console.log('[TonicPlacement] Tonic already exists at this preMacrobeatIndex, returning');
+            logger.debug('TonicPlacement', 'Tonic already exists at this preMacrobeatIndex, returning', null, 'state');
             return;
         }
         
         const boundaryColumn = getMacrobeatInfo(this.state, preMacrobeatIndex + 1).startColumn;
-        console.log('[TonicPlacement] Boundary column for shifting notes:', boundaryColumn);
+        logger.debug('TonicPlacement', 'Boundary column for shifting notes', { boundaryColumn }, 'state');
         
         const notesToShift = this.state.placedNotes.filter(note => note.startColumnIndex >= boundaryColumn);
-        console.log('[TonicPlacement] Notes that will be shifted:', notesToShift.map(n => `${n.startColumnIndex}-${n.endColumnIndex}`));
+        logger.debug('TonicPlacement', 'Notes that will be shifted', { noteRanges: notesToShift.map(n => `${n.startColumnIndex}-${n.endColumnIndex}`) }, 'state');
         
         this.state.placedNotes.forEach(note => {
             if (note.startColumnIndex >= boundaryColumn) {
@@ -106,16 +117,16 @@ export const noteActions = {
                 const oldEnd = note.endColumnIndex;
                 note.startColumnIndex += 2;
                 note.endColumnIndex += 2;
-                console.log(`[TonicPlacement] Shifted note from ${oldStart}-${oldEnd} to ${note.startColumnIndex}-${note.endColumnIndex}`);
+                logger.debug('TonicPlacement', `Shifted note from ${oldStart}-${oldEnd} to ${note.startColumnIndex}-${note.endColumnIndex}`, null, 'state');
             }
         });
 
         const uuid = generateUUID();
         const groupWithId = tonicSignGroup.map(sign => ({ ...sign, uuid }));
         this.state.tonicSignGroups[uuid] = groupWithId;
-        console.log('[TonicPlacement] Added tonic group with UUID:', uuid, 'at columns:', groupWithId.map(s => s.columnIndex));
+        logger.debug('TonicPlacement', 'Added tonic group', { uuid, columns: groupWithId.map(s => s.columnIndex) }, 'state');
         
-        console.log('[TonicPlacement] Emitting events: notesChanged, rhythmStructureChanged');
+        logger.debug('TonicPlacement', 'Emitting events: notesChanged, rhythmStructureChanged', null, 'state');
         this.emit('notesChanged'); 
         this.emit('rhythmStructureChanged');
         this.recordState();

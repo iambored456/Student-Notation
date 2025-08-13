@@ -40,7 +40,9 @@ body.sidebar-open #sidebar {
 }
 
 .sidebar-button {
-  display: block;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
   width: 100%;
   padding: var(--space-2) var(--space-3);
   text-align: left;
@@ -48,6 +50,19 @@ body.sidebar-open #sidebar {
 }
 .sidebar-button:last-child {
   margin-bottom: 0;
+}
+
+.sidebar-button img {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+
+.sidebar-button-text {
+  font-size: 1rem;
+  color: var(--c-text);
+  font-weight: 600;
+  white-space: nowrap;
 }
 
 #sidebar-overlay {
@@ -75,14 +90,14 @@ body.sidebar-open #sidebar-overlay {
 
 #volume-popup {
   position: absolute;
-  top: 100%; 
-  left: 50%;
-  transform: translateX(-50%);
+  top: 50%;
+  left: 100%;
+  transform: translateY(-50%);
   background-color: var(--c-surface);
   border: 1px solid var(--c-border);
   border-radius: var(--border-radius-md);
-  padding: var(--space-3) var(--space-2);
-  margin-top: var(--space-2); 
+  padding: var(--space-2) var(--space-3);
+  margin-left: var(--space-2); 
   box-shadow: var(--box-shadow-sm);
   z-index: 1001;
   visibility: hidden;
@@ -98,9 +113,9 @@ body.sidebar-open #sidebar-overlay {
 input[type="range"][orient="vertical"] {
   appearance: none;
   -webkit-appearance: none;
-  writing-mode: vertical-lr;
-  direction: rtl;
-  width: 8px;
-  height: 120px;
-  padding: 0 5px;
+  writing-mode: initial;
+  direction: initial;
+  width: 120px;
+  height: 8px;
+  padding: 5px 0;
 }

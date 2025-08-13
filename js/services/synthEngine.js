@@ -125,7 +125,7 @@ const SynthEngine = {
             }).connect(volumeControl);
             
             synths[color] = synth;
-            console.log(`[SynthEngine] Created filtered synth for color: ${color}`);
+            logger.debug('SynthEngine', `Created filtered synth for color: ${color}`, null, 'audio');
         }
 
         store.on('timbreChanged', (color) => {
@@ -134,7 +134,7 @@ const SynthEngine = {
         
         store.on('volumeChanged', (dB) => this.setVolume(dB));
         
-        console.log("SynthEngine: Initialized with multi-timbral support.");
+        logger.info('SynthEngine', 'Initialized with multi-timbral support', null, 'audio');
         window.synthEngine = this;
     },
 
@@ -143,7 +143,7 @@ const SynthEngine = {
         const synth = synths[color];
         if (!synth || !timbre) return;
         
-        console.log(`[SYNTH] Updating timbre for color ${color}`);
+        logger.debug('SynthEngine', `Updating timbre for color ${color}`, null, 'audio');
         
         synth.set({
             oscillator: { partials: Array.from(timbre.coeffs) },
@@ -213,7 +213,7 @@ const SynthEngine = {
     createWaveformAnalyzer(color) {
         const synth = synths[color];
         if (!synth) {
-            console.warn(`[SynthEngine] No synth found for color: ${color}`);
+            logger.warn('SynthEngine', `No synth found for color: ${color}`, null, 'audio');
             return null;
         }
 
@@ -225,7 +225,7 @@ const SynthEngine = {
             // We need to tap into the synth's output without affecting the audio routing
             synth.connect(waveformAnalyzers[color]);
             
-            console.log(`[SynthEngine] Created waveform analyzer for color: ${color}`);
+            logger.debug('SynthEngine', `Created waveform analyzer for color: ${color}`, null, 'waveform');
         }
 
         return waveformAnalyzers[color];
@@ -262,7 +262,7 @@ const SynthEngine = {
         if (waveformAnalyzers[color]) {
             waveformAnalyzers[color].dispose();
             delete waveformAnalyzers[color];
-            console.log(`[SynthEngine] Removed waveform analyzer for color: ${color}`);
+            logger.debug('SynthEngine', `Removed waveform analyzer for color: ${color}`, null, 'waveform');
         }
     },
 
@@ -276,7 +276,7 @@ const SynthEngine = {
             }
         }
         waveformAnalyzers = {};
-        console.log("[SynthEngine] Disposed all waveform analyzers");
+        logger.debug('SynthEngine', 'Disposed all waveform analyzers', null, 'waveform');
     },
 
     /**

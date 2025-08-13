@@ -5,6 +5,7 @@ fonts/
 docs/
 README.md
 package-lock.json
+package.json
 vite.config.js
 Student-Notation.zip
 .claude/

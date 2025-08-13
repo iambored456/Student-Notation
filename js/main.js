@@ -1,4 +1,24 @@
 // js/main.js
+
+/**
+ * DEBUGGING WITH LOGGER:
+ * 
+ * By default, all logging is OFF except errors. To enable logging for debugging:
+ * 
+ * In browser console:
+ * - logger.enable('category') - Enable specific categories
+ * - logger.enableAll() - Enable all logging
+ * - logger.setLevel('DEBUG') - Enable all debug logs
+ * 
+ * Categories: general, state, canvas, audio, ui, layout, harmony, paint, 
+ *            performance, initialization, transport, grid, toolbar, zoom, 
+ *            scroll, keyboard, mouse, adsr, filter, waveform, debug
+ * 
+ * Examples:
+ * - logger.enable('state') - See state changes
+ * - logger.enable('audio', 'transport') - See audio/transport logs  
+ * - logger.enable('ui', 'grid') - See UI interactions and grid events
+ */
 import * as Tone from 'tone';
 import store from './state/index.js';
 import { fullRowData } from './state/pitchData.js';
@@ -63,11 +83,11 @@ function setupDebugTools() {
     window.debugZoom = {
         info: () => LayoutService.getViewportInfo ? LayoutService.getViewportInfo() : 'Viewport info not available',
         zoomTo: (level) => {
-            console.log(`Setting zoom to ${level}`);
+            logger.debug('Debug Tools', `Setting zoom to ${level}`, null, 'zoom');
             // This would need to be implemented in LayoutService
         },
         scrollTo: (position) => {
-            console.log(`Scrolling to position ${position}`);
+            logger.debug('Debug Tools', `Scrolling to position ${position}`, null, 'scroll');
             if (LayoutService.scroll) {
                 // Assuming position is a value from 0 to 1
                 const viewportInfo = LayoutService.getViewportInfo();
@@ -80,7 +100,7 @@ function setupDebugTools() {
             if (LayoutService.scrollToNote) {
                 LayoutService.scrollToNote(noteName);
             } else {
-                console.log(`scrollToNote not available. Requested: ${noteName}`);
+                logger.warn('Debug Tools', `scrollToNote not available. Requested: ${noteName}`, null, 'debug');
             }
         }
     };
@@ -158,11 +178,13 @@ document.addEventListener("DOMContentLoaded", () => {
     store.on('notesChanged', renderAll);
     
     store.on('rhythmStructureChanged', () => {
-        console.log('[Main] rhythmStructureChanged event received, calling renderAll()');
+        logger.event('Main', 'rhythmStructureChanged event received, recalculating layout', null, 'state');
+        LayoutService.recalculateLayout();
+        logger.debug('Main', 'Layout recalculated, calling renderAll()', null, 'state');
         renderAll();
-        console.log('[Main] renderAll() completed, calling renderMacrobeatTools()');
+        logger.debug('Main', 'renderAll() completed, calling renderMacrobeatTools()', null, 'state');
         PitchGridController.renderMacrobeatTools();
-        console.log('[Main] rhythmStructureChanged handling complete');
+        logger.debug('Main', 'rhythmStructureChanged handling complete', null, 'state');
     });
 
     store.on('layoutConfigChanged', () => {
@@ -172,12 +194,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // NEW: Enhanced zoom event handling
     store.on('zoomIn', () => {
-        console.log("Main.js: Zoom in event received");
+        logger.event('Main', 'Zoom in event received', null, 'zoom');
         LayoutService.zoomIn();
     });
     
     store.on('zoomOut', () => {
-        console.log("Main.js: Zoom out event received");
+        logger.event('Main', 'Zoom out event received', null, 'zoom');
         LayoutService.zoomOut();
     });
 

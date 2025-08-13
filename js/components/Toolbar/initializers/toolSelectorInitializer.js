@@ -83,6 +83,17 @@ export function initToolSelectors() {
                 } else {
                     console.error(`Failed to retrieve valid intervals for symbol: "${button.textContent}"`);
                 }
+                button.blur(); // Remove focus to prevent lingering highlight
+            });
+
+            // Add double-click functionality to disable chord shapes
+            button.addEventListener('dblclick', () => {
+                // Only handle double-click if this button is currently selected
+                if (button.classList.contains('selected')) {
+                    // Return to note tool to use the most recent shape note
+                    store.setSelectedTool('note');
+                }
+                button.blur(); // Remove focus to prevent lingering highlight
             });
         });
     }
@@ -116,8 +127,14 @@ export function initToolSelectors() {
 
     if(diatonicBtn) diatonicBtn.addEventListener('click', () => store.setDegreeDisplayMode('diatonic'));
     if(modalBtn) modalBtn.addEventListener('click', () => store.setDegreeDisplayMode('modal'));
-    if (flatBtn) flatBtn.addEventListener('click', () => store.toggleAccidentalMode('flat'));
-    if (sharpBtn) sharpBtn.addEventListener('click', () => store.toggleAccidentalMode('sharp'));
+    if (flatBtn) flatBtn.addEventListener('click', () => {
+        store.toggleAccidentalMode('flat');
+        flatBtn.blur(); // Remove focus to prevent lingering blue highlight
+    });
+    if (sharpBtn) sharpBtn.addEventListener('click', () => {
+        store.toggleAccidentalMode('sharp');
+        sharpBtn.blur(); // Remove focus to prevent lingering blue highlight
+    });
 
     document.addEventListener('click', (e) => {
         if (tonicDropdownContainer && !tonicDropdownContainer.contains(e.target)) tonicDropdownContainer.classList.remove('open');
@@ -126,7 +143,8 @@ export function initToolSelectors() {
 
     // --- UI State Change Listeners (Visual Feedback) ---
     store.on('toolChanged', ({ newTool }) => {
-        document.querySelectorAll('.note, .note-pair, .harmony-preset-button, #tonic-dropdown-button, #eraser-tool-button').forEach(el => el.classList.remove('selected'));
+        // Clear selected state from tool buttons, but preserve note selection unless switching to note tool
+        document.querySelectorAll('.harmony-preset-button, #tonic-dropdown-button, #eraser-tool-button').forEach(el => el.classList.remove('selected'));
         if(harmonyContainer) harmonyContainer.classList.remove('active-tool');
 
         if (newTool === 'eraser') {
@@ -136,6 +154,14 @@ export function initToolSelectors() {
         } else if (newTool === 'chord') {
             harmonyContainer?.classList.add('active-tool');
             updateChordButtonSelection();
+        } else if (newTool === 'note') {
+            // Re-select the current note when switching to note tool
+            const currentNote = store.state.selectedNote;
+            if (currentNote) {
+                const targetPair = document.querySelector(`.note-pair[data-color='${currentNote.color}']`);
+                targetPair?.classList.add('selected');
+                targetPair?.querySelector(`.note[data-type='${currentNote.shape}']`)?.classList.add('selected');
+            }
         }
     });
 

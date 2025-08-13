@@ -73,23 +73,29 @@
     background-color: transparent;
     border: none;
     border-radius: var(--border-radius-md);
-    width: 48px;
-    height: 48px;
-    padding: var(--space-2);
+    padding: var(--space-2) var(--space-3);
     margin-bottom: var(--space-2);
     display: flex;
     align-items: center;
-    justify-content: center;
+    gap: var(--space-2);
+    width: 100%;
+    text-align: left;
 }
 .sidebar-button:hover {
     background-color: var(--c-gridline);
 }
 .sidebar-button img {
-    width: 100%;
-    height: 100%;
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
     object-fit: contain;
-    display: block;
-    margin: 0 auto;
+}
+
+.sidebar-button-text {
+    font-size: 1rem;
+    color: var(--c-text);
+    font-weight: 600;
+    white-space: nowrap;
 }
 
 /* --- Preset Voice Buttons --- */
@@ -133,12 +139,60 @@
 .toggle-button-group, .macrobeat-adjust-group { display: flex; gap: var(--space-1); justify-content: center;}
 .sidebar-toggle-button {
     flex: 1; padding: var(--space-2); text-align: center;
-    background-color: var(--c-surface); color: var(--c-text-muted); border: 1px solid var(--c-border);
+    background-color: var(--c-surface); color: var(--c-text); border: 1px solid var(--c-border);
+    opacity: 0.6;
 }
 .sidebar-toggle-button.active {
-    background-color: var(--c-accent); color: var(--c-surface); border-color: var(--c-accent-hover);
+    background-color: var(--c-warning); color: var(--c-text); border-color: var(--c-border);
+    opacity: 1.0;
 }
 .sidebar-toggle-button:not(.active):hover { background-color: var(--c-border); }
+
+/* Macrobeat Structure Buttons */
+.macrobeat-adjust-group .toolkit-button {
+    background-color: var(--c-surface);
+    border: 1px solid var(--c-border);
+    color: var(--c-text);
+}
+.macrobeat-adjust-group .toolkit-button:hover {
+    background-color: var(--c-border);
+}
+.macrobeat-adjust-group .toolkit-button:active {
+    background-color: var(--c-warning);
+    transform: scale(0.95);
+    transition: background-color 0.1s ease, transform 0.1s ease;
+}
+.macrobeat-adjust-group .toolkit-button {
+    transition: background-color 0.1s ease, transform 0.1s ease;
+}
+
+/* Fix dropdown hover states to use gray instead of blue */
+.dropdown-menu .tonic-sign-button:hover {
+    background-color: var(--c-border) !important;
+    color: var(--c-text) !important;
+}
+.dropdown-menu .tonic-sign-button.selected:hover {
+    background-color: var(--c-border) !important;
+    color: var(--c-text) !important;
+}
+#degree-dropdown-menu .toolkit-button:hover {
+    background-color: var(--c-border) !important;
+    color: var(--c-text) !important;
+}
+#degree-dropdown-menu .toolkit-button:not(.active):hover {
+    background-color: var(--c-border) !important;
+    color: var(--c-text) !important;
+}
+
+/* Fix main dropdown toggle buttons hover from blue to gray */
+.tonic-dropdown-toggle:hover {
+    background-color: var(--c-border) !important;
+    color: var(--c-text) !important;
+}
+.degree-dropdown-toggle:hover {
+    background-color: var(--c-border) !important;
+    color: var(--c-text) !important;
+}
 
 .dropdown-container { position: relative; display: inline-block; }
 .dropdown-container.open { z-index: 10; }
@@ -206,9 +260,101 @@
 }
 .harmony-preset-button:hover { background-color: var(--c-border); }
 
-/* NEW: Style for the selected harmony button, using the dynamic accent color */
+/* Override focus state for harmony preset buttons to prevent lingering blue highlight */
+.harmony-preset-button:focus {
+    background-color: var(--c-surface);
+    color: var(--c-text);
+    outline: none;
+}
+.harmony-preset-button:focus:hover {
+    background-color: var(--c-border);
+}
+.harmony-preset-button.selected:focus {
+    background-color: var(--c-accent);
+    color: var(--c-surface);
+}
+
+/* NEWStyle for the selected harmony button, using the dynamic accent color */
 .harmony-preset-button.selected {
     background-color: var(--c-accent);
     color: var(--c-surface);
     border-color: var(--c-accent-hover);
+}
+
+/* --- Time Signature Dropdown --- */
+.time-signature-label {
+    cursor: pointer;
+    padding: 2px 6px;
+    border-radius: var(--border-radius-sm);
+    transition: background-color 0.2s ease;
+}
+
+.time-signature-label:hover {
+    background-color: var(--c-gridline);
+}
+
+.time-signature-dropdown {
+    position: fixed;
+    background-color: var(--c-surface);
+    border: 1px solid var(--c-border);
+    border-radius: var(--border-radius-md);
+    box-shadow: var(--box-shadow-md);
+    z-index: 1000;
+    max-width: 300px;
+    max-height: 400px;
+    overflow-y: auto;
+    padding: var(--space-2);
+}
+
+.time-signature-dropdown.hidden {
+    display: none;
+}
+
+.dropdown-category {
+    margin-bottom: var(--space-3);
+}
+
+.dropdown-category:last-child {
+    margin-bottom: 0;
+}
+
+.dropdown-category-header {
+    font-size: var(--font-size-sm);
+    font-weight: 600;
+    color: var(--c-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: var(--space-2);
+    padding-bottom: var(--space-1);
+    border-bottom: 1px solid var(--c-gridline);
+}
+
+.dropdown-option {
+    display: flex;
+    flex-direction: column;
+    padding: var(--space-2);
+    cursor: pointer;
+    border-radius: var(--border-radius-sm);
+    transition: background-color 0.2s ease;
+    margin-bottom: var(--space-1);
+}
+
+.dropdown-option:hover {
+    background-color: var(--c-gridline);
+}
+
+.dropdown-option:last-child {
+    margin-bottom: 0;
+}
+
+.dropdown-label {
+    font-weight: 600;
+    font-size: var(--font-size-base);
+    color: var(--c-text);
+}
+
+.dropdown-description {
+    font-size: var(--font-size-sm);
+    color: var(--c-text-muted);
+    margin-top: 2px;
 }

@@ -4,7 +4,6 @@ import { HARMONIC_BINS } from '../../constants.js';
 import * as Tone from 'tone';
 import { hexToRgba } from '../../utils/colorUtils.js';
 
-console.log("StaticWaveformVisualizer: Module loaded.");
 
 class StaticWaveformVisualizer {
     constructor() {
@@ -34,7 +33,6 @@ class StaticWaveformVisualizer {
         // Find or create the canvas element
         this.canvas = document.getElementById('static-waveform-canvas');
         if (!this.canvas) {
-            console.warn("StaticWaveformVisualizer: No canvas found with id 'static-waveform-canvas'");
             return false;
         }
 
@@ -52,7 +50,6 @@ class StaticWaveformVisualizer {
         this.generateWaveform();
         this.isInitialized = true;
         
-        console.log("StaticWaveformVisualizer: Initialized successfully.");
         return true;
     }
 
@@ -67,7 +64,6 @@ class StaticWaveformVisualizer {
         // If container is collapsed (hidden tab), don't resize to 0
         // This prevents the canvas from collapsing when tabs are switched
         if (clientWidth === 0 || clientHeight === 0) {
-            console.log('[StaticWaveformVisualizer] Skipping resize - container collapsed (likely hidden tab)');
             return;
         }
         
@@ -75,7 +71,6 @@ class StaticWaveformVisualizer {
         this.canvas.width = clientWidth;
         this.canvas.height = clientHeight;
         
-        console.log(`[StaticWaveformVisualizer] Resized canvas to ${clientWidth}x${clientHeight}`);
         
         // Redraw after resize
         this.draw();
@@ -121,7 +116,6 @@ class StaticWaveformVisualizer {
                 if (tabId === 'timbre') {
                     // Delay resize to allow tab to become fully visible
                     setTimeout(() => {
-                        console.log('[StaticWaveformVisualizer] Timbre tab activated - checking resize');
                         this.resize();
                     }, 100);
                 }
@@ -146,16 +140,12 @@ class StaticWaveformVisualizer {
         const masterAmplitude = 1.0;
         
         // DEBUG: Log coefficient changes
-        console.log(`[StaticWaveformVisualizer] Generating waveform for color: ${this.currentColor}`);
-        console.log(`[StaticWaveformVisualizer] Master amplitude: ${masterAmplitude}`);
-        console.log(`[StaticWaveformVisualizer] Coefficients:`, coeffs);
         const nonZeroCoeffs = [];
         for (let i = 0; i < coeffs.length; i++) {
             if (coeffs[i] > 0.001) {
                 nonZeroCoeffs.push(`${i === 0 ? 'F0' : 'H' + (i + 1)}: ${coeffs[i].toFixed(3)}`);
             }
         }
-        console.log(`[StaticWaveformVisualizer] Non-zero coefficients:`, nonZeroCoeffs);
         
         // Clear the waveform data
         this.waveformData.fill(0);
@@ -182,9 +172,7 @@ class StaticWaveformVisualizer {
             this.waveformData[sample] = amplitude * masterAmplitude;
             maxGeneratedAmp = Math.max(maxGeneratedAmp, Math.abs(amplitude * masterAmplitude));
         }
-        
-        console.log(`[StaticWaveformVisualizer] Max generated amplitude: ${maxGeneratedAmp}`);
-        console.log(`[StaticWaveformVisualizer] Waveform generated without normalization - preserving true amplitude`);
+ 
 
         // Skip aggressive normalization to preserve true amplitude
         this.draw();
@@ -199,7 +187,6 @@ class StaticWaveformVisualizer {
             }
         }
 
-        console.log(`[StaticWaveformVisualizer] Starting phase transition animation for H${harmonicIndex + 1}`);
         
         // Store current waveform as the starting point
         this.fromWaveform = new Float32Array(this.waveformData);
@@ -272,7 +259,6 @@ class StaticWaveformVisualizer {
             this.fromWaveform = null;
             this.toWaveform = null;
             this.transitionAnimationId = null;
-            console.log('[StaticWaveformVisualizer] Phase transition animation completed');
         } else {
             // Continue animation
             this.transitionAnimationId = requestAnimationFrame(() => this.animateTransition());
@@ -285,14 +271,12 @@ class StaticWaveformVisualizer {
             maxAmp = Math.max(maxAmp, Math.abs(this.waveformData[i]));
         }
         
-        console.log(`[StaticWaveformVisualizer] Max amplitude before normalization: ${maxAmp}`);
         
         if (maxAmp > 0) {
             const normalizer = 0.9 / maxAmp; // Leave some headroom but use most of the display area
             for (let i = 0; i < this.waveformData.length; i++) {
                 this.waveformData[i] *= normalizer;
             }
-            console.log(`[StaticWaveformVisualizer] Applied normalizer: ${normalizer}`);
         }
     }
 
@@ -429,7 +413,6 @@ class StaticWaveformVisualizer {
         // For single note audition, use the static waveform data for immediate response
         // instead of waiting for live audio analysis to catch up
         if (this.waveformData && this.waveformData.length > 0) {
-            console.log(`[StaticWaveformVisualizer] Using static waveform data for live single note visualization`);
             
             this.ctx.strokeStyle = color;
             this.ctx.lineWidth = 2;
@@ -516,7 +499,6 @@ class StaticWaveformVisualizer {
         this.setupLiveAnalysers();
         this.updateContainerState(true);
         this.animateLiveWaveforms();
-        console.log("StaticWaveformVisualizer: Started live visualization");
     }
 
     startSingleNoteVisualization(color) {
@@ -526,7 +508,6 @@ class StaticWaveformVisualizer {
         this.setupSingleAnalyser(color);
         this.updateContainerState(true);
         this.animateLiveWaveforms();
-        console.log("StaticWaveformVisualizer: Started single note visualization for", color);
     }
 
     stopLiveVisualization() {
@@ -543,7 +524,6 @@ class StaticWaveformVisualizer {
         
         // Return to static waveform display
         this.draw();
-        console.log("StaticWaveformVisualizer: Stopped live visualization");
     }
 
     updateContainerState(isLive) {
@@ -565,7 +545,6 @@ class StaticWaveformVisualizer {
         // Access the synth engine's audio nodes for each color
         const synthEngine = window.synthEngine;
         if (!synthEngine) {
-            console.warn("StaticWaveformVisualizer: SynthEngine not available");
             return;
         }
 
@@ -667,7 +646,6 @@ class StaticWaveformVisualizer {
         this.toWaveform = null;
         
         this.isInitialized = false;
-        console.log("StaticWaveformVisualizer: Disposed.");
     }
 }
 

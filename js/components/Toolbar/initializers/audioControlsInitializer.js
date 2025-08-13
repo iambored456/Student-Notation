@@ -43,9 +43,25 @@ export function initAudioControls() {
                 if (currentColor) {
                     store.applyPreset(currentColor, preset);
                 }
+                button.blur(); // Remove focus to prevent lingering blue highlight
             });
         }
     });
+
+    const darkenColor = (hex, percent = 20) => {
+        // Convert hex to RGB
+        const r = parseInt(hex.slice(1, 3), 16);
+        const g = parseInt(hex.slice(3, 5), 16);
+        const b = parseInt(hex.slice(5, 7), 16);
+        
+        // Darken each component
+        const darkenedR = Math.max(0, Math.floor(r * (1 - percent / 100)));
+        const darkenedG = Math.max(0, Math.floor(g * (1 - percent / 100)));
+        const darkenedB = Math.max(0, Math.floor(b * (1 - percent / 100)));
+        
+        // Convert back to hex
+        return `#${darkenedR.toString(16).padStart(2, '0')}${darkenedG.toString(16).padStart(2, '0')}${darkenedB.toString(16).padStart(2, '0')}`;
+    };
 
     const updatePresetSelection = (color) => {
         if (!color || !presetContainer) return;
@@ -55,6 +71,7 @@ export function initAudioControls() {
             btn.classList.toggle('selected', timbre && timbre.activePresetName === presetId);
         });
         presetContainer.style.setProperty('--c-accent', color);
+        presetContainer.style.setProperty('--c-accent-hover', darkenColor(color, 20));
     };
     
     // THE FIX: Listen for 'noteChanged' to update the UI when the color changes.
@@ -64,7 +81,10 @@ export function initAudioControls() {
         } else {
             // Handle cases where there might not be a color (e.g. eraser tool selected)
             document.querySelectorAll('.preset-button').forEach(btn => btn.classList.remove('selected'));
-            if(presetContainer) presetContainer.style.setProperty('--c-accent', '#4A90E2'); // Reset to default
+            if(presetContainer) {
+                presetContainer.style.setProperty('--c-accent', '#4A90E2'); // Reset to default
+                presetContainer.style.setProperty('--c-accent-hover', '#357ABD'); // Reset to default
+            }
         }
     });
 

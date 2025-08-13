@@ -1,7 +1,7 @@
 // js/services/transportService.js
 import * as Tone from 'tone';
 import store from '../state/index.js';
-import { getPlacedTonicSigns } from '../state/selectors.js';
+import { getPlacedTonicSigns, getMacrobeatInfo } from '../state/selectors.js';
 import LayoutService from './layoutService.js';
 import SynthEngine from './synthEngine.js';
 import GlobalService from './globalService.js';
@@ -18,6 +18,27 @@ function getMicrobeatDuration() {
     const tempo = store.state.tempo;
     const microbeatBPM = tempo * 2; 
     return 60 / microbeatBPM;
+}
+
+function findNonAnacrusisStart() {
+    if (!store.state.hasAnacrusis) {
+        // No anacrusis, start from the beginning of first macrobeat
+        return timeMap[2] || 0;
+    }
+    
+    // Find the first solid boundary which marks the end of anacrusis
+    for (let i = 0; i < store.state.macrobeatBoundaryStyles.length; i++) {
+        if (store.state.macrobeatBoundaryStyles[i] === 'solid') {
+            // Found the first solid boundary - the non-anacrusis starts after this macrobeat
+            const macrobeatInfo = getMacrobeatInfo(store.state, i + 1);
+            if (macrobeatInfo) {
+                return timeMap[macrobeatInfo.startColumn] || 0;
+            }
+        }
+    }
+    
+    // If no solid boundary found, anacrusis continues throughout, so use anacrusis start
+    return timeMap[2] || 0;
 }
 
 function calculateTimeMap() {
@@ -54,12 +75,29 @@ function scheduleNotes() {
     calculateTimeMap();
     GlobalService.adsrComponent?.playheadManager.clearAll();
 
+    const anacrusisOffset = timeMap[2] || 0;
+
     store.state.placedNotes.forEach(note => {
         const startTime = timeMap[note.startColumnIndex];
         if (startTime === undefined) return;
 
-        const endTime = timeMap[note.endColumnIndex + 1];
-        const duration = endTime - startTime;
+        // Skip notes that would be scheduled before the anacrusis offset (loop start)
+        if (startTime < anacrusisOffset) {
+            logger.debug('transportService', `Skipping note at column ${note.startColumnIndex} (time ${startTime}) - before anacrusis offset (${anacrusisOffset})`);
+            return;
+        }
+
+        // Calculate duration based on note shape
+        let duration;
+        if (note.shape === 'circle') {
+            // Circle notes get 2 microbeats duration
+            const microbeatDuration = getMicrobeatDuration();
+            duration = 2 * microbeatDuration;
+        } else {
+            // Oval notes and others use the current duration (1 microbeat equivalent)
+            const endTime = timeMap[note.endColumnIndex + 1];
+            duration = endTime - startTime;
+        }
 
         if (note.isDrum) {
             Tone.Transport.schedule(time => {
@@ -74,7 +112,7 @@ function scheduleNotes() {
             const timbre = store.state.timbres[toolColor];
 
             if (!timbre) {
-                logger.warn('transportService', `Timbre not found for color ${toolColor}. Skipping note ${noteId}`);
+                logger.warn('TransportService', `Timbre not found for color ${toolColor}. Skipping note ${noteId}`, null, 'audio');
                 return;
             }
             
@@ -90,7 +128,7 @@ function scheduleNotes() {
             }, startTime + duration);
         }
     });
-     logger.debug('transportService', 'scheduleNotes', 'Finished scheduling');
+     logger.debug('TransportService', 'scheduleNotes', 'Finished scheduling', 'audio');
 }
 
 function animatePlayhead() {
@@ -109,10 +147,10 @@ function animatePlayhead() {
         const currentTime = Tone.Transport.seconds;
         
         // NEW LOGS FOR DEBUGGING THE STOP ISSUE
-        logger.timing('animatePlayhead', 'stop condition check', { currentTime, musicalDuration, isLooping });
+        logger.timing('TransportService', 'stop condition check', { currentTime, musicalDuration, isLooping }, 'transport');
         
         if (!isLooping && currentTime >= musicalDuration) {
-            logger.error('animatePlayhead', 'Playback reached end. Forcing stop');
+            logger.error('TransportService', 'Playback reached end. Forcing stop', null, 'transport');
             TransportService.stop();
             return; 
         }
@@ -182,16 +220,16 @@ const TransportService = {
         store.on('notesChanged', () => this.handleStateChange());
         
         store.on('tempoChanged', newTempo => {
-            console.log(`[transportService] EVENT: tempoChanged triggered with new value: ${newTempo} BPM`);
+            logger.event('TransportService', `tempoChanged triggered with new value: ${newTempo} BPM`, null, 'transport');
             
             if (Tone.Transport.state === 'started') {
-                console.log("[transportService] Tempo changed WHILE PLAYING. Resynchronizing transport...");
+                logger.info('TransportService', 'Tempo changed WHILE PLAYING. Resynchronizing transport...', null, 'transport');
 
                 const currentPosition = Tone.Transport.position;
-                console.log(`[transportService]   - Saved musical position: ${currentPosition}`);
+                logger.debug('TransportService', `Saved musical position: ${currentPosition}`, null, 'transport');
                 
                 Tone.Transport.pause();
-                console.log("[transportService]   - Transport paused.");
+                logger.debug('TransportService', 'Transport paused', null, 'transport');
 
                 if (playheadAnimationFrame) {
                     cancelAnimationFrame(playheadAnimationFrame);
@@ -199,19 +237,19 @@ const TransportService = {
                 }
                 
                 Tone.Transport.bpm.value = newTempo;
-                console.log(`[transportService]   - New BPM set to ${Tone.Transport.bpm.value}.`);
+                logger.debug('TransportService', `New BPM set to ${Tone.Transport.bpm.value}`, null, 'transport');
                 
                 scheduleNotes();
                 
                 Tone.Transport.start(undefined, currentPosition);
-                console.log(`[transportService]   - Transport restarted at musical position ${currentPosition}.`);
+                logger.debug('TransportService', `Transport restarted at musical position ${currentPosition}`, null, 'transport');
                 
                 if (!store.state.paint.isMicPaintActive) {
                     animatePlayhead();
                 }
 
             } else {
-                console.log("[transportService] Tempo changed while stopped/paused. Updating BPM for next run.");
+                logger.debug('TransportService', 'Tempo changed while stopped/paused. Updating BPM for next run', null, 'transport');
                 Tone.Transport.bpm.value = newTempo;
                 calculateTimeMap();
             }
@@ -220,7 +258,7 @@ const TransportService = {
         store.on('loopingChanged', isLooping => Tone.Transport.loop = isLooping);
         
         Tone.Transport.on('stop', () => {
-            console.log("[transportService] EVENT: Tone.Transport 'stop' fired. Resetting playback state.");
+            logger.event('TransportService', "Tone.Transport 'stop' fired. Resetting playback state", null, 'transport');
             store.setPlaybackState(false, false);
             GlobalService.adsrComponent?.playheadManager.clearAll();
              if (playheadAnimationFrame) {
@@ -229,12 +267,12 @@ const TransportService = {
             }
         });
 
-        console.log("TransportService: Initialized.");
+        logger.info('TransportService', 'Initialized', null, 'transport');
     },
 
     handleStateChange() {
         if (Tone.Transport.state === 'started') {
-            console.log("[transportService] handleStateChange: Notes or rhythm changed during playback. Rescheduling.");
+            logger.debug('TransportService', 'handleStateChange: Notes or rhythm changed during playback. Rescheduling', null, 'transport');
             
             const currentPosition = Tone.Transport.position;
             Tone.Transport.pause();
@@ -247,23 +285,27 @@ const TransportService = {
     },
 
     start() {
-        console.log("[transportService] start: Starting playback.");
+        logger.info('TransportService', 'Starting playback', null, 'transport');
         Tone.start().then(() => {
             scheduleNotes();
-            const totalDuration = timeMap[timeMap.length - 1];
+            const musicalDuration = timeMap[store.state.columnWidths.length - 2] || 0;
             const anacrusisOffset = timeMap[2] || 0;
+            const nonAnacrusisStart = findNonAnacrusisStart();
 
-            Tone.Transport.loopStart = anacrusisOffset;
-            Tone.Transport.loopEnd = totalDuration;
+            // Loop starts at non-anacrusis area (skipping pickup notes on repeats)
+            Tone.Transport.loopStart = nonAnacrusisStart;
+            Tone.Transport.loopEnd = musicalDuration;
             Tone.Transport.loop = store.state.isLooping;
             Tone.Transport.bpm.value = store.state.tempo;
             
-            console.log(`[transportService] start: Transport configured. Loop: ${Tone.Transport.loop}, BPM: ${Tone.Transport.bpm.value}, StartOffset: ${anacrusisOffset}`);
+            logger.debug('TransportService', `Transport configured. Loop: ${Tone.Transport.loop}, BPM: ${Tone.Transport.bpm.value}, StartOffset: ${anacrusisOffset}, LoopStart: ${nonAnacrusisStart}`, null, 'transport');
+            
+            // Always start from anacrusis (pickup) on first play, but loops will skip anacrusis
             Tone.Transport.start(Tone.now(), anacrusisOffset); 
             
             if (store.state.paint.isMicPaintActive) {
                 store.emit('playbackStateChanged', { isPlaying: true, isPaused: false });
-                console.log("[transportService] Paint playhead is active, skipping regular playhead animation.");
+                logger.debug('TransportService', 'Paint playhead is active, skipping regular playhead animation', null, 'transport');
             } else {
                 animatePlayhead();
             }
@@ -271,7 +313,7 @@ const TransportService = {
     },
 
     resume() {
-        console.log("[transportService] resume: Resuming playback.");
+        logger.info('TransportService', 'Resuming playback', null, 'transport');
         Tone.start().then(() => {
             Tone.Transport.start();
             if (!store.state.paint.isMicPaintActive) {
@@ -281,7 +323,7 @@ const TransportService = {
     },
 
     pause() {
-        console.log("[transportService] pause: Pausing playback.");
+        logger.info('TransportService', 'Pausing playback', null, 'transport');
         Tone.Transport.pause();
         if (playheadAnimationFrame) {
             cancelAnimationFrame(playheadAnimationFrame);
@@ -290,7 +332,7 @@ const TransportService = {
     },
 
     stop() {
-        console.log("[transportService] stop: Stopping playback and clearing visuals.");
+        logger.info('TransportService', 'Stopping playback and clearing visuals', null, 'transport');
         Tone.Transport.stop(); 
         
         Tone.Transport.cancel();

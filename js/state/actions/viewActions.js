@@ -26,6 +26,7 @@ export const viewActions = {
         
         if (stateChanged) {
             const oldTool = this.state.selectedTool;
+            this.state.previousTool = oldTool;
             this.state.selectedTool = type;
             
             if (type === 'tonicization' && tonicNumber) {

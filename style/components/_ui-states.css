@@ -98,3 +98,47 @@
 .preset-button.selected:hover {
     background-color: var(--c-accent-hover);
 }
+
+/* --- Volume Icon Button Override --- */
+/* Make volume icon active state use gray like other dropdown buttons */
+#volume-icon-button.active {
+    background-color: var(--c-border) !important;
+    color: var(--c-text) !important;
+}
+#volume-icon-button.active img {
+    filter: none !important; /* Don't invert the icon color */
+}
+#volume-icon-button.active:hover {
+    background-color: var(--c-gridline) !important;
+    color: var(--c-text) !important;
+}
+
+/* --- Clear Button Override --- */
+/* Make clear button use red when pressed to convey destructive action */
+#clear-button:active {
+    background-color: rgba(220, 53, 69, 0.3) !important; /* Red with transparency */
+    transform: scale(0.92);
+    transition-duration: 0.05s;
+}
+
+/* --- Eraser Button Override --- */
+/* Make eraser button use red when pressed to convey destructive action */
+#eraser-tool-button:active {
+    background-color: rgba(220, 53, 69, 0.3) !important; /* Red with transparency */
+    transform: scale(0.92);
+    transition-duration: 0.05s;
+}
+
+/* --- Loop Button Override --- */
+/* Make loop button use golden yellow like accidentals when active */
+#loop-button.active {
+    background-color: var(--c-warning) !important; /* Golden yellow */
+    color: var(--c-text) !important;
+}
+#loop-button.active img {
+    filter: none !important; /* Don't invert the icon color */
+}
+#loop-button.active:hover {
+    background-color: #e6ac00 !important; /* Slightly darker yellow on hover */
+    color: var(--c-text) !important;
+}

@@ -5,8 +5,9 @@ import { initToolSelectors } from './initializers/toolSelectorInitializer.js';
 import { initPlaybackControls } from './initializers/playbackInitializer.js';
 import { initAudioControls } from './initializers/audioControlsInitializer.js';
 import { initGridControls } from './initializers/gridControlsInitializer.js';
+import logger from '../../utils/logger.js';
 
-console.log("ToolbarComponent: Module loaded.");
+logger.moduleLoaded('ToolbarComponent', 'toolbar');
 
 const Toolbar = {
     init() {
@@ -17,7 +18,7 @@ const Toolbar = {
         initAudioControls();
         initGridControls();
         
-        console.log("ToolbarComponent: All controls initialized.");
+        logger.info('ToolbarComponent', 'All controls initialized', null, 'toolbar');
     },
 
 };

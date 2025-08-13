@@ -10,11 +10,13 @@ import GlobalService from '../../../../services/globalService.js';
 import domCache from '../../../../services/domCache.js';
 import { Note } from 'tonal';
 import { isNotePlayableAtColumn, isWithinTonicSpan } from '../../../../utils/tonicColumnUtils.js';
+import { setGhostNotePosition, clearGhostNotePosition } from '../../../../services/spacebarHandler.js';
 
 // --- Interaction State ---
 let pitchHoverCtx;
 let isDragging = false;
 let activeNote = null;
+let activeChordNotes = []; // NEW: To hold active chord notes during dragging
 let activePreviewPitches = []; // NEW: To hold all pitches for audio preview
 let isRightClickActive = false;
 let previousTool = null;
@@ -167,15 +169,24 @@ function handleMouseDown(e) {
             const pitchColor = store.state.fullRowData[rowIndex]?.hex || '#888888';
             GlobalService.adsrComponent?.playheadManager.trigger('chord_preview', 'attack', pitchColor, store.state.timbres[color].adsr);
 
-            // Placement logic remains the same (places on click)
+            // Place chord notes and track them for dragging
+            activeChordNotes = [];
+            console.log('[CHORD DEBUG] Placing chord notes:', chordNotes);
             chordNotes.forEach(noteName => {
                 const noteRow = store.state.fullRowData.findIndex(r => r.toneNote === noteName);
                 if (noteRow !== -1) {
                     const newNote = { row: noteRow, startColumnIndex: colIndex, endColumnIndex: colIndex, color, shape, isDrum: false };
-                    store.addNote(newNote);
+                    const addedNote = store.addNote(newNote);
+                    activeChordNotes.push(addedNote);
+                    console.log('[CHORD DEBUG] Added chord note:', { noteName, noteRow, addedNote });
                 }
             });
-            store.recordState();
+            
+            // Enable dragging for chord shapes
+            isDragging = true;
+            console.log('[CHORD DEBUG] Enabled dragging, activeChordNotes:', activeChordNotes.length);
+            
+            // Don't record state immediately - wait for drag to complete
             return;
         }
         
@@ -238,10 +249,47 @@ function handleMouseMove(e) {
 
     if (!pitchHoverCtx) return;
     pitchHoverCtx.clearRect(0, 0, pitchHoverCtx.canvas.width, pitchHoverCtx.canvas.height);
+    
+    // Debug log when dragging
+    if (isDragging) {
+        console.log('[CHORD DEBUG] Mouse move during drag - tool:', store.state.selectedTool, 'isDragging:', isDragging, 'activeChordNotes:', activeChordNotes.length);
+    }
 
     if (colIndex < 2 || colIndex >= store.state.columnWidths.length - 2 || getPitchForRow(rowIndex) === null) {
+        if (isDragging) {
+            console.log('[CHORD DEBUG] Early return due to invalid position - colIndex:', colIndex, 'rowIndex:', rowIndex, 'pitchForRow:', getPitchForRow(rowIndex));
+        }
         lastHoveredTonicPoint = null;
         lastHoveredOctaveRows = [];
+        clearGhostNotePosition();
+        return;
+    }
+    
+    // Update ghost note position for spacebar handler
+    setGhostNotePosition(colIndex, rowIndex);
+    
+    // Handle dragging FIRST, before any tool-specific logic
+    if (isDragging && (activeNote || activeChordNotes.length > 0)) {
+        const newEndIndex = colIndex;
+        console.log('[CHORD DEBUG] Dragging detected, newEndIndex:', newEndIndex);
+        
+        if (activeNote) {
+            // Handle single note dragging
+            console.log('[CHORD DEBUG] Single note dragging');
+            if (newEndIndex !== activeNote.endColumnIndex) {
+                store.updateNoteTail(activeNote, newEndIndex);
+            }
+        } else if (activeChordNotes.length > 0) {
+            // Handle chord notes dragging - check if any notes need updating
+            console.log('[CHORD DEBUG] Chord notes dragging, activeChordNotes:', activeChordNotes.length);
+            console.log('[CHORD DEBUG] Current endColumnIndex values:', activeChordNotes.map(n => n.endColumnIndex));
+            const notesToUpdate = activeChordNotes.filter(note => newEndIndex !== note.endColumnIndex);
+            console.log('[CHORD DEBUG] Notes to update:', notesToUpdate.length);
+            if (notesToUpdate.length > 0) {
+                console.log('[CHORD DEBUG] Calling updateMultipleNoteTails with newEndIndex:', newEndIndex);
+                store.updateMultipleNoteTails(notesToUpdate, newEndIndex);
+            }
+        }
         return;
     }
     
@@ -272,15 +320,6 @@ function handleMouseMove(e) {
         if (store.eraseInPitchArea(colIndex, rowIndex, 2, false)) rightClickActionTaken = true;
         if (store.eraseTonicSignAt(colIndex, false)) rightClickActionTaken = true;
         drawHoverHighlight(colIndex, rowIndex, 'rgba(220, 53, 69, 0.3)');
-        return;
-    } 
-    
-    if (isDragging && activeNote) {
-        const startIndex = activeNote.startColumnIndex;
-        const newEndIndex = colIndex;
-        if (newEndIndex !== activeNote.endColumnIndex) {
-            store.updateNoteTail(activeNote, newEndIndex);
-        }
         return;
     }
 
@@ -334,6 +373,7 @@ function handleMouseLeave() {
     }
     lastHoveredTonicPoint = null;
     lastHoveredOctaveRows = [];
+    clearGhostNotePosition();
 }
 
 function handleGlobalMouseUp() {
@@ -361,10 +401,13 @@ function handleGlobalMouseUp() {
     }
 
     if (isDragging) {
+        console.log('[CHORD DEBUG] Mouse up - recording state and resetting drag state');
+        console.log('[CHORD DEBUG] activeChordNotes before reset:', activeChordNotes.length);
         store.recordState();
     }
     isDragging = false;
     activeNote = null;
+    activeChordNotes = [];
 
     if (isRightClickActive) {
         if (rightClickActionTaken) store.recordState();

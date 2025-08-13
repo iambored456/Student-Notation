@@ -20,10 +20,10 @@
 <div class="app-title">Student Notation</div>
 </div>
 <div class="sidebar-container">
-<button class="sidebar-button" id="save-as-button" title="Save As"><img src="/assets/icons/Save As.svg" alt="Save As"></button>
-<button class="sidebar-button" id="import-button" title="Open"><img src="/assets/icons/Open.svg" alt="Open"></button>
-<button class="sidebar-button" id="print-button" title="Print"><img src="/assets/icons/Print.svg" alt="Print"></button>
-<button class="sidebar-button" id="reset-canvas-button" title="New File"><img src="/assets/icons/New File.svg" alt="New File"></button>
+<button class="sidebar-button" id="save-as-button" title="Save As"><img src="/assets/icons/Save As.svg" alt="Save As"><span class="sidebar-button-text">Save As</span></button>
+<button class="sidebar-button" id="import-button" title="Open"><img src="/assets/icons/Open.svg" alt="Open"><span class="sidebar-button-text">Open</span></button>
+<button class="sidebar-button" id="print-button" title="Print"><img src="/assets/icons/Print.svg" alt="Print"><span class="sidebar-button-text">Print</span></button>
+<button class="sidebar-button" id="reset-canvas-button" title="New File"><img src="/assets/icons/New File.svg" alt="New File"><span class="sidebar-button-text">New Page</span></button>
 </div>
 </div>
 <div id="app-container">
@@ -207,7 +207,10 @@
                 </div>
                 <div class="control-section">
                     <h4>Macrobeat Structure</h4>
-                    <div class="macrobeat-adjust-group"><button class="toolkit-button" id="macrobeat-increase">+</button><button class="toolkit-button" id="macrobeat-decrease">–</button></div>
+                    <div class="macrobeat-adjust-group">
+                        <button class="toolkit-button" id="macrobeat-decrease">–</button>
+                        <button class="toolkit-button" id="macrobeat-increase">+</button>
+                    </div>
                 </div>
                 <div class="control-section">
                     <h4>Tempo</h4>

@@ -9,6 +9,7 @@ import {
 import { getPlacedTonicSigns } from '../state/selectors.js';
 import { RESIZE_DEBOUNCE_DELAY } from '../constants.js';
 import { Note } from 'tonal';
+import logger from '../utils/logger.js';
 
 
 const DEFAULT_VISIBLE_SEMITONES = 24;
@@ -37,18 +38,18 @@ function logContainerWidths() {
         { name: 'drum-grid-wrapper', el: document.getElementById('drum-grid-wrapper') }
     ];
     
-    console.log('📐 Container Width Pipeline:');
+    logger.debug('Layout Service', 'Container Width Pipeline', null, 'layout');
     containers.forEach(({ name, el }) => {
         if (el) {
             const computedStyle = window.getComputedStyle(el);
-            console.log(`  ${name}:`, {
+            logger.debug('Layout Service', `${name} container info`, {
                 setWidth: el.style.width || 'auto',
                 computedWidth: computedStyle.width,
                 clientWidth: el.clientWidth + 'px',
                 scrollWidth: el.scrollWidth + 'px'
-            });
+            }, 'layout');
         } else {
-            console.log(`  ${name}: NOT FOUND`);
+            logger.warn('Layout Service', `${name}: NOT FOUND`, null, 'layout');
         }
     });
 }
@@ -69,7 +70,7 @@ function initDOMElements() {
     const canvasContainer = document.getElementById('canvas-container');
     
     if (!pitchGridWrapper || !canvas || !canvasContainer) {
-        console.error("LayoutService FATAL: Could not find essential canvas elements.");
+        logger.error('Layout Service', 'FATAL: Could not find essential canvas elements', null, 'initialization');
         return {};
     }
     
@@ -79,20 +80,20 @@ function initDOMElements() {
 }
 
 function recalcAndApplyLayout() {
-    console.log('[Layout] recalcAndApplyLayout() called');
+    logger.debug('Layout Service', 'recalcAndApplyLayout() called', null, 'layout');
     if (!pitchGridWrapper || pitchGridWrapper.clientHeight === 0) {
-        console.log('[Layout] Deferring layout - pitchGridWrapper not ready');
+        logger.debug('Layout Service', 'Deferring layout - pitchGridWrapper not ready', null, 'layout');
         requestAnimationFrame(recalcAndApplyLayout);
         return;
     }
 
     // Prevent recursive calls during recalculation
     if (isRecalculating) {
-        console.log('⚠️ Skipping recalculation - already in progress');
+        logger.warn('Layout Service', 'Skipping recalculation - already in progress', null, 'layout');
         return;
     }
     
-    console.log('[Layout] Beginning layout recalculation');
+    logger.debug('Layout Service', 'Beginning layout recalculation', null, 'layout');
     isRecalculating = true;
 
     const pitchGridContainer = document.getElementById('pitch-grid-container');
@@ -104,7 +105,7 @@ function recalcAndApplyLayout() {
     const widthDiff = Math.abs(newViewportWidth - (pitchGridWrapper._lastViewportWidth || 0));
     
     if (heightDiff > 0 || widthDiff > 0) {
-        console.log('[Layout] Viewport changed:', `${newViewportWidth}×${newViewportHeight}`);
+        logger.debug('Layout Service', 'Viewport changed', `${newViewportWidth}×${newViewportHeight}`, 'layout');
         
         // Only update viewport dimensions for significant changes
         // This helps prevent micro-adjustments from causing layout instability
@@ -127,7 +128,7 @@ function recalcAndApplyLayout() {
     
     // Log cell size changes
     if (store.state.cellWidth !== newCellWidth || store.state.cellHeight !== newCellHeight) {
-        console.log('[Layout] Cell size changed:', `${newCellWidth.toFixed(1)}×${newCellHeight.toFixed(1)}`);
+        logger.debug('Layout Service', 'Cell size changed', `${newCellWidth.toFixed(1)}×${newCellHeight.toFixed(1)}`, 'layout');
     }
     
     store.state.cellHeight = newCellHeight;
@@ -139,22 +140,22 @@ function recalcAndApplyLayout() {
     const oldColumnWidths = [...(store.state.columnWidths || [])];
     const newColumnWidths = [SIDE_COLUMN_WIDTH, SIDE_COLUMN_WIDTH];
     
-    console.log('[Layout] Starting layout recalculation');
-    console.log('[Layout] Placed tonic signs:', placedTonicSigns.map(ts => `col:${ts.columnIndex},mb:${ts.preMacrobeatIndex}`));
-    console.log('[Layout] Old columnWidths:', oldColumnWidths);
-    console.log('[Layout] Macrobeat groupings:', macrobeatGroupings);
+    logger.debug('Layout Service', 'Starting layout recalculation', null, 'layout');
+    logger.debug('Layout Service', 'Placed tonic signs', placedTonicSigns.map(ts => `col:${ts.columnIndex},mb:${ts.preMacrobeatIndex}`), 'layout');
+    logger.debug('Layout Service', 'Old columnWidths', oldColumnWidths, 'layout');
+    logger.debug('Layout Service', 'Macrobeat groupings', macrobeatGroupings, 'layout');
     const sortedTonicSigns = [...placedTonicSigns].sort((a, b) => a.preMacrobeatIndex - b.preMacrobeatIndex);
     let tonicSignCursor = 0;
     
     const addTonicSignsForIndex = (mbIndex) => {
         let uuid = sortedTonicSigns[tonicSignCursor]?.uuid;
         while (sortedTonicSigns[tonicSignCursor] && sortedTonicSigns[tonicSignCursor].preMacrobeatIndex === mbIndex) {
-            console.log(`[Layout] Adding tonic columns for mbIndex ${mbIndex}, tonic at column ${sortedTonicSigns[tonicSignCursor].columnIndex}`);
+            logger.debug('Layout Service', `Adding tonic columns for mbIndex ${mbIndex}, tonic at column ${sortedTonicSigns[tonicSignCursor].columnIndex}`, null, 'layout');
             // Add 2 columns of width=1 for each tonic (for grid consistency)
             const columnCountBefore = newColumnWidths.length;
             newColumnWidths.push(BEAT_COLUMN_WIDTH);
             newColumnWidths.push(BEAT_COLUMN_WIDTH);
-            console.log(`[Layout] Added 2 columns (width=${BEAT_COLUMN_WIDTH} each), total columns: ${columnCountBefore} -> ${newColumnWidths.length}`);
+            logger.debug('Layout Service', `Added 2 columns (width=${BEAT_COLUMN_WIDTH} each), total columns: ${columnCountBefore} -> ${newColumnWidths.length}`, null, 'layout');
             while(sortedTonicSigns[tonicSignCursor] && sortedTonicSigns[tonicSignCursor].uuid === uuid) {
                 tonicSignCursor++;
             }
@@ -169,10 +170,10 @@ function recalcAndApplyLayout() {
     });
     newColumnWidths.push(SIDE_COLUMN_WIDTH, SIDE_COLUMN_WIDTH);
     
-    console.log('[Layout] Final newColumnWidths:', newColumnWidths);
-    console.log('[Layout] Width change:', `${oldColumnWidths.length} -> ${newColumnWidths.length} columns`);
-    console.log('[Layout] Old total width units:', oldColumnWidths.reduce((sum, w) => sum + w, 0));
-    console.log('[Layout] New total width units:', newColumnWidths.reduce((sum, w) => sum + w, 0));
+    logger.debug('Layout Service', 'Final newColumnWidths', newColumnWidths, 'layout');
+    logger.debug('Layout Service', 'Width change', `${oldColumnWidths.length} -> ${newColumnWidths.length} columns`, 'layout');
+    logger.debug('Layout Service', 'Old total width units', oldColumnWidths.reduce((sum, w) => sum + w, 0), 'layout');
+    logger.debug('Layout Service', 'New total width units', newColumnWidths.reduce((sum, w) => sum + w, 0), 'layout');
     
     store.state.columnWidths = newColumnWidths;
 
@@ -184,41 +185,32 @@ function recalcAndApplyLayout() {
     
     // EXPERIMENT: Remove width setting entirely - let CSS handle layout
     // Simplified width debug
-    console.log('[Layout] Grid width calculated:', `${totalCanvasWidthPx}px (${totalWidthUnits} units)`);
+    logger.debug('Layout Service', 'Grid width calculated', `${totalCanvasWidthPx}px (${totalWidthUnits} units)`, 'layout');
     
-    // SET CONTAINER WIDTHS: Since containers collapsed to 0px, set them to canvas width
-    setTimeout(() => {
-        const pitchGridContainer = document.getElementById('pitch-grid-container');
-        const drumGridWrapper = document.getElementById('drum-grid-wrapper');
-        const harmonyAnalysisGrid = document.getElementById('harmonyAnalysisGrid');
-        const notationGrid = document.getElementById('notation-grid');
-        const drumGrid = document.getElementById('drum-grid');
-        const harmonyCanvas = document.getElementById('harmony-analysis-canvas');
-        
-        // Set all containers to exactly match canvas width
-        const targetWidth = totalCanvasWidthPx + 'px';
-        
-        if (pitchGridContainer) {
-            pitchGridContainer.style.width = targetWidth;
-        }
-        if (drumGridWrapper) {
-            drumGridWrapper.style.width = targetWidth;
-        }
-        if (harmonyAnalysisGrid) {
-            harmonyAnalysisGrid.style.width = targetWidth;
-        }
-        
-        console.log('📊 Container Width Sync:', {
-            pitchGridContainer: pitchGridContainer?.clientWidth + 'px',
-            drumGridWrapper: drumGridWrapper?.clientWidth + 'px',
-            harmonyAnalysisGrid: harmonyAnalysisGrid?.clientWidth + 'px',
-            notationCanvas: notationGrid?.width + 'px',
-            drumCanvas: drumGrid?.width + 'px',
-            harmonyCanvas: harmonyCanvas?.width + 'px',
-            setTo: targetWidth,
-            allMatch: 'Containers now match canvas widths exactly'
-        });
-    }, 0);
+    // SET CONTAINER WIDTHS: Synchronize container widths with canvas updates to prevent scrollbar flash
+    const drumGridWrapper = document.getElementById('drum-grid-wrapper');
+    const harmonyAnalysisGrid = document.getElementById('harmonyAnalysisGrid');
+    
+    // Set all containers to exactly match canvas width BEFORE resizing canvases
+    const targetWidth = totalCanvasWidthPx + 'px';
+    
+    if (pitchGridContainer) {
+        pitchGridContainer.style.width = targetWidth;
+    }
+    if (drumGridWrapper) {
+        drumGridWrapper.style.width = targetWidth;
+    }
+    if (harmonyAnalysisGrid) {
+        harmonyAnalysisGrid.style.width = targetWidth;
+    }
+    
+    logger.debug('Layout Service', 'Container Width Sync', {
+        pitchGridContainer: pitchGridContainer?.clientWidth + 'px',
+        drumGridWrapper: drumGridWrapper?.clientWidth + 'px',
+        harmonyAnalysisGrid: harmonyAnalysisGrid?.clientWidth + 'px',
+        setTo: targetWidth,
+        allMatch: 'Containers synchronized with canvas widths'
+    }, 'layout');
     
     // Don't set grid-container width - let CSS and natural layout handle it
     // Let CSS handle grid-container width naturally
@@ -238,16 +230,16 @@ function recalcAndApplyLayout() {
     const drumHeightChanged = Math.abs(lastCalculatedDrumHeight - drumCanvasHeight) > 5;
     const shouldUpdateDrumHeight = drumGridWrapper && (drumHeightChanged || lastCalculatedDrumHeight === 0);
     
-    console.log('🥁 Drum Grid Height Debug (DEFERRED):', {
+    logger.debug('Layout Service', 'Drum Grid Height Debug (DEFERRED)', {
         drumRowHeight,
         drumCanvasHeight,
         lastCalculatedDrumHeight,
         drumHeightChanged,
         willUpdateDeferred: shouldUpdateDrumHeight
-    });
+    }, 'layout');
     
     if (shouldUpdateDrumHeight) {
-        console.log('📏 Setting drum-grid-wrapper height to:', drumHeightPx);
+        logger.debug('Layout Service', 'Setting drum-grid-wrapper height to', drumHeightPx, 'layout');
         drumGridWrapper.style.height = drumHeightPx;
         lastCalculatedDrumHeight = drumCanvasHeight;
     }
@@ -263,17 +255,17 @@ function recalcAndApplyLayout() {
         const finalPitchGridContainer = document.getElementById('pitch-grid-container');
         const finalViewportHeight = finalPitchGridContainer.clientHeight;
         
-        console.log('🎯 LayoutService Canvas Heights (DEFERRED):', {
+        logger.debug('Layout Service', 'Canvas Heights (DEFERRED)', {
             oldViewportHeight: viewportHeight,
             finalViewportHeight,
             pitchGridContainer: finalPitchGridContainer?.clientHeight,
             pitchGridWrapper: pitchGridWrapper?.clientHeight
-        });
+        }, 'layout');
 
         [canvas, playheadCanvas, hoverCanvas].forEach((c, index) => { 
             if(c && Math.abs(c.height - finalViewportHeight) > 1) { 
                 const canvasNames = ['notation-grid', 'playhead-canvas', 'hover-canvas'];
-                console.log(`📐 Setting ${canvasNames[index]} height (DEFERRED): ${c.height} → ${finalViewportHeight}`);
+                logger.debug('Layout Service', `Setting ${canvasNames[index]} height (DEFERRED): ${c.height} → ${finalViewportHeight}`, null, 'layout');
                 c.height = finalViewportHeight; 
             } 
         });
@@ -283,7 +275,7 @@ function recalcAndApplyLayout() {
         document.dispatchEvent(new CustomEvent('canvasResized', { 
             detail: { source: 'layoutService-deferred' }
         }));
-        console.log('🔄 Dispatched canvasResized event after deferred resize');
+        logger.debug('Layout Service', 'Dispatched canvasResized event after deferred resize', null, 'layout');
     }, 25); // Allow DOM to settle
 
     // Harmony grid height scales with zoom but has minimum size
@@ -299,14 +291,14 @@ function recalcAndApplyLayout() {
     
     // DEBUG: Final DOM state after layout complete
     setTimeout(() => {
-        console.log('✅ Final Canvas Heights (after layout):', {
+        logger.debug('Layout Service', 'Final Canvas Heights (after layout)', {
             'pitch-grid-container': document.getElementById('pitch-grid-container')?.clientHeight,
             'notation-grid': document.getElementById('notation-grid')?.height,
             'pitch-paint-canvas': document.getElementById('pitch-paint-canvas')?.height,
             'playhead-canvas': document.getElementById('playhead-canvas')?.height,
             'hover-canvas': document.getElementById('hover-canvas')?.height,
             'pitch-canvas-wrapper': document.getElementById('pitch-canvas-wrapper')?.clientHeight
-        });
+        }, 'layout');
     }, 50); // Small delay to ensure DOM updates are complete
     
     // Reset the recalculation flag
@@ -323,33 +315,33 @@ const LayoutService = {
         const handleWindowResize = () => {
             // Only process if we're not already recalculating
             if (isRecalculating) {
-                console.log('⚠️ Window resize: Skipping - recalculation in progress');
+                logger.warn('Layout Service', 'Window resize: Skipping - recalculation in progress', null, 'layout');
                 return;
             }
             
             clearTimeout(resizeTimeout);
             resizeTimeout = setTimeout(() => {
-                console.log('🔄 Window resize: Triggering layout recalculation after debounce');
+                logger.debug('Layout Service', 'Window resize: Triggering layout recalculation after debounce', null, 'layout');
                 recalcAndApplyLayout();
             }, RESIZE_DEBOUNCE_DELAY);
         };
         
         window.addEventListener('resize', handleWindowResize);
-        console.log('🔍 Layout trigger: Using window resize events instead of ResizeObserver');
+        logger.debug('Layout Service', 'Layout trigger: Using window resize events instead of ResizeObserver', null, 'layout');
         return { ctx, drumCtx };
     },
     
     zoomIn() {
         const oldZoom = currentZoomLevel;
         currentZoomLevel = Math.min(MAX_ZOOM_LEVEL, currentZoomLevel * ZOOM_IN_FACTOR);
-        console.log('🔍 ZOOM IN:', { from: oldZoom, to: currentZoomLevel });
+        logger.debug('Layout Service', 'ZOOM IN', { from: oldZoom, to: currentZoomLevel }, 'zoom');
         recalcAndApplyLayout();
     },
 
     zoomOut() {
         const oldZoom = currentZoomLevel;
         currentZoomLevel = Math.max(MIN_ZOOM_LEVEL, currentZoomLevel * ZOOM_OUT_FACTOR);
-        console.log('🔍 ZOOM OUT:', { from: oldZoom, to: currentZoomLevel });
+        logger.debug('Layout Service', 'ZOOM OUT', { from: oldZoom, to: currentZoomLevel }, 'zoom');
         recalcAndApplyLayout();
     },
     
@@ -361,6 +353,27 @@ const LayoutService = {
     scroll(deltaY) {
         const scrollAmount = (deltaY / viewportHeight) / 4;
         currentScrollPosition = Math.max(0, Math.min(1, currentScrollPosition + scrollAmount));
+        store.emit('layoutConfigChanged');
+    },
+    
+    // Pixel-level scrolling for middle mouse drag
+    scrollByPixels(deltaY, deltaX = 0) {
+        // Invert vertical direction: dragging down should move view up (negative deltaY)
+        const invertedDeltaY = -deltaY;
+        
+        // Convert pixel delta to scroll position delta
+        const totalRows = store.state.fullRowData.length;
+        const baseRowHeight = (viewportHeight / DEFAULT_VISIBLE_SEMITONES);
+        const rowHeight = baseRowHeight * currentZoomLevel;
+        const fullVirtualHeight = totalRows * rowHeight;
+        const paddedVirtualHeight = fullVirtualHeight + rowHeight;
+        const scrollableDist = Math.max(0, paddedVirtualHeight - viewportHeight);
+        
+        if (scrollableDist > 0) {
+            const scrollDelta = invertedDeltaY / scrollableDist;
+            currentScrollPosition = Math.max(0, Math.min(1, currentScrollPosition + scrollDelta));
+        }
+        
         store.emit('layoutConfigChanged');
     },
     
@@ -406,6 +419,11 @@ const LayoutService = {
 
     getCanvasWidth() {
         return (store.state.columnWidths.reduce((sum, w) => sum + w, 0)) * store.state.cellWidth;
+    },
+    
+    // Force a layout recalculation (e.g., when rhythm structure changes)
+    recalculateLayout() {
+        recalcAndApplyLayout();
     }
 };
 

@@ -22,7 +22,8 @@ export const initialState = {
     paint: getInitialPaintState(),
 
     // --- UI & View State ---
-    selectedTool: 'note', 
+    selectedTool: 'note',
+    previousTool: 'note',
     selectedToolTonicNumber: 1,
     selectedNote: { shape: 'circle', color: '#4a90e2' },
     activeChordId: null,

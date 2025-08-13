@@ -1,6 +1,8 @@
 // js/services/gridScrollHandler.js
 import LayoutService from './layoutService.js';
+import ScrollSyncService from './scrollSyncService.js';
 import store from '../state/index.js';
+import logger from '../utils/logger.js';
 
 /**
  * Initializes the mouse wheel handler for the grid to control zooming and panning.
@@ -9,7 +11,7 @@ export function initGridScrollHandler() {
     // We attach the listener to the wrapper that contains the viewport
     const scrollContainer = document.getElementById('pitch-grid-wrapper'); 
     if (!scrollContainer) {
-        console.error("GridScrollHandler: Scroll container #pitch-grid-wrapper not found.");
+        logger.error('GridScrollHandler', 'Scroll container #pitch-grid-wrapper not found', null, 'scroll');
         return;
     }
 
@@ -17,8 +19,7 @@ export function initGridScrollHandler() {
     let isMiddleMouseDragging = false;
     let lastMouseX = 0;
     let lastMouseY = 0;
-    let initialScrollPosition = 0;
-    let initialHorizontalScroll = 0;
+    let currentHorizontalOffset = 0;
 
     scrollContainer.addEventListener('wheel', (e) => {
         // Prevent the default page scroll behavior
@@ -45,11 +46,6 @@ export function initGridScrollHandler() {
             lastMouseX = e.clientX;
             lastMouseY = e.clientY;
             
-            // Store initial positions
-            const viewportInfo = LayoutService.getViewportInfo();
-            initialScrollPosition = viewportInfo.scrollOffset || 0;
-            initialHorizontalScroll = scrollContainer.scrollLeft || 0;
-            
             // Change cursor to indicate dragging
             scrollContainer.style.cursor = 'grabbing';
             
@@ -62,15 +58,41 @@ export function initGridScrollHandler() {
         if (isMiddleMouseDragging) {
             e.preventDefault();
             
+            // Calculate movement delta
             const deltaX = e.clientX - lastMouseX;
             const deltaY = e.clientY - lastMouseY;
             
-            // Apply horizontal scrolling
-            scrollContainer.scrollLeft = initialHorizontalScroll - deltaX;
+            // Handle vertical scrolling through LayoutService (for proper grid virtualization)
+            if (deltaY !== 0) {
+                LayoutService.scrollByPixels(deltaY, 0);
+            }
             
-            // Apply vertical scrolling using the layout service
-            const verticalSensitivity = 1; // Adjust sensitivity as needed
-            LayoutService.scroll(-deltaY * verticalSensitivity);
+            // Handle horizontal scrolling with CSS transforms (to avoid cursor offset issues)
+            if (deltaX !== 0) {
+                currentHorizontalOffset += deltaX; // Natural drag behavior
+                
+                // Apply transform to all grid containers that should move together
+                const containersToMove = [
+                    'pitch-grid-container',
+                    'drum-grid-wrapper', 
+                    'harmonyAnalysisGrid',
+                    'time-signature-display',
+                    'canvas-macrobeat-tools'
+                ];
+                
+                containersToMove.forEach(id => {
+                    const container = document.getElementById(id);
+                    if (container) {
+                        container.style.transform = `translateX(${currentHorizontalOffset}px)`;
+                    }
+                });
+                
+                console.log('🔄 Horizontal transform applied:', currentHorizontalOffset);
+            }
+            
+            // Update last mouse position for next frame
+            lastMouseX = e.clientX;
+            lastMouseY = e.clientY;
         }
     });
 
@@ -91,5 +113,5 @@ export function initGridScrollHandler() {
         }
     });
 
-    console.log("GridScrollHandler: Initialized with wheel listener for zoom and pan, and middle mouse drag.");
+    logger.info('GridScrollHandler', 'Initialized with wheel listener for zoom and pan, and middle mouse drag', null, 'scroll');
 }

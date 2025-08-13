@@ -3,13 +3,14 @@
 .harmonic-bins-container {
   flex-direction: column;
   justify-content: flex-start;
+  flex-grow: 2; /* Expand to take more space relative to other containers */
 }
 
 .harmonic-bins-grid {
   display: flex;
   flex-direction: row;
   flex-grow: 1;
-  min-height: 120px;
+  min-height: 140px; /* Increased minimum height */
   position: relative;
   gap: 0;
   padding: 0;

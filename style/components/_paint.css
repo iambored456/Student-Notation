@@ -35,6 +35,13 @@
     flex: 1;
 }
 
+/* Mic Paint button styling */
+#mic-paint-toggle {
+    background-color: var(--c-surface);
+    color: var(--c-text);
+    border: 1px solid var(--c-border);
+}
+
 /* Active state for the main toggle button */
 #mic-paint-toggle.active {
     background-color: var(--c-danger);
@@ -118,6 +125,6 @@
     background-color: var(--c-gridline);
     padding: var(--space-1) var(--space-2);
     border-radius: var(--border-radius-sm);
-    min-width: 45px;
+    min-width: 3.8em;
     text-align: center;
 }

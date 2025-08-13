@@ -29,7 +29,6 @@ export function drawPitchGrid(ctx, options) {
     
     // Draw each visible note
     visibleNotes.forEach(note => {
-        console.log(`[drawPitchGrid] Drawing note: shape=${note.shape}, row=${note.row}, col=${note.startColumnIndex}, color=${note.color}`);
         
         // The note drawing functions use getRowY, so they will automatically
         // draw in the correct virtualized position.
@@ -38,7 +37,6 @@ export function drawPitchGrid(ctx, options) {
         } else if (note.shape === 'circle') {
             drawTwoColumnOvalNote(ctx, fullOptions, note, note.row);
         } else {
-            console.warn(`[drawPitchGrid] Unknown note shape: ${note.shape}`);
         }
     });
 

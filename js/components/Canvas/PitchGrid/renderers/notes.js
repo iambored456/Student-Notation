@@ -29,9 +29,6 @@ export function drawTwoColumnOvalNote(ctx, options, note, rowIndex) {
     const xStart = getColumnX(note.startColumnIndex, options);
     const centerX = xStart + cellWidth;
     
-    // Debug logging
-    console.log(`[drawTwoColumnOvalNote] Drawing circle note at row: ${rowIndex}, col: ${note.startColumnIndex}, y: ${y}, centerX: ${centerX}`);
-    
     // Don't double-scale - cellWidth/cellHeight already include zoom
     const dynamicStrokeWidth = Math.max(MIN_STROKE_WIDTH_THICK, cellWidth * STROKE_WIDTH_RATIO);
 
@@ -74,19 +71,13 @@ export function drawTwoColumnOvalNote(ctx, options, note, rowIndex) {
     if (options.degreeDisplayMode !== 'off') {
         drawScaleDegreeText(ctx, note, options, centerX, y, (cellHeight / 2));
     }
-    
-    // Debug logging
-    console.log(`[drawTwoColumnOvalNote] Finished drawing circle note with color: ${note.color}`);
-}
+    }
 
 export function drawSingleColumnOvalNote(ctx, options, note, rowIndex) {
     const { columnWidths, cellWidth, cellHeight, zoomLevel } = options;
     const y = getRowY(rowIndex, options);
     const x = getColumnX(note.startColumnIndex, options);
     const currentCellWidth = columnWidths[note.startColumnIndex] * cellWidth;
-    
-    // Debug logging
-    console.log(`[drawSingleColumnOvalNote] Drawing oval note at row: ${rowIndex}, col: ${note.startColumnIndex}`);
     
     // Don't double-scale - cellWidth/cellHeight already include zoom
     const dynamicStrokeWidth = Math.max(0.5, currentCellWidth * 0.15);

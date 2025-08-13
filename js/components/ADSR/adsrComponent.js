@@ -5,6 +5,7 @@ import { initInteractions } from './adsrInteractions.js';
 import { drawTempoGridlines, drawEnvelope, applyTheme } from './adsrRender.js';
 import { initPlayheadManager } from './adsrPlayhead.js';
 import GlobalService from '../../services/globalService.js';
+import logger from '../../utils/logger.js';
 
 export const MAX_ADSR_TIME_SECONDS = 2.5;
 
@@ -36,7 +37,7 @@ class AdsrComponent {
         }
         
         this.updateFromStore();
-        console.log("ADSR Component: Initialized.");
+        logger.info('ADSR Component', 'Initialized', null, 'adsr');
     }
     
     resize() {

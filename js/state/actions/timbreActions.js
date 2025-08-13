@@ -1,5 +1,6 @@
 // js/state/actions/timbreActions.js
 import { createDefaultFilterState } from '../initialState/timbres.js';
+import logger from '../../utils/logger.js';
 
 export const timbreActions = {
     setADSR(color, newADSR) {
@@ -41,16 +42,16 @@ export const timbreActions = {
      */
     setHarmonicPhases(color, phases) {
         if (this.state.timbres[color]) {
-            console.log(`[TimbreActions] setHarmonicPhases called for ${color}`);
-            console.log(`[TimbreActions] Old phases:`, this.state.timbres[color].phases);
-            console.log(`[TimbreActions] New phases:`, phases);
-            console.log(`[TimbreActions] Coefficients before phase change:`, this.state.timbres[color].coeffs);
+            logger.debug('TimbreActions', `setHarmonicPhases called for ${color}`, null, 'state');
+            logger.debug('TimbreActions', 'Old phases', { phases: this.state.timbres[color].phases }, 'state');
+            logger.debug('TimbreActions', 'New phases', { phases }, 'state');
+            logger.debug('TimbreActions', 'Coefficients before phase change', { coeffs: this.state.timbres[color].coeffs }, 'state');
             
             this.state.timbres[color].phases = phases;
             this.state.timbres[color].activePresetName = null;
             
-            console.log(`[TimbreActions] Coefficients after phase change:`, this.state.timbres[color].coeffs);
-            console.log(`[TimbreActions] Emitting timbreChanged for phase change`);
+            logger.debug('TimbreActions', 'Coefficients after phase change', { coeffs: this.state.timbres[color].coeffs }, 'state');
+            logger.debug('TimbreActions', 'Emitting timbreChanged for phase change', null, 'state');
             
             this.emit('timbreChanged', color);
         }
@@ -61,10 +62,10 @@ export const timbreActions = {
     applyPreset(color, preset) {
         if (!preset || !this.state.timbres[color]) return;
         
-        console.log(`[TimbreActions] applyPreset called for ${color}`);
-        console.log(`[TimbreActions] Preset name:`, preset.name);
-        console.log(`[TimbreActions] Preset coeffs:`, preset.coeffs);
-        console.log(`[TimbreActions] Old timbre coeffs:`, this.state.timbres[color].coeffs);
+        logger.debug('TimbreActions', `applyPreset called for ${color}`, null, 'state');
+        logger.debug('TimbreActions', 'Preset name', { name: preset.name }, 'state');
+        logger.debug('TimbreActions', 'Preset coeffs', { coeffs: preset.coeffs }, 'state');
+        logger.debug('TimbreActions', 'Old timbre coeffs', { coeffs: this.state.timbres[color].coeffs }, 'state');
         
         this.state.timbres[color].adsr = preset.adsr;
         this.state.timbres[color].coeffs = new Float32Array(preset.coeffs);
@@ -80,7 +81,7 @@ export const timbreActions = {
             this.state.timbres[color].filter = createDefaultFilterState();
         }
         
-        console.log(`[TimbreActions] Applied preset - new coeffs:`, this.state.timbres[color].coeffs);
+        logger.debug('TimbreActions', 'Applied preset - new coeffs', { coeffs: this.state.timbres[color].coeffs }, 'state');
         
         this.emit('timbreChanged', color);
         this.recordState();

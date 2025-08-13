@@ -7,8 +7,9 @@ import { rhythmActions } from './actions/rhythmActions.js';
 import { viewActions } from './actions/viewActions.js';
 import { harmonyActions } from './actions/harmonyActions.js';
 import { paintActions } from './actions/paintActions.js';
+import logger from '../utils/logger.js';
 
-console.log("Store: Modular store loaded.");
+logger.moduleLoaded('Store', 'general');
 
 const STORAGE_KEY = 'studentNotationState';
 
@@ -51,7 +52,7 @@ function loadStateFromLocalStorage() {
         
         return parsedState;
     } catch (err) {
-        console.error("Could not load state from localStorage:", err);
+        logger.error('Store', 'Could not load state from localStorage', err, 'general');
         return undefined;
     }
 }
@@ -91,7 +92,7 @@ function saveStateToLocalStorage(state) {
         const serializedState = JSON.stringify(stateToPersist);
         localStorage.setItem(STORAGE_KEY, serializedState);
     } catch (err) {
-        console.error("Could not save state to localStorage:", err);
+        logger.error('Store', 'Could not save state to localStorage', err, 'general');
     }
 }
 
@@ -104,7 +105,7 @@ const actions = {
             localStorage.removeItem(STORAGE_KEY);
             window.location.reload(); 
         } catch (err) {
-            console.error("Could not clear state from localStorage:", err);
+            logger.error('Store', 'Could not clear state from localStorage', err, 'general');
         }
     }
 };
@@ -129,7 +130,7 @@ const store = {
                 try { 
                     callback(data); 
                 } catch (error) { 
-                    console.error(`[Store] Error in listener for event "${eventName}":`, error); 
+                    logger.error('Store', `Error in listener for event "${eventName}"`, error, 'general'); 
                 }
             });
         }

@@ -100,8 +100,13 @@ function drawAnalysisForMacrobeat(ctx, state, macrobeatIndex) {
     if (romanNumeralInfo && romanNumeralInfo.roman) {
         const { roman, ext } = romanNumeralInfo;
         
-        const mainFont = "bold 22px 'Atkinson Hyperlegible', sans-serif"; // Slightly larger font
-        const superFont = "bold 14px 'Atkinson Hyperlegible', sans-serif";
+        // Scale font size based on canvas height to maintain aspect ratio
+        const heightScaleFactor = ctx.canvas.height / 40; // 40px baseline height
+        const mainFontSize = Math.max(12, Math.round(22 * heightScaleFactor)); // Minimum 12px
+        const superFontSize = Math.max(8, Math.round(14 * heightScaleFactor)); // Minimum 8px
+        
+        const mainFont = `bold ${mainFontSize}px 'Atkinson Hyperlegible', sans-serif`;
+        const superFont = `bold ${superFontSize}px 'Atkinson Hyperlegible', sans-serif`;
         
         ctx.font = mainFont;
         const mainWidth = ctx.measureText(roman).width;

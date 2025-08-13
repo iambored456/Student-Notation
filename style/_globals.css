@@ -47,3 +47,20 @@ button:disabled {
   opacity: 0.7;
   cursor: not-allowed;
 }
+
+/* Disable text selection globally */
+* {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+/* Hide selection highlighting */
+*::selection {
+  background: transparent;
+}
+
+*::-moz-selection {
+  background: transparent;
+}

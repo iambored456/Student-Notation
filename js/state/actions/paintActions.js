@@ -1,10 +1,12 @@
 // js/state/actions/paintActions.js
-console.log("paintActions.js: Module loaded.");
+import logger from '../../utils/logger.js';
+
+logger.moduleLoaded('paintActions', 'state');
 
 export const paintActions = {
   setMicPaintActive(isActive) {
     this.state.paint.isMicPaintActive = isActive;
-    console.log(`[STATE] Mic Paint Active set to: ${isActive}`);
+    logger.debug('paintActions', `Mic Paint Active set to: ${isActive}`, null, 'paint');
     this.emit('micPaintStateChanged', isActive);
   },
 
@@ -20,14 +22,14 @@ export const paintActions = {
 
   clearPaintHistory() {
     this.state.paint.paintHistory = [];
-    console.log("[STATE] Paint history cleared.");
+    logger.debug('paintActions', 'Paint history cleared', null, 'paint');
     this.emit('paintHistoryChanged');
     this.recordState();
   },
 
   setPaintSettings(settings) {
     Object.assign(this.state.paint.paintSettings, settings);
-    console.log("[STATE] Paint settings updated:", this.state.paint.paintSettings);
+    logger.debug('paintActions', 'Paint settings updated', { settings: this.state.paint.paintSettings }, 'paint');
     this.emit('paintSettingsChanged', this.state.paint.paintSettings);
     this.recordState(); // Also save settings changes
   }
