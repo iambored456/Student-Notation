@@ -74,9 +74,5 @@ export const getNotesInMacrobeat = (state, macrobeatIndex) => {
     }
 
     const finalNotes = Array.from(allPitches);
-    // Only log if notes were actually found
-    if (finalNotes.length > 0) {
-        console.log(`[getNotesInMacrobeat] Found notes for macrobeat ${macrobeatIndex}:`, finalNotes);
-    }
     return finalNotes;
 };

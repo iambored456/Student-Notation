@@ -2,7 +2,6 @@
 import store from '../../../state/index.js'; // <-- UPDATED PATH
 import RhythmService from '../../../services/rhythmService.js';
 
-console.log("RhythmUIComponent: Module loaded.");
 
 export function renderRhythmUI() {
     const container = document.getElementById('beat-line-controls');

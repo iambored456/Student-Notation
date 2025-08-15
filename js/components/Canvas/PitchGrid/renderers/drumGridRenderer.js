@@ -18,8 +18,12 @@ export function drawDrumShape(ctx, drumRow, x, y, width, height) {
         ctx.lineTo(cx - size, cy + size);
         ctx.lineTo(cx + size, cy + size);
         ctx.closePath();
-    } else if (drumRow === 1) { // Mid: Square
-        ctx.rect(cx - size, cy - size, 2 * size, 2 * size);
+    } else if (drumRow === 1) { // Mid: Diamond
+        ctx.moveTo(cx, cy - size);
+        ctx.lineTo(cx + size, cy);
+        ctx.lineTo(cx, cy + size);
+        ctx.lineTo(cx - size, cy);
+        ctx.closePath();
     } else { // Low: Pentagon
         const sides = 5;
         for (let i = 0; i < sides; i++) {
@@ -58,13 +62,13 @@ function drawVerticalGridLines(ctx, options) {
         const isMacrobeatEnd = macrobeatBoundaries.includes(i);
 
         if (isBoundary || isTonicCol) {
-            style = { lineWidth: 2, strokeStyle: '#dee2e6', dash: [] };
+            style = { lineWidth: 2, strokeStyle: '#adb5bd', dash: [] };
         } else if (isMacrobeatEnd) {
             const mbIndex = macrobeatBoundaries.indexOf(i);
             if (mbIndex !== -1) {
                 const boundaryStyle = macrobeatBoundaryStyles[mbIndex];
                 if (boundaryStyle === 'anacrusis') continue;
-                style = { lineWidth: 1, strokeStyle: '#dee2e6', dash: boundaryStyle === 'solid' ? [] : [5, 5] };
+                style = { lineWidth: 1, strokeStyle: '#adb5bd', dash: boundaryStyle === 'solid' ? [] : [5, 5] };
             } else { continue; }
         } else { continue; }
         
@@ -111,7 +115,7 @@ export function drawDrumGrid(ctx, options) {
         ctx.beginPath();
         ctx.moveTo(0, y);
         ctx.lineTo(ctx.canvas.width, y);
-        ctx.strokeStyle = '#e9ecef';
+        ctx.strokeStyle = '#ced4da';
         ctx.lineWidth = 1;
         ctx.stroke();
     }
@@ -141,7 +145,7 @@ export function drawDrumGrid(ctx, options) {
                 ctx.fillStyle = drumHit.color;
                 drawDrumShape(ctx, row, x, y, currentCellWidth, drumRowHeight);
             } else {
-                ctx.fillStyle = '#e9ecef';
+                ctx.fillStyle = '#ced4da';
                 ctx.beginPath();
                 ctx.arc(x + currentCellWidth / 2, y + drumRowHeight / 2, 2, 0, Math.PI * 2);
                 ctx.fill();

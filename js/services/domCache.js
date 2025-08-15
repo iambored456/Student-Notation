@@ -47,10 +47,8 @@ class DOMCache {
         this.cacheElement('tonicDropdownButton', 'tonic-dropdown-button');
         this.cacheElement('tonicDropdownLabel', 'tonic-dropdown-label');
         this.cacheElement('tonicDropdownMenu', 'tonic-dropdown-menu');
-        this.cacheElement('degreeDropdownWrapper', 'degree-dropdown-wrapper');
-        this.cacheElement('degreeDropdownButton', 'degree-dropdown-button');
-        this.cacheElement('diatonicBtn', 'toggle-diatonic-degrees');
-        this.cacheElement('modalBtn', 'toggle-modal-degrees');
+        this.cacheElement('degreeVisibilityToggle', 'degree-visibility-toggle');
+        this.cacheElement('degreeModeToggle', 'degree-mode-toggle');
         this.cacheElement('flatBtn', 'flat-toggle-btn');
         this.cacheElement('sharpBtn', 'sharp-toggle-btn');
         this.cacheElement('harmonyContainerMain', 'chordShape-container');
@@ -60,7 +58,6 @@ class DOMCache {
         this.cacheElement('volumeSlider', 'vertical-volume-slider');
 
         this.initialized = true;
-        console.log('DOMCache: Initialized with', this.elements.size, 'cached elements');
     }
 
     /**
@@ -73,7 +70,6 @@ class DOMCache {
         if (element) {
             this.elements.set(key, element);
         } else {
-            console.warn(`DOMCache: Element with ID '${id}' not found`);
         }
     }
 
@@ -84,7 +80,6 @@ class DOMCache {
      */
     get(key) {
         if (!this.initialized) {
-            console.warn('DOMCache: Not initialized. Call init() first.');
             return null;
         }
         return this.elements.get(key) || null;

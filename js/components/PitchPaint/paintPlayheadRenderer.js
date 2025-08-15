@@ -14,13 +14,11 @@ class PaintPlayheadRenderer {
     this.animationFrameId = null;
     this.timeMap = [];
     this._lastTempo = 0;
-    console.log("PaintPlayheadRenderer: Instance created.");
   }
 
   initialize() {
     this.canvas = document.getElementById('playhead-canvas');
     if (!this.canvas) {
-        console.error("PaintPlayheadRenderer: Could not find #playhead-canvas.");
         return;
     }
     this.ctx = this.canvas.getContext('2d');
@@ -29,11 +27,9 @@ class PaintPlayheadRenderer {
     store.on('pitchDetected', (pitchData) => this.handlePitchDetection(pitchData));
     store.on('playbackStateChanged', () => {
         if (store.state.paint.isMicPaintActive) {
-             console.log("PaintPlayheadRenderer: Playback state changed, will update visual in next frame.");
         }
     });
 
-    console.log('PaintPlayheadRenderer: Initialized');
   }
 
   handlePaintStateChange(isActive) {
@@ -54,7 +50,6 @@ class PaintPlayheadRenderer {
 
   startRendering() {
     if (this.animationFrameId) return;
-    console.log("PaintPlayheadRenderer: Starting render loop.");
     this.render();
   }
 
@@ -62,7 +57,6 @@ class PaintPlayheadRenderer {
     if (this.animationFrameId) {
       cancelAnimationFrame(this.animationFrameId);
       this.animationFrameId = null;
-      console.log("PaintPlayheadRenderer: Stopped render loop.");
     }
     
     if (this.ctx) {

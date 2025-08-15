@@ -49,13 +49,13 @@ export function initToolSelectors() {
     const {
         noteBankContainer, eraserButton: eraserBtn, tonicDropdownContainer,
         tonicDropdownButton, tonicDropdownLabel, tonicDropdownMenu,
-        degreeDropdownWrapper, degreeDropdownButton, diatonicBtn,
-        modalBtn, flatBtn, sharpBtn, harmonyContainerMain: harmonyContainer
+        degreeVisibilityToggle, degreeModeToggle, flatBtn, sharpBtn, 
+        harmonyContainerMain: harmonyContainer
     } = domCache.getMultiple(
         'noteBankContainer', 'eraserButton', 'tonicDropdownContainer',
         'tonicDropdownButton', 'tonicDropdownLabel', 'tonicDropdownMenu',
-        'degreeDropdownWrapper', 'degreeDropdownButton', 'diatonicBtn',
-        'modalBtn', 'flatBtn', 'sharpBtn', 'harmonyContainerMain'
+        'degreeVisibilityToggle', 'degreeModeToggle', 'flatBtn', 'sharpBtn', 
+        'harmonyContainerMain'
     );
     const harmonyPresetGrid = document.querySelector('.harmony-preset-grid');
 
@@ -102,31 +102,54 @@ export function initToolSelectors() {
         tonicDropdownButton.addEventListener('click', (e) => {
             e.stopPropagation();
             tonicDropdownContainer.classList.toggle('open');
-            if(degreeDropdownWrapper) degreeDropdownWrapper.classList.remove('open');
+            tonicDropdownButton.blur(); // Remove focus to prevent lingering highlight
         });
         tonicDropdownMenu.querySelectorAll('.tonic-sign-button').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 e.stopPropagation(); 
                 const tonicNumber = btn.getAttribute('data-tonic');
+                const modeLabel = btn.querySelector('.mode-label').textContent;
                 store.setSelectedTool('tonicization', tonicNumber);
                 if (tonicDropdownLabel) {
-                    tonicDropdownLabel.innerHTML = `<img src="/assets/icons/tonicShape_${tonicNumber}.svg" alt="Tonic ${tonicNumber}" class="tonic-shape-icon">`;
+                    tonicDropdownLabel.innerHTML = `<img src="/public/assets/tabicons/tonicShape_${tonicNumber}.svg" alt="Tonic ${tonicNumber}" class="tonic-shape-icon"> ${modeLabel}`;
                 }
                 tonicDropdownContainer.classList.remove('open');
             });
         });
     }
     
-    if (degreeDropdownButton) {
-        degreeDropdownButton.addEventListener('click', (e) => {
-            e.stopPropagation();
-            degreeDropdownWrapper.classList.toggle('open');
-            if(tonicDropdownContainer) tonicDropdownContainer.classList.remove('open');
+    // Degree Visibility Toggle (Show/Hide)
+    if (degreeVisibilityToggle) {
+        degreeVisibilityToggle.addEventListener('click', () => {
+            const currentMode = store.state.degreeDisplayMode;
+            if (currentMode === 'off') {
+                // If degrees are off, turn them on with the last used mode (default to diatonic)
+                const lastMode = degreeModeToggle.textContent === 'Mode Degrees' ? 'modal' : 'diatonic';
+                store.setDegreeDisplayMode(lastMode);
+            } else {
+                // If degrees are on, turn them off
+                store.setDegreeDisplayMode('off');
+            }
+            degreeVisibilityToggle.blur();
         });
     }
 
-    if(diatonicBtn) diatonicBtn.addEventListener('click', () => store.setDegreeDisplayMode('diatonic'));
-    if(modalBtn) modalBtn.addEventListener('click', () => store.setDegreeDisplayMode('modal'));
+    // Degree Mode Toggle (Scale/Mode)
+    if (degreeModeToggle) {
+        degreeModeToggle.addEventListener('click', () => {
+            const currentMode = store.state.degreeDisplayMode;
+            if (currentMode === 'diatonic') {
+                store.setDegreeDisplayMode('modal');
+            } else if (currentMode === 'modal') {
+                store.setDegreeDisplayMode('diatonic');
+            } else {
+                // If degrees are off, turn on with the opposite mode
+                const newMode = degreeModeToggle.textContent === 'Scale Degrees' ? 'modal' : 'diatonic';
+                store.setDegreeDisplayMode(newMode);
+            }
+            degreeModeToggle.blur();
+        });
+    }
     if (flatBtn) flatBtn.addEventListener('click', () => {
         store.toggleAccidentalMode('flat');
         flatBtn.blur(); // Remove focus to prevent lingering blue highlight
@@ -138,7 +161,6 @@ export function initToolSelectors() {
 
     document.addEventListener('click', (e) => {
         if (tonicDropdownContainer && !tonicDropdownContainer.contains(e.target)) tonicDropdownContainer.classList.remove('open');
-        if (degreeDropdownWrapper && !degreeDropdownWrapper.contains(e.target)) degreeDropdownWrapper.classList.remove('open');
     });
 
     // --- UI State Change Listeners (Visual Feedback) ---
@@ -186,8 +208,18 @@ export function initToolSelectors() {
     });
 
     store.on('degreeDisplayModeChanged', (mode) => {
-        diatonicBtn?.classList.toggle('active', mode === 'diatonic');
-        modalBtn?.classList.toggle('active', mode === 'modal');
+        // Update visibility toggle button text and state
+        // Shows "Hide" when degrees are off (grayed), "Show" when degrees are on (white)
+        if (degreeVisibilityToggle) {
+            degreeVisibilityToggle.textContent = mode === 'off' ? 'Hide' : 'Show';
+            degreeVisibilityToggle.classList.toggle('active', mode !== 'off');
+        }
+        
+        // Update mode toggle button text and state (simple gold when active)
+        if (degreeModeToggle) {
+            degreeModeToggle.textContent = mode === 'modal' ? 'Mode Degrees' : 'Scale Degrees';
+            degreeModeToggle.classList.toggle('active', mode !== 'off');
+        }
     });
 
     store.on('accidentalModeChanged', ({ sharp, flat }) => {

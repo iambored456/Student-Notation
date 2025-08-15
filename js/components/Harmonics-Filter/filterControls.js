@@ -32,14 +32,6 @@ function updateFromStore() {
     }
 
     const { cutoff, blend, mix } = timbre.filter;
-    console.log('[FilterControls] updateFromStore:',
-         {
-        currentColor,
-        cutoff,
-        blend,
-        mix,
-        filterEnabled: timbre.filter.enabled
-    });
     
     // Update horizontal blend slider
     if(blendThumb && blendTrack) {
@@ -184,50 +176,8 @@ export function initFilterControls() {
         if (blendWrapper) {
             const wrapperRect = blendWrapper.getBoundingClientRect();
             
-            // Also check blend slider children for comparison
-            if (blendTrack) {
-                const blendChildren = Array.from(blendTrack.children);
-                console.log('[FilterControls] Blend slider children:', blendChildren.map(child => {
-                    const rect = child.getBoundingClientRect();
-                    const style = window.getComputedStyle(child);
-                    return {
-                        tagName: child.tagName,
-                        className: child.className,
-                        height: rect.height,
-                        width: rect.width,
-                        position: style.position,
-                        fontSize: style.fontSize,
-                        lineHeight: style.lineHeight,
-                        textContent: child.textContent
-                    };
-                }));
-            }
         }
         
-        if (cutoffTrack) {
-            const cutoffRect = cutoffTrack.getBoundingClientRect();
-            
-            // Check for any child elements that might be adding height
-            const children = Array.from(cutoffTrack.children);
-            console.log('[FilterControls] Cutoff slider children:', children.map(child => {
-                const rect = child.getBoundingClientRect();
-                const style = window.getComputedStyle(child);
-                return {
-                    tagName: child.tagName,
-                    className: child.className,
-                    height: rect.height,
-                    width: rect.width,
-                    position: style.position,
-                    top: style.top,
-                    transform: style.transform,
-                    fontSize: style.fontSize,
-                    lineHeight: style.lineHeight,
-                    padding: style.padding,
-                    margin: style.margin,
-                    textContent: child.textContent
-                };
-            }));
-        }
     }, 100);
 
 }

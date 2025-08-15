@@ -11,6 +11,9 @@ import domCache from '../../../../services/domCache.js';
 import { Note } from 'tonal';
 import { isNotePlayableAtColumn, isWithinTonicSpan } from '../../../../utils/tonicColumnUtils.js';
 import { setGhostNotePosition, clearGhostNotePosition } from '../../../../services/spacebarHandler.js';
+import { placeStamp, removeStampsInEraserArea } from '../../../../rhythm/stampPlacements.js';
+import StampsToolbar from '../../../StampsToolbar/StampsToolbar.js';
+import { renderStampPreview } from '../renderers/stampRenderer.js';
 
 // --- Interaction State ---
 let pitchHoverCtx;
@@ -19,6 +22,7 @@ let activeNote = null;
 let activeChordNotes = []; // NEW: To hold active chord notes during dragging
 let activePreviewPitches = []; // NEW: To hold all pitches for audio preview
 let isRightClickActive = false;
+let isEraserDragActive = false;
 let previousTool = null;
 let lastHoveredTonicPoint = null;
 let lastHoveredOctaveRows = [];
@@ -88,9 +92,13 @@ function drawHoverHighlight(colIndex, rowIndex, color) {
         highlightWidth = store.state.cellWidth * 2;
     } else if (toolType === 'note' && store.state.selectedNote.shape === 'circle') {
         highlightWidth = store.state.cellWidth * 2;
+    } else if (toolType === 'stamp') {
+        highlightWidth = store.state.cellWidth * 2;
     } else if (toolType === 'tonicization') {
         highlightWidth = store.state.cellWidth * 2;
     }
+    
+    
     pitchHoverCtx.fillStyle = color;
     pitchHoverCtx.fillRect(x, y, highlightWidth, store.state.cellHeight);
 }
@@ -106,11 +114,20 @@ function drawGhostNote(colIndex, rowIndex, isFaint = false) {
         const ghostTonic = { row: rowIndex, columnIndex: colIndex, tonicNumber: store.state.selectedToolTonicNumber };
         drawTonicShape(pitchHoverCtx, store.state, ghostTonic);
     } else if (toolType === 'note') { 
-        const ghostNote = { row: rowIndex, startColumnIndex: colIndex, endColumnIndex: colIndex, color, shape, isDrum: false };
+        // Create ghost note that snaps to grid positions like normal notes
+        const ghostNote = { 
+            row: rowIndex, 
+            startColumnIndex: colIndex, 
+            endColumnIndex: colIndex, 
+            color, 
+            shape, 
+            isDrum: false
+        };
+        const fullOptions = { ...store.state, zoomLevel: LayoutService.getViewportInfo().zoomLevel };
         if (shape === 'oval') {
-            drawSingleColumnOvalNote(pitchHoverCtx, store.state, ghostNote, rowIndex);
+            drawSingleColumnOvalNote(pitchHoverCtx, fullOptions, ghostNote, rowIndex);
         } else {
-            drawTwoColumnOvalNote(pitchHoverCtx, store.state, ghostNote, rowIndex);
+            drawTwoColumnOvalNote(pitchHoverCtx, fullOptions, ghostNote, rowIndex);
         }
     }
     pitchHoverCtx.globalAlpha = 1.0;
@@ -126,7 +143,10 @@ function handleMouseDown(e) {
     const colIndex = GridCoordsService.getColumnIndex(x + scrollLeft);
     const rowIndex = GridCoordsService.getPitchRowIndex(y);
     
-    if (colIndex < 2 || colIndex >= store.state.columnWidths.length - 2 || !getPitchForRow(rowIndex)) return;
+    // Check boundaries - circle notes need more space than other tools
+    const isCircleNote = (store.state.selectedTool === 'note' || store.state.selectedTool === 'chord') && store.state.selectedNote.shape === 'circle';
+    const maxColumn = isCircleNote ? store.state.columnWidths.length - 3 : store.state.columnWidths.length - 2;
+    if (colIndex < 2 || colIndex >= maxColumn || !getPitchForRow(rowIndex)) return;
 
     if (e.button === 2) {
         e.preventDefault();
@@ -140,6 +160,20 @@ function handleMouseDown(e) {
         
         if (store.eraseInPitchArea(colIndex, rowIndex, 2, false)) rightClickActionTaken = true;
         if (store.eraseTonicSignAt(colIndex, false)) rightClickActionTaken = true;
+        
+        // Also erase stamps with right-click (2×3 area like circle notes)
+        const eraseEndCol = colIndex + 2 - 1;
+        const eraseStartRow = rowIndex - 1;
+        const eraseEndRow = rowIndex + 1;
+        console.log('[RIGHT CLICK STAMP ERASE] Attempting to erase stamps in area:', {
+            colIndex,
+            rowIndex,
+            eraseStartCol: colIndex,
+            eraseEndCol,
+            eraseStartRow,
+            eraseEndRow
+        });
+        if (store.eraseStampsInArea(colIndex, eraseEndCol, eraseStartRow, eraseEndRow)) rightClickActionTaken = true;
         
         pitchHoverCtx.clearRect(0, 0, pitchHoverCtx.canvas.width, pitchHoverCtx.canvas.height);
         drawHoverHighlight(colIndex, rowIndex, 'rgba(220, 53, 69, 0.3)');
@@ -177,8 +211,12 @@ function handleMouseDown(e) {
                 if (noteRow !== -1) {
                     const newNote = { row: noteRow, startColumnIndex: colIndex, endColumnIndex: colIndex, color, shape, isDrum: false };
                     const addedNote = store.addNote(newNote);
-                    activeChordNotes.push(addedNote);
-                    console.log('[CHORD DEBUG] Added chord note:', { noteName, noteRow, addedNote });
+                    if (addedNote) {
+                        activeChordNotes.push(addedNote);
+                        console.log('[CHORD DEBUG] Added chord note:', { noteName, noteRow, addedNote });
+                    } else {
+                        console.log('[CHORD DEBUG] Skipped duplicate chord note:', { noteName, noteRow, color });
+                    }
                 }
             });
             
@@ -206,7 +244,62 @@ function handleMouseDown(e) {
         }
 
         if (toolType === 'eraser') {
-            store.eraseInPitchArea(colIndex, rowIndex, 2, true);
+            console.log('[ERASER] Using eraser tool at:', {
+                mouseX: x,
+                mouseY: y,
+                colIndex, 
+                rowIndex,
+                scrollOffset: scrollLeft
+            });
+            
+            isEraserDragActive = true; // Enable drag mode for eraser
+            
+            store.eraseInPitchArea(colIndex, rowIndex, 2, false); // Don't record state yet (will record on mouse up)
+            
+            // Also remove stamps that intersect with the eraser area (2×3 area like circle notes)
+            const eraseEndCol = colIndex + 2 - 1; // Eraser spans 2 columns
+            const eraseStartRow = rowIndex - 1; // Eraser starts 1 row above
+            const eraseEndRow = rowIndex + 1; // Eraser covers 3 rows: row-1, row, row+1
+            
+            console.log('[STAMP ERASE] Eraser area:', { 
+                colIndex, 
+                rowIndex, 
+                eraseStartCol: colIndex, 
+                eraseEndCol, 
+                eraseStartRow, 
+                eraseEndRow 
+            });
+            
+            const removedStamps = removeStampsInEraserArea(colIndex, eraseEndCol, eraseStartRow, eraseEndRow);
+            console.log('[STAMP ERASE] Removed stamps:', removedStamps);
+            return;
+        }
+        
+        if (toolType === 'stamp') {
+            const selectedStamp = StampsToolbar.getSelectedStamp();
+            if (selectedStamp) {
+                console.log('[STAMP PLACE] Placing stamp:', {
+                    stampId: selectedStamp.id,
+                    mouseX: x,
+                    mouseY: y,
+                    colIndex,
+                    rowIndex,
+                    pitch: getPitchForRow(rowIndex),
+                    scrollOffset: scrollLeft
+                });
+                
+                const { color } = store.state.selectedNote;
+                placeStamp(selectedStamp.id, colIndex, rowIndex, color);
+                
+                // Optional: Play preview sound for the stamp
+                const pitch = getPitchForRow(rowIndex);
+                if (pitch) {
+                    // Play a short preview of the stamp pattern
+                    SynthEngine.playNote(pitch, '16n'); // Just a quick 16th note preview
+                }
+                
+                store.recordState(); // Save state for undo/redo
+            }
             return;
         }
         
@@ -218,6 +311,12 @@ function handleMouseDown(e) {
             const { shape, color } = store.state.selectedNote;
             const newNote = { row: rowIndex, startColumnIndex: colIndex, endColumnIndex: colIndex, color, shape, isDrum: false };
             const addedNote = store.addNote(newNote); 
+            
+            if (!addedNote) {
+                // Note was not added due to duplicate prevention
+                return;
+            }
+            
             activeNote = addedNote;
             
             isDragging = (shape === 'circle');
@@ -252,12 +351,13 @@ function handleMouseMove(e) {
     
     // Debug log when dragging
     if (isDragging) {
-        console.log('[CHORD DEBUG] Mouse move during drag - tool:', store.state.selectedTool, 'isDragging:', isDragging, 'activeChordNotes:', activeChordNotes.length);
     }
 
-    if (colIndex < 2 || colIndex >= store.state.columnWidths.length - 2 || getPitchForRow(rowIndex) === null) {
+    // Check boundaries for mouse move - circle notes need more space
+    const isCircleNote = (store.state.selectedTool === 'note' || store.state.selectedTool === 'chord') && store.state.selectedNote.shape === 'circle';
+    const maxColumn = isCircleNote ? store.state.columnWidths.length - 3 : store.state.columnWidths.length - 2;
+    if (colIndex < 2 || colIndex >= maxColumn || getPitchForRow(rowIndex) === null) {
         if (isDragging) {
-            console.log('[CHORD DEBUG] Early return due to invalid position - colIndex:', colIndex, 'rowIndex:', rowIndex, 'pitchForRow:', getPitchForRow(rowIndex));
         }
         lastHoveredTonicPoint = null;
         lastHoveredOctaveRows = [];
@@ -271,22 +371,16 @@ function handleMouseMove(e) {
     // Handle dragging FIRST, before any tool-specific logic
     if (isDragging && (activeNote || activeChordNotes.length > 0)) {
         const newEndIndex = colIndex;
-        console.log('[CHORD DEBUG] Dragging detected, newEndIndex:', newEndIndex);
         
         if (activeNote) {
             // Handle single note dragging
-            console.log('[CHORD DEBUG] Single note dragging');
             if (newEndIndex !== activeNote.endColumnIndex) {
                 store.updateNoteTail(activeNote, newEndIndex);
             }
         } else if (activeChordNotes.length > 0) {
             // Handle chord notes dragging - check if any notes need updating
-            console.log('[CHORD DEBUG] Chord notes dragging, activeChordNotes:', activeChordNotes.length);
-            console.log('[CHORD DEBUG] Current endColumnIndex values:', activeChordNotes.map(n => n.endColumnIndex));
             const notesToUpdate = activeChordNotes.filter(note => newEndIndex !== note.endColumnIndex);
-            console.log('[CHORD DEBUG] Notes to update:', notesToUpdate.length);
             if (notesToUpdate.length > 0) {
-                console.log('[CHORD DEBUG] Calling updateMultipleNoteTails with newEndIndex:', newEndIndex);
                 store.updateMultipleNoteTails(notesToUpdate, newEndIndex);
             }
         }
@@ -304,10 +398,11 @@ function handleMouseMove(e) {
                 const noteRowIndex = store.state.fullRowData.findIndex(r => r.toneNote === noteName);
                 if (noteRowIndex > -1) {
                     const ghostNote = { row: noteRowIndex, startColumnIndex: colIndex, endColumnIndex: colIndex, color, shape, isDrum: false };
+                    const fullOptions = { ...store.state, zoomLevel: LayoutService.getViewportInfo().zoomLevel };
                     if (shape === 'oval') {
-                        drawSingleColumnOvalNote(pitchHoverCtx, store.state, ghostNote, noteRowIndex);
+                        drawSingleColumnOvalNote(pitchHoverCtx, fullOptions, ghostNote, noteRowIndex);
                     } else {
-                        drawTwoColumnOvalNote(pitchHoverCtx, store.state, ghostNote, noteRowIndex);
+                        drawTwoColumnOvalNote(pitchHoverCtx, fullOptions, ghostNote, noteRowIndex);
                     }
                 }
             });
@@ -319,6 +414,27 @@ function handleMouseMove(e) {
     if (isRightClickActive) {
         if (store.eraseInPitchArea(colIndex, rowIndex, 2, false)) rightClickActionTaken = true;
         if (store.eraseTonicSignAt(colIndex, false)) rightClickActionTaken = true;
+        
+        // Also erase stamps during right-click drag (2×3 area like circle notes)
+        const eraseEndCol = colIndex + 2 - 1;
+        const eraseStartRow = rowIndex - 1;
+        const eraseEndRow = rowIndex + 1;
+        if (store.eraseStampsInArea(colIndex, eraseEndCol, eraseStartRow, eraseEndRow)) rightClickActionTaken = true;
+        
+        drawHoverHighlight(colIndex, rowIndex, 'rgba(220, 53, 69, 0.3)');
+        return;
+    }
+
+    if (isEraserDragActive) {
+        // Eraser drag behavior - erase as we move the mouse
+        store.eraseInPitchArea(colIndex, rowIndex, 2, false); // Don't record state yet
+        
+        // Also erase stamps during eraser drag (2×3 area like circle notes)
+        const eraseEndCol = colIndex + 2 - 1;
+        const eraseStartRow = rowIndex - 1;
+        const eraseEndRow = rowIndex + 1;
+        store.eraseStampsInArea(colIndex, eraseEndCol, eraseStartRow, eraseEndRow);
+        
         drawHoverHighlight(colIndex, rowIndex, 'rgba(220, 53, 69, 0.3)');
         return;
     }
@@ -361,7 +477,28 @@ function handleMouseMove(e) {
         const highlightStartCol = colIndex;
         drawHoverHighlight(highlightStartCol, rowIndex, highlightColor);
         
-        if (canPlaceNote) {
+        if (store.state.selectedTool === 'stamp') {
+            // Show stamp preview
+            const selectedStamp = StampsToolbar.getSelectedStamp();
+            if (selectedStamp) {
+                console.log('[STAMP HOVER] Preview at:', {
+                    mouseX: x,
+                    mouseY: y,
+                    colIndex,
+                    rowIndex,
+                    pitch: getPitchForRow(rowIndex),
+                    scrollOffset: scrollLeft
+                });
+                
+                const options = {
+                    cellWidth: store.state.cellWidth,
+                    cellHeight: store.state.cellHeight,
+                    columnWidths: store.state.columnWidths,
+                    previewColor: '#4a90e2'
+                };
+                renderStampPreview(pitchHoverCtx, colIndex, rowIndex, selectedStamp, options);
+            }
+        } else if (canPlaceNote) {
             drawGhostNote(colIndex, rowIndex);
         }
     }
@@ -401,13 +538,16 @@ function handleGlobalMouseUp() {
     }
 
     if (isDragging) {
-        console.log('[CHORD DEBUG] Mouse up - recording state and resetting drag state');
-        console.log('[CHORD DEBUG] activeChordNotes before reset:', activeChordNotes.length);
         store.recordState();
     }
     isDragging = false;
     activeNote = null;
     activeChordNotes = [];
+
+    if (isEraserDragActive) {
+        store.recordState(); // Record state after eraser drag operation
+        isEraserDragActive = false;
+    }
 
     if (isRightClickActive) {
         if (rightClickActionTaken) store.recordState();
@@ -439,5 +579,4 @@ export function initPitchGridInteraction() {
     
     window.addEventListener('mouseup', handleGlobalMouseUp);
 
-    console.log("PitchGridInteractor: Initialized and event listeners attached.");
 }

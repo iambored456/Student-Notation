@@ -1,6 +1,5 @@
 // js/services/timeSignatureService.js
 
-console.log("TimeSignatureService: Module loaded.");
 
 const TimeSignatureService = {
     /**

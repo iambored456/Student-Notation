@@ -3,8 +3,7 @@ import store from '../state/index.js';
 import {
     DEFAULT_ZOOM_LEVEL, DEFAULT_SCROLL_POSITION, GRID_HEIGHT_MULTIPLIER, GRID_WIDTH_RATIO,
     SIDE_COLUMN_WIDTH, TONIC_COLUMN_WIDTH, BEAT_COLUMN_WIDTH, BASE_DRUM_ROW_HEIGHT,
-    DRUM_HEIGHT_SCALE_FACTOR, DRUM_ROW_COUNT, BASE_HARMONY_HEIGHT, MAX_ZOOM_LEVEL,
-    MIN_ZOOM_LEVEL, ZOOM_IN_FACTOR, ZOOM_OUT_FACTOR
+    DRUM_HEIGHT_SCALE_FACTOR, DRUM_ROW_COUNT, MAX_ZOOM_LEVEL, MIN_ZOOM_LEVEL, ZOOM_IN_FACTOR, ZOOM_OUT_FACTOR
 } from '../constants.js';
 import { getPlacedTonicSigns } from '../state/selectors.js';
 import { RESIZE_DEBOUNCE_DELAY } from '../constants.js';
@@ -18,7 +17,7 @@ let currentZoomLevel = DEFAULT_ZOOM_LEVEL;
 let currentScrollPosition = DEFAULT_SCROLL_POSITION;
 let viewportHeight = 0;
 
-let gridContainer, pitchGridWrapper, canvas, ctx, drumGridWrapper, drumCanvas, drumCtx, playheadCanvas, hoverCanvas, harmonyContainer, harmonyCanvas, drumHoverCanvas;
+let gridContainer, pitchGridWrapper, canvas, ctx, drumGridWrapper, drumCanvas, drumCtx, playheadCanvas, hoverCanvas, drumHoverCanvas;
 let resizeTimeout;
 let isRecalculating = false;
 let lastCalculatedWidth = 0;
@@ -63,8 +62,6 @@ function initDOMElements() {
     playheadCanvas = document.getElementById('playhead-canvas');
     hoverCanvas = document.getElementById('hover-canvas');
     drumHoverCanvas = document.getElementById('drum-hover-canvas');
-    harmonyContainer = document.getElementById('harmonyAnalysisGrid');
-    harmonyCanvas = document.getElementById('harmony-analysis-canvas');
     
     // pitchGrid Assembly - contains time signature + tools + viewport
     const canvasContainer = document.getElementById('canvas-container');
@@ -215,7 +212,7 @@ function recalcAndApplyLayout() {
     // Don't set grid-container width - let CSS and natural layout handle it
     // Let CSS handle grid-container width naturally
     
-    [canvas, playheadCanvas, hoverCanvas, drumCanvas, drumHoverCanvas, harmonyCanvas].forEach(c => { 
+    [canvas, playheadCanvas, hoverCanvas, drumCanvas, drumHoverCanvas].forEach(c => { 
         if(c && Math.abs(c.width - totalCanvasWidthPx) > 1) { 
             c.width = totalCanvasWidthPx; 
         }
@@ -278,14 +275,6 @@ function recalcAndApplyLayout() {
         logger.debug('Layout Service', 'Dispatched canvasResized event after deferred resize', null, 'layout');
     }, 25); // Allow DOM to settle
 
-    // Harmony grid height scales with zoom but has minimum size
-    const harmonyHeight = Math.max(BASE_HARMONY_HEIGHT, drumRowHeight);
-    if (harmonyContainer && Math.abs(parseFloat(harmonyContainer.style.height) - harmonyHeight) > 1) {
-        harmonyContainer.style.height = `${harmonyHeight}px`;
-    }
-    if (harmonyCanvas && Math.abs(harmonyCanvas.height - harmonyHeight) > 1) {
-        harmonyCanvas.height = harmonyHeight;
-    }
 
     store.emit('layoutConfigChanged');
     
@@ -385,10 +374,11 @@ const LayoutService = {
         const fullVirtualHeight = totalRows * rowHeight;
         
         // Add padding to ensure first and last rows are fully visible
-        // Use half-row padding on each end to center rows properly
-        const paddedVirtualHeight = fullVirtualHeight + rowHeight;
+        // Use half-row padding to prevent excess whitespace at bottom
+        const paddedVirtualHeight = fullVirtualHeight + (rowHeight * 0.5);
         const scrollableDist = Math.max(0, paddedVirtualHeight - viewportHeight);
-        const scrollOffset = (scrollableDist * currentScrollPosition) - (rowHeight / 2);
+        // Subtract full row height to align grid content properly with container bounds
+        const scrollOffset = (scrollableDist * currentScrollPosition) - rowHeight;
 
         const startRow = Math.max(0, Math.floor(scrollOffset / rowHeight) - 2);
         const visibleRowCount = viewportHeight / rowHeight;

@@ -1,6 +1,5 @@
 // js/services/canvasContextService.js
 
-console.log("CanvasContextService: Module loaded.");
 
 let pitchContext = null;
 let drumContext = null;
@@ -16,7 +15,6 @@ const CanvasContextService = {
     setContexts({ ctx, drumCtx }) {
         pitchContext = ctx;
         drumContext = drumCtx;
-        console.log("CanvasContextService: Contexts have been set.");
     },
 
     /**

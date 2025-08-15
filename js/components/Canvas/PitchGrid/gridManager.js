@@ -4,7 +4,6 @@ import DrumGridController from '../DrumGrid/drumGrid.js';
 import { initPitchGridInteraction } from './interactors/pitchGridInteractor.js';
 import { initDrumGridInteraction } from '../DrumGrid/drumGridInteractor.js';
 
-console.log("GridManager: Module loaded.");
 
 /**
  * The GridManager is responsible for initializing all grid-related components
@@ -18,12 +17,10 @@ const GridManager = {
         
         // Listen for canvas resize events from layoutService
         document.addEventListener('canvasResized', (event) => {
-            console.log('🎯 GridManager received canvasResized event:', event.detail);
             this.renderPitchGrid();
             this.renderDrumGrid();
         });
         
-        console.log("GridManager: Pitch and Drum interactors have been initialized.");
     },
 
     // Expose the render methods from the controller modules.

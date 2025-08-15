@@ -56,8 +56,6 @@ function trigger(noteId, phase, color, adsr = null) {
         // Don't animate a release for a note that wasn't playing.
         if (!ph) return;
 
-        // Log the value for verification
-        console.log(`[ADSR Playhead] TRIGGER RELEASE for note ${noteId}. Animation Release Time: ${adsr.release.toFixed(3)}s`);
 
         // Stop any ongoing attack/decay animation
         cancelAnimationFrame(ph.requestId);
@@ -187,6 +185,5 @@ function clearAll() {
 
 export function initPlayheadManager(adsrComponent) {
     componentRef = adsrComponent;
-    console.log("ADSR Playhead Manager: Initialized.");
     return { trigger, pause, resume, clearAll };
 }

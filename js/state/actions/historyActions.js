@@ -24,6 +24,7 @@ export const historyActions = {
         const newSnapshot = {
             notes: JSON.parse(JSON.stringify(this.state.placedNotes)),
             tonicSignGroups: JSON.parse(JSON.stringify(this.state.tonicSignGroups)),
+            stampPlacements: JSON.parse(JSON.stringify(this.state.stampPlacements)),
             timbres: timbresForHistory // Already cloned safely
         };
         this.state.history.push(newSnapshot);
@@ -37,8 +38,10 @@ export const historyActions = {
             const snapshot = this.state.history[this.state.historyIndex];
             this.state.placedNotes = JSON.parse(JSON.stringify(snapshot.notes));
             this.state.tonicSignGroups = JSON.parse(JSON.stringify(snapshot.tonicSignGroups));
+            this.state.stampPlacements = JSON.parse(JSON.stringify(snapshot.stampPlacements || []));
             this.state.timbres = restoreTimbres(snapshot.timbres); // Use safe restore function
             this.emit('notesChanged');
+            this.emit('stampPlacementsChanged');
             this.emit('rhythmStructureChanged');
             this.emit('timbreChanged', this.state.selectedNote.color); 
             this.emit('historyChanged');
@@ -51,8 +54,10 @@ export const historyActions = {
             const snapshot = this.state.history[this.state.historyIndex];
             this.state.placedNotes = JSON.parse(JSON.stringify(snapshot.notes));
             this.state.tonicSignGroups = JSON.parse(JSON.stringify(snapshot.tonicSignGroups));
+            this.state.stampPlacements = JSON.parse(JSON.stringify(snapshot.stampPlacements || []));
             this.state.timbres = restoreTimbres(snapshot.timbres); // Use safe restore function
             this.emit('notesChanged');
+            this.emit('stampPlacementsChanged');
             this.emit('rhythmStructureChanged');
             this.emit('timbreChanged', this.state.selectedNote.color);
             this.emit('historyChanged');

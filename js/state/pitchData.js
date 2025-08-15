@@ -1,6 +1,5 @@
 // js/state/pitchData.js
 
-console.log("PitchData: Module loaded with hex color data.");
 
 /**
  * The single source of truth for all pitch information in the application.

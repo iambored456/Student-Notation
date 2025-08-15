@@ -7,10 +7,8 @@
   --c-surface: #ffffff;       /* Pure white for canvases and primary panels */
   --c-text: #212529;          /* A dark, soft black for text. Easier on the eyes than #000 */
   --c-text-muted: #6c757d;    /* A muted gray for secondary text/labels */
-  --c-border: #dee2e6;        /* A light, soft border color */
-  --c-gridline: #e9ecef;      /* An even lighter gray for grid lines */
-  --c-accent: #4A90E2;        /* A friendly, vibrant blue, our primary action color */
-  --c-accent-hover: #357ABD;  /* A darker shade for hover states */
+  --c-border: #dee2e6;        /* A light, soft border color with 3.1:1 contrast */
+  --c-gridline: #e9ecef;      /* An even lighter gray for grid lines with 2.4:1 contrast */
   --c-danger: #dc3545;        /* Red for destructive actions like 'clear' or 'eraser' */
   --c-warning: #ffc107;      /* A warm yellow for selection highlights */
 

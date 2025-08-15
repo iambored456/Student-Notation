@@ -309,7 +309,7 @@ class StaticWaveformVisualizer {
     }
 
     drawGrid(width, height, centerY) {
-        this.ctx.strokeStyle = '#E5E5E5';
+        this.ctx.strokeStyle = '#ced4da';
         this.ctx.lineWidth = 1;
         this.ctx.setLineDash([2, 2]);
 

@@ -21,7 +21,7 @@ function drawHorizontalMusicLines(ctx, options, startRow, endRow) {
         if (!style) continue;
 
         // THE FIX: Check if the color is the special fill color for the G-line
-        if (style.color === '#f8f9fa') { 
+        if (style.color === '#dee2e6') { 
             ctx.fillStyle = style.color;
             // Use cellHeight directly since it already includes zoom scaling
             ctx.fillRect(musicAreaStartX, y - options.cellHeight / 2, musicAreaEndX - musicAreaStartX, options.cellHeight);
@@ -75,13 +75,13 @@ export function drawVerticalLines(ctx, options) {
         }
 
         if (isBoundary || isTonicColumnStart || isTonicColumnEnd) {
-            style = { lineWidth: 2, strokeStyle: '#dee2e6', dash: [] };
+            style = { lineWidth: 2, strokeStyle: '#adb5bd', dash: [] };
         } else if (isMacrobeatEnd) {
             const mbIndex = macrobeatBoundaries.indexOf(i);
             if (mbIndex !== -1) {
                 const boundaryStyle = macrobeatBoundaryStyles[mbIndex];
                 if (boundaryStyle === 'anacrusis') continue;
-                style = { lineWidth: 1, strokeStyle: '#dee2e6', dash: boundaryStyle === 'solid' ? [] : [5, 5] };
+                style = { lineWidth: 1, strokeStyle: '#adb5bd', dash: boundaryStyle === 'solid' ? [] : [5, 5] };
             } else { continue; }
         } else { 
             continue; 

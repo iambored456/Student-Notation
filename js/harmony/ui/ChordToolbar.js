@@ -125,7 +125,6 @@ export function initChordToolbar() {
     collapseBtn = document.getElementById('chord-toolbar-collapse-btn');
     
     if (!wrapper || !qualitySelect || !inversionSelect || !extensionSelect) {
-        console.error("ChordToolbar: Could not find all required elements.");
         return;
     }
 
@@ -149,8 +148,4 @@ export function initChordToolbar() {
             updateToolbar();
         }
     });
-    
-    /* REMOVED: Scroll listener is no longer needed. */
-
-    console.log("ChordToolbar: Initialized.");
 }

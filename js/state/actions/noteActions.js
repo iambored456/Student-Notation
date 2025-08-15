@@ -13,6 +13,19 @@ export const noteActions = {
      * @param {object} note - The note object to add.
      */
     addNote(note) {
+        // Check if there's already a note of the same color at the same position (row + startColumnIndex)
+        const existingNote = this.state.placedNotes.find(existingNote => 
+            !existingNote.isDrum && 
+            existingNote.row === note.row && 
+            existingNote.startColumnIndex === note.startColumnIndex && 
+            existingNote.color === note.color
+        );
+        
+        if (existingNote) {
+            // Don't add the note if there's already one of the same color at this position
+            return null;
+        }
+        
         const noteWithId = { ...note, uuid: generateUUID() };
         this.state.placedNotes.push(noteWithId);
         this.emit('notesChanged');

@@ -3,7 +3,6 @@ import store from '../state/index.js';
 import { getMacrobeatInfo } from '../state/selectors.js';
 import LayoutService from './layoutService.js';
 
-console.log("RhythmService: Module loaded.");
 
 const RhythmService = {
     /**

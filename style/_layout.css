@@ -48,27 +48,24 @@
     z-index: 2;
 }
 
-#container-1, #container-2, #container-3 {
+#container-1, #container-3 {
     display: flex;
     border: 1px solid var(--c-border);
     border-radius: var(--border-radius-md);
     background-color: var(--c-bg);
 }
 
-#container-1 {
-    padding:0.5em;
-    flex: 0 0 0;
-    gap: 0;
-    align-items: stretch;
+#container-3 {
+    height: 100%;
 }
 
-#container-2 {
-    padding: var(--space-2);
-    width: 13.5em; 
-    flex-shrink: 0;
-    flex-direction: column;
-    gap: var(--space-2);
-    justify-content: space-around;
+#container-1 {
+    padding:0.5em;
+    flex: 0 0 auto;
+    gap: 0;
+    align-items: stretch;
+    height: 100%;
+    overflow: visible;
 }
 
 .tool-subcontainer {
@@ -76,17 +73,19 @@
     flex-direction: column;
     gap: var(--space-1);
     align-items: center;
-    padding: var(--space-2);
+    padding: var(--space-3) var(--space-2);
     background-color: transparent;
     border-radius: 0;
     border-right: 1px solid var(--c-border);
     height: 100%;
     justify-content: center;
+    overflow: visible;
+    min-height: 0;
 }
 .tool-subcontainer:last-child, .control-section:last-child {
     border-right: none;
 }
-#container-3 {
+#container-2 {
     flex: 1 1 0; 
     overflow: visible; 
     min-width: 0;
@@ -103,8 +102,9 @@
     flex: 1;
     padding: 0.1em;
     background-color: var(--c-bg);
-    overflow: visible;
+    overflow: auto;
     min-width: 0;
+    height: 100%;
 }
 .tab-panel { display: none; height: 100%; align-items: stretch; }
 .tab-panel.active { 
@@ -122,13 +122,36 @@
     width: fit-content;
     border-radius: 0;
 }
-.preset-container {
+.preset-effects-container {
     align-items: center;
-    justify-content: center;
+    justify-content: flex-start;
     flex: 0 0 auto;
     width: fit-content;
 }
 .control-section h4 {
+    margin: 0 0 var(--space-1) 0;
+    color: var(--c-text-muted);
+    font-size: 0.9em;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    flex-shrink: 0;
+    width: 100%;
+    text-align: center;
+}
+
+/* Rhythm tab stacked layout */
+.rhythm-structure-container {
+    flex-direction: column;
+    gap: var(--space-3);
+}
+
+.control-subsection {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+}
+
+.control-subsection h4 {
     margin: 0 0 var(--space-1) 0;
     color: var(--c-text-muted);
     font-size: 0.9em;
@@ -188,7 +211,7 @@
   width: fit-content;
   min-height: 40px;
   position: relative;
-  background-color: var(--c-gridline);
+  background-color: var(--c-surface);
   border-left: 1px solid var(--c-border);
   border-right: 1px solid var(--c-border);
 }
@@ -201,6 +224,7 @@
   min-height: 90px; 
   overflow: hidden;
   position: relative;
+  background-color: var(--c-surface);
   border: 1px solid var(--c-border);
   border-top: none;
   border-radius: 0 0 var(--border-radius-md) var(--border-radius-md);

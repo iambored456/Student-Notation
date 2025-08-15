@@ -16,6 +16,7 @@
 .waveform-display-wrapper {
     position: relative;
     width: 100%;
+    max-width: 280px;
     height: 100%; /* Compact height for tab placement */
     border: 1px solid var(--c-border, #dee2e6);
     border-radius: 6px;

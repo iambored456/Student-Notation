@@ -18,7 +18,8 @@ export const BEAT_COLUMN_WIDTH = 1;
 export const BASE_DRUM_ROW_HEIGHT = 30;
 export const DRUM_HEIGHT_SCALE_FACTOR = 0.5;
 export const DRUM_ROW_COUNT = 3;
-export const BASE_HARMONY_HEIGHT = 40;
+export const BASE_HARMONY_HEIGHT = 30;
+export const HARMONY_ROW_COUNT = 1;
 export const MAX_ZOOM_LEVEL = 8.0;
 export const MIN_ZOOM_LEVEL = 0.25;
 export const ZOOM_IN_FACTOR = 1.25;
@@ -26,8 +27,8 @@ export const ZOOM_OUT_FACTOR = 0.8;
 
 // Visual Rendering Constants
 export const ROW_HEIGHT_RATIO = 0.5;
-export const OVAL_NOTE_FONT_RATIO = 0.35;
-export const FILLED_NOTE_FONT_RATIO = 0.525;
+export const OVAL_NOTE_FONT_RATIO = 0.7;
+export const FILLED_NOTE_FONT_RATIO = 0.9;
 export const MIN_FONT_SIZE = 4;
 export const MIN_TONIC_FONT_SIZE = 6;
 export const MIN_STROKE_WIDTH_THICK = 1.5;

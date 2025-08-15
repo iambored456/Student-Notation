@@ -8,7 +8,8 @@ export const initialState = {
     placedNotes: [],
     placedChords: [],
     tonicSignGroups: {},
-    history: [ { notes: [], tonicSignGroups: {}, timbres: getInitialTimbresState().timbres, placedChords: [] } ],
+    stampPlacements: [],
+    history: [ { notes: [], tonicSignGroups: {}, timbres: getInitialTimbresState().timbres, placedChords: [], stampPlacements: [] } ],
     historyIndex: 0,
     fullRowData: [],
 

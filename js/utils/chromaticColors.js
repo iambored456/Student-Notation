@@ -1,5 +1,4 @@
 // js/utils/chromaticColors.js
-console.log("chromaticColors.js: Module loaded.");
 
 // Chromatic color palette adapted from Pitch Visualizer
 export const CHROMATIC_COLORS = [

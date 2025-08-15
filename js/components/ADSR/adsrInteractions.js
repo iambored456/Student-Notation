@@ -175,5 +175,4 @@ export function initInteractions(component) {
     initSustainSlider(elements, component);
     initMultiThumbSlider(elements, component);
     initNodeDragging(elements, component);
-    console.log("ADSR Interactions: Initialized with robust calculation logic.");
 }

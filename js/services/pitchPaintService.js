@@ -22,7 +22,6 @@ class PitchPaintService {
       MIN_VOLUME_DB: -60
     };
 
-    console.log("PitchPaintService: Instance created.");
   }
 
   async initialize() {

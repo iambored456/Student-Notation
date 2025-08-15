@@ -32,7 +32,7 @@ export function initAudioControls() {
     }
 
 
-    const presetContainer = document.querySelector('.preset-container');
+    const presetContainer = document.querySelector('.preset-effects-container');
     document.querySelectorAll('.preset-button').forEach(button => {
         const presetId = button.id.replace('preset-', '');
         const preset = PRESETS[presetId];
@@ -42,6 +42,14 @@ export function initAudioControls() {
                 const currentColor = store.state.selectedNote.color;
                 if (currentColor) {
                     store.applyPreset(currentColor, preset);
+                    // Immediately update the selection to show the highlight
+                    setTimeout(() => {
+                        try {
+                            updatePresetSelection(currentColor);
+                        } catch (error) {
+                        }
+                    }, 10);
+                } else {
                 }
                 button.blur(); // Remove focus to prevent lingering blue highlight
             });
@@ -63,15 +71,50 @@ export function initAudioControls() {
         return `#${darkenedR.toString(16).padStart(2, '0')}${darkenedG.toString(16).padStart(2, '0')}${darkenedB.toString(16).padStart(2, '0')}`;
     };
 
+    const lightenColor = (hex, percent = 50) => {
+        // Convert hex to RGB
+        const r = parseInt(hex.slice(1, 3), 16);
+        const g = parseInt(hex.slice(3, 5), 16);
+        const b = parseInt(hex.slice(5, 7), 16);
+        
+        // Lighten each component towards white
+        const lightenedR = Math.min(255, Math.floor(r + (255 - r) * (percent / 100)));
+        const lightenedG = Math.min(255, Math.floor(g + (255 - g) * (percent / 100)));
+        const lightenedB = Math.min(255, Math.floor(b + (255 - b) * (percent / 100)));
+        
+        // Convert back to hex
+        return `#${lightenedR.toString(16).padStart(2, '0')}${lightenedG.toString(16).padStart(2, '0')}${lightenedB.toString(16).padStart(2, '0')}`;
+    };
+
     const updatePresetSelection = (color) => {
-        if (!color || !presetContainer) return;
+        if (!color || !presetContainer) {
+            return;
+        }
         const timbre = store.state.timbres[color];
+        
+        // Get the light color from the color palette for button backgrounds
+        const palette = store.state.colorPalette[color] || { primary: color, light: color };
+        const lightColor = palette.light;
+        const primaryColor = palette.primary;
+        
+        // Debug logging
+        
         document.querySelectorAll('.preset-button').forEach(btn => {
             const presetId = btn.id.replace('preset-', '');
-            btn.classList.toggle('selected', timbre && timbre.activePresetName === presetId);
+            const isSelected = timbre && timbre.activePresetName === presetId;
+            btn.classList.toggle('selected', isSelected);
+            if (isSelected) {
+            }
         });
-        presetContainer.style.setProperty('--c-accent', color);
-        presetContainer.style.setProperty('--c-accent-hover', darkenColor(color, 20));
+        
+        // Create an even lighter version for button backgrounds
+        const extraLightColor = lightenColor(lightColor, 60);
+        
+        // Use extra light color for button backgrounds, primary for text/borders
+        presetContainer.style.setProperty('--c-accent', primaryColor);
+        presetContainer.style.setProperty('--c-accent-light', extraLightColor);
+        presetContainer.style.setProperty('--c-accent-hover', darkenColor(primaryColor, 20));
+        
     };
     
     // THE FIX: Listen for 'noteChanged' to update the UI when the color changes.

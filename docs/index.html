@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Student Notation Web Applet</title>
 <link rel="icon" href="/Student-Notation/favicon.ico" sizes="any" />
 <link rel="icon" type="image/png" sizes="96x96" href="/Student-Notation/favicon-96x96.png" />
@@ -10,8 +11,8 @@
 <link rel="manifest" href="/Student-Notation/site.webmanifest" />
 <meta name="theme-color" content="#ffffff" />
 <style id="print-style-rules"></style>
-  <script type="module" crossorigin src="/Student-Notation/assets/index-C0d-h0Sk.js"></script>
-  <link rel="stylesheet" crossorigin href="/Student-Notation/assets/index-DFWP_V7W.css">
+  <script type="module" crossorigin src="/Student-Notation/assets/index-C7Q2Wb_A.js"></script>
+  <link rel="stylesheet" crossorigin href="/Student-Notation/assets/index-djF4Pq7K.css">
 </head>
 <body>
 <!-- Sidebar for File/App Actions -->
@@ -21,10 +22,10 @@
 <div class="app-title">Student Notation</div>
 </div>
 <div class="sidebar-container">
-<button class="sidebar-button" id="save-as-button" title="Save As"><img src="/Student-Notation/assets/icons/Save As.svg" alt="Save As"><span class="sidebar-button-text">Save As</span></button>
-<button class="sidebar-button" id="import-button" title="Open"><img src="/Student-Notation/assets/icons/Open.svg" alt="Open"><span class="sidebar-button-text">Open</span></button>
-<button class="sidebar-button" id="print-button" title="Print"><img src="/Student-Notation/assets/icons/Print.svg" alt="Print"><span class="sidebar-button-text">Print</span></button>
-<button class="sidebar-button" id="reset-canvas-button" title="New File"><img src="/Student-Notation/assets/icons/New File.svg" alt="New File"><span class="sidebar-button-text">New Page</span></button>
+<button class="sidebar-button" id="save-as-button" title="Save As"><img src="/Student-Notation/assets/Save%20As-DyEXJ3e_.svg" alt="Save As"><span class="sidebar-button-text">Save As</span></button>
+<button class="sidebar-button" id="import-button" title="Open"><img src="/Student-Notation/assets/Open-yWU2irvQ.svg" alt="Open"><span class="sidebar-button-text">Open</span></button>
+<button class="sidebar-button" id="print-button" title="Print"><img src="/Student-Notation/assets/Print-y0OmDKSR.svg" alt="Print"><span class="sidebar-button-text">Print</span></button>
+<button class="sidebar-button" id="reset-canvas-button" title="New File"><img src="/Student-Notation/assets/New%20Page-C3DkqRnq.svg" alt="New Page"><span class="sidebar-button-text">New Page</span></button>
 </div>
 </div>
 <div id="app-container">
@@ -82,23 +83,48 @@
         <div class="tab-content">
             <!-- Timbre Tab -->
             <div class="tab-panel active" id="timbre-panel">
-                <div class="control-section preset-container">
-                    <div class="preset-grid" id="preset-buttons">
-                        <div class="preset-column">
-                            <button class="preset-button" id="preset-sine">Sine</button>
-                            <button class="preset-button" id="preset-triangle">Triangle</button>
-                            <button class="preset-button" id="preset-square">Square</button>
-                            <button class="preset-button" id="preset-sawtooth">Sawtooth</button>
+                <div class="control-section preset-effects-container">
+                    <div class="preset-effects-tabs">
+                        <button class="preset-tab-button active" data-preset-tab="presets">Presets</button>
+                        <button class="preset-tab-button" data-preset-tab="effects">Effects</button>
+                    </div>
+                    <div class="preset-effects-content">
+                        <div class="preset-tab-panel active" id="presets-panel">
+                            <div class="preset-content-box">
+                                <div class="preset-grid" id="preset-buttons">
+                                    <div class="preset-column">
+                                        <button class="preset-button" id="preset-sine">Sine</button>
+                                        <button class="preset-button" id="preset-triangle">Triangle</button>
+                                        <button class="preset-button" id="preset-square">Square</button>
+                                        <button class="preset-button" id="preset-sawtooth">Sawtooth</button>
+                                    </div>
+                                    <div class="preset-column">
+                                        <button class="preset-button" id="preset-piano">Piano</button>
+                                        <button class="preset-button" id="preset-marimba">Marimba</button>
+                                        <button class="preset-button" id="preset-woodwind">Woodwind</button>
+                                        <button class="preset-button" id="preset-strings">Strings</button>
+                                    </div>
+                                    <div class="preset-column">
+                                        <button class="preset-button" id="preset-trapezium">Trapezium</button>
+                                        <button class="preset-button" id="preset-impulse">Impulse</button>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                        <div class="preset-column">
-                            <button class="preset-button" id="preset-piano">Piano</button>
-                            <button class="preset-button" id="preset-marimba">Marimba</button>
-                            <button class="preset-button" id="preset-woodwind">Woodwind</button>
-                            <button class="preset-button" id="preset-strings">Strings</button>
-                        </div>
-                        <div class="preset-column">
-                            <button class="preset-button" id="preset-trapezium">Trapezium</button>
-                            <button class="preset-button" id="preset-impulse">Impulse</button>
+                        <div class="preset-tab-panel" id="effects-panel">
+                            <div class="effects-content-box">
+                                <div class="effects-grid">
+                                    <button class="effect-button" data-effect="reverb">Reverb</button>
+                                    <button class="effect-button" data-effect="delay">Delay</button>
+                                    <button class="effect-button" data-effect="phaser">Phaser</button>
+                                    <button class="effect-button" data-effect="vibratio">Vibrato</button>
+                                    <button class="effect-button" data-effect="tremelo">Tremolo</button>
+                                    <button class="effect-button" data-effect="portamento">Portamento</button>
+                                </div>
+                                <div class="effect-controls-container" id="effect-controls">
+                                    <!-- Effect controls will be dynamically inserted here -->
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -126,51 +152,76 @@
             <!-- Pitch Tab -->
             <div class="tab-panel" id="pitch-panel">
                 <div class="control-section">
-                    <h4>Accidentals</h4>
                     <div id="accidental-controls-container-v2">
                         <button id="flat-toggle-btn" class="accidental-button active" aria-pressed="true">♭</button>
                         <button id="sharp-toggle-btn" class="accidental-button active" aria-pressed="true">♯</button>
                     </div>
                 </div>
                 <div class="control-section tonic-sign-container">
-                    <h4>Tonic & Key</h4>
+                    <h4>Tonal Center</h4>
                     <div class="tonic-tools-wrapper">
                        <div id="tonic-dropdown-container" class="dropdown-container">
-                           <button id="tonic-dropdown-button" class="toolkit-button tonic-dropdown-toggle"><span id="tonic-dropdown-label"><img src="/Student-Notation/assets/icons/tonicShape_1.svg" alt="Tonic 1" class="tonic-shape-icon"></span> <span class="dropdown-arrow">▼</span></button>
+                           <button id="tonic-dropdown-button" class="toolkit-button tonic-dropdown-toggle"><span id="tonic-dropdown-label"><img src="data:image/svg+xml,%3csvg%20xmlns='http://www.w3.org/2000/svg'%20xmlns:xlink='http://www.w3.org/1999/xlink'%20width='175'%20zoomAndPan='magnify'%20viewBox='0%200%20131.25%20143.999998'%20height='192'%20preserveAspectRatio='xMidYMid%20meet'%20version='1.2'%3e%3cdefs%3e%3cclipPath%20id='456e80bb30'%3e%3cpath%20d='M%2017.898438%2024.675781%20L%20111.859375%2024.675781%20L%20111.859375%20118.640625%20L%2017.898438%20118.640625%20Z%20M%2017.898438%2024.675781%20'/%3e%3c/clipPath%3e%3cclipPath%20id='87c9148330'%3e%3cpath%20d='M%2064.878906%2024.675781%20C%2038.933594%2024.675781%2017.898438%2045.710938%2017.898438%2071.660156%20C%2017.898438%2097.605469%2038.933594%20118.640625%2064.878906%20118.640625%20C%2090.828125%20118.640625%20111.859375%2097.605469%20111.859375%2071.660156%20C%20111.859375%2045.710938%2090.828125%2024.675781%2064.878906%2024.675781%20Z%20M%2064.878906%2024.675781%20'/%3e%3c/clipPath%3e%3c/defs%3e%3cg%20id='d7032f28cc'%3e%3cg%20clip-rule='nonzero'%20clip-path='url(%23456e80bb30)'%3e%3cg%20clip-rule='nonzero'%20clip-path='url(%2387c9148330)'%3e%3cpath%20style='fill:none;stroke-width:8;stroke-linecap:butt;stroke-linejoin:miter;stroke:%23000000;stroke-opacity:1;stroke-miterlimit:4;'%20d='M%2063.093277%20-0.00202662%20C%2028.250074%20-0.00202662%200.0009548%2028.247092%200.0009548%2063.095541%20C%200.0009548%2097.938745%2028.250074%20126.187864%2063.093277%20126.187864%20C%2097.941726%20126.187864%20126.185599%2097.938745%20126.185599%2063.095541%20C%20126.185599%2028.247092%2097.941726%20-0.00202662%2063.093277%20-0.00202662%20Z%20M%2063.093277%20-0.00202662%20'%20transform='matrix(0.744631,0,0,0.744631,17.897727,24.67729)'/%3e%3c/g%3e%3c/g%3e%3cg%20style='fill:%23000000;fill-opacity:1;'%3e%3cg%20transform='translate(44.895794,%20101.083803)'%3e%3cpath%20style='stroke:none'%20d='M%2017.8125%200%20L%2017.8125%20-40.09375%20L%204.203125%20-40.09375%20L%204.203125%20-51.09375%20C%207.367188%20-51.09375%209.992188%20-51.253906%2012.078125%20-51.578125%20C%2014.171875%20-51.910156%2015.914062%20-52.6875%2017.3125%20-53.90625%20C%2018.71875%20-55.132812%2019.957031%20-57.09375%2021.03125%20-59.78125%20L%2031.3125%20-59.78125%20L%2031.3125%200%20Z%20M%2017.8125%200%20'/%3e%3c/g%3e%3c/g%3e%3c/g%3e%3c/svg%3e" alt="Tonic 1" class="tonic-shape-icon"> Major</span> <span class="dropdown-arrow">▼</span></button>
                            <div id="tonic-dropdown-menu" class="dropdown-menu">
-                               <button class="tonic-sign-button" data-tonic="1"><img src="/Student-Notation/assets/icons/tonicShape_1.svg" alt="Tonic 1" class="tonic-shape-icon"><span class="mode-label">Major</span></button>
-                               <button class="tonic-sign-button" data-tonic="2"><img src="/Student-Notation/assets/icons/tonicShape_2.svg" alt="Tonic 2" class="tonic-shape-icon"><span class="mode-label">Dorian</span></button>
-                               <button class="tonic-sign-button" data-tonic="3"><img src="/Student-Notation/assets/icons/tonicShape_3.svg" alt="Tonic 3" class="tonic-shape-icon"><span class="mode-label">Phrygian</span></button>
-                               <button class="tonic-sign-button" data-tonic="4"><img src="/Student-Notation/assets/icons/tonicShape_4.svg" alt="Tonic 4" class="tonic-shape-icon"><span class="mode-label">Lydian</span></button>
-                               <button class="tonic-sign-button" data-tonic="5"><img src="/Student-Notation/assets/icons/tonicShape_5.svg" alt="Tonic 5" class="tonic-shape-icon"><span class="mode-label">Mixolydian</span></button>
-                               <button class="tonic-sign-button" data-tonic="6"><img src="/Student-Notation/assets/icons/tonicShape_6.svg" alt="Tonic 6" class="tonic-shape-icon"><span class="mode-label">Aeolian</span></button>
-                               <button class="tonic-sign-button" data-tonic="7"><img src="/Student-Notation/assets/icons/tonicShape_7.svg" alt="Tonic 7" class="tonic-shape-icon"><span class="mode-label">Locrian</span></button>
+                               <button class="tonic-sign-button" data-tonic="1"><img src="data:image/svg+xml,%3csvg%20xmlns='http://www.w3.org/2000/svg'%20xmlns:xlink='http://www.w3.org/1999/xlink'%20width='175'%20zoomAndPan='magnify'%20viewBox='0%200%20131.25%20143.999998'%20height='192'%20preserveAspectRatio='xMidYMid%20meet'%20version='1.2'%3e%3cdefs%3e%3cclipPath%20id='456e80bb30'%3e%3cpath%20d='M%2017.898438%2024.675781%20L%20111.859375%2024.675781%20L%20111.859375%20118.640625%20L%2017.898438%20118.640625%20Z%20M%2017.898438%2024.675781%20'/%3e%3c/clipPath%3e%3cclipPath%20id='87c9148330'%3e%3cpath%20d='M%2064.878906%2024.675781%20C%2038.933594%2024.675781%2017.898438%2045.710938%2017.898438%2071.660156%20C%2017.898438%2097.605469%2038.933594%20118.640625%2064.878906%20118.640625%20C%2090.828125%20118.640625%20111.859375%2097.605469%20111.859375%2071.660156%20C%20111.859375%2045.710938%2090.828125%2024.675781%2064.878906%2024.675781%20Z%20M%2064.878906%2024.675781%20'/%3e%3c/clipPath%3e%3c/defs%3e%3cg%20id='d7032f28cc'%3e%3cg%20clip-rule='nonzero'%20clip-path='url(%23456e80bb30)'%3e%3cg%20clip-rule='nonzero'%20clip-path='url(%2387c9148330)'%3e%3cpath%20style='fill:none;stroke-width:8;stroke-linecap:butt;stroke-linejoin:miter;stroke:%23000000;stroke-opacity:1;stroke-miterlimit:4;'%20d='M%2063.093277%20-0.00202662%20C%2028.250074%20-0.00202662%200.0009548%2028.247092%200.0009548%2063.095541%20C%200.0009548%2097.938745%2028.250074%20126.187864%2063.093277%20126.187864%20C%2097.941726%20126.187864%20126.185599%2097.938745%20126.185599%2063.095541%20C%20126.185599%2028.247092%2097.941726%20-0.00202662%2063.093277%20-0.00202662%20Z%20M%2063.093277%20-0.00202662%20'%20transform='matrix(0.744631,0,0,0.744631,17.897727,24.67729)'/%3e%3c/g%3e%3c/g%3e%3cg%20style='fill:%23000000;fill-opacity:1;'%3e%3cg%20transform='translate(44.895794,%20101.083803)'%3e%3cpath%20style='stroke:none'%20d='M%2017.8125%200%20L%2017.8125%20-40.09375%20L%204.203125%20-40.09375%20L%204.203125%20-51.09375%20C%207.367188%20-51.09375%209.992188%20-51.253906%2012.078125%20-51.578125%20C%2014.171875%20-51.910156%2015.914062%20-52.6875%2017.3125%20-53.90625%20C%2018.71875%20-55.132812%2019.957031%20-57.09375%2021.03125%20-59.78125%20L%2031.3125%20-59.78125%20L%2031.3125%200%20Z%20M%2017.8125%200%20'/%3e%3c/g%3e%3c/g%3e%3c/g%3e%3c/svg%3e" alt="Tonic 1" class="tonic-shape-icon"><span class="mode-label">Major</span></button>
+                               <button class="tonic-sign-button" data-tonic="2"><img src="data:image/svg+xml,%3csvg%20xmlns='http://www.w3.org/2000/svg'%20xmlns:xlink='http://www.w3.org/1999/xlink'%20width='175'%20zoomAndPan='magnify'%20viewBox='0%200%20131.25%20143.999998'%20height='192'%20preserveAspectRatio='xMidYMid%20meet'%20version='1.2'%3e%3cdefs%3e%3cclipPath%20id='af2f53afe5'%3e%3cpath%20d='M%2017.898438%2024.566406%20L%20111.859375%2024.566406%20L%20111.859375%20118.527344%20L%2017.898438%20118.527344%20Z%20M%2017.898438%2024.566406%20'/%3e%3c/clipPath%3e%3cclipPath%20id='c8dd529e93'%3e%3cpath%20d='M%2064.878906%2024.566406%20C%2038.933594%2024.566406%2017.898438%2045.601562%2017.898438%2071.546875%20C%2017.898438%2097.496094%2038.933594%20118.527344%2064.878906%20118.527344%20C%2090.828125%20118.527344%20111.859375%2097.496094%20111.859375%2071.546875%20C%20111.859375%2045.601562%2090.828125%2024.566406%2064.878906%2024.566406%20Z%20M%2064.878906%2024.566406%20'/%3e%3c/clipPath%3e%3c/defs%3e%3cg%20id='4829c2bf70'%3e%3cg%20clip-rule='nonzero'%20clip-path='url(%23af2f53afe5)'%3e%3cg%20clip-rule='nonzero'%20clip-path='url(%23c8dd529e93)'%3e%3cpath%20style='fill:none;stroke-width:8;stroke-linecap:butt;stroke-linejoin:miter;stroke:%23000000;stroke-opacity:1;stroke-miterlimit:4;'%20d='M%2063.093277%200.00130943%20C%2028.250074%200.00130943%200.0009548%2028.250428%200.0009548%2063.093632%20C%200.0009548%2097.942081%2028.250074%20126.185954%2063.093277%20126.185954%20C%2097.941726%20126.185954%20126.185599%2097.942081%20126.185599%2063.093632%20C%20126.185599%2028.250428%2097.941726%200.00130943%2063.093277%200.00130943%20Z%20M%2063.093277%200.00130943%20'%20transform='matrix(0.744631,0,0,0.744631,17.897727,24.565431)'/%3e%3c/g%3e%3c/g%3e%3cg%20style='fill:%23000000;fill-opacity:1;'%3e%3cg%20transform='translate(38.720147,%20101.083803)'%3e%3cpath%20style='stroke:none'%20d='M%203.046875%200%20L%203.046875%20-11.1875%20C%2010.921875%20-16.726562%2017.179688%20-21.421875%2021.828125%20-25.265625%20C%2026.484375%20-29.117188%2029.835938%20-32.507812%2031.890625%20-35.4375%20C%2033.953125%20-38.363281%2034.984375%20-41.109375%2034.984375%20-43.671875%20C%2034.984375%20-45.992188%2034.160156%20-47.75%2032.515625%20-48.9375%20C%2030.878906%20-50.132812%2028.957031%20-50.734375%2026.75%20-50.734375%20C%2024.90625%20-50.734375%2023.085938%20-50.210938%2021.296875%20-49.171875%20C%2019.503906%20-48.128906%2018.28125%20-46.207031%2017.625%20-43.40625%20L%205.28125%20-47.875%20C%206.894531%20-52.050781%209.664062%20-55.253906%2013.59375%20-57.484375%20C%2017.53125%20-59.722656%2022.125%20-60.84375%2027.375%20-60.84375%20C%2031.4375%20-60.84375%2035.078125%20-60.171875%2038.296875%20-58.828125%20C%2041.515625%20-57.492188%2044.046875%20-55.523438%2045.890625%20-52.921875%20C%2047.742188%20-50.328125%2048.671875%20-47.15625%2048.671875%20-43.40625%20C%2048.671875%20-37.375%2046.148438%20-31.773438%2041.109375%20-26.609375%20C%2036.078125%20-21.453125%2029.175781%20-16.3125%2020.40625%20-11.1875%20L%2048.953125%20-11.1875%20L%2048.953125%200%20Z%20M%203.046875%200%20'/%3e%3c/g%3e%3c/g%3e%3c/g%3e%3c/svg%3e" alt="Tonic 2" class="tonic-shape-icon"><span class="mode-label">Dorian</span></button>
+                               <button class="tonic-sign-button" data-tonic="3"><img src="data:image/svg+xml,%3csvg%20xmlns='http://www.w3.org/2000/svg'%20xmlns:xlink='http://www.w3.org/1999/xlink'%20width='175'%20zoomAndPan='magnify'%20viewBox='0%200%20131.25%20143.999998'%20height='192'%20preserveAspectRatio='xMidYMid%20meet'%20version='1.2'%3e%3cdefs%3e%3cclipPath%20id='0551ece328'%3e%3cpath%20d='M%2017.898438%2024.675781%20L%20111.859375%2024.675781%20L%20111.859375%20118.640625%20L%2017.898438%20118.640625%20Z%20M%2017.898438%2024.675781%20'/%3e%3c/clipPath%3e%3cclipPath%20id='073daee785'%3e%3cpath%20d='M%2064.878906%2024.675781%20C%2038.933594%2024.675781%2017.898438%2045.710938%2017.898438%2071.660156%20C%2017.898438%2097.605469%2038.933594%20118.640625%2064.878906%20118.640625%20C%2090.828125%20118.640625%20111.859375%2097.605469%20111.859375%2071.660156%20C%20111.859375%2045.710938%2090.828125%2024.675781%2064.878906%2024.675781%20Z%20M%2064.878906%2024.675781%20'/%3e%3c/clipPath%3e%3c/defs%3e%3cg%20id='04a7d7f831'%3e%3cg%20clip-rule='nonzero'%20clip-path='url(%230551ece328)'%3e%3cg%20clip-rule='nonzero'%20clip-path='url(%23073daee785)'%3e%3cpath%20style='fill:none;stroke-width:8;stroke-linecap:butt;stroke-linejoin:miter;stroke:%23000000;stroke-opacity:1;stroke-miterlimit:4;'%20d='M%2063.093277%20-0.00202662%20C%2028.250074%20-0.00202662%200.0009548%2028.247092%200.0009548%2063.095541%20C%200.0009548%2097.938745%2028.250074%20126.187864%2063.093277%20126.187864%20C%2097.941726%20126.187864%20126.185599%2097.938745%20126.185599%2063.095541%20C%20126.185599%2028.247092%2097.941726%20-0.00202662%2063.093277%20-0.00202662%20Z%20M%2063.093277%20-0.00202662%20'%20transform='matrix(0.744631,0,0,0.744631,17.897727,24.67729)'/%3e%3c/g%3e%3c/g%3e%3cg%20style='fill:%23000000;fill-opacity:1;'%3e%3cg%20transform='translate(37.869539,%20101.083803)'%3e%3cpath%20style='stroke:none'%20d='M%2026.046875%201.078125%20C%2022.703125%201.078125%2019.492188%200.597656%2016.421875%20-0.359375%20C%2013.347656%20-1.316406%2010.644531%20-2.789062%208.3125%20-4.78125%20C%205.988281%20-6.78125%204.203125%20-9.363281%202.953125%20-12.53125%20L%2015.296875%20-17%20C%2016.078125%20-14.082031%2017.507812%20-12.023438%2019.59375%20-10.828125%20C%2021.6875%20-9.628906%2023.953125%20-9.03125%2026.390625%20-9.03125%20C%2029.203125%20-9.03125%2031.441406%20-9.71875%2033.109375%20-11.09375%20C%2034.773438%20-12.46875%2035.609375%20-14.378906%2035.609375%20-16.828125%20C%2035.609375%20-19.265625%2034.832031%20-21.15625%2033.28125%20-22.5%20C%2031.738281%20-23.84375%2029.695312%20-24.769531%2027.15625%20-25.28125%20C%2024.625%20-25.789062%2021.863281%20-26.046875%2018.875%20-26.046875%20L%2018.875%20-35.53125%20C%2024.007812%20-35.53125%2027.960938%20-36.242188%2030.734375%20-37.671875%20C%2033.515625%20-39.109375%2034.90625%20-41.140625%2034.90625%20-43.765625%20C%2034.90625%20-46.085938%2033.960938%20-47.828125%2032.078125%20-48.984375%20C%2030.203125%20-50.148438%2028.039062%20-50.734375%2025.59375%20-50.734375%20C%2023.382812%20-50.734375%2021.351562%20-50.195312%2019.5%20-49.125%20C%2017.65625%20-48.050781%2016.4375%20-46.144531%2015.84375%20-43.40625%20L%203.578125%20-47.875%20C%204.773438%20-50.914062%206.535156%20-53.390625%208.859375%20-55.296875%20C%2011.179688%20-57.210938%2013.863281%20-58.613281%2016.90625%20-59.5%20C%2019.945312%20-60.394531%2023.109375%20-60.84375%2026.390625%20-60.84375%20C%2029.140625%20-60.84375%2031.828125%20-60.546875%2034.453125%20-59.953125%20C%2037.078125%20-59.359375%2039.445312%20-58.421875%2041.5625%20-57.140625%20C%2043.6875%20-55.859375%2045.390625%20-54.242188%2046.671875%20-52.296875%20C%2047.953125%20-50.359375%2048.59375%20-48.050781%2048.59375%20-45.375%20C%2048.59375%20-42.144531%2047.726562%20-39.320312%2046%20-36.90625%20C%2044.269531%20-34.488281%2042.359375%20-32.6875%2040.265625%20-31.5%20C%2042.234375%20-30.78125%2043.914062%20-29.644531%2045.3125%20-28.09375%20C%2046.71875%20-26.539062%2047.78125%20-24.835938%2048.5%20-22.984375%20C%2049.21875%20-21.140625%2049.578125%20-19.296875%2049.578125%20-17.453125%20C%2049.578125%20-13.273438%2048.472656%20-9.828125%2046.265625%20-7.109375%20C%2044.054688%20-4.398438%2041.160156%20-2.359375%2037.578125%20-0.984375%20C%2034.003906%200.390625%2030.160156%201.078125%2026.046875%201.078125%20Z%20M%2026.046875%201.078125%20'/%3e%3c/g%3e%3c/g%3e%3c/g%3e%3c/svg%3e" alt="Tonic 3" class="tonic-shape-icon"><span class="mode-label">Phrygian</span></button>
+                               <button class="tonic-sign-button" data-tonic="4"><img src="data:image/svg+xml,%3csvg%20xmlns='http://www.w3.org/2000/svg'%20xmlns:xlink='http://www.w3.org/1999/xlink'%20width='175'%20zoomAndPan='magnify'%20viewBox='0%200%20131.25%20143.999998'%20height='192'%20preserveAspectRatio='xMidYMid%20meet'%20version='1.2'%3e%3cdefs%3e%3cclipPath%20id='0f524ef70a'%3e%3cpath%20d='M%2017.898438%2024.675781%20L%20111.859375%2024.675781%20L%20111.859375%20118.640625%20L%2017.898438%20118.640625%20Z%20M%2017.898438%2024.675781%20'/%3e%3c/clipPath%3e%3cclipPath%20id='786a2dceed'%3e%3cpath%20d='M%2064.878906%2024.675781%20C%2038.933594%2024.675781%2017.898438%2045.710938%2017.898438%2071.660156%20C%2017.898438%2097.605469%2038.933594%20118.640625%2064.878906%20118.640625%20C%2090.828125%20118.640625%20111.859375%2097.605469%20111.859375%2071.660156%20C%20111.859375%2045.710938%2090.828125%2024.675781%2064.878906%2024.675781%20Z%20M%2064.878906%2024.675781%20'/%3e%3c/clipPath%3e%3c/defs%3e%3cg%20id='1bb9b822db'%3e%3cg%20clip-rule='nonzero'%20clip-path='url(%230f524ef70a)'%3e%3cg%20clip-rule='nonzero'%20clip-path='url(%23786a2dceed)'%3e%3cpath%20style='fill:none;stroke-width:8;stroke-linecap:butt;stroke-linejoin:miter;stroke:%23000000;stroke-opacity:1;stroke-miterlimit:4;'%20d='M%2063.093277%20-0.00202662%20C%2028.250074%20-0.00202662%200.0009548%2028.247092%200.0009548%2063.095541%20C%200.0009548%2097.938745%2028.250074%20126.187864%2063.093277%20126.187864%20C%2097.941726%20126.187864%20126.185599%2097.938745%20126.185599%2063.095541%20C%20126.185599%2028.247092%2097.941726%20-0.00202662%2063.093277%20-0.00202662%20Z%20M%2063.093277%20-0.00202662%20'%20transform='matrix(0.744631,0,0,0.744631,17.897727,24.67729)'/%3e%3c/g%3e%3c/g%3e%3cg%20style='fill:%23000000;fill-opacity:1;'%3e%3cg%20transform='translate(36.937365,%20101.083803)'%3e%3cpath%20style='stroke:none'%20d='M%2031.140625%200%20L%2031.140625%20-12.625%20L%202.0625%20-12.625%20L%202.0625%20-22.546875%20L%2031.140625%20-59.78125%20L%2044.75%20-59.78125%20L%2044.75%20-24.609375%20L%2052.96875%20-24.609375%20L%2052.96875%20-12.625%20L%2044.75%20-12.625%20L%2044.75%200%20Z%20M%2016.828125%20-24.609375%20L%2031.140625%20-24.609375%20L%2031.140625%20-41.96875%20Z%20M%2016.828125%20-24.609375%20'/%3e%3c/g%3e%3c/g%3e%3c/g%3e%3c/svg%3e" alt="Tonic 4" class="tonic-shape-icon"><span class="mode-label">Lydian</span></button>
+                               <button class="tonic-sign-button" data-tonic="5"><img src="data:image/svg+xml,%3csvg%20xmlns='http://www.w3.org/2000/svg'%20xmlns:xlink='http://www.w3.org/1999/xlink'%20width='175'%20zoomAndPan='magnify'%20viewBox='0%200%20131.25%20143.999998'%20height='192'%20preserveAspectRatio='xMidYMid%20meet'%20version='1.2'%3e%3cdefs%3e%3cclipPath%20id='0d82974cc8'%3e%3cpath%20d='M%2017.898438%2024.789062%20L%20111.859375%2024.789062%20L%20111.859375%20118.753906%20L%2017.898438%20118.753906%20Z%20M%2017.898438%2024.789062%20'/%3e%3c/clipPath%3e%3cclipPath%20id='37694f020a'%3e%3cpath%20d='M%2064.878906%2024.789062%20C%2038.933594%2024.789062%2017.898438%2045.824219%2017.898438%2071.769531%20C%2017.898438%2097.71875%2038.933594%20118.753906%2064.878906%20118.753906%20C%2090.828125%20118.753906%20111.859375%2097.71875%20111.859375%2071.769531%20C%20111.859375%2045.824219%2090.828125%2024.789062%2064.878906%2024.789062%20Z%20M%2064.878906%2024.789062%20'/%3e%3c/clipPath%3e%3c/defs%3e%3cg%20id='22003a5ccc'%3e%3cg%20clip-rule='nonzero'%20clip-path='url(%230d82974cc8)'%3e%3cg%20clip-rule='nonzero'%20clip-path='url(%2337694f020a)'%3e%3cpath%20style='fill:none;stroke-width:8;stroke-linecap:butt;stroke-linejoin:miter;stroke:%23000000;stroke-opacity:1;stroke-miterlimit:4;'%20d='M%2063.093277%20-0.000119013%20C%2028.250074%20-0.000119013%200.0009548%2028.249%200.0009548%2063.092203%20C%200.0009548%2097.940652%2028.250074%20126.189771%2063.093277%20126.189771%20C%2097.941726%20126.189771%20126.185599%2097.940652%20126.185599%2063.092203%20C%20126.185599%2028.249%2097.941726%20-0.000119013%2063.093277%20-0.000119013%20Z%20M%2063.093277%20-0.000119013%20'%20transform='matrix(0.744631,0,0,0.744631,17.897727,24.789151)'/%3e%3c/g%3e%3c/g%3e%3cg%20style='fill:%23000000;fill-opacity:1;'%3e%3cg%20transform='translate(37.55493,%20101.083803)'%3e%3cpath%20style='stroke:none'%20d='M%2026.390625%201.078125%20C%2021.203125%201.078125%2016.59375%20-0.0664062%2012.5625%20-2.359375%20C%208.539062%20-4.660156%205.578125%20-8.019531%203.671875%20-12.4375%20L%2015.484375%20-16.734375%20C%2016.316406%20-13.804688%2017.671875%20-11.789062%2019.546875%20-10.6875%20C%2021.429688%20-9.582031%2023.476562%20-9.03125%2025.6875%20-9.03125%20C%2028.84375%20-9.03125%2031.4375%20-9.957031%2033.46875%20-11.8125%20C%2035.5%20-13.664062%2036.515625%20-16.320312%2036.515625%20-19.78125%20C%2036.515625%20-23.476562%2035.453125%20-26.191406%2033.328125%20-27.921875%20C%2031.210938%20-29.648438%2028.753906%20-30.515625%2025.953125%20-30.515625%20C%2021.535156%20-30.515625%2018.253906%20-28.578125%2016.109375%20-24.703125%20L%204.03125%20-29.171875%20L%207.78125%20-59.78125%20L%2047.78125%20-59.78125%20L%2047.78125%20-48.671875%20L%2019.0625%20-48.671875%20L%2017.71875%20-37.5%20C%2019.09375%20-38.507812%2020.894531%20-39.28125%2023.125%20-39.8125%20C%2025.363281%20-40.351562%2027.53125%20-40.625%2029.625%20-40.625%20C%2033.195312%20-40.625%2036.578125%20-39.847656%2039.765625%20-38.296875%20C%2042.960938%20-36.742188%2045.5625%20-34.429688%2047.5625%20-31.359375%20C%2049.5625%20-28.285156%2050.5625%20-24.425781%2050.5625%20-19.78125%20C%2050.5625%20-15.238281%2049.441406%20-11.414062%2047.203125%20-8.3125%20C%2044.960938%20-5.21875%2042.007812%20-2.878906%2038.34375%20-1.296875%20C%2034.675781%200.285156%2030.691406%201.078125%2026.390625%201.078125%20Z%20M%2026.390625%201.078125%20'/%3e%3c/g%3e%3c/g%3e%3c/g%3e%3c/svg%3e" alt="Tonic 5" class="tonic-shape-icon"><span class="mode-label">Mixolydian</span></button>
+                               <button class="tonic-sign-button" data-tonic="6"><img src="data:image/svg+xml,%3csvg%20xmlns='http://www.w3.org/2000/svg'%20xmlns:xlink='http://www.w3.org/1999/xlink'%20width='175'%20zoomAndPan='magnify'%20viewBox='0%200%20131.25%20143.999998'%20height='192'%20preserveAspectRatio='xMidYMid%20meet'%20version='1.2'%3e%3cdefs%3e%3cclipPath%20id='2a134d5da5'%3e%3cpath%20d='M%2017.898438%2024.675781%20L%20111.859375%2024.675781%20L%20111.859375%20118.640625%20L%2017.898438%20118.640625%20Z%20M%2017.898438%2024.675781%20'/%3e%3c/clipPath%3e%3cclipPath%20id='1436cb12ac'%3e%3cpath%20d='M%2064.878906%2024.675781%20C%2038.933594%2024.675781%2017.898438%2045.710938%2017.898438%2071.660156%20C%2017.898438%2097.605469%2038.933594%20118.640625%2064.878906%20118.640625%20C%2090.828125%20118.640625%20111.859375%2097.605469%20111.859375%2071.660156%20C%20111.859375%2045.710938%2090.828125%2024.675781%2064.878906%2024.675781%20Z%20M%2064.878906%2024.675781%20'/%3e%3c/clipPath%3e%3c/defs%3e%3cg%20id='0d388df51e'%3e%3cg%20clip-rule='nonzero'%20clip-path='url(%232a134d5da5)'%3e%3cg%20clip-rule='nonzero'%20clip-path='url(%231436cb12ac)'%3e%3cpath%20style='fill:none;stroke-width:8;stroke-linecap:butt;stroke-linejoin:miter;stroke:%23000000;stroke-opacity:1;stroke-miterlimit:4;'%20d='M%2063.093277%20-0.00202662%20C%2028.250074%20-0.00202662%200.0009548%2028.247092%200.0009548%2063.095541%20C%200.0009548%2097.938745%2028.250074%20126.187864%2063.093277%20126.187864%20C%2097.941726%20126.187864%20126.185599%2097.938745%20126.185599%2063.095541%20C%20126.185599%2028.247092%2097.941726%20-0.00202662%2063.093277%20-0.00202662%20Z%20M%2063.093277%20-0.00202662%20'%20transform='matrix(0.744631,0,0,0.744631,17.897727,24.67729)'/%3e%3c/g%3e%3c/g%3e%3cg%20style='fill:%23000000;fill-opacity:1;'%3e%3cg%20transform='translate(36.669365,%20101.083803)'%3e%3cpath%20style='stroke:none'%20d='M%2028.71875%201.078125%20C%2023%201.078125%2018.363281%20-0.113281%2014.8125%20-2.5%20C%2011.257812%20-4.882812%208.660156%20-8.222656%207.015625%20-12.515625%20C%205.378906%20-16.816406%204.5625%20-21.769531%204.5625%20-27.375%20C%204.5625%20-31.675781%205.035156%20-35.820312%205.984375%20-39.8125%20C%206.941406%20-43.8125%208.453125%20-47.390625%2010.515625%20-50.546875%20C%2012.578125%20-53.710938%2015.242188%20-56.21875%2018.515625%20-58.0625%20C%2021.796875%20-59.914062%2025.765625%20-60.84375%2030.421875%20-60.84375%20C%2034.953125%20-60.84375%2038.738281%20-60.050781%2041.78125%20-58.46875%20C%2044.832031%20-56.894531%2047.128906%20-54.796875%2048.671875%20-52.171875%20L%2036.515625%20-47.78125%20C%2035.910156%20-48.800781%2034.984375%20-49.59375%2033.734375%20-50.15625%20C%2032.484375%20-50.71875%2031.082031%20-51%2029.53125%20-51%20C%2026.363281%20-51%2023.78125%20-49.789062%2021.78125%20-47.375%20C%2019.789062%20-44.96875%2018.796875%20-41.195312%2018.796875%20-36.0625%20C%2020.285156%20-37.4375%2022.054688%20-38.507812%2024.109375%20-39.28125%20C%2026.171875%20-40.0625%2028.664062%20-40.453125%2031.59375%20-40.453125%20C%2035.113281%20-40.453125%2038.40625%20-39.628906%2041.46875%20-37.984375%20C%2044.539062%20-36.347656%2047.015625%20-34.019531%2048.890625%20-31%20C%2050.773438%20-27.988281%2051.71875%20-24.425781%2051.71875%20-20.3125%20C%2051.71875%20-16.195312%2050.734375%20-12.523438%2048.765625%20-9.296875%20C%2046.796875%20-6.078125%2044.082031%20-3.539062%2040.625%20-1.6875%20C%2037.164062%200.15625%2033.195312%201.078125%2028.71875%201.078125%20Z%20M%2028.640625%20-9.03125%20C%2031.554688%20-9.03125%2033.847656%20-10%2035.515625%20-11.9375%20C%2037.191406%20-13.882812%2038.03125%20-16.4375%2038.03125%20-19.59375%20C%2038.03125%20-22.757812%2037.191406%20-25.328125%2035.515625%20-27.296875%20C%2033.847656%20-29.265625%2031.523438%20-30.25%2028.546875%20-30.25%20C%2025.679688%20-30.25%2023.367188%20-29.289062%2021.609375%20-27.375%20C%2019.847656%20-25.46875%2018.96875%20-22.90625%2018.96875%20-19.6875%20C%2018.96875%20-16.46875%2019.847656%20-13.882812%2021.609375%20-11.9375%20C%2023.367188%20-10%2025.710938%20-9.03125%2028.640625%20-9.03125%20Z%20M%2028.640625%20-9.03125%20'/%3e%3c/g%3e%3c/g%3e%3c/g%3e%3c/svg%3e" alt="Tonic 6" class="tonic-shape-icon"><span class="mode-label">Minor</span></button>
+                               <button class="tonic-sign-button" data-tonic="7"><img src="data:image/svg+xml,%3csvg%20xmlns='http://www.w3.org/2000/svg'%20xmlns:xlink='http://www.w3.org/1999/xlink'%20width='175'%20zoomAndPan='magnify'%20viewBox='0%200%20131.25%20143.999998'%20height='192'%20preserveAspectRatio='xMidYMid%20meet'%20version='1.2'%3e%3cdefs%3e%3cclipPath%20id='d5d49c9923'%3e%3cpath%20d='M%2017.898438%2024.675781%20L%20111.859375%2024.675781%20L%20111.859375%20118.640625%20L%2017.898438%20118.640625%20Z%20M%2017.898438%2024.675781%20'/%3e%3c/clipPath%3e%3cclipPath%20id='0ef729529e'%3e%3cpath%20d='M%2064.878906%2024.675781%20C%2038.933594%2024.675781%2017.898438%2045.710938%2017.898438%2071.660156%20C%2017.898438%2097.605469%2038.933594%20118.640625%2064.878906%20118.640625%20C%2090.828125%20118.640625%20111.859375%2097.605469%20111.859375%2071.660156%20C%20111.859375%2045.710938%2090.828125%2024.675781%2064.878906%2024.675781%20Z%20M%2064.878906%2024.675781%20'/%3e%3c/clipPath%3e%3c/defs%3e%3cg%20id='926e811c6f'%3e%3cg%20clip-rule='nonzero'%20clip-path='url(%23d5d49c9923)'%3e%3cg%20clip-rule='nonzero'%20clip-path='url(%230ef729529e)'%3e%3cpath%20style='fill:none;stroke-width:8;stroke-linecap:butt;stroke-linejoin:miter;stroke:%23000000;stroke-opacity:1;stroke-miterlimit:4;'%20d='M%2063.093277%20-0.00202662%20C%2028.250074%20-0.00202662%200.0009548%2028.247092%200.0009548%2063.095541%20C%200.0009548%2097.938745%2028.250074%20126.187864%2063.093277%20126.187864%20C%2097.941726%20126.187864%20126.185599%2097.938745%20126.185599%2063.095541%20C%20126.185599%2028.247092%2097.941726%20-0.00202662%2063.093277%20-0.00202662%20Z%20M%2063.093277%20-0.00202662%20'%20transform='matrix(0.744631,0,0,0.744631,17.897727,24.67729)'/%3e%3c/g%3e%3c/g%3e%3cg%20style='fill:%23000000;fill-opacity:1;'%3e%3cg%20transform='translate(40.642754,%20101.083803)'%3e%3cpath%20style='stroke:none'%20d='M%207.421875%200%20L%2031.671875%20-48.59375%20L%201.34375%20-48.59375%20L%201.34375%20-59.78125%20L%2046.078125%20-59.78125%20L%2046.078125%20-48.59375%20L%2023.09375%200%20Z%20M%207.421875%200%20'/%3e%3c/g%3e%3c/g%3e%3c/g%3e%3c/svg%3e" alt="Tonic 7" class="tonic-shape-icon"><span class="mode-label">Locrian</span></button>
                            </div>
                        </div>
                     </div>
                 </div>
                 <div class="control-section">
-                    <h4>Scale Degrees</h4>
-                    <div id="degree-dropdown-wrapper" class="degree-toggle-container dropdown-container">
-                        <button id="degree-dropdown-button" class="toolkit-button degree-dropdown-toggle">Degrees <span class="dropdown-arrow">▼</span></button>
-                        <div id="degree-dropdown-menu" class="dropdown-menu"><button id="toggle-diatonic-degrees" class="toolkit-button">Scale</button><button id="toggle-modal-degrees" class="toolkit-button">Mode</button></div>
+                    <div class="degree-toggle-container">
+                        <button id="degree-visibility-toggle" class="toolkit-button degree-visibility-toggle">Hide</button>
+                        <button id="degree-mode-toggle" class="toolkit-button degree-mode-toggle">Scale Degrees</button>
                     </div>
                 </div>
-                <div class="control-section" id="chordShape-container">
-                    <h4>Chord Shape</h4>
-                    <div class="harmony-preset-grid">
-                        <button class="harmony-preset-button">X</button>
-                        <button class="harmony-preset-button">x</button>
-                        <button class="harmony-preset-button">x°</button>
-                        <button class="harmony-preset-button">X+</button>
-                        <button class="harmony-preset-button">X7</button>
-                        <button class="harmony-preset-button">x⁷</button>
-                        <button class="harmony-preset-button">ø⁷</button>
-                        <button class="harmony-preset-button">Xadd6</button>
-                        <button class="harmony-preset-button">Xsus4</button>
-                        <button class="harmony-preset-button">Xsus2</button>
-                        <button class="harmony-preset-button">Xmaj7</button>
-                        <button class="harmony-preset-button">x°7</button>
+                <div class="control-section chord-shape-container">
+                    <div class="chord-shape-tabs">
+                        <button class="chord-tab-button active" data-chord-tab="intervals">Intervals</button>
+                        <button class="chord-tab-button" data-chord-tab="chords">Chords</button>
+                    </div>
+                    <div class="chord-shape-content">
+                        <div class="chord-tab-panel active" id="intervals-panel">
+                            <div class="intervals-content-box">
+                                <div class="harmony-preset-grid">
+                                    <button class="harmony-preset-button">1</button>
+                                    <button class="harmony-preset-button">2</button>
+                                    <button class="harmony-preset-button">3</button>
+                                    <button class="harmony-preset-button">4</button>
+                                    <button class="harmony-preset-button">5</button>
+                                    <button class="harmony-preset-button">6</button>
+                                    <button class="harmony-preset-button">7</button>
+                                    <button class="harmony-preset-button">8</button>
+                                    <button class="harmony-preset-button">9</button>
+                                    <button class="harmony-preset-button">11</button>
+                                    <button class="harmony-preset-button">13</button>
+                                    <button class="harmony-preset-button">♯11</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="chord-tab-panel" id="chords-panel">
+                            <div class="chords-content-box">
+                                <div class="harmony-preset-grid">
+                                    <button class="harmony-preset-button">X</button>
+                                    <button class="harmony-preset-button">x</button>
+                                    <button class="harmony-preset-button">x°</button>
+                                    <button class="harmony-preset-button">X+</button>
+                                    <button class="harmony-preset-button">X7</button>
+                                    <button class="harmony-preset-button">x⁷</button>
+                                    <button class="harmony-preset-button">ø⁷</button>
+                                    <button class="harmony-preset-button">Xadd6</button>
+                                    <button class="harmony-preset-button">Xsus4</button>
+                                    <button class="harmony-preset-button">Xsus2</button>
+                                    <button class="harmony-preset-button">Xmaj7</button>
+                                    <button class="harmony-preset-button">x°7</button>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 <div class="control-section" id="pitch-paint-container">
@@ -202,35 +253,41 @@
 
             <!-- Rhythm Tab -->
             <div class="tab-panel" id="rhythm-panel">
-                <div class="control-section">
-                    <h4>Anacrusis</h4>
-                    <div class="toggle-button-group"><button class="sidebar-toggle-button" id="anacrusis-on-btn">On</button><button class="sidebar-toggle-button" id="anacrusis-off-btn">Off</button></div>
-                </div>
-                <div class="control-section">
-                    <h4>Macrobeat Structure</h4>
-                    <div class="macrobeat-adjust-group">
-                        <button class="toolkit-button" id="macrobeat-decrease">–</button>
-                        <button class="toolkit-button" id="macrobeat-increase">+</button>
+                <div class="control-section rhythm-structure-container">
+                    <div class="control-subsection">
+                        <h4>Add/Del Beat</h4>
+                        <div class="macrobeat-adjust-group">
+                            <button class="toolkit-button" id="macrobeat-decrease">–</button>
+                            <button class="toolkit-button" id="macrobeat-increase">+</button>
+                        </div>
+                    </div>
+                    <div class="control-subsection">
+                        <h4>Pickup</h4>
+                        <div class="toggle-button-group"><button class="sidebar-toggle-button" id="anacrusis-on-btn">On</button><button class="sidebar-toggle-button" id="anacrusis-off-btn">Off</button></div>
                     </div>
                 </div>
                 <div class="control-section">
-                    <h4>Tempo</h4>
                     <div class="tempo-row">
                         <div class="tempo-input-group">
-                            <img src="/Student-Notation/assets/icons/eigthNote.svg" alt="Eighth Note Tempo" class="tempo-label-icon">
+                            <img src="data:image/svg+xml,%3csvg%20xmlns='http://www.w3.org/2000/svg'%20xmlns:xlink='http://www.w3.org/1999/xlink'%20width='168'%20zoomAndPan='magnify'%20viewBox='0%200%20126%20231.75'%20height='309'%20preserveAspectRatio='xMidYMid%20meet'%20version='1.2'%3e%3cdefs%3e%3cclipPath%20id='f11b48ab54'%3e%3cpath%20d='M%200.0664062%200%20L%20125%200%20L%20125%20230.75%20L%200.0664062%20230.75%20Z%20M%200.0664062%200%20'/%3e%3c/clipPath%3e%3c/defs%3e%3cg%20id='9738701237'%3e%3cg%20clip-rule='nonzero'%20clip-path='url(%23f11b48ab54)'%3e%3cpath%20style='%20stroke:none;fill-rule:nonzero;fill:%23000000;fill-opacity:1;'%20d='M%208.109375%20225.367188%20C%20-6.25%20212.289062%201.699219%20191.523438%2025.289062%20179.214844%20C%2033.234375%20175.371094%2039.132812%20173.574219%2049.386719%20173.832031%20C%2055.796875%20174.089844%2062.976562%20177.679688%2062.976562%20177.679688%20C%2062.976562%20131.273438%2062.71875%2043.585938%2062.71875%200.511719%20C%2065.285156%200.511719%2067.078125%200.257812%2070.667969%200.257812%20C%2070.667969%202.820312%2070.667969%204.871094%2070.667969%206.921875%20C%2070.667969%209.230469%2070.667969%2010.511719%2070.925781%2012.050781%20C%2073.488281%2028.203125%2077.078125%2034.613281%2095.023438%2054.355469%20C%20117.84375%2079.738281%20124.511719%2094.863281%20124.511719%20115.121094%20C%20124.253906%20134.09375%20107.589844%20174.601562%20104%20173.0625%20C%20109.125%20158.707031%20116.304688%20143.320312%20118.101562%20130.503906%20C%20120.40625%20114.863281%20114%2092.8125%20103.742188%2081.277344%20C%2095.539062%2071.53125%2076.050781%2063.070312%2070.667969%2063.070312%20C%2070.667969%2063.070312%2070.410156%20156.398438%2070.410156%20191.78125%20C%2070.410156%20197.675781%2065.027344%20208.1875%2061.949219%20211.777344%20C%2047.847656%20228.699219%2020.414062%20236.390625%208.109375%20225.367188%20Z%20M%208.109375%20225.367188%20'/%3e%3c/g%3e%3c/g%3e%3c/svg%3e" alt="Eighth Note Tempo" class="tempo-label-icon">
                             <input type="number" class="tempo-input" id="eighth-note-tempo" value="180">
                         </div>
                         <div class="tempo-input-group">
-                            <img src="/Student-Notation/assets/icons/quarterNote.svg" alt="Quarter Note Tempo" class="tempo-label-icon">
+                            <img src="data:image/svg+xml,%3csvg%20xmlns='http://www.w3.org/2000/svg'%20xmlns:xlink='http://www.w3.org/1999/xlink'%20width='111'%20zoomAndPan='magnify'%20viewBox='0%200%2083.25%20230.999992'%20height='308'%20preserveAspectRatio='xMidYMid%20meet'%20version='1.2'%3e%3cdefs%3e%3cclipPath%20id='084e4edff4'%3e%3cpath%20d='M%201%20165%20L%2081.761719%20165%20L%2081.761719%20229.226562%20L%201%20229.226562%20Z%20M%201%20165%20'/%3e%3c/clipPath%3e%3cclipPath%20id='fdeab4882e'%3e%3cpath%20d='M%2073%201.03125%20L%2081.761719%201.03125%20L%2081.761719%20192%20L%2073%20192%20Z%20M%2073%201.03125%20'/%3e%3c/clipPath%3e%3c/defs%3e%3cg%20id='45713f1632'%3e%3cg%20clip-rule='nonzero'%20clip-path='url(%23084e4edff4)'%3e%3cpath%20style='%20stroke:none;fill-rule:evenodd;fill:%23000000;fill-opacity:0.9;'%20d='M%2057.546875%20222.390625%20C%2076.429688%20212.289062%2086.492188%20194.003906%2080.304688%20180.25%20C%2073.699219%20165.578125%2051.011719%20161.4375%2029.660156%20171.003906%20C%208.308594%20180.574219%20-3.664062%20200.25%202.9375%20214.921875%20C%209.542969%20229.59375%2032.230469%20233.734375%2053.582031%20224.164062%20C%2054.917969%20223.566406%2056.285156%20223.0625%2057.546875%20222.390625%20Z%20M%2057.546875%20222.390625%20'/%3e%3c/g%3e%3cg%20clip-rule='nonzero'%20clip-path='url(%23fdeab4882e)'%3e%3cpath%20style='fill:none;stroke-width:1.5;stroke-linecap:butt;stroke-linejoin:miter;stroke:%23000000;stroke-opacity:1;stroke-miterlimit:4;'%20d='M%20299.504676%20305.984569%20L%20299.504676%20339.572267%20'%20transform='matrix(-5.561147,0,0,-5.549953,1743.335656,1885.43835)'/%3e%3c/g%3e%3c/g%3e%3c/svg%3e" alt="Quarter Note Tempo" class="tempo-label-icon">
                             <input type="number" class="tempo-input" id="quarter-note-tempo" value="90">
                         </div>
                         <div class="tempo-input-group">
-                            <img src="/Student-Notation/assets/icons/dottedQuarterNote.svg" alt="Dotted Quarter Note Tempo" class="tempo-label-icon">
+                            <img src="/Student-Notation/assets/dottedQuarterNote-Cf79kpGq.svg" alt="Dotted Quarter Note Tempo" class="tempo-label-icon">
                             <input type="number" class="tempo-input" id="dotted-quarter-tempo" value="60">
                         </div>
                     </div>
                     <div class="tempo-slider-row">
                         <input type="range" id="tempo-slider" min="30" max="240" value="90">
+                    </div>
+                </div>
+                <div class="control-section">
+                    <div id="stamps-toolbar-container" class="stamps-toolbar-container">
+                        <!-- Stamps toolbar will be rendered here by JavaScript -->
                     </div>
                 </div>
             </div>
@@ -322,6 +379,26 @@
             document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
             button.classList.add('active');
             document.querySelectorAll('.tab-panel').forEach(panel => panel.classList.remove('active'));
+            document.getElementById(`${tabId}-panel`).classList.add('active');
+        });
+    });
+    
+    document.querySelectorAll('.preset-tab-button').forEach(button => {
+        button.addEventListener('click', () => {
+            const tabId = button.dataset.presetTab;
+            document.querySelectorAll('.preset-tab-button').forEach(btn => btn.classList.remove('active'));
+            button.classList.add('active');
+            document.querySelectorAll('.preset-tab-panel').forEach(panel => panel.classList.remove('active'));
+            document.getElementById(`${tabId}-panel`).classList.add('active');
+        });
+    });
+    
+    document.querySelectorAll('.chord-tab-button').forEach(button => {
+        button.addEventListener('click', () => {
+            const tabId = button.dataset.chordTab;
+            document.querySelectorAll('.chord-tab-button').forEach(btn => btn.classList.remove('active'));
+            button.classList.add('active');
+            document.querySelectorAll('.chord-tab-panel').forEach(panel => panel.classList.remove('active'));
             document.getElementById(`${tabId}-panel`).classList.add('active');
         });
     });

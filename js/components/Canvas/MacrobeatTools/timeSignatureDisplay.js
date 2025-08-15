@@ -3,7 +3,6 @@ import RhythmService from '../../../services/rhythmService.js';
 import TimeSignatureService from '../../../services/timeSignatureService.js';
 import store from '../../../state/index.js';
 
-console.log("TimeSignatureDisplay: Module loaded.");
 
 let dropdownInstance = null;
 

@@ -92,11 +92,23 @@
     display: flex;
     align-items: center;
     gap: var(--space-2);
-    width: 60px;
+    min-width: 60px;
+    width: fit-content;
     justify-content: center;
     background-color: var(--c-surface);
     color: var(--c-text);
     border: 1px solid var(--c-border);
+}
+
+#tonic-dropdown-label {
+    display: flex;
+    align-items: center;
+    gap: var(--space-1);
+}
+
+#tonic-dropdown-label .tonic-shape-icon {
+    display: inline-block;
+    flex-shrink: 0;
 }
 
 .dropdown-arrow {
@@ -143,40 +155,59 @@
     box-shadow: 0 0 5px var(--c-accent);
 }
 
-/* --- Degree Dropdown Styles --- */
-#degree-dropdown-wrapper {
-    position: relative; 
+/* --- Degree Toggle Buttons Styles --- */
+.degree-toggle-container {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
 }
 
-.degree-dropdown-toggle {
+/* Visibility Toggle - Hide (grayed) by default, Show (white) when active */
+.degree-visibility-toggle {
     width: 100%;
     display: flex;
     justify-content: center;
     align-items: center;
-    gap: var(--space-2);
-}
-
-#degree-dropdown-menu {
-    top: 100%;
-    left: 0;
-    width: 100%; 
-    margin-top: var(--space-1);
-}
-
-#degree-dropdown-menu .toolkit-button {
-    width: 100%;
-    justify-content: center;
-    line-height: initial;
     padding: var(--space-2);
-}
-
-#degree-dropdown-menu .toolkit-button.active {
-    background-color: var(--c-accent);
-    color: var(--c-surface);
-    border: 1px solid var(--c-accent-hover);
-}
-
-#degree-dropdown-menu .toolkit-button:not(.active) {
     background-color: var(--c-surface);
     color: var(--c-text);
+    border: 1px solid var(--c-border);
+    border-radius: var(--border-radius-sm);
+    opacity: 0.6;
+    transition: background-color 0.2s, color 0.2s, opacity 0.2s;
+}
+
+.degree-visibility-toggle.active {
+    background-color: var(--c-surface);
+    color: var(--c-text);
+    opacity: 1.0;
+}
+
+.degree-visibility-toggle:not(.active):hover {
+    background-color: var(--c-border);
+}
+
+/* Mode Toggle - simple styling matching accidental pattern */
+.degree-mode-toggle {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: var(--space-2);
+    background-color: var(--c-surface);
+    color: var(--c-text);
+    border: 1px solid var(--c-border);
+    border-radius: var(--border-radius-sm);
+    opacity: 0.6;
+    transition: background-color 0.2s, color 0.2s, opacity 0.2s;
+}
+
+.degree-mode-toggle.active {
+    background-color: var(--c-warning);
+    color: var(--c-text);
+    opacity: 1.0;
+}
+
+.degree-mode-toggle:not(.active):hover {
+    background-color: var(--c-border);
 }

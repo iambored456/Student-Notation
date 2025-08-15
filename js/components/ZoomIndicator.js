@@ -32,7 +32,6 @@ class ZoomIndicator {
         store.on('zoomIn', () => this.show());
         store.on('zoomOut', () => this.show());
         
-        console.log('ZoomIndicator: Initialized');
     }
 
     show() {

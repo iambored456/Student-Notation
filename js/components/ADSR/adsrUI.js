@@ -18,7 +18,6 @@ function init() {
     elements.thumbD = document.getElementById('thumb-d');
     elements.thumbR = document.getElementById('thumb-r');
     
-    console.log("ADSR UI: Elements cached.");
     return elements;
 }
 

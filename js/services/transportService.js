@@ -7,6 +7,8 @@ import SynthEngine from './synthEngine.js';
 import GlobalService from './globalService.js';
 import domCache from './domCache.js';
 import logger from '../utils/logger.js';
+import { getStampPlaybackData } from '../rhythm/stampPlacements.js';
+import { getStampScheduleEvents } from '../rhythm/scheduleStamps.js';
 
 logger.moduleLoaded('TransportService');
 
@@ -89,14 +91,53 @@ function scheduleNotes() {
 
         // Calculate duration based on note shape
         let duration;
+        const endTime = timeMap[note.endColumnIndex + 1];
+        
+        // Safety check: if endTime is undefined, skip this note
+        if (endTime === undefined) {
+            logger.warn('TransportService', `Skipping note with invalid endColumnIndex: ${note.endColumnIndex + 1} (note ends at ${note.endColumnIndex})`, {
+                noteId: note.uuid,
+                startColumnIndex: note.startColumnIndex,
+                endColumnIndex: note.endColumnIndex,
+                lookupIndex: note.endColumnIndex + 1,
+                timeMapLength: timeMap.length,
+                maxValidIndex: timeMap.length - 1,
+                noteShape: note.shape
+            }, 'audio');
+            return;
+        }
+        
+        const tailDuration = endTime - startTime;
+        
         if (note.shape === 'circle') {
-            // Circle notes get 2 microbeats duration
+            // Circle notes should respect their tail duration
+            duration = tailDuration;
             const microbeatDuration = getMicrobeatDuration();
-            duration = 2 * microbeatDuration;
+            const defaultCircleDuration = 2 * microbeatDuration;
+            
+            // Log duration calculation for circle notes
+            console.log(`[DURATION] Circle note ${note.uuid}:`, {
+                startColumn: note.startColumnIndex,
+                endColumn: note.endColumnIndex,
+                startTime: startTime.toFixed(3),
+                endTime: endTime.toFixed(3),
+                tailDuration: tailDuration.toFixed(3),
+                actualDuration: duration.toFixed(3),
+                defaultCircleDuration: defaultCircleDuration.toFixed(3),
+                microbeatDuration: microbeatDuration.toFixed(3)
+            });
         } else {
             // Oval notes and others use the current duration (1 microbeat equivalent)
-            const endTime = timeMap[note.endColumnIndex + 1];
-            duration = endTime - startTime;
+            duration = tailDuration;
+            
+            // Log duration calculation for oval notes
+            console.log(`[DURATION] Oval note ${note.uuid}:`, {
+                startColumn: note.startColumnIndex,
+                endColumn: note.endColumnIndex,
+                startTime: startTime.toFixed(3),
+                endTime: endTime.toFixed(3),
+                duration: duration.toFixed(3)
+            });
         }
 
         if (note.isDrum) {
@@ -116,19 +157,75 @@ function scheduleNotes() {
                 return;
             }
             
+            // Log when attack is scheduled
+            console.log(`[SCHEDULE] Attack for ${note.shape} note ${noteId} scheduled at time ${startTime.toFixed(3)}`);
+            
             Tone.Transport.schedule(time => {
                 if (store.state.isPaused) return;
+                console.log(`[ATTACK] Triggering attack for ${note.shape} note ${noteId} at time ${time.toFixed(3)}`);
                 SynthEngine.triggerAttack(pitch, toolColor, time);
                 GlobalService.adsrComponent?.playheadManager.trigger(noteId, 'attack', pitchColor, timbre.adsr);
             }, startTime);
 
+            // Log when release is scheduled
+            const releaseTime = startTime + duration;
+            console.log(`[SCHEDULE] Release for ${note.shape} note ${noteId} scheduled at time ${releaseTime.toFixed(3)} (duration: ${duration.toFixed(3)})`);
+            
             Tone.Transport.schedule(time => {
+                console.log(`[RELEASE] Triggering release for ${note.shape} note ${noteId} at time ${time.toFixed(3)}`);
                 SynthEngine.triggerRelease(pitch, toolColor, time);
                 GlobalService.adsrComponent?.playheadManager.trigger(noteId, 'release', pitchColor, timbre.adsr);
-            }, startTime + duration);
+            }, releaseTime);
         }
     });
-     logger.debug('TransportService', 'scheduleNotes', 'Finished scheduling', 'audio');
+    
+    // Schedule stamps
+    const stampPlaybackData = getStampPlaybackData();
+    stampPlaybackData.forEach(stampData => {
+        const cellStartTime = timeMap[stampData.column];
+        if (cellStartTime === undefined) return;
+        
+        // Skip stamps that would be scheduled before the anacrusis offset
+        if (cellStartTime < anacrusisOffset) {
+            logger.debug('TransportService', `Skipping stamp at column ${stampData.column} - before anacrusis offset`);
+            return;
+        }
+        
+        // Get the schedule events for this stamp
+        const scheduleEvents = getStampScheduleEvents(stampData.stampId);
+        
+        scheduleEvents.forEach(event => {
+            const offsetTime = Tone.Time(event.offset).toSeconds();
+            const duration = Tone.Time(event.duration).toSeconds();
+            const triggerTime = cellStartTime + offsetTime;
+            const releaseTime = triggerTime + duration;
+            
+            console.log(`[TRANSPORT DEBUG] Event: slot=${event.slot}, offset="${event.offset}" -> ${offsetTime}s, triggerTime=${triggerTime}s`);
+            
+            // Schedule attack
+            Tone.Transport.schedule(time => {
+                if (store.state.isPaused) return;
+                console.log(`[TRANSPORT DEBUG] TRIGGERING: slot=${event.slot} at time=${time}s`);
+                SynthEngine.triggerAttack(stampData.pitch, stampData.color, time);
+            }, triggerTime);
+            
+            // Schedule release
+            Tone.Transport.schedule(time => {
+                if (store.state.isPaused) return;
+                SynthEngine.triggerRelease(stampData.pitch, stampData.color, time);
+            }, releaseTime);
+        });
+        
+        logger.debug('TransportService', `Scheduled stamp ${stampData.stampId} with ${scheduleEvents.length} events at column ${stampData.column}`, {
+            stampId: stampData.stampId,
+            column: stampData.column,
+            pitch: stampData.pitch,
+            startTime: cellStartTime,
+            events: scheduleEvents.length
+        }, 'audio');
+    });
+    
+    logger.debug('TransportService', 'scheduleNotes', `Finished scheduling ${store.state.placedNotes.length} notes and ${stampPlaybackData.length} stamps`, 'audio');
 }
 
 function animatePlayhead() {
@@ -218,6 +315,7 @@ const TransportService = {
 
         store.on('rhythmStructureChanged', () => this.handleStateChange());
         store.on('notesChanged', () => this.handleStateChange());
+        store.on('stampPlacementsChanged', () => this.handleStateChange());
         
         store.on('tempoChanged', newTempo => {
             logger.event('TransportService', `tempoChanged triggered with new value: ${newTempo} BPM`, null, 'transport');

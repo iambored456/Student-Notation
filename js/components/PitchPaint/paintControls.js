@@ -19,7 +19,6 @@ class PaintControls {
     store.on('paintHistoryChanged', () => this.updateUI());
     store.on('paintSettingsChanged', () => this.updateUI());
     
-    console.log('PaintControls: Initialized');
   }
 
   cacheDOMElements() {
@@ -57,16 +56,13 @@ class PaintControls {
         await PitchPaintService.initialize();
         store.setMicPaintActive(true);
         PitchPaintService.startDetection();
-        console.log('Mic Paint: Activated');
       } catch (error) {
-        console.error('Failed to activate Mic Paint:', error);
         alert('Microphone access is required for Pitch Painting. Please check your browser permissions and try again.');
         store.setMicPaintActive(false);
       }
     } else {
       PitchPaintService.stopDetection();
       store.setMicPaintActive(false);
-      console.log('Mic Paint: Deactivated');
     }
     this.elements.toggleBtn.disabled = false;
   }

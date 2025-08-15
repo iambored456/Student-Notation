@@ -13,12 +13,15 @@ export const timbreActions = {
 
     setFilterSettings(color, newSettings) {
         if (this.state.timbres[color]) {
+            console.log('setFilterSettings called:', { color, newSettings, activePresetName: this.state.timbres[color].activePresetName });
+            console.trace('setFilterSettings call stack');
             Object.assign(this.state.timbres[color].filter, newSettings);
             const blend = this.state.timbres[color].filter.blend;
             if (blend <= 0.0) this.state.timbres[color].filter.type = 'highpass';
             else if (blend >= 2.0) this.state.timbres[color].filter.type = 'lowpass';
             else this.state.timbres[color].filter.type = 'bandpass';
             if(newSettings.enabled === undefined) {
+                console.log('Clearing activePresetName because enabled is undefined');
                 this.state.timbres[color].activePresetName = null;
             }
             this.emit('timbreChanged', color);

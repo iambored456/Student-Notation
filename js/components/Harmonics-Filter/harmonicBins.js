@@ -4,10 +4,10 @@ import { HARMONIC_BINS } from '../../constants.js';
 import SynthEngine from '../../services/synthEngine.js';
 import { hexToRgba, shadeHexColor } from '../../utils/colorUtils.js';
 import logger from '../../utils/logger.js';
-import phaseIcon0 from '/assets/icons/phaseButton_0.svg?raw';
-import phaseIcon90 from '/assets/icons/phaseButton_90.svg?raw';
-import phaseIcon180 from '/assets/icons/phaseButton_180.svg?raw';
-import phaseIcon270 from '/assets/icons/phaseButton_270.svg?raw';
+import phaseIcon0 from '/public/assets/tabicons/phaseButton_0.svg?raw';
+import phaseIcon90 from '/public/assets/tabicons/phaseButton_90.svg?raw';
+import phaseIcon180 from '/public/assets/tabicons/phaseButton_180.svg?raw';
+import phaseIcon270 from '/public/assets/tabicons/phaseButton_270.svg?raw';
 
 logger.moduleLoaded('HarmonicBins with Columnar Structure');
 
@@ -129,16 +129,10 @@ function drawFilterOverlay() {
     
     const rect = harmonicBinsGrid.getBoundingClientRect();
     const { width, height } = overlayCanvas;
-    console.log('[FilterOverlay] Canvas dimensions:', { width, height });
     
     overlayCtx.clearRect(0, 0, width, height);
     
     const filterSettings = store.state.timbres[currentColor]?.filter;
-    console.log('[FilterOverlay] Filter settings:', {
-        currentColor,
-        filterSettings,
-        enabled: filterSettings?.enabled
-    });
     
     // Fix: Default enabled to true if undefined (handles legacy state or missing property)
     const isFilterEnabled = filterSettings && (filterSettings.enabled !== false);
@@ -149,17 +143,9 @@ function drawFilterOverlay() {
         const barBaseY = height;
         const mixAmount = filterSettings.mix || 0;
         
-        console.log('[FilterOverlay] Drawing overlay with settings:', {
-            blend: filterSettings.blend,
-            cutoff: filterSettings.cutoff,
-            mix: mixAmount,
-            usableHeight,
-            maxBarHeight
-        });
         
         // If mix is 0, don't draw overlay and reset filter values to no filtering
         if (mixAmount === 0) {
-            console.log('[FilterOverlay] Mix is 0, not drawing overlay');
             binFilterValues.fill(1);
             return;
         }
@@ -171,7 +157,6 @@ function drawFilterOverlay() {
             binFilterValues[i] = applyFilterMix(rawFilterAmp, mixAmount);
         }
         
-        console.log('[FilterOverlay] Calculated bin filter values:', binFilterValues);
         
         // Draw continuous curve showing the RAW filter shape (not mixed)
         overlayCtx.beginPath();
@@ -192,11 +177,6 @@ function drawFilterOverlay() {
         const strokeAlpha = 0.4 + (mixNorm * 0.6); // Range from 0.4 to 1.0
         const fillAlpha = mixNorm * 0.3; // Range from 0 to 0.3
         
-        console.log('[FilterOverlay] Drawing with alpha values:', {
-            mixNorm,
-            strokeAlpha,
-            fillAlpha
-        });
         
         overlayCtx.strokeStyle = hexToRgba(shadeHexColor(currentColor, -0.3), strokeAlpha);
         overlayCtx.lineWidth = 2.5;
@@ -207,9 +187,7 @@ function drawFilterOverlay() {
         overlayCtx.fillStyle = hexToRgba(currentColor, fillAlpha);
         overlayCtx.fill();
         
-        console.log('[FilterOverlay] Overlay drawn successfully');
     } else {
-        console.log('[FilterOverlay] Filter not enabled or no settings, resetting bin values');
         // Reset filter values when filter is disabled
         binFilterValues.fill(1);
     }

@@ -38,7 +38,7 @@ button {
 }
 
 button:hover, button:focus {
-  background-color: var(--c-accent-hover);
+  background-color: var(--c-accent);
   outline: none;
 }
 

@@ -6,16 +6,96 @@ export const rhythmActions = {
     setAnacrusis(enabled) {
         if (this.state.hasAnacrusis === enabled) return;
         
+        // Calculate the column shift needed
+        const oldGroupings = this.state.macrobeatGroupings;
+        const newGroupings = enabled ? ANACRUSIS_ON_GROUPINGS : ANACRUSIS_OFF_GROUPINGS;
+        
+        // Calculate total columns for old and new configurations
+        const oldTotalColumns = oldGroupings.reduce((sum, val) => sum + val, 0);
+        const newTotalColumns = newGroupings.reduce((sum, val) => sum + val, 0);
+        const columnShift = newTotalColumns - oldTotalColumns;
+
+        // Update the state
         this.state.hasAnacrusis = enabled;
-        if (enabled) {
-            this.state.macrobeatGroupings = [...ANACRUSIS_ON_GROUPINGS];
-            this.state.macrobeatBoundaryStyles = [...ANACRUSIS_ON_STYLES];
-        } else {
-            this.state.macrobeatGroupings = [...ANACRUSIS_OFF_GROUPINGS];
-            this.state.macrobeatBoundaryStyles = [...ANACRUSIS_OFF_STYLES];
+        this.state.macrobeatGroupings = [...newGroupings];
+        this.state.macrobeatBoundaryStyles = enabled ? [...ANACRUSIS_ON_STYLES] : [...ANACRUSIS_OFF_STYLES];
+        
+        // Shift all existing notes if there's a column difference
+        if (columnShift !== 0) {
+            // Track notes that need to be removed if they fall outside valid bounds
+            const notesToRemove = [];
+            
+            this.state.placedNotes.forEach(note => {
+                // Shift notes from the beginning of the grid (after legend columns)
+                // Legend columns are at index 0 and 1, so notes start from column 2
+                const legendColumns = 2;
+                if (note.startColumnIndex >= legendColumns) {
+                    const newStartColumn = note.startColumnIndex + columnShift;
+                    const newEndColumn = note.endColumnIndex + columnShift;
+                    
+                    // Check bounds - ensure notes don't go before the legend columns
+                    if (newStartColumn < legendColumns) {
+                        // Mark note for removal if it would go into invalid territory
+                        notesToRemove.push(note);
+                    } else {
+                        note.startColumnIndex = newStartColumn;
+                        note.endColumnIndex = newEndColumn;
+                    }
+                }
+            });
+            
+            // Remove notes that would fall outside valid bounds
+            notesToRemove.forEach(noteToRemove => {
+                const index = this.state.placedNotes.indexOf(noteToRemove);
+                if (index > -1) {
+                    this.state.placedNotes.splice(index, 1);
+                }
+            });
+            
+            // Also shift stamp placements (16th note stamps)
+            const stampsToRemove = [];
+            
+            this.state.stampPlacements.forEach(stamp => {
+                // Stamps use startColumn/endColumn instead of startColumnIndex/endColumnIndex
+                const legendColumns = 2;
+                if (stamp.startColumn >= legendColumns) {
+                    const newStartColumn = stamp.startColumn + columnShift;
+                    const newEndColumn = stamp.endColumn + columnShift;
+                    
+                    // Check bounds - ensure stamps don't go before the legend columns
+                    if (newStartColumn < legendColumns) {
+                        // Mark stamp for removal if it would go into invalid territory
+                        stampsToRemove.push(stamp);
+                    } else {
+                        stamp.startColumn = newStartColumn;
+                        stamp.endColumn = newEndColumn;
+                    }
+                }
+            });
+            
+            // Remove stamps that would fall outside valid bounds
+            stampsToRemove.forEach(stampToRemove => {
+                const index = this.state.stampPlacements.indexOf(stampToRemove);
+                if (index > -1) {
+                    this.state.stampPlacements.splice(index, 1);
+                }
+            });
+            
+            // Also shift any tonic signs that may have been placed
+            Object.values(this.state.tonicSignGroups).flat().forEach(tonicSign => {
+                // Tonic signs are placed before macrobeats, so they need adjustment too
+                // The preMacrobeatIndex should remain the same, but we need to ensure
+                // the visual positioning accounts for the column shift
+                if (tonicSign.preMacrobeatIndex >= 0) {
+                    // The tonic sign positioning will be recalculated by the rendering system
+                    // based on the new macrobeat structure, so no direct column adjustment needed
+                }
+            });
         }
 
         this.emit('anacrusisChanged', enabled);
+        this.emit('notesChanged'); // Ensure notes are redrawn with new positions
+        this.emit('stampPlacementsChanged'); // Ensure stamps are redrawn with new positions
         this.emit('rhythmStructureChanged');
         this.recordState();
     },

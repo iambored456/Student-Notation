@@ -1,12 +1,95 @@
 // js/components/Canvas/PitchGrid/renderers/notes.js
 import { getColumnX, getRowY } from './rendererUtils.js';
 import TonalService from '../../../../services/tonalService.js';
+import store from '../../../../state/index.js';
 import {
     OVAL_NOTE_FONT_RATIO, FILLED_NOTE_FONT_RATIO, MIN_FONT_SIZE, MIN_TONIC_FONT_SIZE,
     MIN_STROKE_WIDTH_THICK, MIN_STROKE_WIDTH_THIN, STROKE_WIDTH_RATIO,
     TAIL_LINE_WIDTH_RATIO, MIN_TAIL_LINE_WIDTH, SHADOW_BLUR_RADIUS,
     TONIC_RADIUS_RATIO, MIN_TONIC_RADIUS, TONIC_BORDER_WIDTH, TONIC_FONT_SIZE_RATIO
 } from '../../../../constants.js';
+
+// Helper function to calculate visual offset for overlapping notes
+function calculateColorOffset(note, allNotes, options) {
+    const { cellWidth } = options;
+    const offsetAmount = cellWidth * 0.25; // Small right offset - 25% of cell width
+    
+    // Safety check for ghost notes without UUIDs
+    if (!note.uuid) {
+        return 0; // Ghost notes get no offset
+    }
+    
+    // Find all notes at the same position (row + startColumnIndex)
+    const notesAtSamePosition = allNotes.filter(otherNote => 
+        !otherNote.isDrum && 
+        otherNote.row === note.row && 
+        otherNote.startColumnIndex === note.startColumnIndex &&
+        otherNote.uuid && // Ensure other note has UUID
+        otherNote.uuid !== note.uuid // Don't include the note itself
+    );
+    
+    
+    if (notesAtSamePosition.length === 0) {
+        return 0; // No offset needed
+    }
+    
+    // Sort all notes at this position by their UUID (which contains timestamp)
+    // Most recently placed notes (higher timestamps) should appear on top (rightmost)
+    const allNotesAtPosition = [note, ...notesAtSamePosition];
+    allNotesAtPosition.sort((a, b) => {
+        // Extract timestamp from UUID format: uuid-timestamp-randomstring
+        const timestampA = parseInt(a.uuid.split('-')[1]);
+        const timestampB = parseInt(b.uuid.split('-')[1]);
+        return timestampA - timestampB; // Sort by timestamp ascending (oldest first)
+    });
+    
+    
+    // Find the index of the current note in the sorted array
+    const currentNoteIndex = allNotesAtPosition.findIndex(n => n.uuid === note.uuid);
+    
+    
+    return currentNoteIndex * offsetAmount;
+}
+
+// Helper function to calculate vertical offset for note tails
+function calculateTailYOffset(note, allNotes, options) {
+    const { cellHeight } = options;
+    const tailOffsetAmount = cellHeight * 0.12; // Vertical offset for tails - 15% of cell height
+    
+    // Safety check for ghost notes without UUIDs
+    if (!note.uuid) {
+        return 0; // Ghost notes get no offset
+    }
+    
+    // Find all notes at the same position (row + startColumnIndex) that have tails
+    const notesWithTailsAtSamePosition = allNotes.filter(otherNote => 
+        !otherNote.isDrum && 
+        otherNote.row === note.row && 
+        otherNote.startColumnIndex === note.startColumnIndex &&
+        otherNote.uuid && // Ensure other note has UUID
+        otherNote.uuid !== note.uuid && // Don't include the note itself
+        otherNote.endColumnIndex > otherNote.startColumnIndex // Only notes with tails
+    );
+    
+    
+    if (notesWithTailsAtSamePosition.length === 0) {
+        return 0; // No offset needed
+    }
+    
+    // Sort all notes with tails at this position by their UUID timestamp
+    const allNotesWithTailsAtPosition = [note, ...notesWithTailsAtSamePosition];
+    allNotesWithTailsAtPosition.sort((a, b) => {
+        const timestampA = parseInt(a.uuid.split('-')[1]);
+        const timestampB = parseInt(b.uuid.split('-')[1]);
+        return timestampA - timestampB; // Sort by timestamp ascending (oldest first)
+    });
+    
+    // Find the index of the current note in the sorted array
+    const currentNoteIndex = allNotesWithTailsAtPosition.findIndex(n => n.uuid === note.uuid);
+    
+    
+    return currentNoteIndex * tailOffsetAmount;
+}
 
 function drawScaleDegreeText(ctx, note, options, centerX, centerY, noteHeight) {
     const degreeStr = TonalService.getDegreeForNote(note, options);
@@ -27,17 +110,26 @@ export function drawTwoColumnOvalNote(ctx, options, note, rowIndex) {
     const { cellWidth, cellHeight, zoomLevel } = options;
     const y = getRowY(rowIndex, options);
     const xStart = getColumnX(note.startColumnIndex, options);
-    const centerX = xStart + cellWidth;
+    
+    // Calculate visual offset for overlapping notes
+    const xOffset = calculateColorOffset(note, store.state.placedNotes, options);
+    const centerX = xStart + cellWidth + xOffset;
     
     // Don't double-scale - cellWidth/cellHeight already include zoom
     const dynamicStrokeWidth = Math.max(MIN_STROKE_WIDTH_THICK, cellWidth * STROKE_WIDTH_RATIO);
 
     // Draw the tail/extension line if the note extends beyond its starting column
     if (note.endColumnIndex > note.startColumnIndex) {
-        const endX = getColumnX(note.endColumnIndex + 1, options);
+        const originalEndX = getColumnX(note.endColumnIndex + 1, options);
+        // Apply horizontal offset to end position, but shorten by the offset amount to stay within grid boundaries
+        const endX = originalEndX + xOffset - xOffset;
+        const tailYOffset = calculateTailYOffset(note, store.state.placedNotes, options);
+        const tailY = y + tailYOffset;
+        
+        
         ctx.beginPath();
-        ctx.moveTo(centerX, y);
-        ctx.lineTo(endX, y);
+        ctx.moveTo(centerX, tailY);
+        ctx.lineTo(endX, tailY);
         ctx.strokeStyle = note.color;
         ctx.lineWidth = Math.max(MIN_TAIL_LINE_WIDTH, cellWidth * TAIL_LINE_WIDTH_RATIO);
         ctx.stroke();
@@ -79,9 +171,12 @@ export function drawSingleColumnOvalNote(ctx, options, note, rowIndex) {
     const x = getColumnX(note.startColumnIndex, options);
     const currentCellWidth = columnWidths[note.startColumnIndex] * cellWidth;
     
+    // Calculate visual offset for overlapping notes
+    const xOffset = calculateColorOffset(note, store.state.placedNotes, options);
+    
     // Don't double-scale - cellWidth/cellHeight already include zoom
     const dynamicStrokeWidth = Math.max(0.5, currentCellWidth * 0.15);
-    const cx = x + currentCellWidth / 2;
+    const cx = x + currentCellWidth / 2 + xOffset;
     const rx = (currentCellWidth / 2) - (dynamicStrokeWidth / 2);
     const ry = (cellHeight / 2) - (dynamicStrokeWidth / 2);
 

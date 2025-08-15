@@ -1,5 +1,4 @@
 // js/state/initialState/paintState.js
-console.log("paintState.js: Module loaded.");
 
 export function getInitialPaintState() {
   return {

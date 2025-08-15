@@ -4,6 +4,7 @@ import { drawHorizontalLines, drawVerticalLines } from './gridLines.js';
 import { drawLegends } from './legend.js';
 import { drawSingleColumnOvalNote, drawTwoColumnOvalNote, drawTonicShape } from './notes.js';
 import { getVisibleRowRange } from './rendererUtils.js';
+import { renderStamps } from './stampRenderer.js';
 
 export function drawPitchGrid(ctx, options) {
     const fullOptions = { ...options, ...store.state };
@@ -44,5 +45,8 @@ export function drawPitchGrid(ctx, options) {
     visibleTonicSigns.forEach(sign => {
         drawTonicShape(ctx, fullOptions, sign);
     });
+    
+    // Draw stamps (render on top of everything else)
+    renderStamps(ctx, fullOptions);
     
 }

@@ -17,7 +17,7 @@ export function drawTempoGridlines(gridLayer, { width, height }, totalADRTime) {
         line.setAttribute('x2', x);
         line.setAttribute('y2', height);
         const isMacrobeat = (beatCount + 1) % 2 === 0;
-        line.setAttribute('stroke', isMacrobeat ? '#dee2e6' : '#e9ecef');
+        line.setAttribute('stroke', isMacrobeat ? '#adb5bd' : '#ced4da');
         line.setAttribute('stroke-width', isMacrobeat ? '1' : '0.5');
         gridLayer.appendChild(line);
         beatCount++;

@@ -76,7 +76,6 @@ export function initHarmonyToolbar() {
     bassSelect = document.getElementById('harmony-degreed-bass-select');
 
     if (!qualitySelect || !extensionSelect || !bassSelect) {
-        console.error("HarmonyToolbar: Could not find all required select elements.");
         return;
     }
 
@@ -90,5 +89,4 @@ export function initHarmonyToolbar() {
     extensionSelect.addEventListener('change', updateChordShapeInStore);
     bassSelect.addEventListener('change', updateChordShapeInStore);
 
-    console.log("HarmonyToolbar: Initialized.");
 }

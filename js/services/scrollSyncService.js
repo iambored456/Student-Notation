@@ -31,7 +31,6 @@ class ScrollSyncService {
         this.setupScrollSynchronization();
         this.isInitialized = true;
         
-        console.log('ScrollSyncService: Initialized scroll synchronization between pitch and drum grids');
     }
 
     setupScrollSynchronization() {

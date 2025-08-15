@@ -2,7 +2,6 @@
 import { Note, Interval, Scale, Chord, RomanNumeral, Progression } from 'tonal';
 import { getKeyContextForBeat } from '../state/selectors.js';
 
-console.log("TonalService: Module loaded.");
 
 function formatInterval(interval) {
     if (!interval) return null;

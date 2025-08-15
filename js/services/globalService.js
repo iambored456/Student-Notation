@@ -1,5 +1,4 @@
 // js/services/globalService.js
-console.log("GlobalService: Module loaded.");
 
 /**
  * A simple singleton object to hold globally accessible component instances

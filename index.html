@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Student Notation Web Applet</title>
 <link rel="icon" href="/favicon.ico" sizes="any" />
 <link rel="icon" type="image/png" sizes="96x96" href="/favicon-96x96.png" />
@@ -20,10 +21,10 @@
 <div class="app-title">Student Notation</div>
 </div>
 <div class="sidebar-container">
-<button class="sidebar-button" id="save-as-button" title="Save As"><img src="/assets/icons/Save As.svg" alt="Save As"><span class="sidebar-button-text">Save As</span></button>
-<button class="sidebar-button" id="import-button" title="Open"><img src="/assets/icons/Open.svg" alt="Open"><span class="sidebar-button-text">Open</span></button>
-<button class="sidebar-button" id="print-button" title="Print"><img src="/assets/icons/Print.svg" alt="Print"><span class="sidebar-button-text">Print</span></button>
-<button class="sidebar-button" id="reset-canvas-button" title="New File"><img src="/assets/icons/New File.svg" alt="New File"><span class="sidebar-button-text">New Page</span></button>
+<button class="sidebar-button" id="save-as-button" title="Save As"><img src="/public/assets/sidebar/Save As.svg" alt="Save As"><span class="sidebar-button-text">Save As</span></button>
+<button class="sidebar-button" id="import-button" title="Open"><img src="/public/assets/sidebar/Open.svg" alt="Open"><span class="sidebar-button-text">Open</span></button>
+<button class="sidebar-button" id="print-button" title="Print"><img src="/public/assets/sidebar/Print.svg" alt="Print"><span class="sidebar-button-text">Print</span></button>
+<button class="sidebar-button" id="reset-canvas-button" title="New File"><img src="/public/assets/sidebar/New Page.svg" alt="New Page"><span class="sidebar-button-text">New Page</span></button>
 </div>
 </div>
 <div id="app-container">
@@ -81,23 +82,48 @@
         <div class="tab-content">
             <!-- Timbre Tab -->
             <div class="tab-panel active" id="timbre-panel">
-                <div class="control-section preset-container">
-                    <div class="preset-grid" id="preset-buttons">
-                        <div class="preset-column">
-                            <button class="preset-button" id="preset-sine">Sine</button>
-                            <button class="preset-button" id="preset-triangle">Triangle</button>
-                            <button class="preset-button" id="preset-square">Square</button>
-                            <button class="preset-button" id="preset-sawtooth">Sawtooth</button>
+                <div class="control-section preset-effects-container">
+                    <div class="preset-effects-tabs">
+                        <button class="preset-tab-button active" data-preset-tab="presets">Presets</button>
+                        <button class="preset-tab-button" data-preset-tab="effects">Effects</button>
+                    </div>
+                    <div class="preset-effects-content">
+                        <div class="preset-tab-panel active" id="presets-panel">
+                            <div class="preset-content-box">
+                                <div class="preset-grid" id="preset-buttons">
+                                    <div class="preset-column">
+                                        <button class="preset-button" id="preset-sine">Sine</button>
+                                        <button class="preset-button" id="preset-triangle">Triangle</button>
+                                        <button class="preset-button" id="preset-square">Square</button>
+                                        <button class="preset-button" id="preset-sawtooth">Sawtooth</button>
+                                    </div>
+                                    <div class="preset-column">
+                                        <button class="preset-button" id="preset-piano">Piano</button>
+                                        <button class="preset-button" id="preset-marimba">Marimba</button>
+                                        <button class="preset-button" id="preset-woodwind">Woodwind</button>
+                                        <button class="preset-button" id="preset-strings">Strings</button>
+                                    </div>
+                                    <div class="preset-column">
+                                        <button class="preset-button" id="preset-trapezium">Trapezium</button>
+                                        <button class="preset-button" id="preset-impulse">Impulse</button>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                        <div class="preset-column">
-                            <button class="preset-button" id="preset-piano">Piano</button>
-                            <button class="preset-button" id="preset-marimba">Marimba</button>
-                            <button class="preset-button" id="preset-woodwind">Woodwind</button>
-                            <button class="preset-button" id="preset-strings">Strings</button>
-                        </div>
-                        <div class="preset-column">
-                            <button class="preset-button" id="preset-trapezium">Trapezium</button>
-                            <button class="preset-button" id="preset-impulse">Impulse</button>
+                        <div class="preset-tab-panel" id="effects-panel">
+                            <div class="effects-content-box">
+                                <div class="effects-grid">
+                                    <button class="effect-button" data-effect="reverb">Reverb</button>
+                                    <button class="effect-button" data-effect="delay">Delay</button>
+                                    <button class="effect-button" data-effect="phaser">Phaser</button>
+                                    <button class="effect-button" data-effect="vibratio">Vibrato</button>
+                                    <button class="effect-button" data-effect="tremelo">Tremolo</button>
+                                    <button class="effect-button" data-effect="portamento">Portamento</button>
+                                </div>
+                                <div class="effect-controls-container" id="effect-controls">
+                                    <!-- Effect controls will be dynamically inserted here -->
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -125,51 +151,76 @@
             <!-- Pitch Tab -->
             <div class="tab-panel" id="pitch-panel">
                 <div class="control-section">
-                    <h4>Accidentals</h4>
                     <div id="accidental-controls-container-v2">
                         <button id="flat-toggle-btn" class="accidental-button active" aria-pressed="true">♭</button>
                         <button id="sharp-toggle-btn" class="accidental-button active" aria-pressed="true">♯</button>
                     </div>
                 </div>
                 <div class="control-section tonic-sign-container">
-                    <h4>Tonic & Key</h4>
+                    <h4>Tonal Center</h4>
                     <div class="tonic-tools-wrapper">
                        <div id="tonic-dropdown-container" class="dropdown-container">
-                           <button id="tonic-dropdown-button" class="toolkit-button tonic-dropdown-toggle"><span id="tonic-dropdown-label"><img src="/assets/icons/tonicShape_1.svg" alt="Tonic 1" class="tonic-shape-icon"></span> <span class="dropdown-arrow">▼</span></button>
+                           <button id="tonic-dropdown-button" class="toolkit-button tonic-dropdown-toggle"><span id="tonic-dropdown-label"><img src="/public/assets/tabicons/tonicShape_1.svg" alt="Tonic 1" class="tonic-shape-icon"> Major</span> <span class="dropdown-arrow">▼</span></button>
                            <div id="tonic-dropdown-menu" class="dropdown-menu">
-                               <button class="tonic-sign-button" data-tonic="1"><img src="/assets/icons/tonicShape_1.svg" alt="Tonic 1" class="tonic-shape-icon"><span class="mode-label">Major</span></button>
-                               <button class="tonic-sign-button" data-tonic="2"><img src="/assets/icons/tonicShape_2.svg" alt="Tonic 2" class="tonic-shape-icon"><span class="mode-label">Dorian</span></button>
-                               <button class="tonic-sign-button" data-tonic="3"><img src="/assets/icons/tonicShape_3.svg" alt="Tonic 3" class="tonic-shape-icon"><span class="mode-label">Phrygian</span></button>
-                               <button class="tonic-sign-button" data-tonic="4"><img src="/assets/icons/tonicShape_4.svg" alt="Tonic 4" class="tonic-shape-icon"><span class="mode-label">Lydian</span></button>
-                               <button class="tonic-sign-button" data-tonic="5"><img src="/assets/icons/tonicShape_5.svg" alt="Tonic 5" class="tonic-shape-icon"><span class="mode-label">Mixolydian</span></button>
-                               <button class="tonic-sign-button" data-tonic="6"><img src="/assets/icons/tonicShape_6.svg" alt="Tonic 6" class="tonic-shape-icon"><span class="mode-label">Aeolian</span></button>
-                               <button class="tonic-sign-button" data-tonic="7"><img src="/assets/icons/tonicShape_7.svg" alt="Tonic 7" class="tonic-shape-icon"><span class="mode-label">Locrian</span></button>
+                               <button class="tonic-sign-button" data-tonic="1"><img src="/public/assets/tabicons/tonicShape_1.svg" alt="Tonic 1" class="tonic-shape-icon"><span class="mode-label">Major</span></button>
+                               <button class="tonic-sign-button" data-tonic="2"><img src="/public/assets/tabicons/tonicShape_2.svg" alt="Tonic 2" class="tonic-shape-icon"><span class="mode-label">Dorian</span></button>
+                               <button class="tonic-sign-button" data-tonic="3"><img src="/public/assets/tabicons/tonicShape_3.svg" alt="Tonic 3" class="tonic-shape-icon"><span class="mode-label">Phrygian</span></button>
+                               <button class="tonic-sign-button" data-tonic="4"><img src="/public/assets/tabicons/tonicShape_4.svg" alt="Tonic 4" class="tonic-shape-icon"><span class="mode-label">Lydian</span></button>
+                               <button class="tonic-sign-button" data-tonic="5"><img src="/public/assets/tabicons/tonicShape_5.svg" alt="Tonic 5" class="tonic-shape-icon"><span class="mode-label">Mixolydian</span></button>
+                               <button class="tonic-sign-button" data-tonic="6"><img src="/public/assets/tabicons/tonicShape_6.svg" alt="Tonic 6" class="tonic-shape-icon"><span class="mode-label">Minor</span></button>
+                               <button class="tonic-sign-button" data-tonic="7"><img src="/public/assets/tabicons/tonicShape_7.svg" alt="Tonic 7" class="tonic-shape-icon"><span class="mode-label">Locrian</span></button>
                            </div>
                        </div>
                     </div>
                 </div>
                 <div class="control-section">
-                    <h4>Scale Degrees</h4>
-                    <div id="degree-dropdown-wrapper" class="degree-toggle-container dropdown-container">
-                        <button id="degree-dropdown-button" class="toolkit-button degree-dropdown-toggle">Degrees <span class="dropdown-arrow">▼</span></button>
-                        <div id="degree-dropdown-menu" class="dropdown-menu"><button id="toggle-diatonic-degrees" class="toolkit-button">Scale</button><button id="toggle-modal-degrees" class="toolkit-button">Mode</button></div>
+                    <div class="degree-toggle-container">
+                        <button id="degree-visibility-toggle" class="toolkit-button degree-visibility-toggle">Hide</button>
+                        <button id="degree-mode-toggle" class="toolkit-button degree-mode-toggle">Scale Degrees</button>
                     </div>
                 </div>
-                <div class="control-section" id="chordShape-container">
-                    <h4>Chord Shape</h4>
-                    <div class="harmony-preset-grid">
-                        <button class="harmony-preset-button">X</button>
-                        <button class="harmony-preset-button">x</button>
-                        <button class="harmony-preset-button">x°</button>
-                        <button class="harmony-preset-button">X+</button>
-                        <button class="harmony-preset-button">X7</button>
-                        <button class="harmony-preset-button">x⁷</button>
-                        <button class="harmony-preset-button">ø⁷</button>
-                        <button class="harmony-preset-button">Xadd6</button>
-                        <button class="harmony-preset-button">Xsus4</button>
-                        <button class="harmony-preset-button">Xsus2</button>
-                        <button class="harmony-preset-button">Xmaj7</button>
-                        <button class="harmony-preset-button">x°7</button>
+                <div class="control-section chord-shape-container">
+                    <div class="chord-shape-tabs">
+                        <button class="chord-tab-button active" data-chord-tab="intervals">Intervals</button>
+                        <button class="chord-tab-button" data-chord-tab="chords">Chords</button>
+                    </div>
+                    <div class="chord-shape-content">
+                        <div class="chord-tab-panel active" id="intervals-panel">
+                            <div class="intervals-content-box">
+                                <div class="harmony-preset-grid">
+                                    <button class="harmony-preset-button">1</button>
+                                    <button class="harmony-preset-button">2</button>
+                                    <button class="harmony-preset-button">3</button>
+                                    <button class="harmony-preset-button">4</button>
+                                    <button class="harmony-preset-button">5</button>
+                                    <button class="harmony-preset-button">6</button>
+                                    <button class="harmony-preset-button">7</button>
+                                    <button class="harmony-preset-button">8</button>
+                                    <button class="harmony-preset-button">9</button>
+                                    <button class="harmony-preset-button">11</button>
+                                    <button class="harmony-preset-button">13</button>
+                                    <button class="harmony-preset-button">♯11</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="chord-tab-panel" id="chords-panel">
+                            <div class="chords-content-box">
+                                <div class="harmony-preset-grid">
+                                    <button class="harmony-preset-button">X</button>
+                                    <button class="harmony-preset-button">x</button>
+                                    <button class="harmony-preset-button">x°</button>
+                                    <button class="harmony-preset-button">X+</button>
+                                    <button class="harmony-preset-button">X7</button>
+                                    <button class="harmony-preset-button">x⁷</button>
+                                    <button class="harmony-preset-button">ø⁷</button>
+                                    <button class="harmony-preset-button">Xadd6</button>
+                                    <button class="harmony-preset-button">Xsus4</button>
+                                    <button class="harmony-preset-button">Xsus2</button>
+                                    <button class="harmony-preset-button">Xmaj7</button>
+                                    <button class="harmony-preset-button">x°7</button>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 <div class="control-section" id="pitch-paint-container">
@@ -201,35 +252,41 @@
 
             <!-- Rhythm Tab -->
             <div class="tab-panel" id="rhythm-panel">
-                <div class="control-section">
-                    <h4>Anacrusis</h4>
-                    <div class="toggle-button-group"><button class="sidebar-toggle-button" id="anacrusis-on-btn">On</button><button class="sidebar-toggle-button" id="anacrusis-off-btn">Off</button></div>
-                </div>
-                <div class="control-section">
-                    <h4>Macrobeat Structure</h4>
-                    <div class="macrobeat-adjust-group">
-                        <button class="toolkit-button" id="macrobeat-decrease">–</button>
-                        <button class="toolkit-button" id="macrobeat-increase">+</button>
+                <div class="control-section rhythm-structure-container">
+                    <div class="control-subsection">
+                        <h4>Add/Del Beat</h4>
+                        <div class="macrobeat-adjust-group">
+                            <button class="toolkit-button" id="macrobeat-decrease">–</button>
+                            <button class="toolkit-button" id="macrobeat-increase">+</button>
+                        </div>
+                    </div>
+                    <div class="control-subsection">
+                        <h4>Pickup</h4>
+                        <div class="toggle-button-group"><button class="sidebar-toggle-button" id="anacrusis-on-btn">On</button><button class="sidebar-toggle-button" id="anacrusis-off-btn">Off</button></div>
                     </div>
                 </div>
                 <div class="control-section">
-                    <h4>Tempo</h4>
                     <div class="tempo-row">
                         <div class="tempo-input-group">
-                            <img src="/assets/icons/eigthNote.svg" alt="Eighth Note Tempo" class="tempo-label-icon">
+                            <img src="/public/assets/tabicons/eigthNote.svg" alt="Eighth Note Tempo" class="tempo-label-icon">
                             <input type="number" class="tempo-input" id="eighth-note-tempo" value="180">
                         </div>
                         <div class="tempo-input-group">
-                            <img src="/assets/icons/quarterNote.svg" alt="Quarter Note Tempo" class="tempo-label-icon">
+                            <img src="/public/assets/tabicons/quarterNote.svg" alt="Quarter Note Tempo" class="tempo-label-icon">
                             <input type="number" class="tempo-input" id="quarter-note-tempo" value="90">
                         </div>
                         <div class="tempo-input-group">
-                            <img src="/assets/icons/dottedQuarterNote.svg" alt="Dotted Quarter Note Tempo" class="tempo-label-icon">
+                            <img src="/public/assets/tabicons/dottedQuarterNote.svg" alt="Dotted Quarter Note Tempo" class="tempo-label-icon">
                             <input type="number" class="tempo-input" id="dotted-quarter-tempo" value="60">
                         </div>
                     </div>
                     <div class="tempo-slider-row">
                         <input type="range" id="tempo-slider" min="30" max="240" value="90">
+                    </div>
+                </div>
+                <div class="control-section">
+                    <div id="stamps-toolbar-container" class="stamps-toolbar-container">
+                        <!-- Stamps toolbar will be rendered here by JavaScript -->
                     </div>
                 </div>
             </div>
@@ -321,6 +378,26 @@
             document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
             button.classList.add('active');
             document.querySelectorAll('.tab-panel').forEach(panel => panel.classList.remove('active'));
+            document.getElementById(`${tabId}-panel`).classList.add('active');
+        });
+    });
+    
+    document.querySelectorAll('.preset-tab-button').forEach(button => {
+        button.addEventListener('click', () => {
+            const tabId = button.dataset.presetTab;
+            document.querySelectorAll('.preset-tab-button').forEach(btn => btn.classList.remove('active'));
+            button.classList.add('active');
+            document.querySelectorAll('.preset-tab-panel').forEach(panel => panel.classList.remove('active'));
+            document.getElementById(`${tabId}-panel`).classList.add('active');
+        });
+    });
+    
+    document.querySelectorAll('.chord-tab-button').forEach(button => {
+        button.addEventListener('click', () => {
+            const tabId = button.dataset.chordTab;
+            document.querySelectorAll('.chord-tab-button').forEach(btn => btn.classList.remove('active'));
+            button.classList.add('active');
+            document.querySelectorAll('.chord-tab-panel').forEach(panel => panel.classList.remove('active'));
             document.getElementById(`${tabId}-panel`).classList.add('active');
         });
     });

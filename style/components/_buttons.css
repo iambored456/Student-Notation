@@ -1,4 +1,4 @@
-/* style/components/_buttons.css */
+   /* style/components/_buttons.css */
 
 /* --- Tab Buttons --- */
 .tab-button {
@@ -7,7 +7,7 @@
     border: 1px solid transparent;
     border-bottom-color: var(--c-border); 
     color: var(--c-text-muted);
-    font-family: var(--main-font); font-size: 1.41em; font-weight: 500;
+    font-family: var(--main-font); font-size: 1.0em; font-weight: 500;
     cursor: pointer; text-align: left;
     transition: all 0.2s ease; position: relative;
     border-top-left-radius: var(--border-radius-md);
@@ -33,9 +33,9 @@
 /* --- General Toolkit Buttons --- */
 .toolkit-button { line-height: 1.2; padding: var(--space-2); }
 .toolkit-icon-button {
-    font-size: 16px; 
-    width: 42px; 
-    height: 42px; 
+    font-size: 14px; 
+    width: 36px; 
+    height: 36px; 
     padding: var(--space-1); 
     display: flex; align-items: center; justify-content: center;
     background-color: transparent; 
@@ -98,6 +98,113 @@
     white-space: nowrap;
 }
 
+/* --- Preset/Effects Container Styles --- */
+.preset-effects-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    flex: 0 0 auto;
+    width: fit-content;
+    gap: 0;
+}
+
+.preset-effects-tabs {
+    display: flex;
+    gap: 0;
+    margin-bottom: 0;
+}
+
+.preset-tab-button {
+    padding: var(--space-1) var(--space-3);
+    background-color: transparent; 
+    border: 1px solid var(--c-border);
+    border-bottom: none;
+    color: var(--c-text-muted);
+    font-family: var(--main-font); 
+    font-size: 0.875rem; 
+    font-weight: 500;
+    cursor: pointer; 
+    text-align: center;
+    transition: all 0.2s ease; 
+    position: relative;
+    border-top-left-radius: var(--border-radius-md);
+    border-top-right-radius: var(--border-radius-md);
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+}
+
+.preset-tab-button:first-child {
+    border-right: none;
+}
+
+.preset-tab-button:hover {
+    background-color: rgba(0, 0, 0, 0.05); 
+    color: var(--c-text);
+}
+
+.preset-tab-button.active {
+    background-color: var(--c-surface);
+    color: var(--c-text);
+    font-weight: 600; 
+    border-color: var(--c-border);
+    border-bottom-color: var(--c-surface);
+    z-index: 2;
+    margin-bottom: -1px;
+}
+
+.preset-effects-content {
+    position: relative;
+    width: 100%;
+}
+
+.preset-tab-panel {
+    display: none;
+}
+
+.preset-tab-panel.active {
+    display: block;
+}
+
+.preset-content-box, .effects-content-box {
+    background-color: var(--c-surface);
+    border: 1px solid var(--c-border);
+    border-radius: 16px;
+    padding: var(--space-1);
+    box-shadow: var(--box-shadow-sm);
+    position: relative;
+    z-index: 1;
+    width: 16rem;
+    min-width: 280px;
+    overflow: visible;
+}
+
+.effects-content-box {
+    height: fit-content;
+}
+
+.preset-tab-panel.active .preset-content-box::before {
+    content: '';
+    position: absolute;
+    top: -1px;
+    left: calc(50% - 80px);
+    width: 80px;
+    height: 1px;
+    background-color: var(--c-surface);
+    z-index: 3;
+}
+
+.preset-tab-panel.active .effects-content-box::before {
+    content: '';
+    position: absolute;
+    top: -1px;
+    left: calc(50%);
+    width: 70px;
+    height: 1px;
+    background-color: var(--c-surface);
+    z-index: 3;
+}
+
 /* --- Preset Voice Buttons --- */
 .preset-grid { display: flex; gap: var(--space-2); }
 .preset-column { display: flex; flex-direction: column; gap: var(--space-1); }
@@ -108,6 +215,136 @@
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 .preset-button:hover { background-color: var(--c-border); }
+
+.preset-effects-container .preset-button.selected {
+    background-color: var(--c-accent-light, #63a9fd) !important;
+    color: var(--c-text, #212529) !important;
+    border-color: var(--c-accent, #4A90E2) !important;
+    font-weight: 600 !important;
+    box-shadow: 0 0 0 1px var(--c-accent, #4A90E2) !important;
+    transform: scale(0.98) !important;
+    opacity: 1 !important;
+}
+
+/* --- Effects Buttons --- */
+.effects-grid { 
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: repeat(2, 1fr);
+    row-gap: 0.15rem;
+    column-gap: 0.15rem;
+    margin-bottom: 0;
+}
+
+.effect-button { 
+    width: 4.5rem; 
+    justify-content: center; 
+    display: flex; 
+    align-items: center;
+    padding: 0.1rem; 
+    background-color: var(--c-surface);
+    color: var(--c-text); 
+    border: 1px solid var(--c-border); 
+    border-radius: var(--border-radius-sm);
+    font-size: 13px;
+    white-space: nowrap; 
+    overflow: hidden; 
+    text-overflow: ellipsis;
+    transition: background-color 0.2s ease;
+}
+
+.effect-button:hover { 
+    background-color: var(--c-border); 
+}
+
+.effect-button.active {
+    background-color: var(--c-accent-light, #63a9fd);
+    color: var(--c-text, #212529);
+    border-color: var(--c-accent, #4A90E2);
+    font-weight: 600;
+    box-shadow: 0 0 0 2px var(--c-accent, rgba(74, 144, 226, 0.2));
+    transform: scale(0.98);
+}
+
+/* --- Effect Controls Container --- */
+.effect-controls-container {
+    padding-top: 0.15rem;
+    margin-top: 0rem;
+    min-height: 2rem;
+    display: none;
+}
+
+.effect-controls-container.active {
+    display: block;
+    min-height: auto;
+    height: fit-content;
+}
+
+.effect-controls {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+    gap: var(--space-3);
+    align-items: start;
+    justify-items: center;
+    padding: var(--space-2) 0;
+}
+
+.effect-control-group {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+    align-items: center;
+    min-width: 80px;
+    position: relative;
+}
+
+.effect-control-label {
+    font-size: 0.5rem;
+    color: var(--c-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 500;
+}
+
+.effect-control-slider {
+    width: 100%;
+    height: 4px;
+    background: var(--c-border);
+    border-radius: 2px;
+    outline: none;
+    -webkit-appearance: none;
+    appearance: none;
+}
+
+.effect-control-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: var(--c-accent);
+    cursor: pointer;
+    border: 2px solid var(--c-surface);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.effect-control-slider::-moz-range-thumb {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: var(--c-accent);
+    cursor: pointer;
+    border: 2px solid var(--c-surface);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.effect-control-value {
+    font-size: 0.75rem;
+    color: var(--c-text);
+    font-weight: 600;
+    min-width: 30px;
+    text-align: center;
+}
 
 /* --- Playback Control Buttons --- */
 .playback-row {
@@ -251,8 +488,109 @@
     border-color: var(--c-accent); box-shadow: 0 0 5px var(--c-accent);
 }
 
+/* --- Chord Shape Container Styles --- */
+.chord-shape-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    flex: 0 0 auto;
+    width: fit-content;
+    gap: 0;
+}
+
+.chord-shape-tabs {
+    display: flex;
+    gap: 0;
+    margin-bottom: 0;
+}
+
+.chord-tab-button {
+    padding: var(--space-1) var(--space-3);
+    background-color: transparent; 
+    border: 1px solid var(--c-border);
+    border-bottom: none;
+    color: var(--c-text-muted);
+    font-family: var(--main-font); 
+    font-size: 0.875rem; 
+    font-weight: 500;
+    cursor: pointer; 
+    text-align: center;
+    transition: all 0.2s ease; 
+    position: relative;
+    border-top-left-radius: var(--border-radius-md);
+    border-top-right-radius: var(--border-radius-md);
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+}
+
+.chord-tab-button:first-child {
+    border-right: none;
+}
+
+.chord-tab-button:hover {
+    background-color: rgba(0, 0, 0, 0.05); 
+    color: var(--c-text);
+}
+
+.chord-tab-button.active {
+    background-color: var(--c-surface);
+    color: var(--c-text);
+    font-weight: 600; 
+    border-color: var(--c-border);
+    border-bottom-color: var(--c-surface);
+    z-index: 2;
+    margin-bottom: -1px;
+}
+
+.chord-shape-content {
+    position: relative;
+    width: 100%;
+}
+
+.chord-tab-panel {
+    display: none;
+}
+
+.chord-tab-panel.active {
+    display: block;
+}
+
+.intervals-content-box, .chords-content-box {
+    background-color: var(--c-surface);
+    border: 1px solid var(--c-border);
+    border-radius: 16px;
+    padding: var(--space-2);
+    box-shadow: var(--box-shadow-sm);
+    position: relative;
+    z-index: 1;
+    width: 16rem;
+}
+
+.chord-tab-panel.active .intervals-content-box::before {
+    content: '';
+    position: absolute;
+    top: -1px;
+    left: calc(50% - 50px);
+    width: 60px;
+    height: 1px;
+    background-color: var(--c-surface);
+    z-index: 3;
+}
+
+.chord-tab-panel.active .chords-content-box::before {
+    content: '';
+    position: absolute;
+    top: -1px;
+    left: calc(50% + 10px);
+    width: 50px;
+    height: 1px;
+    background-color: var(--c-surface);
+    z-index: 3;
+}
+
 /* --- Harmony Preset Button Styles --- */
-.harmony-preset-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: var(--space-1); flex: 1; }
+.harmony-preset-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--space-1); flex: 1; }
 .harmony-preset-button {
     background-color: var(--c-surface); color: var(--c-text);
     border: 1px solid var(--c-border); border-radius: var(--border-radius-sm);
@@ -276,9 +614,10 @@
 
 /* NEWStyle for the selected harmony button, using the dynamic accent color */
 .harmony-preset-button.selected {
-    background-color: var(--c-accent);
-    color: var(--c-surface);
-    border-color: var(--c-accent-hover);
+    background-color: var(--c-accent-light, #63a9fd);
+    color: var(--c-text, #212529);
+    border-color: var(--c-accent, #4A90E2);
+    font-weight: 600;
 }
 
 /* --- Time Signature Dropdown --- */
@@ -357,4 +696,351 @@
     font-size: var(--font-size-sm);
     color: var(--c-text-muted);
     margin-top: 2px;
+}
+
+/* --- Dial Components --- */
+.dial-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-1);
+    user-select: none;
+}
+
+.dial-svg {
+    cursor: pointer;
+    transition: transform 0.1s ease;
+}
+
+.dial-svg:hover {
+    transform: scale(1.05);
+}
+
+.dial-svg.dragging {
+    cursor: grabbing;
+    transform: scale(1.1);
+}
+
+.dial-background {
+    fill: var(--c-surface);
+    stroke: var(--c-border);
+    stroke-width: 2;
+}
+
+.dial-track {
+    stroke: var(--c-border);
+    stroke-width: 4;
+    stroke-linecap: round;
+    opacity: 0.3;
+}
+
+.dial-handle {
+    stroke: var(--c-accent);
+    stroke-width: 4;
+    stroke-linecap: round;
+    filter: drop-shadow(0 0 3px var(--c-accent));
+}
+
+.dial-handle-line {
+    stroke: var(--c-accent);
+    stroke-width: 3;
+    stroke-linecap: round;
+    filter: drop-shadow(0 0 2px var(--c-accent));
+}
+
+.dial-indicator {
+    fill: var(--c-accent);
+    stroke: var(--c-surface);
+    stroke-width: 2;
+    filter: drop-shadow(0 0 3px var(--c-accent));
+}
+
+.dial-screw {
+    fill: var(--c-text-muted);
+    stroke: var(--c-border);
+    stroke-width: 1;
+}
+
+.dial-label {
+    font-size: 0.8rem;
+    color: var(--c-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 500;
+    text-align: center;
+    margin-bottom: var(--space-1);
+}
+
+.dial-value {
+    font-size: 0.75rem;
+    color: var(--c-text);
+    font-weight: 600;
+    min-width: 30px;
+    text-align: center;
+    background-color: var(--c-gridline);
+    padding: 2px 6px;
+    border-radius: var(--border-radius-sm);
+    border: 1px solid var(--c-border);
+}
+
+/* Hover states for better interactivity */
+.dial-svg:hover .dial-background {
+    fill: var(--c-gridline);
+}
+
+.dial-svg:hover .dial-handle {
+    stroke-width: 5;
+}
+
+.dial-svg:hover .dial-handle-line {
+    stroke-width: 4;
+}
+
+.dial-svg:hover .dial-indicator {
+    r: 5;
+    filter: drop-shadow(0 0 4px var(--c-accent));
+}
+
+/* Active/dragging states */
+.dial-svg.dragging .dial-background {
+    fill: var(--c-gridline);
+    stroke: var(--c-accent);
+}
+
+.dial-svg.dragging .dial-handle {
+    stroke-width: 5;
+    filter: drop-shadow(0 0 6px var(--c-accent));
+}
+
+.dial-svg.dragging .dial-indicator {
+    r: 5;
+    filter: drop-shadow(0 0 6px var(--c-accent));
+    stroke-width: 3;
+}
+
+.dial-svg.dragging .dial-value {
+    background-color: var(--c-accent);
+    color: var(--c-surface);
+    border-color: var(--c-accent-hover);
+}
+
+/* --- Nexus UI Dial Integration --- */
+.effect-control-group .nexus-dial-label {
+    font-size: 0.8rem;
+    color: var(--c-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 500;
+    text-align: center;
+    margin-bottom: var(--space-1);
+}
+
+.effect-control-group .nexus-dial-value {
+    font-size: 0.75rem;
+    color: var(--c-text);
+    font-weight: 600;
+    min-width: 30px;
+    text-align: center;
+    background-color: var(--c-surface);
+    padding: 0.5rem;
+    border-radius: var(--border-radius-sm);
+    border: 1px solid var(--c-border);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    position: absolute;
+    z-index: 1000;
+    top: -40px;
+    left: 50%;
+    transform: translateX(-50%);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+    display: none;
+}
+
+/* Style the nexus UI elements to match our theme */
+.effect-control-group svg {
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
+}
+
+.effect-control-group svg circle:first-child {
+    fill: var(--c-surface) !important;
+    stroke: var(--c-border) !important;
+    stroke-width: 2 !important;
+}
+
+.effect-control-group svg circle:last-child {
+    fill: var(--c-text-muted) !important;
+}
+
+.effect-control-group svg path {
+    stroke: var(--c-accent) !important;
+    fill: var(--c-accent) !important;
+}
+
+/* Hover effects for nexus dials */
+.effect-control-group:hover svg {
+    transform: scale(1.05);
+    transition: transform 0.2s ease;
+}
+
+.effect-control-group:hover svg circle:first-child {
+    fill: var(--c-gridline) !important;
+}
+
+.effect-control-group:hover .nexus-dial-value {
+    display: block;
+    opacity: 1;
+    transform: translateX(-50%) translateY(-5px);
+    background-color: var(--c-accent);
+    color: var(--c-surface);
+    border-color: var(--c-accent-hover);
+}
+
+/* Dial Container */
+#dial-container {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    flex-direction: row;
+    row-gap: 0rem;
+    column-gap: var(--space-3);
+    padding-right: 0.4rem;
+    padding-left: 0.1rem;
+    padding-bottom: 0rem;
+    overflow: visible;
+    background-color: var(--c-gridline);
+    border: 1px solid var(--c-border);
+    border-radius: 10px;
+    margin: 0 auto;
+    width: fit-parent;
+    height: fit-content;
+}
+
+#dial-container svg {
+    overflow: visible;
+}
+
+/* Dial wrapper styling */
+.dial-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0rem;
+    position: relative;
+    margin: 0rem;
+}
+
+
+.dial-value {
+    font-size: 0.75rem;
+    color: var(--c-text);
+    font-weight: 600;
+    min-width: 30px;
+    text-align: center;
+    background-color: var(--c-surface);
+    padding: 2px 6px;
+    border-radius: var(--border-radius-sm);
+    border: 1px solid var(--c-border);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    position: absolute;
+    z-index: 1000;
+    bottom: -40px;
+    left: 50%;
+    transform: translateX(-50%);
+    transition: opacity 0.2s ease, transform 0.2s ease;
+    display: none;
+}
+
+.dial-value-hidden {
+    display: none;
+}
+
+.dial-value-visible {
+    display: block;
+    opacity: 1;
+    transform: translateX(-50%) translateY(5px);
+    background-color: var(--c-accent);
+    color: var(--c-surface);
+    border-color: var(--c-accent-hover);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+
+/* --- Stamps Toolbar --- */
+.stamps-toolbar-container {
+    display: flex;
+    justify-content: center;
+    padding: var(--space-1);
+}
+
+.stamps-grid {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+}
+
+.stamps-row {
+    display: grid;
+    gap: 0.5rem;
+    justify-items: center;
+}
+
+.stamps-row-1 {
+    grid-template-columns: repeat(4, 1fr);
+}
+
+.stamps-row-2 {
+    grid-template-columns: repeat(6, 1fr);
+}
+
+.stamps-row-3 {
+    grid-template-columns: repeat(5, 1fr);
+}
+
+.stamp-button {
+    position: relative;
+    width: fit-content;
+    height: fit-content;
+    min-width: 0rem;
+    min-height: 0rem;
+    background-color: var(--c-surface);
+    border: 2px solid var(--c-border);
+    border-radius: var(--border-radius-md);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 0rem;
+}
+
+.stamp-button:hover {
+    background-color: var(--c-gridline);
+    transform: scale(1.05);
+    border-color: var(--c-accent);
+}
+
+.stamp-button.active {
+    background-color: var(--c-accent-light, #63a9fd) !important;
+    color: var(--c-text, #212529) !important;
+    border-color: var(--c-accent, #4A90E2) !important;
+    font-weight: 600 !important;
+    box-shadow: 0 0 0 1px var(--c-accent, #4A90E2) !important;
+    transform: scale(0.98) !important;
+    opacity: 1 !important;
+}
+
+.stamp-button svg {
+    flex-shrink: 0;
+}
+
+.stamp-number {
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: var(--c-text-muted);
+    line-height: 1;
+}
+
+.stamp-button.active .stamp-number {
+    color: var(--c-text);
 }

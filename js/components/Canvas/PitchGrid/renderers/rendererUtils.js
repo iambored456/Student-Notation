@@ -25,16 +25,16 @@ export function getPitchClass(pitchWithOctave) {
 
 export function getLineStyleFromPitchClass(pc) {
     switch (pc) {
-        case 'C': return { lineWidth: 2, dash: [], color: '#dee2e6' };
-        case 'E': return { lineWidth: 1, dash: [10, 10], color: '#dee2e6' };
-        case 'G': return { lineWidth: 1, dash: [], color: '#f8f9fa' };
+        case 'C': return { lineWidth: 3.33, dash: [], color: '#adb5bd' };
+        case 'E': return { lineWidth: 1, dash: [10, 20], color: '#adb5bd' };
+        case 'G': return { lineWidth: 1, dash: [], color: '#dee2e6' };
         case 'D♭/C♯':
         case 'E♭/D♯':
         case 'F':
         case 'A':
         case 'B':
             return null;
-        default: return { lineWidth: 1, dash: [], color: '#e9ecef' };
+        default: return { lineWidth: 1, dash: [], color: '#ced4da' };
     }
 }
 

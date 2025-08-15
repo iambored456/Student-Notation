@@ -6,7 +6,7 @@ import { getPlacedTonicSigns } from '../../../state/selectors.js';
 import { Scale, Interval } from 'tonal';
 
 function drawVerticalHarmonyLines(ctx, options) {
-    const { columnWidths, macrobeatGroupings, macrobeatBoundaryStyles } = options;
+    const { columnWidths, macrobeatGroupings, macrobeatBoundaryStyles, cellWidth } = options;
     const placedTonicSigns = getPlacedTonicSigns(options);
     const totalColumns = columnWidths.length;
     let macrobeatBoundaries = [];
@@ -21,8 +21,17 @@ function drawVerticalHarmonyLines(ctx, options) {
         macrobeatBoundaries.push(current_col);
     }
 
+    function getColumnX(index) {
+        let x = 0;
+        for (let i = 0; i < index; i++) {
+            const widthMultiplier = columnWidths[i] || 0;
+            x += widthMultiplier * cellWidth;
+        }
+        return x;
+    }
+
     for (let i = 0; i <= totalColumns; i++) {
-        const x = LayoutService.getColumnX(i);
+        const x = getColumnX(i);
         let style;
         const isBoundary = i === 2 || i === totalColumns - 2;
         const isTonicCol = placedTonicSigns.some(ts => ts.columnIndex === i);
@@ -30,13 +39,13 @@ function drawVerticalHarmonyLines(ctx, options) {
         const isMacrobeatEnd = macrobeatBoundaries.includes(i);
 
         if (isBoundary || isTonicCol || isTonicColumnEnd) {
-            style = { lineWidth: 2, strokeStyle: '#dee2e6', dash: [] };
+            style = { lineWidth: 2, strokeStyle: '#adb5bd', dash: [] };
         } else if (isMacrobeatEnd) {
             const mbIndex = macrobeatBoundaries.indexOf(i);
             if (mbIndex !== -1) {
                 const boundaryStyle = macrobeatBoundaryStyles[mbIndex];
                 if (boundaryStyle === 'anacrusis') continue;
-                style = { lineWidth: 1, strokeStyle: '#dee2e6', dash: boundaryStyle === 'solid' ? [] : [5, 5] };
+                style = { lineWidth: 1, strokeStyle: '#adb5bd', dash: boundaryStyle === 'solid' ? [] : [5, 5] };
             } else { continue; }
         } else { continue; }
         
@@ -57,8 +66,19 @@ function drawAnalysisForMacrobeat(ctx, state, macrobeatIndex) {
     
     const { startColumn, grouping } = getMacrobeatInfo(state, macrobeatIndex);
     const { keyTonic, keyMode } = getKeyContextForBeat(state, startColumn);
-    const x = LayoutService.getColumnX(startColumn);
-    const width = LayoutService.getMacrobeatWidthPx(state, grouping);
+    
+    // Use zoom-aware positioning like other grids
+    function getColumnX(index) {
+        let x = 0;
+        for (let i = 0; i < index; i++) {
+            const widthMultiplier = state.columnWidths[i] || 0;
+            x += widthMultiplier * state.cellWidth;
+        }
+        return x;
+    }
+    
+    const x = getColumnX(startColumn);
+    const width = grouping * state.cellWidth;
     const centerX = x + width / 2;
 
     const romanNumeralInfo = TonalService.getRomanNumeralForNotes(notes, keyTonic, keyMode);
@@ -137,6 +157,11 @@ function drawAnalysisForMacrobeat(ctx, state, macrobeatIndex) {
 export function drawHarmonyGrid(ctx, options) {
     const { state } = options;
     ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+    
+    // DEBUG: Log canvas positioning info
+    const canvas = ctx.canvas;
+    const rect = canvas.getBoundingClientRect();
+    const computedStyle = window.getComputedStyle(canvas);
     
     // REMOVED: The horizontal line dividing the two sections is no longer needed.
     // ctx.beginPath();

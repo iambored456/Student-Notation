@@ -4,7 +4,6 @@ import { getPlacedTonicSigns } from '../state/selectors.js';
 import { drawPitchGrid } from '../components/Canvas/PitchGrid/renderers/pitchGridRenderer.js';
 import { drawDrumGrid } from '../components/Canvas/DrumGrid/drumGridRenderer.js';
 
-console.log("PrintService: Module loaded.");
 
 // NEW HELPER FUNCTION FOR RENDERING PAINT TRAILS
 function renderPaintTrails(ctx, paintHistory, options) {

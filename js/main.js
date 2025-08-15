@@ -41,6 +41,7 @@ import { initAdsrComponent } from './components/ADSR/adsrComponent.js';
 import { initFilterControls } from './components/Harmonics-Filter/filterControls.js';
 import PrintPreview from './components/PrintPreview.js';
 import { initStaticWaveformVisualizer } from './components/StaticWaveform/staticWaveformVisualizer.js';
+import simpleEffectsTest from './components/Effects/simpleEffectsTest.js';
 
 // Paint Components
 import PaintCanvas from './components/PitchPaint/paintCanvas.js';
@@ -49,6 +50,9 @@ import PaintControls from './components/PitchPaint/paintControls.js';
 
 // Zoom System Components
 import ZoomIndicator from './components/ZoomIndicator.js';
+
+// Stamps Toolbar Component
+import StampsToolbar from './components/StampsToolbar/StampsToolbar.js';
 
 
 function initializeNewZoomSystem() {
@@ -147,6 +151,9 @@ document.addEventListener("DOMContentLoaded", () => {
     initHarmonicBins();
     initFilterControls();
     PrintPreview.init();
+    
+    // Initialize Stamps Toolbar
+    StampsToolbar.init();
 
     // Initialize static waveform visualizer
     logger.initStart('Static Waveform Visualizer');
@@ -155,6 +162,9 @@ document.addEventListener("DOMContentLoaded", () => {
     } else {
         logger.initFailed('Static Waveform Visualizer');
     }
+
+    // Initialize simple effects test
+    simpleEffectsTest.init();
 
     // Initialize Paint components
     logger.initStart('Paint components');
@@ -176,6 +186,7 @@ document.addEventListener("DOMContentLoaded", () => {
     };
 
     store.on('notesChanged', renderAll);
+    store.on('stampPlacementsChanged', renderAll);
     
     store.on('rhythmStructureChanged', () => {
         logger.event('Main', 'rhythmStructureChanged event received, recalculating layout', null, 'state');
