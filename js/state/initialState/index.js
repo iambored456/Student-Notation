@@ -9,7 +9,8 @@ export const initialState = {
     placedChords: [],
     tonicSignGroups: {},
     stampPlacements: [],
-    history: [ { notes: [], tonicSignGroups: {}, timbres: getInitialTimbresState().timbres, placedChords: [], stampPlacements: [] } ],
+    tripletPlacements: [],
+    history: [ { notes: [], tonicSignGroups: {}, timbres: getInitialTimbresState().timbres, placedChords: [], stampPlacements: [], tripletPlacements: [] } ],
     historyIndex: 0,
     fullRowData: [],
 

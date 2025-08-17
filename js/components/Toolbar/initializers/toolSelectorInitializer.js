@@ -102,6 +102,19 @@ export function initToolSelectors() {
         tonicDropdownButton.addEventListener('click', (e) => {
             e.stopPropagation();
             tonicDropdownContainer.classList.toggle('open');
+            
+            // Toggle overflow on containers for dropdown escape
+            const tabContent = document.querySelector('.tab-content');
+            const container3 = document.getElementById('container-3');
+            const isOpen = tonicDropdownContainer.classList.contains('open');
+            
+            if (tabContent) {
+                tabContent.classList.toggle('dropdown-open', isOpen);
+            }
+            if (container3) {
+                container3.classList.toggle('dropdown-open', isOpen);
+            }
+            
             tonicDropdownButton.blur(); // Remove focus to prevent lingering highlight
         });
         tonicDropdownMenu.querySelectorAll('.tonic-sign-button').forEach(btn => {
@@ -114,6 +127,16 @@ export function initToolSelectors() {
                     tonicDropdownLabel.innerHTML = `<img src="/public/assets/tabicons/tonicShape_${tonicNumber}.svg" alt="Tonic ${tonicNumber}" class="tonic-shape-icon"> ${modeLabel}`;
                 }
                 tonicDropdownContainer.classList.remove('open');
+                
+                // Remove overflow class when dropdown closes
+                const tabContent = document.querySelector('.tab-content');
+                const container3 = document.getElementById('container-3');
+                if (tabContent) {
+                    tabContent.classList.remove('dropdown-open');
+                }
+                if (container3) {
+                    container3.classList.remove('dropdown-open');
+                }
             });
         });
     }
@@ -160,7 +183,19 @@ export function initToolSelectors() {
     });
 
     document.addEventListener('click', (e) => {
-        if (tonicDropdownContainer && !tonicDropdownContainer.contains(e.target)) tonicDropdownContainer.classList.remove('open');
+        if (tonicDropdownContainer && !tonicDropdownContainer.contains(e.target)) {
+            tonicDropdownContainer.classList.remove('open');
+            
+            // Remove overflow class when dropdown closes
+            const tabContent = document.querySelector('.tab-content');
+            const container3 = document.getElementById('container-3');
+            if (tabContent) {
+                tabContent.classList.remove('dropdown-open');
+            }
+            if (container3) {
+                container3.classList.remove('dropdown-open');
+            }
+        }
     });
 
     // --- UI State Change Listeners (Visual Feedback) ---

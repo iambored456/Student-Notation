@@ -1,5 +1,5 @@
 // js/components/Canvas/PitchGrid/renderers/gridLines.js
-import { getColumnX, getRowY, getPitchClass, getLineStyleFromPitchClass } from './rendererUtils.js';
+import { getColumnX, getRowY, getPitchClass, getLineStyleFromPitchClass, getCurrentCoordinateMapping } from './rendererUtils.js';
 import { shouldDrawVerticalLineAtColumn, isTonicColumn } from '../../../../utils/tonicColumnUtils.js';
 
 function drawHorizontalMusicLines(ctx, options, startRow, endRow) {
@@ -44,7 +44,14 @@ export function drawHorizontalLines(ctx, options, startRow, endRow) {
 }
 
 export function drawVerticalLines(ctx, options) {
-    // This function remains correct and does not need changes.
+    // First draw the regular grid lines (with modulation-aware spacing)
+    drawRegularVerticalLines(ctx, options);
+    
+    // TEMPORARILY DISABLED: Draw ghost lines for modulated segments (now with proper grid-based calculation)
+    // drawGhostLines(ctx, options);
+}
+
+function drawRegularVerticalLines(ctx, options) {
     const { columnWidths, macrobeatGroupings, macrobeatBoundaryStyles, placedTonicSigns } = options;
     const totalColumns = columnWidths.length;
     let macrobeatBoundaries = [];
@@ -57,17 +64,16 @@ export function drawVerticalLines(ctx, options) {
         current_col += macrobeatGroupings[i];
         macrobeatBoundaries.push(current_col);
     }
-
     
     for (let i = 0; i <= totalColumns; i++) {
         const x = getColumnX(i, options);
+        
         let style;
         const isBoundary = i === 2 || i === totalColumns - 2;
         const isTonicColumnStart = isTonicColumn(i, placedTonicSigns);
         const isTonicColumnEnd = placedTonicSigns.some(ts => i === ts.columnIndex + 2);
         const isMacrobeatEnd = macrobeatBoundaries.includes(i);
         const shouldDraw = shouldDrawVerticalLineAtColumn(i, placedTonicSigns);
-
 
         // Skip drawing vertical lines in the middle of tonic shapes
         if (!shouldDraw) {
@@ -80,9 +86,13 @@ export function drawVerticalLines(ctx, options) {
             const mbIndex = macrobeatBoundaries.indexOf(i);
             if (mbIndex !== -1) {
                 const boundaryStyle = macrobeatBoundaryStyles[mbIndex];
-                if (boundaryStyle === 'anacrusis') continue;
+                if (boundaryStyle === 'anacrusis') {
+                    continue;
+                }
                 style = { lineWidth: 1, strokeStyle: '#adb5bd', dash: boundaryStyle === 'solid' ? [] : [5, 5] };
-            } else { continue; }
+            } else { 
+                continue; 
+            }
         } else { 
             continue; 
         }
@@ -96,4 +106,81 @@ export function drawVerticalLines(ctx, options) {
         ctx.stroke();
     }
     ctx.setLineDash([]);
+}
+
+function drawGhostLines(ctx, options) {
+    const { modulationMarkers } = options;
+    
+    if (!modulationMarkers || modulationMarkers.length === 0) {
+        return;
+    }
+    
+    // Get coordinate mapping to access ghost line positions
+    const mapping = getCurrentCoordinateMapping(options);
+    const baseMicrobeatPx = options.baseMicrobeatPx || options.cellWidth || 40;
+    
+    // Draw ghost lines for each modulated segment
+    mapping.segments.forEach((segment, index) => {
+        if (!segment.marker) {
+            return; // Skip base segment
+        }
+        
+        const ghostPositions = mapping.getGhostGridPositions(segment, options);
+        
+        // Get right legend boundary to stop ghost lines at the music area end
+        const rightLegendColumnIndex = options.columnWidths.length - 2;
+        const rightBoundary = getColumnX(rightLegendColumnIndex, options);
+        
+        console.log('[GRIDLINES] Ghost line boundary calculation:', {
+            rightLegendColumnIndex,
+            rightBoundary,
+            canvasWidth: ctx.canvas.width
+        });
+        
+        ghostPositions.forEach((x, posIndex) => {
+            // Skip ghost lines that extend past the right boundary
+            if (x >= rightBoundary) {
+                return;
+            }
+            
+            // Only draw ghost lines that don't overlap with regular grid lines
+            const isRegular = isRegularGridLineAt(x, options);
+            
+            if (!isRegular) {
+                drawGhostLine(ctx, x);
+            }
+        });
+    });
+}
+
+function drawGhostLine(ctx, x) {
+    ctx.save();
+    
+    // Ghost line style: dashed, lighter color, reduced opacity
+    ctx.beginPath();
+    ctx.moveTo(x, 0);
+    ctx.lineTo(x, ctx.canvas.height);
+    ctx.lineWidth = 1;
+    ctx.strokeStyle = 'rgba(173, 181, 189, 0.4)'; // 40% opacity of regular grid color
+    ctx.setLineDash([4, 3]); // 4px dash, 3px gap
+    ctx.stroke();
+    
+    ctx.restore();
+}
+
+function isRegularGridLineAt(x, options) {
+    // Check if there's already a regular grid line at this position
+    // This is a simple tolerance check to avoid overlapping lines
+    const tolerance = 2; // pixels
+    const { columnWidths } = options;
+    
+    let currentX = 0;
+    for (let i = 0; i < columnWidths.length; i++) {
+        const lineX = getColumnX(i, options);
+        if (Math.abs(x - lineX) <= tolerance) {
+            return true;
+        }
+    }
+    
+    return false;
 }

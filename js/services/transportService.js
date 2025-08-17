@@ -7,8 +7,33 @@ import SynthEngine from './synthEngine.js';
 import GlobalService from './globalService.js';
 import domCache from './domCache.js';
 import logger from '../utils/logger.js';
+
+/**
+ * Gets the base (non-modulated) column X position for playhead timing
+ * @param {number} columnIndex - Column index
+ * @returns {number} Base X position without modulation effects
+ */
+function getBaseColumnX(columnIndex) {
+    let x = 0;
+    for (let i = 0; i < columnIndex; i++) {
+        const widthMultiplier = store.state.columnWidths[i] || 0;
+        x += widthMultiplier * store.state.cellWidth;
+    }
+    return x;
+}
 import { getStampPlaybackData } from '../rhythm/stampPlacements.js';
 import { getStampScheduleEvents } from '../rhythm/scheduleStamps.js';
+import { getTripletPlaybackData } from '../rhythm/tripletPlacements.js';
+import { getTripletScheduleEvents } from '../rhythm/scheduleTriplets.js';
+import { createCoordinateMapping, canvasXToSeconds, secondsToCanvasX, columnToRegularTime } from '../rhythm/modulationMapping.js';
+import { analyzeNoteCrossesMarkers } from '../components/Canvas/PitchGrid/renderers/notes.js';
+import { getColumnX } from '../components/Canvas/PitchGrid/renderers/rendererUtils.js';
+
+// Helper function to get pitch from row index (like in pitchGridInteractor.js)
+function getPitchFromRow(rowIndex) {
+    const rowData = store.state.fullRowData[rowIndex];
+    return rowData ? rowData.toneNote.replace('♭', 'b').replace('♯', '#') : 'C4';
+}
 
 logger.moduleLoaded('TransportService');
 
@@ -46,11 +71,25 @@ function findNonAnacrusisStart() {
 function calculateTimeMap() {
     logger.debug('transportService', 'calculateTimeMap', { tempo: `${store.state.tempo} BPM` });
     timeMap = [];
-    let currentTime = 0;
+    
     const microbeatDuration = getMicrobeatDuration();
-    const { columnWidths } = store.state;
+    const { columnWidths, modulationMarkers } = store.state;
     const placedTonicSigns = getPlacedTonicSigns(store.state);
+    
+    // PLAYHEAD FIX: Always use regular timing for consistent playhead speed
+    // Note triggers will be calculated separately using modulation mapping
+    console.log('[TIMEMAP] Using regular timing for consistent playhead speed');
+    if (modulationMarkers && modulationMarkers.length > 0) {
+        console.log('[TIMEMAP] Modulation markers present:', modulationMarkers.length, 'markers found - will affect note triggers only');
+    }
+    calculateRegularTimeMap(microbeatDuration, columnWidths, placedTonicSigns);
+    
+    logger.timing('transportService', 'calculateTimeMap', { totalDuration: `${timeMap[timeMap.length - 1]?.toFixed(2)}s` });
+}
 
+function calculateRegularTimeMap(microbeatDuration, columnWidths, placedTonicSigns) {
+    let currentTime = 0;
+    
     for (let i = 0; i < columnWidths.length; i++) {
         timeMap[i] = currentTime;
         const isTonicColumn = placedTonicSigns.some(ts => ts.columnIndex === i);
@@ -58,8 +97,78 @@ function calculateTimeMap() {
             currentTime += columnWidths[i] * microbeatDuration;
         }
     }
-    timeMap.push(currentTime); 
-    logger.timing('transportService', 'calculateTimeMap', { totalDuration: `${currentTime.toFixed(2)}s` });
+    timeMap.push(currentTime);
+}
+
+function calculateModulatedTimeMap(microbeatDuration, columnWidths, placedTonicSigns) {
+    const baseMicrobeatPx = store.state.baseMicrobeatPx || store.state.cellWidth || 40;
+    const coordinateMapping = createCoordinateMapping(store.state.modulationMarkers, baseMicrobeatPx, store.state);
+    
+    console.log('[MODULATED-TIMEMAP] Creating modulated time map with:', {
+        microbeatDuration: microbeatDuration.toFixed(4),
+        baseMicrobeatPx,
+        markersCount: store.state.modulationMarkers.length,
+        segmentsCount: coordinateMapping.segments.length
+    });
+    
+    // Calculate time for each column using modulation mapping
+    for (let i = 0; i < columnWidths.length; i++) {
+        const columnX = getColumnXForTimeMap(i, columnWidths, baseMicrobeatPx);
+        const timeSeconds = canvasXToSeconds(columnX, coordinateMapping, microbeatDuration);
+        timeMap[i] = timeSeconds;
+        
+        // Skip tonic columns (they don't consume time)
+        const isTonicColumn = placedTonicSigns.some(ts => ts.columnIndex === i);
+        
+        console.log(`[MODULATED-TIMEMAP] Column ${i}: x=${columnX.toFixed(1)}px → time=${timeSeconds.toFixed(4)}s ${isTonicColumn ? '(tonic)' : ''}`);
+    }
+    
+    // Add final time point
+    const finalX = getColumnXForTimeMap(columnWidths.length, columnWidths, baseMicrobeatPx);
+    const finalTime = canvasXToSeconds(finalX, coordinateMapping, microbeatDuration);
+    timeMap.push(finalTime);
+    
+    console.log(`[MODULATED-TIMEMAP] Final time point: x=${finalX.toFixed(1)}px → time=${finalTime.toFixed(4)}s`);
+    console.log('[MODULATED-TIMEMAP] Total duration with modulation:', finalTime.toFixed(4), 'seconds');
+}
+
+function getColumnXForTimeMap(columnIndex, columnWidths, baseMicrobeatPx) {
+    // Calculate actual column X position based on column widths (same logic as getBaseColumnX)
+    let x = 0;
+    for (let i = 0; i < columnIndex; i++) {
+        const widthMultiplier = columnWidths[i] || 0;
+        x += widthMultiplier * baseMicrobeatPx;
+    }
+    return x;
+}
+
+/**
+ * Calculates the trigger time for a note, accounting for modulation if present
+ * @param {number} columnIndex - Column index of the note
+ * @returns {number} Time in seconds when the note should trigger
+ */
+function calculateNoteTriggerTime(columnIndex) {
+    const { modulationMarkers } = store.state;
+    
+    if (!modulationMarkers || modulationMarkers.length === 0) {
+        // No modulation - use regular time map
+        return timeMap[columnIndex];
+    }
+    
+    // With modulation - calculate trigger time using modulation mapping
+    const microbeatDuration = getMicrobeatDuration();
+    const baseMicrobeatPx = store.state.baseMicrobeatPx || store.state.cellWidth || 40;
+    const coordinateMapping = createCoordinateMapping(modulationMarkers, baseMicrobeatPx, store.state);
+    
+    // Convert column index to canvas X position
+    const columnX = getColumnXForTimeMap(columnIndex, store.state.columnWidths, baseMicrobeatPx);
+    
+    // Convert canvas X to modulated time
+    const modulatedTime = canvasXToSeconds(columnX, coordinateMapping, microbeatDuration);
+    
+    console.log(`[MODULATED-TRIGGER] Column ${columnIndex}: x=${columnX.toFixed(1)}px → modulatedTime=${modulatedTime.toFixed(4)}s vs regularTime=${timeMap[columnIndex]?.toFixed(4)}s`);
+    
+    return modulatedTime;
 }
 
 function getPitchForNote(note) {
@@ -79,22 +188,40 @@ function scheduleNotes() {
 
     const anacrusisOffset = timeMap[2] || 0;
 
+    const hasModulation = store.state.modulationMarkers && store.state.modulationMarkers.length > 0;
+    
     store.state.placedNotes.forEach(note => {
-        const startTime = timeMap[note.startColumnIndex];
-        if (startTime === undefined) return;
+        // Calculate note trigger times
+        const regularStartTime = timeMap[note.startColumnIndex]; // Regular transport time
+        const modulatedStartTime = hasModulation ? calculateNoteTriggerTime(note.startColumnIndex) : regularStartTime;
+        
+        if (regularStartTime === undefined) return;
 
         // Skip notes that would be scheduled before the anacrusis offset (loop start)
-        if (startTime < anacrusisOffset) {
-            logger.debug('transportService', `Skipping note at column ${note.startColumnIndex} (time ${startTime}) - before anacrusis offset (${anacrusisOffset})`);
+        if (regularStartTime < anacrusisOffset) {
+            logger.debug('transportService', `Skipping note at column ${note.startColumnIndex} (regular time ${regularStartTime}) - before anacrusis offset (${anacrusisOffset})`);
             return;
+        }
+        
+        // TIMING FIX: For modulation, use regular time since playhead moves at constant speed
+        // The modulated time is just for musical calculation - transport scheduling uses regular time
+        const scheduleTime = regularStartTime;
+        
+        console.log(`[NOTE-SCHEDULE] ${hasModulation ? 'MODULATED' : 'REGULAR'} scheduling note ${note.uuid} at column ${note.startColumnIndex} → scheduleTime=${scheduleTime.toFixed(4)}s`);
+        
+        // Show timing comparison when modulation is active
+        if (hasModulation) {
+            const timeDifference = modulatedStartTime - regularStartTime;
+            console.log(`[TIMING-COMPARISON] Note ${note.uuid}: regular=${regularStartTime.toFixed(4)}s, modulated=${modulatedStartTime.toFixed(4)}s, difference=${timeDifference >= 0 ? '+' : ''}${timeDifference.toFixed(4)}s, using regular for scheduling`);
         }
 
         // Calculate duration based on note shape
         let duration;
-        const endTime = timeMap[note.endColumnIndex + 1];
+        const regularEndTime = timeMap[note.endColumnIndex + 1];
+        const modulatedEndTime = hasModulation ? calculateNoteTriggerTime(note.endColumnIndex + 1) : regularEndTime;
         
         // Safety check: if endTime is undefined, skip this note
-        if (endTime === undefined) {
+        if (regularEndTime === undefined) {
             logger.warn('TransportService', `Skipping note with invalid endColumnIndex: ${note.endColumnIndex + 1} (note ends at ${note.endColumnIndex})`, {
                 noteId: note.uuid,
                 startColumnIndex: note.startColumnIndex,
@@ -107,7 +234,8 @@ function scheduleNotes() {
             return;
         }
         
-        const tailDuration = endTime - startTime;
+        // Use regular duration for transport scheduling (playhead moves at constant speed)
+        const tailDuration = regularEndTime - regularStartTime;
         
         if (note.shape === 'circle') {
             // Circle notes should respect their tail duration
@@ -119,10 +247,11 @@ function scheduleNotes() {
             console.log(`[DURATION] Circle note ${note.uuid}:`, {
                 startColumn: note.startColumnIndex,
                 endColumn: note.endColumnIndex,
-                startTime: startTime.toFixed(3),
-                endTime: endTime.toFixed(3),
-                tailDuration: tailDuration.toFixed(3),
-                actualDuration: duration.toFixed(3),
+                regularStartTime: regularStartTime.toFixed(3),
+                regularEndTime: regularEndTime.toFixed(3),
+                modulatedStartTime: hasModulation ? modulatedStartTime.toFixed(3) : 'N/A',
+                modulatedEndTime: hasModulation ? modulatedEndTime.toFixed(3) : 'N/A',
+                scheduleDuration: duration.toFixed(3),
                 defaultCircleDuration: defaultCircleDuration.toFixed(3),
                 microbeatDuration: microbeatDuration.toFixed(3)
             });
@@ -134,9 +263,9 @@ function scheduleNotes() {
             console.log(`[DURATION] Oval note ${note.uuid}:`, {
                 startColumn: note.startColumnIndex,
                 endColumn: note.endColumnIndex,
-                startTime: startTime.toFixed(3),
-                endTime: endTime.toFixed(3),
-                duration: duration.toFixed(3)
+                regularStartTime: regularStartTime.toFixed(3),
+                regularEndTime: regularEndTime.toFixed(3),
+                scheduleDuration: duration.toFixed(3)
             });
         }
 
@@ -144,7 +273,7 @@ function scheduleNotes() {
             Tone.Transport.schedule(time => {
                 if (store.state.isPaused) return;
                 drumPlayers?.player(note.drumTrack)?.start(time);
-            }, startTime);
+            }, scheduleTime);
         } else {
             const pitch = getPitchForNote(note);
             const toolColor = note.color;
@@ -158,17 +287,17 @@ function scheduleNotes() {
             }
             
             // Log when attack is scheduled
-            console.log(`[SCHEDULE] Attack for ${note.shape} note ${noteId} scheduled at time ${startTime.toFixed(3)}`);
+            console.log(`[SCHEDULE] Attack for ${note.shape} note ${noteId} scheduled at time ${scheduleTime.toFixed(3)}`);
             
             Tone.Transport.schedule(time => {
                 if (store.state.isPaused) return;
                 console.log(`[ATTACK] Triggering attack for ${note.shape} note ${noteId} at time ${time.toFixed(3)}`);
                 SynthEngine.triggerAttack(pitch, toolColor, time);
                 GlobalService.adsrComponent?.playheadManager.trigger(noteId, 'attack', pitchColor, timbre.adsr);
-            }, startTime);
+            }, scheduleTime);
 
             // Log when release is scheduled
-            const releaseTime = startTime + duration;
+            const releaseTime = scheduleTime + duration;
             console.log(`[SCHEDULE] Release for ${note.shape} note ${noteId} scheduled at time ${releaseTime.toFixed(3)} (duration: ${duration.toFixed(3)})`);
             
             Tone.Transport.schedule(time => {
@@ -225,15 +354,77 @@ function scheduleNotes() {
         }, 'audio');
     });
     
-    logger.debug('TransportService', 'scheduleNotes', `Finished scheduling ${store.state.placedNotes.length} notes and ${stampPlaybackData.length} stamps`, 'audio');
+    // Schedule triplet groups
+    const tripletPlaybackData = getTripletPlaybackData();
+    tripletPlaybackData.forEach(tripletData => {
+        // Convert cell index to microbeat column index (same as stamps)
+        const columnIndex = tripletData.startCellIndex * 2; // cell index * 2 microbeats per cell
+        const cellStartTime = timeMap[columnIndex];
+        
+        console.log(`[TRIPLET DEBUG] Triplet ${tripletData.stampId} at cell ${tripletData.startCellIndex} -> column ${columnIndex} -> time ${cellStartTime}`);
+        
+        if (cellStartTime === undefined) return;
+        
+        // Skip triplets that would be scheduled before the anacrusis offset
+        if (cellStartTime < anacrusisOffset) {
+            logger.debug('TransportService', `Skipping triplet at cell ${tripletData.startCellIndex} - before anacrusis offset`);
+            return;
+        }
+        
+        // Get pitch from row index (like notes do)
+        const pitch = getPitchFromRow(tripletData.row);
+        
+        // Get the schedule events for this triplet
+        const scheduleEvents = getTripletScheduleEvents(tripletData.stampId);
+        
+        scheduleEvents.forEach(event => {
+            const offsetTime = Tone.Time(event.offset).toSeconds();
+            const eventDuration = Tone.Time(event.duration).toSeconds();
+            
+            const triggerTime = cellStartTime + offsetTime;
+            const releaseTime = triggerTime + eventDuration;
+            
+            // Schedule attack
+            Tone.Transport.schedule(time => {
+                if (store.state.isPaused) return;
+                console.log(`[TRIPLET] Triggering ${event.type} for triplet ${tripletData.stampId} slot ${event.slot} at time ${time.toFixed(3)} pitch ${pitch}`);
+                SynthEngine.triggerAttack(pitch, tripletData.color, time);
+            }, triggerTime);
+            
+            // Schedule release
+            Tone.Transport.schedule(time => {
+                if (store.state.isPaused) return;
+                SynthEngine.triggerRelease(pitch, tripletData.color, time);
+            }, releaseTime);
+        });
+        
+        logger.debug('TransportService', `Scheduled triplet ${tripletData.stampId} with ${scheduleEvents.length} events at cell ${tripletData.startCellIndex}`, {
+            stampId: tripletData.stampId,
+            cellIndex: tripletData.startCellIndex,
+            pitch: pitch,
+            startTime: cellStartTime,
+            events: scheduleEvents.length
+        }, 'audio');
+    });
+    
+    logger.debug('TransportService', 'scheduleNotes', `Finished scheduling ${store.state.placedNotes.length} notes, ${stampPlaybackData.length} stamps, and ${tripletPlaybackData.length} triplets`, 'audio');
 }
 
 function animatePlayhead() {
     const playheadCanvas = domCache.get('playheadCanvas');
     if (!playheadCanvas) return;
     const ctx = playheadCanvas.getContext('2d');
-    const maxXPos = LayoutService.getColumnX(store.state.columnWidths.length - 2);
+    
+    // DYNAMIC TEMPO: Track modulation markers and adjust BPM as playhead crosses them
+    const hasModulation = store.state.modulationMarkers && store.state.modulationMarkers.length > 0;
+    console.log('[PLAYHEAD] Starting playhead animation at constant speed, modulation:', hasModulation ? 'ENABLED (dynamic tempo changes)' : 'DISABLED');
+    const maxXPos = getBaseColumnX(store.state.columnWidths.length - 2);
     const musicalDuration = timeMap[store.state.columnWidths.length - 2] || 0;
+    
+    // Track which modulation markers we've passed
+    let passedMarkers = new Set();
+    const baseTempo = store.state.tempo;
+    let currentTempoMultiplier = 1.0;
 
     function draw() {
         if (Tone.Transport.state !== 'started' || !playheadCanvas) {
@@ -243,11 +434,9 @@ function animatePlayhead() {
         const isLooping = store.state.isLooping;
         const currentTime = Tone.Transport.seconds;
         
-        // NEW LOGS FOR DEBUGGING THE STOP ISSUE
-        logger.timing('TransportService', 'stop condition check', { currentTime, musicalDuration, isLooping }, 'transport');
-        
-        if (!isLooping && currentTime >= musicalDuration) {
-            logger.error('TransportService', 'Playback reached end. Forcing stop', null, 'transport');
+        // Check if we should stop - either when not looping OR when we reach the end even with looping
+        if (currentTime >= musicalDuration) {
+            logger.info('TransportService', 'Playback reached end. Stopping playhead.', { currentTime, musicalDuration, isLooping }, 'transport');
             TransportService.stop();
             return; 
         }
@@ -276,16 +465,62 @@ function animatePlayhead() {
                 const colDuration = colEndTime - colStartTime;
                 const timeIntoCol = loopAwareTime - colStartTime;
                 
-                const colStartX = LayoutService.getColumnX(i);
-                const colWidth = LayoutService.getColumnX(i + 1) - colStartX;
+                // PLAYHEAD FIX: Always use base column positions for consistent playhead speed
+                // The playhead moves at constant tempo regardless of modulation
+                const colStartX = getBaseColumnX(i);
+                const colWidth = getBaseColumnX(i + 1) - colStartX;
                 
                 const ratio = colDuration > 0 ? timeIntoCol / colDuration : 0;
                 xPos = colStartX + ratio * colWidth;
+                
+                // Debug logging every 30 frames (~0.5 seconds at 60fps)
+                if (Math.floor(currentTime * 2) !== Math.floor((currentTime - 0.016) * 2)) {
+                    console.log(`[PLAYHEAD] CONSTANT-SPEED time=${currentTime.toFixed(3)}, col=${i}, baseX=${colStartX.toFixed(1)}, width=${colWidth.toFixed(1)}, finalX=${xPos.toFixed(1)} ${hasModulation ? '(modulation affects notes only)' : ''}`);
+                }
                 break;
             }
         }
         
         const finalXPos = Math.min(xPos, maxXPos);
+        
+        // DYNAMIC TEMPO: Check if playhead has crossed any modulation markers
+        if (hasModulation && store.state.modulationMarkers) {
+            for (const marker of store.state.modulationMarkers) {
+                if (!marker.active) continue;
+                
+                // Get marker's visual X position  
+                const markerX = marker.xPosition || 477.5; // Fallback to stored position
+                
+                // Check if playhead has just crossed this marker
+                if (finalXPos >= markerX && !passedMarkers.has(marker.id)) {
+                    passedMarkers.add(marker.id);
+                    
+                    // Apply tempo modulation based on marker type
+                    let tempoAdjustment;
+                    if (Math.abs(marker.ratio - (2/3)) < 0.001) {
+                        // 2:3 compression: tempo should increase (1/ratio = 1.5x faster)
+                        tempoAdjustment = 1 / marker.ratio;
+                        console.log(`[TEMPO-MODULATION] 2:3 compression detected, applying 1/ratio = ${tempoAdjustment.toFixed(3)}`);
+                    } else if (Math.abs(marker.ratio - (3/2)) < 0.001) {
+                        // 3:2 expansion: tempo should decrease (1/ratio = 0.667x slower)
+                        tempoAdjustment = 1 / marker.ratio;
+                        console.log(`[TEMPO-MODULATION] 3:2 expansion detected, applying 1/ratio = ${tempoAdjustment.toFixed(3)} (slower tempo)`);
+                    } else {
+                        // Other ratios: use inverted ratio as default
+                        tempoAdjustment = 1 / marker.ratio;
+                        console.log(`[TEMPO-MODULATION] Other ratio detected, applying 1/ratio = ${tempoAdjustment.toFixed(3)}`);
+                    }
+                    
+                    currentTempoMultiplier *= tempoAdjustment;
+                    const newTempo = baseTempo * currentTempoMultiplier;
+                    
+                    console.log(`[TEMPO-MODULATION] Playhead crossed marker ${marker.id} at x=${markerX}px, ratio=${marker.ratio}, newMultiplier=${currentTempoMultiplier.toFixed(3)}, newTempo=${newTempo.toFixed(1)}BPM`);
+                    
+                    // Apply the tempo change
+                    Tone.Transport.bpm.value = newTempo;
+                }
+            }
+        }
         
         if (finalXPos > 0) {
             ctx.strokeStyle = 'rgba(255,0,0,0.8)';
@@ -316,6 +551,7 @@ const TransportService = {
         store.on('rhythmStructureChanged', () => this.handleStateChange());
         store.on('notesChanged', () => this.handleStateChange());
         store.on('stampPlacementsChanged', () => this.handleStateChange());
+        store.on('modulationMarkersChanged', () => this.handleStateChange());
         
         store.on('tempoChanged', newTempo => {
             logger.event('TransportService', `tempoChanged triggered with new value: ${newTempo} BPM`, null, 'transport');
@@ -397,6 +633,11 @@ const TransportService = {
             Tone.Transport.bpm.value = store.state.tempo;
             
             logger.debug('TransportService', `Transport configured. Loop: ${Tone.Transport.loop}, BPM: ${Tone.Transport.bpm.value}, StartOffset: ${anacrusisOffset}, LoopStart: ${nonAnacrusisStart}`, null, 'transport');
+            
+            // Log modulation setup
+            if (store.state.modulationMarkers && store.state.modulationMarkers.length > 0) {
+                console.log(`[TEMPO-MODULATION] Starting with base tempo ${store.state.tempo}BPM, ${store.state.modulationMarkers.length} modulation markers will affect tempo dynamically`);
+            }
             
             // Always start from anacrusis (pickup) on first play, but loops will skip anacrusis
             Tone.Transport.start(Tone.now(), anacrusisOffset); 

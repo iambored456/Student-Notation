@@ -4,31 +4,69 @@ import GridCoordsService from '../../../services/gridCoordsService.js';
 import LayoutService from '../../../services/layoutService.js';
 import { drawDrumShape } from './drumGridRenderer.js';
 import { BASE_DRUM_ROW_HEIGHT, DRUM_HEIGHT_SCALE_FACTOR } from '../../../constants.js';
+import { getColumnX as getModulatedColumnX } from '../PitchGrid/renderers/rendererUtils.js';
 
 // --- Interaction State ---
 let drumHoverCtx;
 let isRightClickActive = false;
 let rightClickActionTaken = false;
 
+// --- Helper Functions ---
+function getColumnX(index) {
+    // Use modulation-aware column positions if modulation exists
+    const hasModulation = store.state.modulationMarkers && store.state.modulationMarkers.length > 0;
+    
+    if (hasModulation) {
+        console.log(`[DRUM-INTERACTOR] Using modulated position for column ${index}`);
+        const options = {
+            modulationMarkers: store.state.modulationMarkers,
+            columnWidths: store.state.columnWidths,
+            cellWidth: store.state.cellWidth,
+            baseMicrobeatPx: store.state.baseMicrobeatPx || store.state.cellWidth || 40
+        };
+        return getModulatedColumnX(index, options);
+    } else {
+        console.log(`[DRUM-INTERACTOR] Using base position for column ${index}`);
+        return LayoutService.getColumnX(index);
+    }
+}
+
+function getModulatedCellWidth(colIndex) {
+    // Calculate modulated cell width if modulation is present
+    const hasModulation = store.state.modulationMarkers && store.state.modulationMarkers.length > 0;
+    
+    if (hasModulation) {
+        const currentX = getColumnX(colIndex);
+        const nextX = getColumnX(colIndex + 1);
+        const modulatedWidth = nextX - currentX;
+        console.log(`[DRUM-INTERACTOR] Using modulated cell width for column ${colIndex}: ${modulatedWidth.toFixed(2)}px`);
+        return modulatedWidth;
+    } else {
+        const regularWidth = store.state.columnWidths[colIndex] * store.state.cellWidth;
+        console.log(`[DRUM-INTERACTOR] Using regular cell width for column ${colIndex}: ${regularWidth.toFixed(2)}px`);
+        return regularWidth;
+    }
+}
+
 // --- Hover Drawing Logic ---
 function drawHoverHighlight(colIndex, rowIndex, color) {
     if (!drumHoverCtx) return;
-    const x = LayoutService.getColumnX(colIndex);
+    const x = getColumnX(colIndex); // Use modulation-aware position
     // FIXED: Use same drum row height calculation as renderer and grid coords
     const drumRowHeight = Math.max(BASE_DRUM_ROW_HEIGHT, DRUM_HEIGHT_SCALE_FACTOR * store.state.cellHeight);
     const y = rowIndex * drumRowHeight;
-    const cellWidth = store.state.columnWidths[colIndex] * store.state.cellWidth;
+    const cellWidth = getModulatedCellWidth(colIndex); // Use modulated cell width
     drumHoverCtx.fillStyle = color;
     drumHoverCtx.fillRect(x, y, cellWidth, drumRowHeight);
 }
 
 function drawGhostNote(colIndex, rowIndex) {
     if (!drumHoverCtx) return;
-    const x = LayoutService.getColumnX(colIndex);
+    const x = getColumnX(colIndex); // Use modulation-aware position
     // FIXED: Use same drum row height calculation as renderer and grid coords
     const drumRowHeight = Math.max(BASE_DRUM_ROW_HEIGHT, DRUM_HEIGHT_SCALE_FACTOR * store.state.cellHeight);
     const y = rowIndex * drumRowHeight;
-    const cellWidth = store.state.columnWidths[colIndex] * store.state.cellWidth;
+    const cellWidth = getModulatedCellWidth(colIndex); // Use modulated cell width
     drumHoverCtx.globalAlpha = 0.4;
     drumHoverCtx.fillStyle = store.state.selectedTool.color || '#212529';
     drawDrumShape(drumHoverCtx, rowIndex, x, y, cellWidth, drumRowHeight);

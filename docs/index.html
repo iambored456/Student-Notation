@@ -11,8 +11,8 @@
 <link rel="manifest" href="/Student-Notation/site.webmanifest" />
 <meta name="theme-color" content="#ffffff" />
 <style id="print-style-rules"></style>
-  <script type="module" crossorigin src="/Student-Notation/assets/index-C7Q2Wb_A.js"></script>
-  <link rel="stylesheet" crossorigin href="/Student-Notation/assets/index-djF4Pq7K.css">
+  <script type="module" crossorigin src="/Student-Notation/assets/index-CNGtvNSH.js"></script>
+  <link rel="stylesheet" crossorigin href="/Student-Notation/assets/index-CUsUQpee.css">
 </head>
 <body>
 <!-- Sidebar for File/App Actions -->
@@ -172,12 +172,10 @@
                                <button class="tonic-sign-button" data-tonic="7"><img src="data:image/svg+xml,%3csvg%20xmlns='http://www.w3.org/2000/svg'%20xmlns:xlink='http://www.w3.org/1999/xlink'%20width='175'%20zoomAndPan='magnify'%20viewBox='0%200%20131.25%20143.999998'%20height='192'%20preserveAspectRatio='xMidYMid%20meet'%20version='1.2'%3e%3cdefs%3e%3cclipPath%20id='d5d49c9923'%3e%3cpath%20d='M%2017.898438%2024.675781%20L%20111.859375%2024.675781%20L%20111.859375%20118.640625%20L%2017.898438%20118.640625%20Z%20M%2017.898438%2024.675781%20'/%3e%3c/clipPath%3e%3cclipPath%20id='0ef729529e'%3e%3cpath%20d='M%2064.878906%2024.675781%20C%2038.933594%2024.675781%2017.898438%2045.710938%2017.898438%2071.660156%20C%2017.898438%2097.605469%2038.933594%20118.640625%2064.878906%20118.640625%20C%2090.828125%20118.640625%20111.859375%2097.605469%20111.859375%2071.660156%20C%20111.859375%2045.710938%2090.828125%2024.675781%2064.878906%2024.675781%20Z%20M%2064.878906%2024.675781%20'/%3e%3c/clipPath%3e%3c/defs%3e%3cg%20id='926e811c6f'%3e%3cg%20clip-rule='nonzero'%20clip-path='url(%23d5d49c9923)'%3e%3cg%20clip-rule='nonzero'%20clip-path='url(%230ef729529e)'%3e%3cpath%20style='fill:none;stroke-width:8;stroke-linecap:butt;stroke-linejoin:miter;stroke:%23000000;stroke-opacity:1;stroke-miterlimit:4;'%20d='M%2063.093277%20-0.00202662%20C%2028.250074%20-0.00202662%200.0009548%2028.247092%200.0009548%2063.095541%20C%200.0009548%2097.938745%2028.250074%20126.187864%2063.093277%20126.187864%20C%2097.941726%20126.187864%20126.185599%2097.938745%20126.185599%2063.095541%20C%20126.185599%2028.247092%2097.941726%20-0.00202662%2063.093277%20-0.00202662%20Z%20M%2063.093277%20-0.00202662%20'%20transform='matrix(0.744631,0,0,0.744631,17.897727,24.67729)'/%3e%3c/g%3e%3c/g%3e%3cg%20style='fill:%23000000;fill-opacity:1;'%3e%3cg%20transform='translate(40.642754,%20101.083803)'%3e%3cpath%20style='stroke:none'%20d='M%207.421875%200%20L%2031.671875%20-48.59375%20L%201.34375%20-48.59375%20L%201.34375%20-59.78125%20L%2046.078125%20-59.78125%20L%2046.078125%20-48.59375%20L%2023.09375%200%20Z%20M%207.421875%200%20'/%3e%3c/g%3e%3c/g%3e%3c/g%3e%3c/svg%3e" alt="Tonic 7" class="tonic-shape-icon"><span class="mode-label">Locrian</span></button>
                            </div>
                        </div>
-                    </div>
-                </div>
-                <div class="control-section">
-                    <div class="degree-toggle-container">
-                        <button id="degree-visibility-toggle" class="toolkit-button degree-visibility-toggle">Hide</button>
-                        <button id="degree-mode-toggle" class="toolkit-button degree-mode-toggle">Scale Degrees</button>
+                       <div class="degree-toggle-container">
+                           <button id="degree-visibility-toggle" class="toolkit-button degree-visibility-toggle">Hide</button>
+                           <button id="degree-mode-toggle" class="toolkit-button degree-mode-toggle">Scale Degrees</button>
+                       </div>
                     </div>
                 </div>
                 <div class="control-section chord-shape-container">
@@ -285,9 +283,32 @@
                         <input type="range" id="tempo-slider" min="30" max="240" value="90">
                     </div>
                 </div>
-                <div class="control-section">
-                    <div id="stamps-toolbar-container" class="stamps-toolbar-container">
-                        <!-- Stamps toolbar will be rendered here by JavaScript -->
+                <div class="control-section rhythm-stamps-container">
+                    <div class="rhythm-tab-sidebar">
+                        <button class="rhythm-tab-button active" data-rhythm-tab="stamps">Sixteenths</button>
+                        <button class="rhythm-tab-button" data-rhythm-tab="triplets">Triplets</button>
+                    </div>
+                    <div class="rhythm-tab-content">
+                        <div class="rhythm-tab-panel active" id="stamps-panel">
+                            <div id="stamps-toolbar-container" class="stamps-toolbar-container">
+                                <!-- Stamps toolbar will be rendered here by JavaScript -->
+                            </div>
+                        </div>
+                        <div class="rhythm-tab-panel" id="triplets-panel">
+                            <div id="triplets-toolbar-container" class="triplets-toolbar-container">
+                                <!-- Triplets toolbar will be rendered here by JavaScript -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="control-section modulation-container">
+                    <div class="control-subsection">
+                        <h4>Modulation</h4>
+                        <div class="modulation-controls">
+                            <button class="toolkit-button modulation-ratio-btn" id="modulation-2-3-btn" data-ratio="2:3" title="Place 2:3 modulation marker">2:3</button>
+                            <button class="toolkit-button modulation-ratio-btn" id="modulation-3-2-btn" data-ratio="3:2" title="Place 3:2 modulation marker">3:2</button>
+                            <button class="toolkit-button" id="modulation-clear-btn" title="Clear all modulation markers">Clear</button>
+                        </div>
                     </div>
                 </div>
             </div>

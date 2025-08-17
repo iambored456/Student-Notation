@@ -84,7 +84,7 @@ export function initAnalysisGrid() {
     document.addEventListener('mouseup', handleMouseUp);
     
     const resizeObserver = new ResizeObserver(() => {
-        const totalWidth = LayoutService.getCanvasWidth();
+        const totalWidth = LayoutService.getModulatedCanvasWidth();
         degreeCanvas.width = totalWidth;
         romanCanvas.width = totalWidth;
         render();

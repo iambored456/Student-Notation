@@ -25,6 +25,7 @@ export const historyActions = {
             notes: JSON.parse(JSON.stringify(this.state.placedNotes)),
             tonicSignGroups: JSON.parse(JSON.stringify(this.state.tonicSignGroups)),
             stampPlacements: JSON.parse(JSON.stringify(this.state.stampPlacements)),
+            tripletPlacements: JSON.parse(JSON.stringify(this.state.tripletPlacements || [])),
             timbres: timbresForHistory // Already cloned safely
         };
         this.state.history.push(newSnapshot);
@@ -39,9 +40,11 @@ export const historyActions = {
             this.state.placedNotes = JSON.parse(JSON.stringify(snapshot.notes));
             this.state.tonicSignGroups = JSON.parse(JSON.stringify(snapshot.tonicSignGroups));
             this.state.stampPlacements = JSON.parse(JSON.stringify(snapshot.stampPlacements || []));
+            this.state.tripletPlacements = JSON.parse(JSON.stringify(snapshot.tripletPlacements || []));
             this.state.timbres = restoreTimbres(snapshot.timbres); // Use safe restore function
             this.emit('notesChanged');
             this.emit('stampPlacementsChanged');
+            this.emit('tripletPlacementsChanged');
             this.emit('rhythmStructureChanged');
             this.emit('timbreChanged', this.state.selectedNote.color); 
             this.emit('historyChanged');
@@ -55,9 +58,11 @@ export const historyActions = {
             this.state.placedNotes = JSON.parse(JSON.stringify(snapshot.notes));
             this.state.tonicSignGroups = JSON.parse(JSON.stringify(snapshot.tonicSignGroups));
             this.state.stampPlacements = JSON.parse(JSON.stringify(snapshot.stampPlacements || []));
+            this.state.tripletPlacements = JSON.parse(JSON.stringify(snapshot.tripletPlacements || []));
             this.state.timbres = restoreTimbres(snapshot.timbres); // Use safe restore function
             this.emit('notesChanged');
             this.emit('stampPlacementsChanged');
+            this.emit('tripletPlacementsChanged');
             this.emit('rhythmStructureChanged');
             this.emit('timbreChanged', this.state.selectedNote.color);
             this.emit('historyChanged');

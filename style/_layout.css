@@ -57,6 +57,7 @@
 
 #container-3 {
     height: 100%;
+    overflow: hidden;
 }
 
 #container-1 {
@@ -105,6 +106,25 @@
     overflow: auto;
     min-width: 0;
     height: 100%;
+}
+
+/* Allow dropdown to escape tab content when open */
+.tab-content:has(.dropdown-container.open) {
+    overflow: visible;
+}
+
+/* Fallback for browsers without :has() support */
+.tab-content.dropdown-open {
+    overflow: visible;
+}
+
+/* Also allow container-3 to overflow when dropdown is open */
+#container-3:has(.dropdown-container.open) {
+    overflow: visible;
+}
+
+#container-3.dropdown-open {
+    overflow: visible;
 }
 .tab-panel { display: none; height: 100%; align-items: stretch; }
 .tab-panel.active { 

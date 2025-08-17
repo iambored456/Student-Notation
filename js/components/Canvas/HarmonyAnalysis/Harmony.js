@@ -9,7 +9,7 @@ let canvas, ctx;
 function render() {
     if (!ctx) return;
 
-    const totalWidth = LayoutService.getCanvasWidth();
+    const totalWidth = LayoutService.getModulatedCanvasWidth();
 
     if (canvas.width !== totalWidth) {
         canvas.width = totalWidth;
@@ -39,6 +39,7 @@ const Harmony = {
         
         // Listen for layout changes that might affect width
         store.on('layoutConfigChanged', render);
+        store.on('modulationMarkersChanged', render);
         
         render(); // Initial render
         logger.info('Harmony', 'Initialized', null, 'harmony');

@@ -15,5 +15,7 @@ export function getInitialRhythmState() {
         hasAnacrusis: true,
         macrobeatGroupings: [...ANACRUSIS_ON_GROUPINGS],
         macrobeatBoundaryStyles: [...ANACRUSIS_ON_STYLES],
+        baseMicrobeatPx: 40, // Base pixels per microbeat (will be calculated from cellWidth)
+        modulationMarkers: [], // Array of ModulationMarker objects
     };
 }

@@ -3,11 +3,20 @@ import { BASE_DRUM_ROW_HEIGHT, DRUM_HEIGHT_SCALE_FACTOR } from '../../../constan
 import { shouldDrawVerticalLineAtColumn, isTonicColumn } from '../../../utils/tonicColumnUtils.js';
 
 import LayoutService from '../../../services/layoutService.js';
+import { getColumnX as getModulatedColumnX } from '../PitchGrid/renderers/rendererUtils.js';
 
 // --- Pure Helper Functions ---
 function getColumnX(index, options) {
-    // Use LayoutService to get the column X position with horizontal offset
-    return LayoutService.getColumnX(index);
+    // Use modulation-aware column positions if modulation exists
+    const hasModulation = options.modulationMarkers && options.modulationMarkers.length > 0;
+    
+    if (hasModulation) {
+        console.log(`[DRUM-GRID] Using modulated position for column ${index}`);
+        return getModulatedColumnX(index, options);
+    } else {
+        console.log(`[DRUM-GRID] Using base position for column ${index}`);
+        return LayoutService.getColumnX(index);
+    }
 }
 
 export function drawDrumShape(ctx, drumRow, x, y, width, height) {
@@ -149,7 +158,17 @@ export function drawDrumGrid(ctx, options) {
         }
 
         const x = getColumnX(col, options);
-        const currentCellWidth = columnWidths[col] * cellWidth;
+        
+        // Calculate modulated cell width if modulation is present
+        let currentCellWidth;
+        if (options.modulationMarkers && options.modulationMarkers.length > 0) {
+            const nextX = getColumnX(col + 1, options);
+            currentCellWidth = nextX - x;
+            console.log(`[DRUM-GRID] Using modulated cell width for column ${col}: ${currentCellWidth.toFixed(2)}px (nextX=${nextX.toFixed(1)} - x=${x.toFixed(1)})`);
+        } else {
+            currentCellWidth = columnWidths[col] * cellWidth;
+            console.log(`[DRUM-GRID] Using regular cell width for column ${col}: ${currentCellWidth.toFixed(2)}px`);
+        }
         
         for (let row = 0; row < 3; row++) {
             const y = row * drumRowHeight;

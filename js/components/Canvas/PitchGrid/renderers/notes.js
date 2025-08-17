@@ -1,5 +1,5 @@
 // js/components/Canvas/PitchGrid/renderers/notes.js
-import { getColumnX, getRowY } from './rendererUtils.js';
+import { getColumnX, getRowY, getCurrentCoordinateMapping } from './rendererUtils.js';
 import TonalService from '../../../../services/tonalService.js';
 import store from '../../../../state/index.js';
 import {
@@ -107,37 +107,102 @@ function drawScaleDegreeText(ctx, note, options, centerX, centerY, noteHeight) {
 }
 
 export function drawTwoColumnOvalNote(ctx, options, note, rowIndex) {
+    console.log('[NOTES] drawTwoColumnOvalNote called:', {
+        noteId: note.id,
+        noteUuid: note.uuid,
+        startColumnIndex: note.startColumnIndex,
+        endColumnIndex: note.endColumnIndex,
+        rowIndex,
+        hasModulation: !!(options.modulationMarkers && options.modulationMarkers.length > 0),
+        modulationCount: (options.modulationMarkers || []).length
+    });
+    
     const { cellWidth, cellHeight, zoomLevel } = options;
     const y = getRowY(rowIndex, options);
     const xStart = getColumnX(note.startColumnIndex, options);
     
+    // MODULATION FIX: Calculate actual cell width from modulated positions for sizing
+    let actualCellWidth;
+    if (options.modulationMarkers && options.modulationMarkers.length > 0) {
+        const nextX = getColumnX(note.startColumnIndex + 1, options);
+        actualCellWidth = nextX - xStart;
+        console.log('[NOTES] Two-column note using modulated cell width:', {
+            noteId: note.id,
+            startColumnIndex: note.startColumnIndex,
+            baseWidth: cellWidth,
+            modulatedWidth: actualCellWidth,
+            startX: xStart,
+            nextX
+        });
+    } else {
+        actualCellWidth = cellWidth;
+        console.log('[NOTES] Two-column note using standard cell width:', {
+            noteId: note.id,
+            startColumnIndex: note.startColumnIndex,
+            cellWidth: actualCellWidth
+        });
+    }
+    
+    console.log('[NOTES] Two column note start positioning:', {
+        noteId: note.id,
+        startColumnIndex: note.startColumnIndex,
+        calculatedXStart: xStart,
+        y
+    });
+    
     // Calculate visual offset for overlapping notes
     const xOffset = calculateColorOffset(note, store.state.placedNotes, options);
-    const centerX = xStart + cellWidth + xOffset;
+    const centerX = xStart + actualCellWidth + xOffset;
     
     // Don't double-scale - cellWidth/cellHeight already include zoom
-    const dynamicStrokeWidth = Math.max(MIN_STROKE_WIDTH_THICK, cellWidth * STROKE_WIDTH_RATIO);
+    // Use modulated cell width for stroke calculations to maintain proper proportions
+    const dynamicStrokeWidth = Math.max(MIN_STROKE_WIDTH_THICK, actualCellWidth * STROKE_WIDTH_RATIO);
 
     // Draw the tail/extension line if the note extends beyond its starting column
     if (note.endColumnIndex > note.startColumnIndex) {
         const originalEndX = getColumnX(note.endColumnIndex + 1, options);
+        
+        console.log('[NOTES] Two column note tail positioning:', {
+            noteId: note.id,
+            endColumnIndex: note.endColumnIndex + 1,
+            calculatedEndX: originalEndX,
+            centerX
+        });
+        
         // Apply horizontal offset to end position, but shorten by the offset amount to stay within grid boundaries
         const endX = originalEndX + xOffset - xOffset;
         const tailYOffset = calculateTailYOffset(note, store.state.placedNotes, options);
         const tailY = y + tailYOffset;
         
+        console.log('[NOTES] Drawing note tail:', {
+            noteId: note.id,
+            fromX: centerX,
+            toX: endX,
+            tailY,
+            tailYOffset
+        });
         
         ctx.beginPath();
         ctx.moveTo(centerX, tailY);
         ctx.lineTo(endX, tailY);
         ctx.strokeStyle = note.color;
-        ctx.lineWidth = Math.max(MIN_TAIL_LINE_WIDTH, cellWidth * TAIL_LINE_WIDTH_RATIO);
+        ctx.lineWidth = Math.max(MIN_TAIL_LINE_WIDTH, actualCellWidth * TAIL_LINE_WIDTH_RATIO);
         ctx.stroke();
     }
 
     // Calculate ellipse dimensions without extra zoom scaling
-    const rx = cellWidth - (dynamicStrokeWidth / 2);
+    // Use modulated cell width for proper scaling
+    const rx = actualCellWidth - (dynamicStrokeWidth / 2);
     const ry = (cellHeight / 2) - (dynamicStrokeWidth / 2);
+
+    console.log('[NOTES] Final two column note rendering params:', {
+        noteId: note.id,
+        centerX,
+        centerY: y,
+        radiusX: rx,
+        radiusY: ry,
+        xOffset
+    });
 
     // Save context state for cleaner rendering
     ctx.save();
@@ -166,10 +231,48 @@ export function drawTwoColumnOvalNote(ctx, options, note, rowIndex) {
     }
 
 export function drawSingleColumnOvalNote(ctx, options, note, rowIndex) {
+    console.log('[NOTES] drawSingleColumnOvalNote called:', {
+        noteId: note.id,
+        noteUuid: note.uuid,
+        startColumnIndex: note.startColumnIndex,
+        rowIndex,
+        hasModulation: !!(options.modulationMarkers && options.modulationMarkers.length > 0),
+        modulationCount: (options.modulationMarkers || []).length
+    });
+    
     const { columnWidths, cellWidth, cellHeight, zoomLevel } = options;
     const y = getRowY(rowIndex, options);
     const x = getColumnX(note.startColumnIndex, options);
-    const currentCellWidth = columnWidths[note.startColumnIndex] * cellWidth;
+    
+    // MODULATION FIX: Calculate actual cell width from modulated positions
+    let currentCellWidth;
+    if (options.modulationMarkers && options.modulationMarkers.length > 0) {
+        const nextX = getColumnX(note.startColumnIndex + 1, options);
+        currentCellWidth = nextX - x;
+        console.log('[NOTES] Using modulated cell width:', {
+            noteId: note.id,
+            startColumnIndex: note.startColumnIndex,
+            baseWidth: columnWidths[note.startColumnIndex] * cellWidth,
+            modulatedWidth: currentCellWidth,
+            startX: x,
+            nextX
+        });
+    } else {
+        currentCellWidth = columnWidths[note.startColumnIndex] * cellWidth;
+        console.log('[NOTES] Using standard cell width:', {
+            noteId: note.id,
+            startColumnIndex: note.startColumnIndex,
+            cellWidth: currentCellWidth
+        });
+    }
+    
+    console.log('[NOTES] Single column note positioning:', {
+        noteId: note.id,
+        startColumnIndex: note.startColumnIndex,
+        calculatedX: x,
+        y,
+        currentCellWidth
+    });
     
     // Calculate visual offset for overlapping notes
     const xOffset = calculateColorOffset(note, store.state.placedNotes, options);
@@ -179,6 +282,15 @@ export function drawSingleColumnOvalNote(ctx, options, note, rowIndex) {
     const cx = x + currentCellWidth / 2 + xOffset;
     const rx = (currentCellWidth / 2) - (dynamicStrokeWidth / 2);
     const ry = (cellHeight / 2) - (dynamicStrokeWidth / 2);
+
+    console.log('[NOTES] Final note rendering params:', {
+        noteId: note.id,
+        centerX: cx,
+        centerY: y,
+        radiusX: rx,
+        radiusY: ry,
+        xOffset
+    });
 
     // Save context state
     ctx.save();
@@ -207,15 +319,58 @@ export function drawSingleColumnOvalNote(ctx, options, note, rowIndex) {
 }
 
 export function drawTonicShape(ctx, options, tonicSign) {
+    console.log('[NOTES] drawTonicShape called:', {
+        tonicId: tonicSign.id,
+        columnIndex: tonicSign.columnIndex,
+        row: tonicSign.row,
+        tonicNumber: tonicSign.tonicNumber,
+        hasModulation: !!(options.modulationMarkers && options.modulationMarkers.length > 0)
+    });
+    
     const { cellWidth, cellHeight, zoomLevel } = options;
     const y = getRowY(tonicSign.row, options);
     const x = getColumnX(tonicSign.columnIndex, options);
+    
+    // MODULATION FIX: Calculate actual width for tonic sign scaling
+    let actualCellWidth;
+    if (options.modulationMarkers && options.modulationMarkers.length > 0) {
+        const nextX = getColumnX(tonicSign.columnIndex + 1, options);
+        actualCellWidth = nextX - x;
+        console.log('[NOTES] Tonic using modulated cell width:', {
+            tonicId: tonicSign.id,
+            columnIndex: tonicSign.columnIndex,
+            baseWidth: cellWidth,
+            modulatedWidth: actualCellWidth
+        });
+    } else {
+        actualCellWidth = cellWidth;
+    }
+
+    console.log('[NOTES] Tonic shape positioning:', {
+        tonicId: tonicSign.id,
+        columnIndex: tonicSign.columnIndex,
+        calculatedX: x,
+        y
+    });
 
     // Scale all dimensions by the zoom level
-    const width = cellWidth * 2;
+    // Use modulated cell width for proper scaling
+    const width = actualCellWidth * 2;
     const centerX = x + width / 2;
     const radius = (Math.min(width, cellHeight) / 2 * 0.9) * zoomLevel;
-    if (radius < 2) return; // Don't draw if too small
+    
+    console.log('[NOTES] Tonic shape final params:', {
+        tonicId: tonicSign.id,
+        centerX,
+        centerY: y,
+        radius,
+        width
+    });
+    
+    if (radius < 2) {
+        console.log('[NOTES] Skipping tonic shape - too small:', radius);
+        return; // Don't draw if too small
+    }
 
     ctx.beginPath();
     ctx.arc(centerX, y, radius, 0, 2 * Math.PI);
@@ -224,14 +379,53 @@ export function drawTonicShape(ctx, options, tonicSign) {
     ctx.stroke();
     
     // Safety check for tonicNumber
-    if (!tonicSign.tonicNumber) return;
+    if (!tonicSign.tonicNumber) {
+        console.log('[NOTES] No tonic number to draw');
+        return;
+    }
     const numberText = tonicSign.tonicNumber.toString();
     const fontSize = radius * 1.5;
-    if (fontSize < 6) return; // Don't draw text if too small
+    if (fontSize < 6) {
+        console.log('[NOTES] Skipping tonic text - too small:', fontSize);
+        return; // Don't draw text if too small
+    }
 
+    console.log('[NOTES] Drawing tonic text:', { numberText, fontSize });
     ctx.fillStyle = '#212529';
     ctx.font = `bold ${fontSize}px 'Atkinson Hyperlegible', sans-serif`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillText(numberText, centerX, y);
+}
+
+/**
+ * Checks if a note crosses modulation marker boundaries and needs special handling
+ * @param {Object} note - Note object with startColumnIndex and endColumnIndex
+ * @param {Object} options - Render options containing modulation markers
+ * @returns {Object} Information about segments the note crosses
+ */
+export function analyzeNoteCrossesMarkers(note, options) {
+    const { modulationMarkers } = options;
+    
+    if (!modulationMarkers || modulationMarkers.length === 0) {
+        return { crossesMarkers: false, segments: [] };
+    }
+    
+    const mapping = getCurrentCoordinateMapping(options);
+    const noteStartX = getColumnX(note.startColumnIndex, options);
+    const noteEndX = getColumnX(note.endColumnIndex + 1, options);
+    
+    const affectedSegments = mapping.segments.filter(segment => {
+        // Check if note overlaps with this segment
+        return !(noteEndX <= segment.startX || noteStartX >= segment.endX);
+    });
+    
+    const crossesMarkers = affectedSegments.length > 1;
+    
+    return {
+        crossesMarkers,
+        segments: affectedSegments,
+        noteStartX,
+        noteEndX
+    };
 }

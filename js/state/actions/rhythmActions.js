@@ -1,5 +1,6 @@
 // js/state/actions/rhythmActions.js
 import { ANACRUSIS_ON_GROUPINGS, ANACRUSIS_ON_STYLES, ANACRUSIS_OFF_GROUPINGS, ANACRUSIS_OFF_STYLES } from '../initialState/rhythm.js';
+import { createModulationMarker, MODULATION_RATIOS } from '../../rhythm/modulationMapping.js';
 import logger from '../../utils/logger.js';
 
 export const rhythmActions = {
@@ -81,6 +82,38 @@ export const rhythmActions = {
                 }
             });
             
+            // Also shift triplet placements
+            const tripletsToRemove = [];
+            
+            if (this.state.tripletPlacements) {
+                this.state.tripletPlacements.forEach(triplet => {
+                    // Triplets use startCellIndex, which represents cells (each cell = 2 microbeats)
+                    // We need to convert column shift to cell shift: columnShift / 2
+                    const cellShift = columnShift / 2;
+                    const legendCells = 1; // Legend takes up 2 columns = 1 cell
+                    
+                    if (triplet.startCellIndex >= legendCells) {
+                        const newStartCellIndex = triplet.startCellIndex + cellShift;
+                        
+                        // Check bounds - ensure triplets don't go before the legend cells
+                        if (newStartCellIndex < legendCells) {
+                            // Mark triplet for removal if it would go into invalid territory
+                            tripletsToRemove.push(triplet);
+                        } else {
+                            triplet.startCellIndex = newStartCellIndex;
+                        }
+                    }
+                });
+                
+                // Remove triplets that would fall outside valid bounds
+                tripletsToRemove.forEach(tripletToRemove => {
+                    const index = this.state.tripletPlacements.indexOf(tripletToRemove);
+                    if (index > -1) {
+                        this.state.tripletPlacements.splice(index, 1);
+                    }
+                });
+            }
+            
             // Also shift any tonic signs that may have been placed
             Object.values(this.state.tonicSignGroups).flat().forEach(tonicSign => {
                 // Tonic signs are placed before macrobeats, so they need adjustment too
@@ -96,6 +129,7 @@ export const rhythmActions = {
         this.emit('anacrusisChanged', enabled);
         this.emit('notesChanged'); // Ensure notes are redrawn with new positions
         this.emit('stampPlacementsChanged'); // Ensure stamps are redrawn with new positions
+        this.emit('tripletPlacementsChanged'); // Ensure triplets are redrawn with new positions
         this.emit('rhythmStructureChanged');
         this.recordState();
     },
@@ -312,5 +346,133 @@ export const rhythmActions = {
         this.emit('notesChanged');
         this.emit('rhythmStructureChanged');
         this.recordState();
+    },
+
+    /**
+     * Adds a new modulation marker at the specified measure boundary
+     * @param {number} measureIndex - Index of the measure after which modulation starts
+     * @param {number} ratio - Modulation ratio (2/3 or 3/2)
+     * @param {number} xPosition - Optional X position override (for accurate placement)
+     * @param {number} columnIndex - Optional column index for stable positioning
+     * @param {number} macrobeatIndex - Optional macrobeat index for stable positioning
+     * @returns {string} The ID of the created marker
+     */
+    addModulationMarker(measureIndex, ratio, xPosition = null, columnIndex = null, macrobeatIndex = null) {
+        if (!Object.values(MODULATION_RATIOS).includes(ratio)) {
+            logger.error('rhythmActions', `Invalid modulation ratio: ${ratio}`, null, 'state');
+            return null;
+        }
+
+        const marker = createModulationMarker(measureIndex, ratio, xPosition, columnIndex, macrobeatIndex);
+        this.state.modulationMarkers.push(marker);
+        
+        // Sort markers by measure index
+        this.state.modulationMarkers.sort((a, b) => a.measureIndex - b.measureIndex);
+        
+        this.emit('modulationMarkersChanged');
+        this.recordState();
+        
+        logger.info('rhythmActions', `Added modulation marker ${marker.id} at measure ${measureIndex} with ratio=${ratio}, columnIndex=${columnIndex}`, null, 'state');
+        console.log('[MODULATION] State after adding marker:', {
+            markerCount: this.state.modulationMarkers.length,
+            markers: this.state.modulationMarkers
+        });
+        return marker.id;
+    },
+
+    /**
+     * Removes a modulation marker by ID
+     * @param {string} markerId - The ID of the marker to remove
+     */
+    removeModulationMarker(markerId) {
+        const index = this.state.modulationMarkers.findIndex(m => m.id === markerId);
+        if (index === -1) {
+            logger.warn('rhythmActions', `Modulation marker not found: ${markerId}`, null, 'state');
+            return;
+        }
+
+        this.state.modulationMarkers.splice(index, 1);
+        this.emit('modulationMarkersChanged');
+        this.recordState();
+        
+        logger.info('rhythmActions', `Removed modulation marker ${markerId}`, null, 'state');
+    },
+
+    /**
+     * Updates the ratio of a modulation marker
+     * @param {string} markerId - The ID of the marker to update
+     * @param {number} ratio - New modulation ratio
+     */
+    setModulationRatio(markerId, ratio) {
+        if (!Object.values(MODULATION_RATIOS).includes(ratio)) {
+            logger.error('rhythmActions', `Invalid modulation ratio: ${ratio}`, null, 'state');
+            return;
+        }
+
+        const marker = this.state.modulationMarkers.find(m => m.id === markerId);
+        if (!marker) {
+            logger.warn('rhythmActions', `Modulation marker not found: ${markerId}`, null, 'state');
+            return;
+        }
+
+        marker.ratio = ratio;
+        this.emit('modulationMarkersChanged');
+        this.recordState();
+        
+        logger.info('rhythmActions', `Updated modulation marker ${markerId} ratio to ${ratio}`, null, 'state');
+    },
+
+    /**
+     * Moves a modulation marker to a new measure boundary
+     * @param {string} markerId - The ID of the marker to move
+     * @param {number} measureIndex - New measure index
+     */
+    moveModulationMarker(markerId, measureIndex) {
+        const marker = this.state.modulationMarkers.find(m => m.id === markerId);
+        if (!marker) {
+            logger.warn('rhythmActions', `Modulation marker not found: ${markerId}`, null, 'state');
+            return;
+        }
+
+        marker.measureIndex = measureIndex;
+        
+        // Re-sort markers by measure index
+        this.state.modulationMarkers.sort((a, b) => a.measureIndex - b.measureIndex);
+        
+        this.emit('modulationMarkersChanged');
+        this.recordState();
+        
+        logger.info('rhythmActions', `Moved modulation marker ${markerId} to measure ${measureIndex}`, null, 'state');
+    },
+
+    /**
+     * Toggles the active state of a modulation marker
+     * @param {string} markerId - The ID of the marker to toggle
+     */
+    toggleModulationMarker(markerId) {
+        const marker = this.state.modulationMarkers.find(m => m.id === markerId);
+        if (!marker) {
+            logger.warn('rhythmActions', `Modulation marker not found: ${markerId}`, null, 'state');
+            return;
+        }
+
+        marker.active = !marker.active;
+        this.emit('modulationMarkersChanged');
+        this.recordState();
+        
+        logger.info('rhythmActions', `Toggled modulation marker ${markerId} active state to ${marker.active}`, null, 'state');
+    },
+
+    /**
+     * Clears all modulation markers
+     */
+    clearModulationMarkers() {
+        const removedCount = this.state.modulationMarkers.length;
+        this.state.modulationMarkers = [];
+        this.emit('modulationMarkersChanged');
+        this.recordState();
+        
+        logger.info('rhythmActions', `Cleared ${removedCount} modulation markers`, null, 'state');
+        console.log('[MODULATION] All markers cleared');
     },
 };

@@ -5,15 +5,20 @@ import SynthEngine from '../../../../services/synthEngine.js';
 import GridCoordsService from '../../../../services/gridCoordsService.js';
 import LayoutService from '../../../../services/layoutService.js';
 import { drawSingleColumnOvalNote, drawTwoColumnOvalNote, drawTonicShape } from '../renderers/notes.js';
-import { getRowY } from '../renderers/rendererUtils.js';
+import { getRowY, getColumnX } from '../renderers/rendererUtils.js';
 import GlobalService from '../../../../services/globalService.js';
 import domCache from '../../../../services/domCache.js';
 import { Note } from 'tonal';
 import { isNotePlayableAtColumn, isWithinTonicSpan } from '../../../../utils/tonicColumnUtils.js';
 import { setGhostNotePosition, clearGhostNotePosition } from '../../../../services/spacebarHandler.js';
 import { placeStamp, removeStampsInEraserArea } from '../../../../rhythm/stampPlacements.js';
+import { placeTripletGroup, eraseTripletGroups } from '../../../../rhythm/tripletPlacements.js';
 import StampsToolbar from '../../../StampsToolbar/StampsToolbar.js';
+import TripletsToolbar from '../../../StampsToolbar/TripletsToolbar.js';
 import { renderStampPreview } from '../renderers/stampRenderer.js';
+import { renderTripletPreview } from '../renderers/tripletRenderer.js';
+import { hitTestModulationMarker, getModulationMarkerCursor } from '../renderers/modulationRenderer.js';
+import { getModulationDisplayText, getModulationColor, MODULATION_RATIOS } from '../../../../rhythm/modulationMapping.js';
 
 // --- Interaction State ---
 let pitchHoverCtx;
@@ -26,7 +31,12 @@ let isEraserDragActive = false;
 let previousTool = null;
 let lastHoveredTonicPoint = null;
 let lastHoveredOctaveRows = [];
-let rightClickActionTaken = false; 
+let rightClickActionTaken = false;
+
+// --- Modulation Marker State ---
+let isDraggingModulationMarker = false;
+let draggedModulationMarker = null;
+let lastModulationHoverResult = null; 
 
 // --- Interaction Helpers ---
 function getPitchForRow(rowIndex) {
@@ -81,21 +91,100 @@ function getChordNotesFromIntervals(rootNote) {
 function drawHoverHighlight(colIndex, rowIndex, color) {
     if (!pitchHoverCtx) return;
 
-    const x = LayoutService.getColumnX(colIndex);
+    // MODULATION FIX: Use modulated column positioning to match placed notes
+    const fullOptions = { ...store.state, zoomLevel: LayoutService.getViewportInfo().zoomLevel };
+    const x = getColumnX(colIndex, fullOptions);
     const centerY = getRowY(rowIndex, store.state);
     const y = centerY - (store.state.cellHeight / 2);
+    
+    console.log('[HOVER-ALIGN] Drawing hover highlight:', {
+        colIndex,
+        rowIndex,
+        calculatedX: x,
+        y,
+        hasModulation: !!(store.state.modulationMarkers && store.state.modulationMarkers.length > 0),
+        modulationCount: (store.state.modulationMarkers || []).length,
+        usingModulatedPosition: true
+    });
 
     const toolType = store.state.selectedTool;
-    let highlightWidth = store.state.columnWidths[colIndex] * store.state.cellWidth;
     
+    // MODULATION FIX: Calculate highlight width based on modulated grid scaling
+    let highlightWidth;
+    if (store.state.modulationMarkers && store.state.modulationMarkers.length > 0) {
+        // For modulated grids, calculate the actual width by finding the difference 
+        // between this column position and the next column position
+        const nextX = getColumnX(colIndex + 1, fullOptions);
+        highlightWidth = nextX - x;
+        console.log('[HOVER-WIDTH] Using modulated width calculation:', {
+            colIndex,
+            currentX: x,
+            nextX,
+            calculatedWidth: highlightWidth,
+            baseWidth: store.state.columnWidths[colIndex] * store.state.cellWidth
+        });
+    } else {
+        // No modulation - use standard calculation
+        highlightWidth = store.state.columnWidths[colIndex] * store.state.cellWidth;
+        console.log('[HOVER-WIDTH] Using standard width calculation:', {
+            colIndex,
+            calculatedWidth: highlightWidth
+        });
+    }
+    
+    // Apply tool-specific width overrides, but account for modulation scaling
     if (toolType === 'eraser' || isRightClickActive) {
-        highlightWidth = store.state.cellWidth * 2;
+        if (store.state.modulationMarkers && store.state.modulationMarkers.length > 0) {
+            // For modulated grids, calculate 2-column span using actual positions
+            const twoColumnsEndX = getColumnX(colIndex + 2, fullOptions);
+            highlightWidth = twoColumnsEndX - x;
+            console.log('[HOVER-WIDTH] Modulated eraser width:', { highlightWidth, span: '2 columns' });
+        } else {
+            highlightWidth = store.state.cellWidth * 2;
+        }
     } else if (toolType === 'note' && store.state.selectedNote.shape === 'circle') {
-        highlightWidth = store.state.cellWidth * 2;
+        if (store.state.modulationMarkers && store.state.modulationMarkers.length > 0) {
+            // For modulated grids, calculate 2-column span using actual positions
+            const twoColumnsEndX = getColumnX(colIndex + 2, fullOptions);
+            highlightWidth = twoColumnsEndX - x;
+            console.log('[HOVER-WIDTH] Modulated circle note width:', { highlightWidth, span: '2 columns' });
+        } else {
+            highlightWidth = store.state.cellWidth * 2;
+        }
     } else if (toolType === 'stamp') {
-        highlightWidth = store.state.cellWidth * 2;
+        if (store.state.modulationMarkers && store.state.modulationMarkers.length > 0) {
+            // For modulated grids, calculate 2-column span using actual positions
+            const twoColumnsEndX = getColumnX(colIndex + 2, fullOptions);
+            highlightWidth = twoColumnsEndX - x;
+            console.log('[HOVER-WIDTH] Modulated stamp width:', { highlightWidth, span: '2 columns' });
+        } else {
+            highlightWidth = store.state.cellWidth * 2;
+        }
+    } else if (toolType === 'triplet') {
+        // Triplet width depends on the selected triplet stamp (1 or 2 cells)
+        const selectedTriplet = TripletsToolbar.getSelectedTripletStamp();
+        if (selectedTriplet) {
+            const span = selectedTriplet.span === 'eighth' ? 1 : 2; // eighth=1 cell, quarter=2 cells
+            const cellSpan = 2 * span; // Each cell is 2 microbeats
+            if (store.state.modulationMarkers && store.state.modulationMarkers.length > 0) {
+                const spanEndX = getColumnX(colIndex + cellSpan, fullOptions);
+                highlightWidth = spanEndX - x;
+                console.log('[HOVER-WIDTH] Modulated triplet width:', { highlightWidth, span: `${cellSpan} columns` });
+            } else {
+                highlightWidth = store.state.cellWidth * cellSpan;
+            }
+        } else {
+            highlightWidth = store.state.cellWidth * 2;
+        }
     } else if (toolType === 'tonicization') {
-        highlightWidth = store.state.cellWidth * 2;
+        if (store.state.modulationMarkers && store.state.modulationMarkers.length > 0) {
+            // For modulated grids, calculate 2-column span using actual positions
+            const twoColumnsEndX = getColumnX(colIndex + 2, fullOptions);
+            highlightWidth = twoColumnsEndX - x;
+            console.log('[HOVER-WIDTH] Modulated tonicization width:', { highlightWidth, span: '2 columns' });
+        } else {
+            highlightWidth = store.state.cellWidth * 2;
+        }
     }
     
     
@@ -175,12 +264,39 @@ function handleMouseDown(e) {
         });
         if (store.eraseStampsInArea(colIndex, eraseEndCol, eraseStartRow, eraseEndRow)) rightClickActionTaken = true;
         
+        // Also erase triplets with right-click
+        if (store.eraseTripletsInArea(colIndex, eraseEndCol, eraseStartRow, eraseEndRow)) rightClickActionTaken = true;
+        
         pitchHoverCtx.clearRect(0, 0, pitchHoverCtx.canvas.width, pitchHoverCtx.canvas.height);
         drawHoverHighlight(colIndex, rowIndex, 'rgba(220, 53, 69, 0.3)');
         return;
     }
 
     if (e.button === 0) {
+        // First check for modulation marker interactions (before tool-specific logic)
+        const actualX = x + scrollLeft;
+        const fullOptions = { ...store.state };
+        
+        // Test if we clicked on an existing modulation marker
+        for (const marker of store.state.modulationMarkers || []) {
+            const hitResult = hitTestModulationMarker(actualX, y, marker, fullOptions);
+            if (hitResult) {
+                if (hitResult.type === 'label') {
+                    // Clicked on label - toggle ratio
+                    const newRatio = marker.ratio === MODULATION_RATIOS.COMPRESSION_2_3 ? 
+                                    MODULATION_RATIOS.EXPANSION_3_2 : 
+                                    MODULATION_RATIOS.COMPRESSION_2_3;
+                    store.setModulationRatio(marker.id, newRatio);
+                    return;
+                } else if (hitResult.type === 'barline' && hitResult.canDrag) {
+                    // Start dragging the marker
+                    isDraggingModulationMarker = true;
+                    draggedModulationMarker = marker;
+                    return;
+                }
+            }
+        }
+        
         const toolType = store.state.selectedTool;
 
         if (toolType === 'chord') {
@@ -272,6 +388,10 @@ function handleMouseDown(e) {
             
             const removedStamps = removeStampsInEraserArea(colIndex, eraseEndCol, eraseStartRow, eraseEndRow);
             console.log('[STAMP ERASE] Removed stamps:', removedStamps);
+            
+            // Also remove triplets that intersect with the eraser area
+            const removedTriplets = eraseTripletGroups(colIndex, eraseEndCol, eraseStartRow, eraseEndRow);
+            console.log('[TRIPLET ERASE] Removed triplets:', removedTriplets);
             return;
         }
         
@@ -300,6 +420,70 @@ function handleMouseDown(e) {
                 
                 store.recordState(); // Save state for undo/redo
             }
+            return;
+        }
+        
+        if (toolType === 'triplet') {
+            const selectedTriplet = TripletsToolbar.getSelectedTripletStamp();
+            if (selectedTriplet) {
+                console.log('[TRIPLET PLACE] Placing triplet:', {
+                    stampId: selectedTriplet.id,
+                    mouseX: x,
+                    mouseY: y,
+                    colIndex,
+                    rowIndex,
+                    pitch: getPitchForRow(rowIndex),
+                    scrollOffset: scrollLeft
+                });
+                
+                // Convert column index to cell index for triplets (cell = 2 microbeats)
+                const cellIndex = Math.floor(colIndex / 2);
+                const { color } = store.state.selectedNote;
+                placeTripletGroup(selectedTriplet.id, cellIndex, rowIndex, color);
+                
+                // Optional: Play preview sound for the triplet
+                const pitch = getPitchForRow(rowIndex);
+                if (pitch) {
+                    // Play a short preview of the triplet pattern
+                    SynthEngine.playNote(pitch, '8t'); // Quick triplet preview
+                }
+                
+                store.recordState(); // Save state for undo/redo
+            }
+            return;
+        }
+        
+        if (toolType === 'modulation') {
+            // Get the selected modulation ratio from the UI
+            const selectedRatio = store.state.selectedModulationRatio;
+            if (!selectedRatio) {
+                console.warn('[MODULATION] No ratio selected - click 2:3 or 3:2 button first');
+                return;
+            }
+            
+            // Find which measure boundary we're closest to
+            const measureBoundary = findNearestMeasureBoundary(actualX, colIndex);
+            if (!measureBoundary) {
+                console.warn('[MODULATION] Click must be near a measure boundary');
+                return;
+            }
+            
+            console.log('[MODULATION] Placing marker at measure boundary:', {
+                measureIndex: measureBoundary.measureIndex,
+                ratio: selectedRatio,
+                clickX: actualX,
+                boundaryX: measureBoundary.xPosition
+            });
+            
+            // Create and add the marker at the measure boundary
+            const markerId = store.addModulationMarker(measureBoundary.measureIndex, selectedRatio, measureBoundary.xPosition, null, measureBoundary.macrobeatIndex);
+            
+            console.log('[MODULATION] Marker placed successfully:', {
+                markerId,
+                measureIndex: measureBoundary.measureIndex,
+                ratio: selectedRatio
+            });
+            
             return;
         }
         
@@ -348,6 +532,49 @@ function handleMouseMove(e) {
 
     if (!pitchHoverCtx) return;
     pitchHoverCtx.clearRect(0, 0, pitchHoverCtx.canvas.width, pitchHoverCtx.canvas.height);
+    
+    // Handle modulation marker dragging
+    if (isDraggingModulationMarker && draggedModulationMarker) {
+        const actualX = x + scrollLeft;
+        const baseMicrobeatPx = store.state.baseMicrobeatPx || store.state.cellWidth || 40;
+        const snappedX = Math.round(actualX / baseMicrobeatPx) * baseMicrobeatPx;
+        
+        // Update marker position
+        store.moveModulationMarker(draggedModulationMarker.id, snappedX);
+        return;
+    }
+    
+    // Handle modulation tool preview and hover
+    const actualX = x + scrollLeft;
+    const fullOptions = { ...store.state };
+    let hoveredMarker = null;
+    
+    // Check for existing modulation marker hover
+    for (const marker of store.state.modulationMarkers || []) {
+        const hitResult = hitTestModulationMarker(actualX, y, marker, fullOptions);
+        if (hitResult) {
+            hoveredMarker = hitResult;
+            break;
+        }
+    }
+    
+    // Show modulation placement preview if modulation tool is active
+    if (store.state.selectedTool === 'modulation' && !hoveredMarker) {
+        const nearestBoundary = findNearestMeasureBoundary(actualX, colIndex);
+        if (nearestBoundary) {
+            drawModulationPreview(pitchHoverCtx, nearestBoundary.xPosition, store.state.selectedModulationRatio);
+        }
+    }
+    
+    // Update cursor based on hover state
+    const canvas = e.target;
+    if (hoveredMarker) {
+        canvas.style.cursor = getModulationMarkerCursor(hoveredMarker);
+        lastModulationHoverResult = hoveredMarker;
+    } else if (lastModulationHoverResult) {
+        canvas.style.cursor = 'default';
+        lastModulationHoverResult = null;
+    }
     
     // Debug log when dragging
     if (isDragging) {
@@ -421,6 +648,9 @@ function handleMouseMove(e) {
         const eraseEndRow = rowIndex + 1;
         if (store.eraseStampsInArea(colIndex, eraseEndCol, eraseStartRow, eraseEndRow)) rightClickActionTaken = true;
         
+        // Also erase triplets during right-click drag
+        if (store.eraseTripletsInArea(colIndex, eraseEndCol, eraseStartRow, eraseEndRow)) rightClickActionTaken = true;
+        
         drawHoverHighlight(colIndex, rowIndex, 'rgba(220, 53, 69, 0.3)');
         return;
     }
@@ -434,6 +664,9 @@ function handleMouseMove(e) {
         const eraseStartRow = rowIndex - 1;
         const eraseEndRow = rowIndex + 1;
         store.eraseStampsInArea(colIndex, eraseEndCol, eraseStartRow, eraseEndRow);
+        
+        // Also erase triplets during eraser drag
+        store.eraseTripletsInArea(colIndex, eraseEndCol, eraseStartRow, eraseEndRow);
         
         drawHoverHighlight(colIndex, rowIndex, 'rgba(220, 53, 69, 0.3)');
         return;
@@ -498,6 +731,29 @@ function handleMouseMove(e) {
                 };
                 renderStampPreview(pitchHoverCtx, colIndex, rowIndex, selectedStamp, options);
             }
+        } else if (store.state.selectedTool === 'triplet') {
+            // Show triplet preview
+            const selectedTriplet = TripletsToolbar.getSelectedTripletStamp();
+            if (selectedTriplet) {
+                console.log('[TRIPLET HOVER] Preview at:', {
+                    mouseX: x,
+                    mouseY: y,
+                    colIndex,
+                    rowIndex,
+                    pitch: getPitchForRow(rowIndex),
+                    scrollOffset: scrollLeft
+                });
+                
+                // Convert column index to cell index for triplet preview
+                const cellIndex = Math.floor(colIndex / 2);
+                const options = {
+                    cellWidth: store.state.cellWidth,
+                    cellHeight: store.state.cellHeight,
+                    columnWidths: store.state.columnWidths,
+                    previewColor: '#4a90e2'
+                };
+                renderTripletPreview(pitchHoverCtx, cellIndex, rowIndex, selectedTriplet, options);
+            }
         } else if (canPlaceNote) {
             drawGhostNote(colIndex, rowIndex);
         }
@@ -514,6 +770,13 @@ function handleMouseLeave() {
 }
 
 function handleGlobalMouseUp() {
+    // Handle modulation marker drag end
+    if (isDraggingModulationMarker) {
+        isDraggingModulationMarker = false;
+        draggedModulationMarker = null;
+        return;
+    }
+    
     // MODIFIED: Release any pitches that were triggered for preview
     if (activePreviewPitches.length > 0) {
         const color = store.state.selectedNote.color;
@@ -560,6 +823,136 @@ function handleGlobalMouseUp() {
         domCache.get('eraserButton')?.classList.remove('erasing-active');
     }
     handleMouseLeave();
+}
+
+/**
+ * Finds the nearest measure boundary to a given click position
+ * @param {number} clickX - Canvas x position of click
+ * @param {number} colIndex - Column index of click
+ * @returns {Object|null} Measure boundary info or null if none found
+ */
+function findNearestMeasureBoundary(clickX, colIndex) {
+    const { macrobeatGroupings, macrobeatBoundaryStyles } = store.state;
+    const placedTonicSigns = getPlacedTonicSigns(store.state);
+    const tolerance = 100; // pixels - increased for easier placement
+    
+    // Find all measure boundaries (solid boundaries)
+    const boundaries = [];
+    const hasModulation = store.state.modulationMarkers && store.state.modulationMarkers.length > 0;
+    
+    console.log('[MODULATION] Boundary calculation - has modulation:', hasModulation);
+    
+    for (let i = 0; i < macrobeatBoundaryStyles.length; i++) {
+        if (macrobeatBoundaryStyles[i] === 'solid') {
+            const measureInfo = getMacrobeatInfo(store.state, i);
+            if (measureInfo) {
+                // Use modulated positions if modulation exists, otherwise use LayoutService
+                const boundaryX = hasModulation ? 
+                    getColumnX(measureInfo.endColumn + 1, { 
+                        ...store.state, 
+                        modulationMarkers: store.state.modulationMarkers, 
+                        cellWidth: store.state.cellWidth, 
+                        columnWidths: store.state.columnWidths, 
+                        baseMicrobeatPx: store.state.cellWidth 
+                    }) :
+                    LayoutService.getColumnX(measureInfo.endColumn + 1);
+                    
+                console.log(`[MODULATION] Boundary ${i}: measureInfo.endColumn=${measureInfo.endColumn}, calculatedX=${boundaryX}, method=${hasModulation ? 'modulated' : 'base'}`);
+                    
+                boundaries.push({
+                    measureIndex: i + 1, // Modulation starts after this measure
+                    xPosition: boundaryX,
+                    macrobeatIndex: i
+                });
+            }
+        }
+    }
+    
+    // Also include the start boundary (measure 0)
+    const startBoundaryX = hasModulation ?
+        getColumnX(2, { 
+            ...store.state, 
+            modulationMarkers: store.state.modulationMarkers, 
+            cellWidth: store.state.cellWidth, 
+            columnWidths: store.state.columnWidths, 
+            baseMicrobeatPx: store.state.cellWidth 
+        }) :
+        LayoutService.getColumnX(2); // Start of first measure
+        
+    console.log('[MODULATION] Start boundary: calculatedX=', startBoundaryX, ', method=', hasModulation ? 'modulated' : 'base');
+    boundaries.unshift({
+        measureIndex: 0,
+        xPosition: startBoundaryX,
+        macrobeatIndex: -1
+    });
+    
+    console.log('[MODULATION] Available measure boundaries:', boundaries);
+    console.log('[MODULATION] Click position:', clickX, 'tolerance:', tolerance);
+    
+    // Find the closest boundary within tolerance
+    let closestBoundary = null;
+    let closestDistance = Infinity;
+    
+    boundaries.forEach(boundary => {
+        const distance = Math.abs(clickX - boundary.xPosition);
+        console.log(`[MODULATION] Boundary at x=${boundary.xPosition}, distance=${distance}`);
+        
+        if (distance <= tolerance && distance < closestDistance) {
+            closestDistance = distance;
+            closestBoundary = boundary;
+        }
+    });
+    
+    if (closestBoundary) {
+        console.log('[MODULATION] Found closest boundary:', closestBoundary, 'distance:', closestDistance);
+    } else {
+        console.log('[MODULATION] No boundary within tolerance');
+    }
+    
+    return closestBoundary;
+}
+
+/**
+ * Draws modulation placement preview (three solid lines)
+ * @param {CanvasRenderingContext2D} ctx - Hover canvas context
+ * @param {number} xPosition - X position of the measure boundary
+ * @param {number} ratio - Modulation ratio
+ */
+function drawModulationPreview(ctx, xPosition, ratio) {
+    if (!ratio) return;
+    
+    const color = getModulationColor(ratio);
+    const displayText = getModulationDisplayText(ratio);
+    
+    ctx.save();
+    
+    // Draw three solid preview lines
+    const lineSpacing = 3; // pixels between lines
+    const lineWidth = 2;
+    const canvasHeight = ctx.canvas.height;
+    
+    ctx.strokeStyle = color;
+    ctx.lineWidth = lineWidth;
+    ctx.globalAlpha = 0.7; // Semi-transparent preview
+    ctx.setLineDash([]); // Solid lines
+    
+    for (let i = -1; i <= 1; i++) {
+        const x = xPosition + (i * lineSpacing);
+        ctx.beginPath();
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, canvasHeight);
+        ctx.stroke();
+    }
+    
+    // Draw preview label
+    ctx.globalAlpha = 0.8;
+    ctx.font = '12px Arial, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'top';
+    ctx.fillStyle = color;
+    ctx.fillText(`Preview: ${displayText}`, xPosition, 10);
+    
+    ctx.restore();
 }
 
 export function initPitchGridInteraction() {

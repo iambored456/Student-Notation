@@ -171,12 +171,10 @@
                                <button class="tonic-sign-button" data-tonic="7"><img src="/public/assets/tabicons/tonicShape_7.svg" alt="Tonic 7" class="tonic-shape-icon"><span class="mode-label">Locrian</span></button>
                            </div>
                        </div>
-                    </div>
-                </div>
-                <div class="control-section">
-                    <div class="degree-toggle-container">
-                        <button id="degree-visibility-toggle" class="toolkit-button degree-visibility-toggle">Hide</button>
-                        <button id="degree-mode-toggle" class="toolkit-button degree-mode-toggle">Scale Degrees</button>
+                       <div class="degree-toggle-container">
+                           <button id="degree-visibility-toggle" class="toolkit-button degree-visibility-toggle">Hide</button>
+                           <button id="degree-mode-toggle" class="toolkit-button degree-mode-toggle">Scale Degrees</button>
+                       </div>
                     </div>
                 </div>
                 <div class="control-section chord-shape-container">
@@ -284,9 +282,32 @@
                         <input type="range" id="tempo-slider" min="30" max="240" value="90">
                     </div>
                 </div>
-                <div class="control-section">
-                    <div id="stamps-toolbar-container" class="stamps-toolbar-container">
-                        <!-- Stamps toolbar will be rendered here by JavaScript -->
+                <div class="control-section rhythm-stamps-container">
+                    <div class="rhythm-tab-sidebar">
+                        <button class="rhythm-tab-button active" data-rhythm-tab="stamps">Sixteenths</button>
+                        <button class="rhythm-tab-button" data-rhythm-tab="triplets">Triplets</button>
+                    </div>
+                    <div class="rhythm-tab-content">
+                        <div class="rhythm-tab-panel active" id="stamps-panel">
+                            <div id="stamps-toolbar-container" class="stamps-toolbar-container">
+                                <!-- Stamps toolbar will be rendered here by JavaScript -->
+                            </div>
+                        </div>
+                        <div class="rhythm-tab-panel" id="triplets-panel">
+                            <div id="triplets-toolbar-container" class="triplets-toolbar-container">
+                                <!-- Triplets toolbar will be rendered here by JavaScript -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="control-section modulation-container">
+                    <div class="control-subsection">
+                        <h4>Modulation</h4>
+                        <div class="modulation-controls">
+                            <button class="toolkit-button modulation-ratio-btn" id="modulation-2-3-btn" data-ratio="2:3" title="Place 2:3 modulation marker">2:3</button>
+                            <button class="toolkit-button modulation-ratio-btn" id="modulation-3-2-btn" data-ratio="3:2" title="Place 3:2 modulation marker">3:2</button>
+                            <button class="toolkit-button" id="modulation-clear-btn" title="Clear all modulation markers">Clear</button>
+                        </div>
                     </div>
                 </div>
             </div>

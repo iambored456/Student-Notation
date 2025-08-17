@@ -1,5 +1,7 @@
 import store from '../../../state/index.js';
 import TransportService from '../../../services/transportService.js';
+import { clearAllStamps } from '../../../rhythm/stampPlacements.js';
+import { clearAllTripletPlacements } from '../../../rhythm/tripletPlacements.js';
 
 export function initPlaybackControls() {
     const playBtn = document.getElementById('play-button');
@@ -37,6 +39,8 @@ export function initPlaybackControls() {
         clearBtn.classList.add('flash');
         setTimeout(() => clearBtn.classList.remove('flash'), 300);
         store.clearAllNotes();
+        clearAllStamps();
+        clearAllTripletPlacements();
         clearBtn.blur(); // Remove focus to prevent lingering blue highlight
     });
     

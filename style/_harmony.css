@@ -88,6 +88,10 @@
     display: inline-block;
 }
 
+.dropdown-container.open {
+    z-index: 1000;
+}
+
 .tonic-dropdown-toggle {
     display: flex;
     align-items: center;
@@ -129,7 +133,7 @@
     border: 1px solid var(--c-border);
     border-radius: var(--border-radius-md);
     box-shadow: var(--box-shadow-md);
-    z-index: 100;
+    z-index: 1001;
     padding: var(--space-1);
     flex-direction: column;
     gap: var(--space-1);
@@ -153,6 +157,14 @@
 .tonic-dropdown-toggle.selected {
     border: 2px solid var(--c-accent);
     box-shadow: 0 0 5px var(--c-accent);
+}
+
+/* --- Tonal Center Tools Wrapper --- */
+.tonic-tools-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    align-items: center;
 }
 
 /* --- Degree Toggle Buttons Styles --- */

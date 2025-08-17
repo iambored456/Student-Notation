@@ -5,9 +5,23 @@ import { drawLegends } from './legend.js';
 import { drawSingleColumnOvalNote, drawTwoColumnOvalNote, drawTonicShape } from './notes.js';
 import { getVisibleRowRange } from './rendererUtils.js';
 import { renderStamps } from './stampRenderer.js';
+import { renderTriplets } from './tripletRenderer.js';
+import { renderModulationMarkers } from './modulationRenderer.js';
 
 export function drawPitchGrid(ctx, options) {
     const fullOptions = { ...options, ...store.state };
+    
+    // Debug modulation markers
+    console.log('[MODULATION] State passed to renderer:', {
+        hasModulationMarkers: !!fullOptions.modulationMarkers,
+        markerCount: fullOptions.modulationMarkers ? fullOptions.modulationMarkers.length : 0,
+        markers: fullOptions.modulationMarkers
+    });
+    
+    if (fullOptions.modulationMarkers && fullOptions.modulationMarkers.length > 0) {
+        console.log('[MODULATION] Rendering with markers:', fullOptions.modulationMarkers);
+    }
+    
     ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
 
     // 1. Get the range of rows that are actually visible
@@ -48,5 +62,11 @@ export function drawPitchGrid(ctx, options) {
     
     // Draw stamps (render on top of everything else)
     renderStamps(ctx, fullOptions);
+    
+    // Draw triplet groups (render on top of stamps)
+    renderTriplets(ctx, fullOptions);
+    
+    // Draw modulation markers (render on top of everything else for UI overlay)
+    renderModulationMarkers(ctx, fullOptions);
     
 }

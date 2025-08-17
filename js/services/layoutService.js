@@ -177,8 +177,19 @@ function recalcAndApplyLayout() {
     const totalWidthUnits = newColumnWidths.reduce((sum, w) => sum + w, 0);
     const totalCanvasWidth = totalWidthUnits * store.state.cellWidth;
 
+    // MODULATION: Use modulated width if modulation markers are present
+    const modulatedCanvasWidth = LayoutService.getModulatedCanvasWidth();
+    const finalCanvasWidth = modulatedCanvasWidth > totalCanvasWidth ? modulatedCanvasWidth : totalCanvasWidth;
+    
+    console.log('[LAYOUT] Canvas width calculation:', {
+        baseWidth: totalCanvasWidth,
+        modulatedWidth: modulatedCanvasWidth,
+        finalWidth: finalCanvasWidth,
+        usingModulation: modulatedCanvasWidth > totalCanvasWidth
+    });
+
     // Only update dimensions if they actually changed to prevent resize loops
-    const totalCanvasWidthPx = Math.round(totalCanvasWidth);
+    const totalCanvasWidthPx = Math.round(finalCanvasWidth);
     
     // EXPERIMENT: Remove width setting entirely - let CSS handle layout
     // Simplified width debug
@@ -409,6 +420,59 @@ const LayoutService = {
 
     getCanvasWidth() {
         return (store.state.columnWidths.reduce((sum, w) => sum + w, 0)) * store.state.cellWidth;
+    },
+
+    /**
+     * Gets canvas width accounting for modulation effects
+     * @returns {number} Canvas width in pixels including modulation expansion/compression
+     */
+    getModulatedCanvasWidth() {
+        console.log('[LAYOUT] getModulatedCanvasWidth called');
+        
+        const baseWidth = this.getCanvasWidth();
+        console.log('[LAYOUT] Base canvas width:', baseWidth);
+        
+        // If no modulation markers, return base width
+        if (!store.state.modulationMarkers || store.state.modulationMarkers.length === 0) {
+            console.log('[LAYOUT] No modulation markers, returning base width:', baseWidth);
+            return baseWidth;
+        }
+        
+        // Use a simple approach: import the function directly
+        // This avoids circular dependency issues by importing at call time
+        try {
+            console.log('[LAYOUT] Attempting to access coordinate mapping from global scope');
+            
+            // Check if we can access the coordinate mapping from rendererUtils
+            const baseMicrobeatPx = store.state.baseMicrobeatPx || store.state.cellWidth || 40;
+            
+            // For now, estimate the expansion by checking if markers exist
+            // and applying a rough calculation based on modulation ratios
+            let estimatedWidth = baseWidth;
+            
+            store.state.modulationMarkers.forEach(marker => {
+                if (marker.ratio > 1) {
+                    // Expansion marker - increase width estimate
+                    estimatedWidth *= marker.ratio;
+                    console.log('[LAYOUT] Found expansion marker, ratio:', marker.ratio, 'new estimate:', estimatedWidth);
+                } else if (marker.ratio < 1) {
+                    // Compression marker - might actually reduce width, but we'll be conservative
+                    console.log('[LAYOUT] Found compression marker, ratio:', marker.ratio);
+                }
+            });
+            
+            console.log('[LAYOUT] Estimated modulated width:', estimatedWidth);
+            
+            // Return a conservative estimate (base width + 50% for expansions)
+            const finalWidth = Math.max(baseWidth, estimatedWidth);
+            console.log('[LAYOUT] Final modulated canvas width:', finalWidth);
+            
+            return finalWidth;
+            
+        } catch (error) {
+            console.warn('[LAYOUT] Error calculating modulated width, using base width:', error);
+            return baseWidth;
+        }
     },
     
     // Force a layout recalculation (e.g., when rhythm structure changes)

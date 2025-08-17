@@ -19,6 +19,8 @@ function renderDrumGrid() {
         cellHeight: store.state.cellHeight,
         macrobeatGroupings: store.state.macrobeatGroupings,
         macrobeatBoundaryStyles: store.state.macrobeatBoundaryStyles,
+        modulationMarkers: store.state.modulationMarkers,
+        baseMicrobeatPx: store.state.cellWidth
     };
 
     drawDrumGrid(ctx, renderOptions);

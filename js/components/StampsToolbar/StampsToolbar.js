@@ -146,6 +146,18 @@ const StampsToolbar = {
         if (currentNote && currentNote.color) {
             this.updateStampColors(currentNote.color);
         }
+
+        // Listen for tool changes to clear selection when switching away from stamp tool
+        store.on('toolChanged', ({ newTool }) => {
+            if (newTool !== 'stamp') {
+                this.clearSelection();
+            }
+        });
+
+        // Listen for triplet tool selection to clear stamp selection
+        store.on('tripletToolSelected', () => {
+            this.clearSelection();
+        });
     },
 
     selectStamp(stampId) {
@@ -165,7 +177,22 @@ const StampsToolbar = {
         // Emit event for other components
         store.emit('stampSelected', stampId);
         
+        // Emit event to clear other rhythm tool selections
+        store.emit('stampToolSelected');
+        
         logger.info('StampsToolbar', `Selected stamp ${stampId} and switched to stamp tool`, { stampId }, 'stamps');
+    },
+
+    clearSelection() {
+        this.selectedStampId = null;
+        
+        // Update UI
+        const container = document.getElementById('stamps-toolbar-container');
+        if (container) {
+            container.querySelectorAll('.stamp-button').forEach(btn => {
+                btn.classList.remove('active');
+            });
+        }
     },
 
     getSelectedStamp() {

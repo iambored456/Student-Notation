@@ -53,6 +53,10 @@ import ZoomIndicator from './components/ZoomIndicator.js';
 
 // Stamps Toolbar Component
 import StampsToolbar from './components/StampsToolbar/StampsToolbar.js';
+import TripletsToolbar from './components/StampsToolbar/TripletsToolbar.js';
+
+// Modulation Testing (keep for advanced debugging)
+import ModulationTest from './rhythm/modulationTest.js';
 
 
 function initializeNewZoomSystem() {
@@ -154,6 +158,12 @@ document.addEventListener("DOMContentLoaded", () => {
     
     // Initialize Stamps Toolbar
     StampsToolbar.init();
+    
+    // Initialize Triplets Toolbar
+    TripletsToolbar.init();
+    
+    // Initialize Rhythm Tabs
+    initRhythmTabs();
 
     // Initialize static waveform visualizer
     logger.initStart('Static Waveform Visualizer');
@@ -187,6 +197,16 @@ document.addEventListener("DOMContentLoaded", () => {
 
     store.on('notesChanged', renderAll);
     store.on('stampPlacementsChanged', renderAll);
+    store.on('tripletPlacementsChanged', renderAll);
+    store.on('modulationMarkersChanged', () => {
+        logger.event('Main', 'modulationMarkersChanged event received, recalculating layout', null, 'state');
+        LayoutService.recalculateLayout();
+        logger.debug('Main', 'Layout recalculated for modulation, calling renderAll()', null, 'state');
+        renderAll();
+        logger.debug('Main', 'renderAll() completed, calling renderMacrobeatTools() for modulation', null, 'state');
+        PitchGridController.renderMacrobeatTools();
+        logger.debug('Main', 'modulationMarkersChanged handling complete', null, 'state');
+    });
     
     store.on('rhythmStructureChanged', () => {
         logger.event('Main', 'rhythmStructureChanged event received, recalculating layout', null, 'state');
@@ -221,9 +241,88 @@ document.addEventListener("DOMContentLoaded", () => {
     
     logger.section('INITIALIZATION COMPLETE');
     
+    // Initialize modulation testing (keep for advanced debugging)
+    window.ModulationTest = ModulationTest;
+    console.log('🎵 [MODULATION] Rhythmic modulation feature loaded');
+    console.log('🎵 [MODULATION] Use Rhythm tab > Modulation > Tool to enable');
+    
     // Log viewport info after initialization
     setTimeout(() => {
         if (LayoutService.getViewportInfo) {
         }
     }, 1000);
 });
+
+// Rhythm Tabs Functionality
+function initRhythmTabs() {
+    console.log('🎵 [DEBUG] initRhythmTabs() called');
+    
+    const rhythmContainer = document.querySelector('.rhythm-stamps-container');
+    const rhythmTabSidebar = document.querySelector('.rhythm-tab-sidebar');
+    const rhythmTabContent = document.querySelector('.rhythm-tab-content');
+    const rhythmTabButtons = document.querySelectorAll('.rhythm-tab-button');
+    const rhythmTabPanels = document.querySelectorAll('.rhythm-tab-panel');
+    
+    console.log('🎵 [DEBUG] Element check:');
+    console.log('  - rhythmContainer:', rhythmContainer);
+    console.log('  - rhythmTabSidebar:', rhythmTabSidebar);
+    console.log('  - rhythmTabContent:', rhythmTabContent);
+    console.log('  - rhythmTabButtons found:', rhythmTabButtons.length);
+    console.log('  - rhythmTabPanels found:', rhythmTabPanels.length);
+    
+    if (rhythmContainer) {
+        const containerStyles = window.getComputedStyle(rhythmContainer);
+        console.log('🎵 [DEBUG] Container styles:', {
+            display: containerStyles.display,
+            flexDirection: containerStyles.flexDirection,
+            width: containerStyles.width,
+            height: containerStyles.height,
+            gap: containerStyles.gap
+        });
+        
+        // Check if we have the expected classes
+        console.log('🎵 [DEBUG] Container classes:', rhythmContainer.className);
+    }
+    
+    if (rhythmTabSidebar) {
+        const sidebarStyles = window.getComputedStyle(rhythmTabSidebar);
+        console.log('🎵 [DEBUG] Sidebar styles:', {
+            display: sidebarStyles.display,
+            flex: sidebarStyles.flex,
+            width: sidebarStyles.width,
+            height: sidebarStyles.height
+        });
+    }
+    
+    if (!rhythmTabButtons.length || !rhythmTabPanels.length) {
+        console.log('🎵 [DEBUG] No rhythm tab buttons or panels found - exiting');
+        return;
+    }
+    
+    rhythmTabButtons.forEach((button, index) => {
+        console.log(`🎵 [DEBUG] Setting up button ${index}:`, button.getAttribute('data-rhythm-tab'));
+        
+        button.addEventListener('click', (e) => {
+            const targetTab = button.getAttribute('data-rhythm-tab');
+            console.log(`🎵 [DEBUG] Tab clicked: ${targetTab}`);
+            
+            // Remove active class from all buttons and panels
+            rhythmTabButtons.forEach(btn => btn.classList.remove('active'));
+            rhythmTabPanels.forEach(panel => panel.classList.remove('active'));
+            
+            // Add active class to clicked button and corresponding panel
+            button.classList.add('active');
+            const targetPanel = document.getElementById(`${targetTab}-panel`);
+            console.log(`🎵 [DEBUG] Target panel:`, targetPanel);
+            
+            if (targetPanel) {
+                targetPanel.classList.add('active');
+                console.log(`🎵 [DEBUG] Activated panel: ${targetTab}-panel`);
+            } else {
+                console.log(`🎵 [DEBUG] ERROR: Could not find panel ${targetTab}-panel`);
+            }
+        });
+    });
+    
+    console.log('🎵 [DEBUG] initRhythmTabs() completed');
+}

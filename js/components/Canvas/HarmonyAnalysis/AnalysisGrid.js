@@ -84,7 +84,7 @@ export function initAnalysisGrid() {
     document.addEventListener('mouseup', handleMouseUp);
     
     const resizeObserver = new ResizeObserver(() => {
-        const totalWidth = LayoutService.getCanvasWidth();
+        const totalWidth = LayoutService.getModulatedCanvasWidth();
         degreeCanvas.width = totalWidth;
         romanCanvas.width = totalWidth;
         render();
@@ -95,6 +95,7 @@ export function initAnalysisGrid() {
     store.on('notesChanged', render);
     store.on('chordsChanged', render);
     store.on('layoutConfigChanged', render);
+    store.on('modulationMarkersChanged', render);
 
     render();
     console.log("AnalysisGrid: Initialized.");

@@ -32,6 +32,61 @@
 
 /* --- General Toolkit Buttons --- */
 .toolkit-button { line-height: 1.2; padding: var(--space-2); }
+
+/* --- Modulation Controls --- */
+.modulation-controls {
+    display: flex;
+    gap: var(--space-2);
+    align-items: center;
+}
+
+.modulation-controls .toolkit-button {
+    font-size: 12px;
+    padding: var(--space-1) var(--space-2);
+    background-color: var(--c-bg-muted);
+    border: 1px solid var(--c-border);
+    border-radius: var(--border-radius-sm);
+    color: var(--c-text);
+    transition: all 0.2s ease;
+    cursor: pointer;
+    min-width: 50px;
+}
+
+.modulation-controls .toolkit-button:hover {
+    background-color: var(--c-bg-accent);
+    border-color: var(--c-accent);
+    color: var(--c-accent);
+}
+
+.modulation-controls .toolkit-button.active {
+    background-color: var(--c-accent);
+    border-color: var(--c-accent);
+    color: white;
+    font-weight: 600;
+}
+
+/* Ratio buttons with specific colors */
+.modulation-ratio-btn[data-ratio="2:3"].active {
+    background-color: #dc3545; /* Red for compression */
+    border-color: #dc3545;
+}
+
+.modulation-ratio-btn[data-ratio="3:2"].active {
+    background-color: #007bff; /* Blue for expansion */
+    border-color: #007bff;
+}
+
+.modulation-ratio-btn[data-ratio="2:3"]:hover {
+    background-color: rgba(220, 53, 69, 0.1);
+    border-color: #dc3545;
+    color: #dc3545;
+}
+
+.modulation-ratio-btn[data-ratio="3:2"]:hover {
+    background-color: rgba(0, 123, 255, 0.1);
+    border-color: #007bff;
+    color: #007bff;
+}
 .toolkit-icon-button {
     font-size: 14px; 
     width: 36px; 
@@ -421,7 +476,6 @@
     color: var(--c-text) !important;
 }
 
-/* Fix main dropdown toggle buttons hover from blue to gray */
 .tonic-dropdown-toggle:hover {
     background-color: var(--c-border) !important;
     color: var(--c-text) !important;
@@ -432,7 +486,7 @@
 }
 
 .dropdown-container { position: relative; display: inline-block; }
-.dropdown-container.open { z-index: 10; }
+.dropdown-container.open { z-index: 1000; }
 
 .tonic-dropdown-toggle, .degree-dropdown-toggle {
     display: flex; align-items: center; gap: var(--space-2);
@@ -448,11 +502,9 @@
     display: none; position: absolute; top: 100%; left: 50%;
     transform: translateX(-50%); background-color: var(--c-surface);
     border: 1px solid var(--c-border); border-radius: var(--border-radius-md);
-    box-shadow: var(--box-shadow-md); z-index: 100;
-    padding: var(--space-1); flex-direction: column; gap: var(--space-1);
-    margin-top: var(--space-1); 
-    /* THE FIX: Changed from fixed max-height to a viewport-relative one */
-    max-height: 80vh; 
+    box-shadow: var(--box-shadow-md); z-index: 1001;
+    padding: var(--space-1); flex-direction: column; gap: 0rem;
+    margin-top: 0rem; 
     overflow-y: auto;
     white-space: nowrap; width: max-content;
 }
@@ -470,13 +522,13 @@
     background-color: var(--c-border);
 }
 .mode-label {
-    font-size: 12px;
+    font-size: var(--font-size-sm);
     color: var(--c-text-muted);
     font-weight: normal;
 }
 .tonic-shape-icon {
-    width: 28px;
-    height: 28px;
+    width: 1.5rem;
+    height: 1.5rem;
     object-fit: contain;
     display: block;
 }
@@ -560,11 +612,11 @@
     background-color: var(--c-surface);
     border: 1px solid var(--c-border);
     border-radius: 16px;
-    padding: var(--space-2);
+    padding: 0.45rem;
     box-shadow: var(--box-shadow-sm);
     position: relative;
     z-index: 1;
-    width: 16rem;
+    width: 18rem;
 }
 
 .chord-tab-panel.active .intervals-content-box::before {
@@ -969,13 +1021,12 @@
 .stamps-toolbar-container {
     display: flex;
     justify-content: center;
-    padding: var(--space-1);
+    padding-left: 0.3rem;
 }
 
 .stamps-grid {
     display: flex;
     flex-direction: column;
-    gap: var(--space-1);
 }
 
 .stamps-row {
@@ -990,10 +1041,12 @@
 
 .stamps-row-2 {
     grid-template-columns: repeat(6, 1fr);
+    padding-top: 0.42rem
 }
 
 .stamps-row-3 {
     grid-template-columns: repeat(5, 1fr);
+    padding-top: 0.42rem
 }
 
 .stamp-button {
@@ -1043,4 +1096,179 @@
 
 .stamp-button.active .stamp-number {
     color: var(--c-text);
+}
+
+/* --- Triplets Toolbar --- */
+.triplets-toolbar-container {
+    display: flex;
+    justify-content: center;
+}
+
+.triplets-main-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.triplets-header {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--c-text);
+    margin: 0;
+    text-align: center;
+}
+
+.triplets-sections {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+}
+
+.triplets-section {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    align-items: center;
+}
+
+
+.triplets-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    justify-items: center;
+    gap: 0.5rem
+}
+
+.triplets-quarter-row {
+    grid-template-columns: repeat(3, 1fr);
+    margin-bottom: 0.2rem;
+}
+
+.triplets-quarter-row:nth-child(2) {
+    grid-template-columns: repeat(4, 1fr);
+    margin-bottom: 0;
+}
+
+.triplet-button {
+    position: relative;
+    width: fit-content;
+    height: fit-content;
+    min-width: 0rem;
+    min-height: 0rem;
+    background-color: var(--c-surface);
+    border: 2px solid var(--c-border);
+    border-radius: var(--border-radius-md);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 0rem;
+}
+
+.triplet-button:hover {
+    background-color: var(--c-gridline);
+    transform: scale(1.05);
+    border-color: var(--c-accent);
+}
+
+.triplet-button.active {
+    background-color: var(--c-accent-light, #63a9fd) !important;
+    color: var(--c-text, #212529) !important;
+    border-color: var(--c-accent, #4A90E2) !important;
+    font-weight: 600 !important;
+    box-shadow: 0 0 0 1px var(--c-accent, #4A90E2) !important;
+    transform: scale(0.98) !important;
+    opacity: 1 !important;
+}
+
+.triplet-button svg {
+    flex-shrink: 0;
+}
+
+.triplet-button-wide {
+    /* Quarter triplet buttons are wider to show their 2-cell span */
+    min-width: 96px;
+    position: relative;
+}
+
+.triplet-button-wide::after {
+    content: '';
+    position: absolute;
+    top: 10%;
+    bottom: 10%;
+    left: 50%;
+    width: 1px;
+    border-left: 1px dashed var(--c-border);
+    pointer-events: none;
+    z-index: 1;
+}
+
+/* --- Rhythm Stamps Tabs (Vertical Layout like Main Tabs) --- */
+.rhythm-stamps-container {
+    display: flex;
+    flex-direction: row !important; /* Override .control-section's column layout */
+    gap: 0;
+    height: auto;
+}
+
+.rhythm-tab-sidebar {
+    flex: 0 0 80px;
+    display: flex;
+    flex-direction: column;
+    background-color: var(--c-gridline);
+    border-right: 1px solid var(--c-border);
+}
+
+.rhythm-tab-button {
+    padding: var(--space-2) var(--space-1);
+    background-color: transparent; 
+    border: 1px solid transparent;
+    border-bottom-color: var(--c-border); 
+    color: var(--c-text-muted);
+    font-family: var(--main-font); 
+    font-size: 0.75rem; 
+    font-weight: 500;
+    cursor: pointer; 
+    text-align: center;
+    transition: all 0.2s ease; 
+    position: relative;
+    border-top-left-radius: var(--border-radius-md);
+    border-bottom-left-radius: var(--border-radius-md);
+}
+
+.rhythm-tab-button:hover {
+    background-color: rgba(0, 0, 0, 0.05); 
+    color: var(--c-text);
+}
+
+.rhythm-tab-button.active {
+    background-color: var(--c-bg); /* Match content area */
+    color: var(--c-accent);
+    font-weight: 600; 
+    margin-right: -1px; /* Pull over the sidebar's right border */
+    position: relative;
+    z-index: 1; /* Ensure this tab is on top */
+    border-color: var(--c-border);
+    border-right-color: transparent;
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+}
+
+.rhythm-tab-content {
+    flex: 1;
+    padding: 0.1em;
+    background-color: var(--c-bg);
+    overflow: auto;
+    min-width: 0;
+}
+
+.rhythm-tab-panel {
+    display: none;
+    padding: 0;
+}
+
+.rhythm-tab-panel.active {
+    display: block;
 }

@@ -8,6 +8,7 @@ import { viewActions } from './actions/viewActions.js';
 import { harmonyActions } from './actions/harmonyActions.js';
 import { paintActions } from './actions/paintActions.js';
 import { stampActions } from './actions/stampActions.js';
+import { tripletActions } from './actions/tripletActions.js';
 import logger from '../utils/logger.js';
 
 logger.moduleLoaded('Store', 'general');
@@ -66,10 +67,13 @@ function saveStateToLocalStorage(state) {
             placedChords: state.placedChords,
             tonicSignGroups: state.tonicSignGroups,
             stampPlacements: state.stampPlacements,
+            tripletPlacements: state.tripletPlacements,
             timbres: state.timbres,
             macrobeatGroupings: state.macrobeatGroupings,
             macrobeatBoundaryStyles: state.macrobeatBoundaryStyles,
             hasAnacrusis: state.hasAnacrusis,
+            baseMicrobeatPx: state.baseMicrobeatPx,
+            modulationMarkers: state.modulationMarkers,
             tempo: state.tempo,
             activeChordIntervals: state.activeChordIntervals,
             selectedNote: state.selectedNote,
@@ -101,7 +105,7 @@ function saveStateToLocalStorage(state) {
 const actions = {
     ...historyActions, ...noteActions, ...timbreActions,
     ...rhythmActions, ...viewActions, ...harmonyActions,
-    ...paintActions, ...stampActions,
+    ...paintActions, ...stampActions, ...tripletActions,
     clearSavedState() {
         try {
             localStorage.removeItem(STORAGE_KEY);
