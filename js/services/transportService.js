@@ -620,7 +620,9 @@ const TransportService = {
 
     start() {
         logger.info('TransportService', 'Starting playback', null, 'transport');
-        Tone.start().then(() => {
+        // Use global audio initialization to ensure user gesture compliance
+        const audioInit = window.initAudio || (() => Tone.start());
+        audioInit().then(() => {
             scheduleNotes();
             const musicalDuration = timeMap[store.state.columnWidths.length - 2] || 0;
             const anacrusisOffset = timeMap[2] || 0;
@@ -653,7 +655,9 @@ const TransportService = {
 
     resume() {
         logger.info('TransportService', 'Resuming playback', null, 'transport');
-        Tone.start().then(() => {
+        // Use global audio initialization to ensure user gesture compliance
+        const audioInit = window.initAudio || (() => Tone.start());
+        audioInit().then(() => {
             Tone.Transport.start();
             if (!store.state.paint.isMicPaintActive) {
                 animatePlayhead();

@@ -61,8 +61,8 @@ export function initPlaybackControls() {
 
     store.on('playbackStateChanged', ({ isPlaying, isPaused }) => {
         if (playBtn) {
-            const playIcon = '<img src="/assets/icons/Play.svg" alt="Play">';
-            const pauseIcon = '<img src="/assets/icons/Pause.svg" alt="Pause">';
+            const playIcon = '<img src="/public/assets/icons/Play.svg" alt="Play">';
+            const pauseIcon = '<img src="/public/assets/icons/Pause.svg" alt="Pause">';
             playBtn.innerHTML = (isPlaying && !isPaused) ? pauseIcon : playIcon;
             
         }

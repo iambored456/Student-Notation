@@ -117,6 +117,24 @@ function setupDebugTools() {
     };
 }
 
+// Global audio initialization function
+let audioInitialized = false;
+window.initAudio = async () => {
+    if (audioInitialized) return true;
+    try {
+        // Only start if the context is not already running
+        if (Tone.context.state !== 'running') {
+            await Tone.start();
+            logger.info('Main.js', 'AudioContext started successfully');
+        }
+        audioInitialized = true;
+        return true;
+    } catch (e) {
+        logger.error('Main.js', 'Could not start AudioContext', e);
+        return false;
+    }
+};
+
 document.addEventListener("DOMContentLoaded", () => {
     logger.info('Main.js', 'DOMContentLoaded event fired');
     logger.section('STARTING INITIALIZATION');
@@ -124,16 +142,17 @@ document.addEventListener("DOMContentLoaded", () => {
     // Initialize DOM cache first
     domCache.init();
 
-    const startAudio = async () => {
-        try {
-            await Tone.start();
-            logger.info('Main.js', 'AudioContext started successfully');
-        } catch (e) {
-            logger.error('Main.js', 'Could not start AudioContext', e);
+    // Setup user gesture handlers for audio initialization
+    const setupAudioGesture = () => {
+        const appContainer = domCache.get('appContainer') || document.getElementById('app-container');
+        if (appContainer) {
+            const events = ['click', 'keydown', 'touchstart'];
+            events.forEach(eventType => {
+                appContainer.addEventListener(eventType, window.initAudio, { once: true });
+            });
         }
     };
-    domCache.get('appContainer')?.addEventListener('click', startAudio, { once: true });
-    document.getElementById('app-container').addEventListener('keydown', startAudio, { once: true });
+    setupAudioGesture();
 
     // Initialize core data and services
     store.state.fullRowData = fullRowData;
