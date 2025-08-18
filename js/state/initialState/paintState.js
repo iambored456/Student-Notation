@@ -9,7 +9,7 @@ export function getInitialPaintState() {
     paintSettings: {
       thickness: 6,
       opacity: 80,
-      minClarity: 0.8
+      minClarity: 0.1  // Very low threshold for sensitive detection
     }
   };
 }

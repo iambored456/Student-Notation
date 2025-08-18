@@ -4,6 +4,7 @@ import TonalService from '../../../services/tonalService.js';
 import LayoutService from '../../../services/layoutService.js';
 import { getPlacedTonicSigns } from '../../../state/selectors.js';
 import { Scale, Interval } from 'tonal';
+import { renderModulationMarkers } from '../PitchGrid/renderers/modulationRenderer.js';
 
 function drawVerticalHarmonyLines(ctx, options) {
     const { columnWidths, macrobeatGroupings, macrobeatBoundaryStyles, cellWidth } = options;
@@ -176,6 +177,9 @@ export function drawHarmonyGrid(ctx, options) {
     for (let i = 0; i < state.macrobeatGroupings.length; i++) {
         drawAnalysisForMacrobeat(ctx, state, i);
     }
+    
+    // Draw modulation markers (render on top of everything else)
+    renderModulationMarkers(ctx, state);
 }
 
 // This helper function is no longer called, but we can leave it in case you want to use it elsewhere.

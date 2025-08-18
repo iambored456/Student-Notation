@@ -17,7 +17,6 @@ function getColumnX(index) {
     const hasModulation = store.state.modulationMarkers && store.state.modulationMarkers.length > 0;
     
     if (hasModulation) {
-        console.log(`[DRUM-INTERACTOR] Using modulated position for column ${index}`);
         const options = {
             modulationMarkers: store.state.modulationMarkers,
             columnWidths: store.state.columnWidths,
@@ -26,7 +25,6 @@ function getColumnX(index) {
         };
         return getModulatedColumnX(index, options);
     } else {
-        console.log(`[DRUM-INTERACTOR] Using base position for column ${index}`);
         return LayoutService.getColumnX(index);
     }
 }
@@ -39,11 +37,9 @@ function getModulatedCellWidth(colIndex) {
         const currentX = getColumnX(colIndex);
         const nextX = getColumnX(colIndex + 1);
         const modulatedWidth = nextX - currentX;
-        console.log(`[DRUM-INTERACTOR] Using modulated cell width for column ${colIndex}: ${modulatedWidth.toFixed(2)}px`);
         return modulatedWidth;
     } else {
         const regularWidth = store.state.columnWidths[colIndex] * store.state.cellWidth;
-        console.log(`[DRUM-INTERACTOR] Using regular cell width for column ${colIndex}: ${regularWidth.toFixed(2)}px`);
         return regularWidth;
     }
 }

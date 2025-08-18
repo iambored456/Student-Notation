@@ -4,6 +4,7 @@ import { shouldDrawVerticalLineAtColumn, isTonicColumn } from '../../../utils/to
 
 import LayoutService from '../../../services/layoutService.js';
 import { getColumnX as getModulatedColumnX } from '../PitchGrid/renderers/rendererUtils.js';
+import { renderModulationMarkers } from '../PitchGrid/renderers/modulationRenderer.js';
 
 // --- Pure Helper Functions ---
 function getColumnX(index, options) {
@@ -11,10 +12,8 @@ function getColumnX(index, options) {
     const hasModulation = options.modulationMarkers && options.modulationMarkers.length > 0;
     
     if (hasModulation) {
-        console.log(`[DRUM-GRID] Using modulated position for column ${index}`);
         return getModulatedColumnX(index, options);
     } else {
-        console.log(`[DRUM-GRID] Using base position for column ${index}`);
         return LayoutService.getColumnX(index);
     }
 }
@@ -164,10 +163,8 @@ export function drawDrumGrid(ctx, options) {
         if (options.modulationMarkers && options.modulationMarkers.length > 0) {
             const nextX = getColumnX(col + 1, options);
             currentCellWidth = nextX - x;
-            console.log(`[DRUM-GRID] Using modulated cell width for column ${col}: ${currentCellWidth.toFixed(2)}px (nextX=${nextX.toFixed(1)} - x=${x.toFixed(1)})`);
         } else {
             currentCellWidth = columnWidths[col] * cellWidth;
-            console.log(`[DRUM-GRID] Using regular cell width for column ${col}: ${currentCellWidth.toFixed(2)}px`);
         }
         
         for (let row = 0; row < 3; row++) {
@@ -189,4 +186,7 @@ export function drawDrumGrid(ctx, options) {
             }
         }
     }
+    
+    // Draw modulation markers (render on top of everything else)
+    renderModulationMarkers(ctx, options);
 }

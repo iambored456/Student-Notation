@@ -54,14 +54,9 @@ function getBaseColumnX(columnIndex, options) {
 export function renderModulationMarkers(ctx, options) {
     const { modulationMarkers } = options;
     
-    console.log('[MODULATION] renderModulationMarkers called with:', modulationMarkers);
-    
     if (!modulationMarkers || modulationMarkers.length === 0) {
-        console.log('[MODULATION] No markers to render');
         return;
     }
-    
-    console.log('[MODULATION] Rendering', modulationMarkers.length, 'markers');
     
     // Convert measure-based markers to canvas positions
     const markersWithCanvasX = modulationMarkers
@@ -70,27 +65,14 @@ export function renderModulationMarkers(ctx, options) {
             let canvasX;
             
             // ALIGNMENT FIX: Check what data the marker actually has and calculate accordingly
-            console.log(`[GRIDLINE-ALIGN] Marker ${marker.id} data:`, {
-                hasColumnIndex: marker.columnIndex !== null && marker.columnIndex !== undefined,
-                columnIndex: marker.columnIndex,
-                hasMeasureIndex: marker.measureIndex !== null && marker.measureIndex !== undefined,
-                measureIndex: marker.measureIndex,
-                hasXPosition: !!marker.xPosition,
-                xPosition: marker.xPosition,
-                macrobeatIndex: marker.macrobeatIndex
-            });
-
             if (marker.columnIndex !== null && marker.columnIndex !== undefined) {
                 // Use modulated column calculation to match current grid display
                 canvasX = getColumnX(marker.columnIndex + 1, options); // +1 because getColumnX gives end of column
-                console.log(`[GRIDLINE-ALIGN] Using columnIndex ${marker.columnIndex} → calculated x=${canvasX} (modulated)`);
             } else if (marker.macrobeatIndex !== null && marker.macrobeatIndex !== undefined) {
                 // Use the macrobeat index to find the correct boundary position
-                // We need to get the actual end column of this macrobeat from getMacrobeatInfo
                 const macrobeatInfo = getMacrobeatInfo(options, marker.macrobeatIndex);
                 if (macrobeatInfo) {
                     canvasX = getColumnX(macrobeatInfo.endColumn + 1, options);
-                    console.log(`[GRIDLINE-ALIGN] Using macrobeatIndex ${marker.macrobeatIndex} → endColumn=${macrobeatInfo.endColumn} → x=${canvasX} (modulated)`);
                 } else {
                     console.warn(`[GRIDLINE-ALIGN] Could not find macrobeat info for index ${marker.macrobeatIndex}`);
                     canvasX = marker.xPosition || 0;
@@ -98,11 +80,9 @@ export function renderModulationMarkers(ctx, options) {
             } else if (marker.measureIndex !== null && marker.measureIndex !== undefined) {
                 // Fallback to measure calculation
                 canvasX = measureIndexToCanvasX(marker.measureIndex, options);
-                console.log(`[GRIDLINE-ALIGN] Using measureIndex ${marker.measureIndex} → x=${canvasX} (measure calc)`);
             } else {
                 // Final fallback to stored position
                 canvasX = marker.xPosition || 0;
-                console.log(`[GRIDLINE-ALIGN] Using stored xPosition → x=${canvasX} (fallback)`);
             }
             
             return {
@@ -110,8 +90,6 @@ export function renderModulationMarkers(ctx, options) {
                 xCanvas: canvasX
             };
         });
-    
-    console.log('[MODULATION] Converted markers:', markersWithCanvasX);
     
     // Save context state
     ctx.save();
@@ -125,14 +103,10 @@ export function renderModulationMarkers(ctx, options) {
     ctx.restore();
 }
 
-/**
- * Renders a single modulation marker
- * @param {CanvasRenderingContext2D} ctx - Canvas context
- * @param {Object} marker - Modulation marker object
- * @param {Object} options - Render options
- */
+// Renders a single modulation marker
 function renderSingleMarker(ctx, marker, options) {
-    const { xCanvas, ratio } = marker;
+    const xCanvas = marker.xCanvas;
+    const ratio = marker.ratio;
     const color = getModulationColor(ratio);
     const displayText = getModulationDisplayText(ratio);
     

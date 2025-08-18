@@ -16,8 +16,9 @@
   width: fit-content;
   min-width: 100%;
   overflow-x: visible; 
-  padding: 0 var(--app-padding) var(--app-padding);
-
+  padding: 0.2rem;
+  padding-top: 0rem;
+  padding-bottom: 0rem;
   position: relative;
   z-index: 1;
 }
@@ -36,8 +37,8 @@
     min-height: 170px;
     width: fit-content;
     display: flex;
-    gap: var(--space-1);
-    padding: 0.4em;
+    gap: 0rem;
+    padding: 0.2em;
     padding-bottom: 0;
     border: none;
     background-color: transparent;
@@ -61,9 +62,9 @@
 }
 
 #container-1 {
-    padding:0.5em;
+    padding: 0.1em;
     flex: 0 0 auto;
-    gap: 0;
+    gap: 0.2rem;
     align-items: stretch;
     height: 100%;
     overflow: visible;
@@ -72,9 +73,9 @@
 .tool-subcontainer {
     display: flex;
     flex-direction: column;
-    gap: var(--space-1);
+    gap: 0.5rem;
     align-items: center;
-    padding: var(--space-3) var(--space-2);
+    padding: 0.rem;
     background-color: transparent;
     border-radius: 0;
     border-right: 1px solid var(--c-border);
@@ -93,7 +94,7 @@
     padding: 0; 
 }
 .tab-sidebar {
-    flex: 0 0 100px;
+    flex: 0 0 fit-content;
     display: flex;
     flex-direction: column;
     background-color: var(--c-gridline);
@@ -132,8 +133,8 @@
     gap: var(--space-2);
 }
 .control-section {
-    flex: 0 1 auto;
-    padding: 0.2em;
+    flex: 0 1 fit-content;
+    padding: 0em;
     background-color: transparent;
     border-right: none;
     display: flex;

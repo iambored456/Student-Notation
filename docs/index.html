@@ -11,8 +11,8 @@
 <link rel="manifest" href="/Student-Notation/site.webmanifest" />
 <meta name="theme-color" content="#ffffff" />
 <style id="print-style-rules"></style>
-  <script type="module" crossorigin src="/Student-Notation/assets/index-CNGtvNSH.js"></script>
-  <link rel="stylesheet" crossorigin href="/Student-Notation/assets/index-CUsUQpee.css">
+  <script type="module" crossorigin src="/Student-Notation/assets/index-B6eSSDXx.js"></script>
+  <link rel="stylesheet" crossorigin href="/Student-Notation/assets/index-DoX5notq.css">
 </head>
 <body>
 <!-- Sidebar for File/App Actions -->
@@ -55,11 +55,9 @@
             </button>
         </div>
         <div class="tool-subcontainer" id="note-bank-container">
-            <div class="note-bank-row">
+            <div class="note-bank-column">
                 <div class="note-pair" data-color="#4a90e2"><div class="note circle-note" data-type="circle"></div><div class="note oval-note" data-type="oval"></div></div>
                 <div class="note-pair" data-color="#2d2d2d"><div class="note circle-note" data-type="circle"></div><div class="note oval-note" data-type="oval"></div></div>
-            </div>
-            <div class="note-bank-row">
                 <div class="note-pair" data-color="#d66573"><div class="note circle-note" data-type="circle"></div><div class="note oval-note" data-type="oval"></div></div>
                 <div class="note-pair" data-color="#68a03f"><div class="note circle-note" data-type="circle"></div><div class="note oval-note" data-type="oval"></div></div>
             </div>
@@ -73,16 +71,16 @@
             </div>
         </div>
     </div>
-    <!-- Container 3: Tabbed Interface -->
+    <!-- Container 2: Tabbed Interface -->
     <div id="container-3">
         <div class="tab-sidebar">
-            <button class="tab-button active" data-tab="timbre">Timbre</button>
+            <button class="tab-button" data-tab="timbre">Timbre</button>
             <button class="tab-button" data-tab="pitch">Pitch</button>
             <button class="tab-button" data-tab="rhythm">Rhythm</button>
         </div>
         <div class="tab-content">
             <!-- Timbre Tab -->
-            <div class="tab-panel active" id="timbre-panel">
+            <div class="tab-panel" id="timbre-panel">
                 <div class="control-section preset-effects-container">
                     <div class="preset-effects-tabs">
                         <button class="preset-tab-button active" data-preset-tab="presets">Presets</button>
@@ -226,24 +224,52 @@
                     <h4>Pitch Painting</h4>
                     <div class="paint-layout-grid">
                         <div class="paint-main-controls">
-                            <button class="toolkit-button" id="mic-paint-toggle">Mic Paint (OFF)</button>
-                            <button class="toolkit-button" id="paint-clear-btn" disabled>Clear Paint</button>
+                            <div class="paint-buttons-row">
+                                <button class="toolkit-button" id="mic-paint-toggle">Mic Paint (OFF)</button>
+                                <button class="toolkit-button" id="paint-clear-btn" disabled>Clear Paint</button>
+                            </div>
+                            <div class="paint-controls-row">
+                                <div class="paint-control-group">
+                                    <label>Thickness</label>
+                                    <div id="trail-thickness"></div>
+                                </div>
+                                <div class="paint-control-group">
+                                    <label>Opacity</label>
+                                    <div id="trail-opacity"></div>
+                                </div>
+                            </div>
                         </div>
-                        <div class="paint-settings">
-                            <div class="paint-setting-group">
-                                <label for="trail-thickness">Thickness:</label>
-                                <div class="slider-wrapper">
-                                    <input type="range" id="trail-thickness" min="2" max="20" value="6" class="paint-slider">
-                                    <span id="thickness-value">6</span>
+                        <div class="mic-meter-container-vertical">
+                            <div class="mic-meter-wrapper-vertical" id="mic-meter-wrapper">
+                                <div class="meter-placeholder" id="meter-placeholder">
                                 </div>
                             </div>
-                            <div class="paint-setting-group">
-                                <label for="trail-opacity">Opacity:</label>
-                                <div class="slider-wrapper">
-                                    <input type="range" id="trail-opacity" min="20" max="100" value="80" class="paint-slider">
-                                    <span id="opacity-value">80%</span>
-                                </div>
-                            </div>
+                        </div>
+                    </div>
+                    <div class="meter-settings-panel hidden" id="meter-settings-panel">
+                        <div class="meter-setting-group">
+                            <label for="meter-size-select">Size:</label>
+                            <select id="meter-size-select" class="meter-control">
+                                <option value="compact">Compact</option>
+                                <option value="wide" selected>Wide</option>
+                            </select>
+                        </div>
+                        <div class="meter-setting-group">
+                            <label for="meter-fps-select">Frame Rate:</label>
+                            <select id="meter-fps-select" class="meter-control">
+                                <option value="12">12 FPS</option>
+                                <option value="20">20 FPS</option>
+                                <option value="30" selected>30 FPS</option>
+                                <option value="60">60 FPS</option>
+                            </select>
+                        </div>
+                        <div class="meter-setting-group">
+                            <label for="meter-battery-saver">Battery Saver:</label>
+                            <input type="checkbox" id="meter-battery-saver" class="meter-control">
+                        </div>
+                        <div class="meter-setting-group">
+                            <button class="toolkit-button" id="meter-calibrate-btn">Auto-Calibrate</button>
+                            <button class="toolkit-button" id="meter-reset-btn">Reset</button>
                         </div>
                     </div>
                 </div>
@@ -265,22 +291,24 @@
                     </div>
                 </div>
                 <div class="control-section">
-                    <div class="tempo-row">
-                        <div class="tempo-input-group">
-                            <img src="data:image/svg+xml,%3csvg%20xmlns='http://www.w3.org/2000/svg'%20xmlns:xlink='http://www.w3.org/1999/xlink'%20width='168'%20zoomAndPan='magnify'%20viewBox='0%200%20126%20231.75'%20height='309'%20preserveAspectRatio='xMidYMid%20meet'%20version='1.2'%3e%3cdefs%3e%3cclipPath%20id='f11b48ab54'%3e%3cpath%20d='M%200.0664062%200%20L%20125%200%20L%20125%20230.75%20L%200.0664062%20230.75%20Z%20M%200.0664062%200%20'/%3e%3c/clipPath%3e%3c/defs%3e%3cg%20id='9738701237'%3e%3cg%20clip-rule='nonzero'%20clip-path='url(%23f11b48ab54)'%3e%3cpath%20style='%20stroke:none;fill-rule:nonzero;fill:%23000000;fill-opacity:1;'%20d='M%208.109375%20225.367188%20C%20-6.25%20212.289062%201.699219%20191.523438%2025.289062%20179.214844%20C%2033.234375%20175.371094%2039.132812%20173.574219%2049.386719%20173.832031%20C%2055.796875%20174.089844%2062.976562%20177.679688%2062.976562%20177.679688%20C%2062.976562%20131.273438%2062.71875%2043.585938%2062.71875%200.511719%20C%2065.285156%200.511719%2067.078125%200.257812%2070.667969%200.257812%20C%2070.667969%202.820312%2070.667969%204.871094%2070.667969%206.921875%20C%2070.667969%209.230469%2070.667969%2010.511719%2070.925781%2012.050781%20C%2073.488281%2028.203125%2077.078125%2034.613281%2095.023438%2054.355469%20C%20117.84375%2079.738281%20124.511719%2094.863281%20124.511719%20115.121094%20C%20124.253906%20134.09375%20107.589844%20174.601562%20104%20173.0625%20C%20109.125%20158.707031%20116.304688%20143.320312%20118.101562%20130.503906%20C%20120.40625%20114.863281%20114%2092.8125%20103.742188%2081.277344%20C%2095.539062%2071.53125%2076.050781%2063.070312%2070.667969%2063.070312%20C%2070.667969%2063.070312%2070.410156%20156.398438%2070.410156%20191.78125%20C%2070.410156%20197.675781%2065.027344%20208.1875%2061.949219%20211.777344%20C%2047.847656%20228.699219%2020.414062%20236.390625%208.109375%20225.367188%20Z%20M%208.109375%20225.367188%20'/%3e%3c/g%3e%3c/g%3e%3c/svg%3e" alt="Eighth Note Tempo" class="tempo-label-icon">
-                            <input type="number" class="tempo-input" id="eighth-note-tempo" value="180">
+                    <div class="tempo-container">
+                        <div class="tempo-column">
+                            <div class="tempo-input-group">
+                                <img src="data:image/svg+xml,%3csvg%20xmlns='http://www.w3.org/2000/svg'%20xmlns:xlink='http://www.w3.org/1999/xlink'%20width='168'%20zoomAndPan='magnify'%20viewBox='0%200%20126%20231.75'%20height='309'%20preserveAspectRatio='xMidYMid%20meet'%20version='1.2'%3e%3cdefs%3e%3cclipPath%20id='f11b48ab54'%3e%3cpath%20d='M%200.0664062%200%20L%20125%200%20L%20125%20230.75%20L%200.0664062%20230.75%20Z%20M%200.0664062%200%20'/%3e%3c/clipPath%3e%3c/defs%3e%3cg%20id='9738701237'%3e%3cg%20clip-rule='nonzero'%20clip-path='url(%23f11b48ab54)'%3e%3cpath%20style='%20stroke:none;fill-rule:nonzero;fill:%23000000;fill-opacity:1;'%20d='M%208.109375%20225.367188%20C%20-6.25%20212.289062%201.699219%20191.523438%2025.289062%20179.214844%20C%2033.234375%20175.371094%2039.132812%20173.574219%2049.386719%20173.832031%20C%2055.796875%20174.089844%2062.976562%20177.679688%2062.976562%20177.679688%20C%2062.976562%20131.273438%2062.71875%2043.585938%2062.71875%200.511719%20C%2065.285156%200.511719%2067.078125%200.257812%2070.667969%200.257812%20C%2070.667969%202.820312%2070.667969%204.871094%2070.667969%206.921875%20C%2070.667969%209.230469%2070.667969%2010.511719%2070.925781%2012.050781%20C%2073.488281%2028.203125%2077.078125%2034.613281%2095.023438%2054.355469%20C%20117.84375%2079.738281%20124.511719%2094.863281%20124.511719%20115.121094%20C%20124.253906%20134.09375%20107.589844%20174.601562%20104%20173.0625%20C%20109.125%20158.707031%20116.304688%20143.320312%20118.101562%20130.503906%20C%20120.40625%20114.863281%20114%2092.8125%20103.742188%2081.277344%20C%2095.539062%2071.53125%2076.050781%2063.070312%2070.667969%2063.070312%20C%2070.667969%2063.070312%2070.410156%20156.398438%2070.410156%20191.78125%20C%2070.410156%20197.675781%2065.027344%20208.1875%2061.949219%20211.777344%20C%2047.847656%20228.699219%2020.414062%20236.390625%208.109375%20225.367188%20Z%20M%208.109375%20225.367188%20'/%3e%3c/g%3e%3c/g%3e%3c/svg%3e" alt="Eighth Note Tempo" class="tempo-label-icon">
+                                <div id="eighth-note-tempo"></div>
+                            </div>
+                            <div class="tempo-input-group">
+                                <img src="data:image/svg+xml,%3csvg%20xmlns='http://www.w3.org/2000/svg'%20xmlns:xlink='http://www.w3.org/1999/xlink'%20width='111'%20zoomAndPan='magnify'%20viewBox='0%200%2083.25%20230.999992'%20height='308'%20preserveAspectRatio='xMidYMid%20meet'%20version='1.2'%3e%3cdefs%3e%3cclipPath%20id='084e4edff4'%3e%3cpath%20d='M%201%20165%20L%2081.761719%20165%20L%2081.761719%20229.226562%20L%201%20229.226562%20Z%20M%201%20165%20'/%3e%3c/clipPath%3e%3cclipPath%20id='fdeab4882e'%3e%3cpath%20d='M%2073%201.03125%20L%2081.761719%201.03125%20L%2081.761719%20192%20L%2073%20192%20Z%20M%2073%201.03125%20'/%3e%3c/clipPath%3e%3c/defs%3e%3cg%20id='45713f1632'%3e%3cg%20clip-rule='nonzero'%20clip-path='url(%23084e4edff4)'%3e%3cpath%20style='%20stroke:none;fill-rule:evenodd;fill:%23000000;fill-opacity:0.9;'%20d='M%2057.546875%20222.390625%20C%2076.429688%20212.289062%2086.492188%20194.003906%2080.304688%20180.25%20C%2073.699219%20165.578125%2051.011719%20161.4375%2029.660156%20171.003906%20C%208.308594%20180.574219%20-3.664062%20200.25%202.9375%20214.921875%20C%209.542969%20229.59375%2032.230469%20233.734375%2053.582031%20224.164062%20C%2054.917969%20223.566406%2056.285156%20223.0625%2057.546875%20222.390625%20Z%20M%2057.546875%20222.390625%20'/%3e%3c/g%3e%3cg%20clip-rule='nonzero'%20clip-path='url(%23fdeab4882e)'%3e%3cpath%20style='fill:none;stroke-width:1.5;stroke-linecap:butt;stroke-linejoin:miter;stroke:%23000000;stroke-opacity:1;stroke-miterlimit:4;'%20d='M%20299.504676%20305.984569%20L%20299.504676%20339.572267%20'%20transform='matrix(-5.561147,0,0,-5.549953,1743.335656,1885.43835)'/%3e%3c/g%3e%3c/g%3e%3c/svg%3e" alt="Quarter Note Tempo" class="tempo-label-icon">
+                                <div id="quarter-note-tempo"></div>
+                            </div>
+                            <div class="tempo-input-group">
+                                <img src="/Student-Notation/assets/dottedQuarterNote-Cf79kpGq.svg" alt="Dotted Quarter Note Tempo" class="tempo-label-icon">
+                                <div id="dotted-quarter-tempo"></div>
+                            </div>
                         </div>
-                        <div class="tempo-input-group">
-                            <img src="data:image/svg+xml,%3csvg%20xmlns='http://www.w3.org/2000/svg'%20xmlns:xlink='http://www.w3.org/1999/xlink'%20width='111'%20zoomAndPan='magnify'%20viewBox='0%200%2083.25%20230.999992'%20height='308'%20preserveAspectRatio='xMidYMid%20meet'%20version='1.2'%3e%3cdefs%3e%3cclipPath%20id='084e4edff4'%3e%3cpath%20d='M%201%20165%20L%2081.761719%20165%20L%2081.761719%20229.226562%20L%201%20229.226562%20Z%20M%201%20165%20'/%3e%3c/clipPath%3e%3cclipPath%20id='fdeab4882e'%3e%3cpath%20d='M%2073%201.03125%20L%2081.761719%201.03125%20L%2081.761719%20192%20L%2073%20192%20Z%20M%2073%201.03125%20'/%3e%3c/clipPath%3e%3c/defs%3e%3cg%20id='45713f1632'%3e%3cg%20clip-rule='nonzero'%20clip-path='url(%23084e4edff4)'%3e%3cpath%20style='%20stroke:none;fill-rule:evenodd;fill:%23000000;fill-opacity:0.9;'%20d='M%2057.546875%20222.390625%20C%2076.429688%20212.289062%2086.492188%20194.003906%2080.304688%20180.25%20C%2073.699219%20165.578125%2051.011719%20161.4375%2029.660156%20171.003906%20C%208.308594%20180.574219%20-3.664062%20200.25%202.9375%20214.921875%20C%209.542969%20229.59375%2032.230469%20233.734375%2053.582031%20224.164062%20C%2054.917969%20223.566406%2056.285156%20223.0625%2057.546875%20222.390625%20Z%20M%2057.546875%20222.390625%20'/%3e%3c/g%3e%3cg%20clip-rule='nonzero'%20clip-path='url(%23fdeab4882e)'%3e%3cpath%20style='fill:none;stroke-width:1.5;stroke-linecap:butt;stroke-linejoin:miter;stroke:%23000000;stroke-opacity:1;stroke-miterlimit:4;'%20d='M%20299.504676%20305.984569%20L%20299.504676%20339.572267%20'%20transform='matrix(-5.561147,0,0,-5.549953,1743.335656,1885.43835)'/%3e%3c/g%3e%3c/g%3e%3c/svg%3e" alt="Quarter Note Tempo" class="tempo-label-icon">
-                            <input type="number" class="tempo-input" id="quarter-note-tempo" value="90">
+                        <div class="tempo-column-2">
+                            <input type="range" id="tempo-slider" min="30" max="240" value="90">
                         </div>
-                        <div class="tempo-input-group">
-                            <img src="/Student-Notation/assets/dottedQuarterNote-Cf79kpGq.svg" alt="Dotted Quarter Note Tempo" class="tempo-label-icon">
-                            <input type="number" class="tempo-input" id="dotted-quarter-tempo" value="60">
-                        </div>
-                    </div>
-                    <div class="tempo-slider-row">
-                        <input type="range" id="tempo-slider" min="30" max="240" value="90">
                     </div>
                 </div>
                 <div class="control-section rhythm-stamps-container">
@@ -394,6 +422,29 @@
 <div id="print-staging-area"></div>
 
 <script>
+    // Function to save the current tab to localStorage
+    function saveCurrentTab(tabId) {
+        localStorage.setItem('selectedTab', tabId);
+    }
+    
+    // Function to restore the saved tab on page load
+    function restoreSavedTab() {
+        const savedTab = localStorage.getItem('selectedTab') || 'timbre'; // Default to timbre if none saved
+        
+        // Remove active class from all tabs
+        document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+        document.querySelectorAll('.tab-panel').forEach(panel => panel.classList.remove('active'));
+        
+        // Activate the saved tab (or default)
+        const targetButton = document.querySelector(`[data-tab="${savedTab}"]`);
+        const targetPanel = document.getElementById(`${savedTab}-panel`);
+        
+        if (targetButton && targetPanel) {
+            targetButton.classList.add('active');
+            targetPanel.classList.add('active');
+        }
+    }
+    
     document.querySelectorAll('.tab-button').forEach(button => {
         button.addEventListener('click', () => {
             const tabId = button.dataset.tab;
@@ -401,8 +452,15 @@
             button.classList.add('active');
             document.querySelectorAll('.tab-panel').forEach(panel => panel.classList.remove('active'));
             document.getElementById(`${tabId}-panel`).classList.add('active');
+            
+            // Save the selected tab to localStorage
+            saveCurrentTab(tabId);
         });
     });
+    
+    // Restore the saved tab immediately (before DOMContentLoaded)
+    // This prevents layout issues with hidden tab panels
+    restoreSavedTab();
     
     document.querySelectorAll('.preset-tab-button').forEach(button => {
         button.addEventListener('click', () => {

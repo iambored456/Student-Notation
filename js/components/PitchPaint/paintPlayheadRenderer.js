@@ -2,7 +2,8 @@
 import store from '../../state/index.js';
 import LayoutService from '../../services/layoutService.js';
 import GridCoordsService from '../../services/gridCoordsService.js';
-import { getPitchColor } from '../../utils/chromaticColors.js';
+import { getPitchColor, getInterpolatedColor } from '../../utils/chromaticColors.js';
+import { getRowY } from '../Canvas/PitchGrid/renderers/rendererUtils.js';
 import PaintCanvas from './paintCanvas.js';
 import * as Tone from 'tone';
 import { Note } from 'tonal';
@@ -33,19 +34,27 @@ class PaintPlayheadRenderer {
   }
 
   handlePaintStateChange(isActive) {
+    console.log('PaintPlayheadRenderer: Paint state changed to:', isActive);
     const hoverCanvas = document.getElementById('hover-canvas');
     if (hoverCanvas) hoverCanvas.style.display = isActive ? 'none' : 'block';
 
     if (isActive) {
+      console.log('PaintPlayheadRenderer: Starting rendering...');
       this.startRendering();
     } else {
+      console.log('PaintPlayheadRenderer: Stopping rendering...');
       this.stopRendering();
     }
   }
 
   handlePitchDetection(pitchData) {
-    if (!store.state.paint.isMicPaintActive || !store.state.isPlaying || store.state.isPaused) return;
-    this.addPaintAtPlayhead(pitchData);
+    // Store the pitch data for rendering (this will update the horizontal line)
+    // No need to restrict this to only when playing
+    
+    // Only add permanent paint when music is actually playing
+    if (store.state.paint.isMicPaintActive && store.state.isPlaying && !store.state.isPaused) {
+      this.addPaintAtPlayhead(pitchData);
+    }
   }
 
   startRendering() {
@@ -72,6 +81,12 @@ class PaintPlayheadRenderer {
 
     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
+    const playbackState = {
+      isPlaying: store.state.isPlaying,
+      isPaused: store.state.isPaused,
+      shouldShowMoving: store.state.isPlaying && !store.state.isPaused
+    };
+
     if (store.state.isPlaying && !store.state.isPaused) {
       this.renderMovingPlayhead();
     } else {
@@ -82,37 +97,50 @@ class PaintPlayheadRenderer {
   }
 
   renderStationaryPlayhead() {
-    const startX = LayoutService.getColumnX(2);
     const { detectedPitch } = store.state.paint;
+    
+    // Clear canvas first
+    this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+    
     const y = this.midiToY(detectedPitch.midi);
     const hasValidPitch = y !== null;
 
-    if (hasValidPitch) {
-      const color = getPitchColor(detectedPitch.midi);
-      const radius = 10 + (detectedPitch.clarity * 10);
-      
-      this.ctx.fillStyle = color;
-      this.ctx.globalAlpha = detectedPitch.clarity;
-      this.ctx.beginPath();
-      this.ctx.arc(startX, y, radius, 0, 2 * Math.PI);
-      this.ctx.fill();
-      this.ctx.globalAlpha = 1.0;
+    // Get grid boundaries - from start of column 2 to end of grid
+    const startX = LayoutService.getColumnX(2);
+    const endX = LayoutService.getCanvasWidth();
 
-      this.ctx.strokeStyle = '#ffffff';
-      this.ctx.lineWidth = 2;
+
+    if (hasValidPitch) {
+      // Use interpolated color for smooth transitions between pitches
+      const colorRgb = getInterpolatedColor(detectedPitch.midi);
+      const color = `rgb(${colorRgb[0]}, ${colorRgb[1]}, ${colorRgb[2]})`;
+      
+      this.ctx.strokeStyle = color;
+      this.ctx.globalAlpha = Math.min(detectedPitch.clarity * 1.2, 1.0);
+      this.ctx.lineWidth = 4;
+      this.ctx.shadowColor = color;
+      this.ctx.shadowBlur = 6;
+      this.ctx.beginPath();
+      this.ctx.moveTo(startX, y);
+      this.ctx.lineTo(endX, y);
       this.ctx.stroke();
+      this.ctx.shadowBlur = 0;
+      this.ctx.globalAlpha = 1.0;
+      
     } else {
-      // UPDATED: Draw the stationary playhead in the center of the current viewport
+      // Draw a neutral line in the center of the viewport when no pitch detected
       const viewportInfo = LayoutService.getViewportInfo();
       const centerY = viewportInfo.viewportHeight / 2;
 
-      this.ctx.strokeStyle = 'rgba(74, 144, 226, 0.8)';
+      this.ctx.strokeStyle = 'rgba(74, 144, 226, 0.6)';
       this.ctx.lineWidth = 2;
-      this.ctx.setLineDash([4, 4]);
+      this.ctx.setLineDash([8, 8]);
       this.ctx.beginPath();
-      this.ctx.arc(startX, centerY, 10, 0, 2 * Math.PI);
+      this.ctx.moveTo(startX, centerY);
+      this.ctx.lineTo(endX, centerY);
       this.ctx.stroke();
       this.ctx.setLineDash([]);
+      
     }
   }
 
@@ -134,14 +162,18 @@ class PaintPlayheadRenderer {
     const { detectedPitch } = store.state.paint;
     const y = this.midiToY(detectedPitch.midi);
     if (y !== null) {
-        const color = getPitchColor(detectedPitch.midi);
+        const colorRgb = getInterpolatedColor(detectedPitch.midi);
+        const color = `rgb(${colorRgb[0]}, ${colorRgb[1]}, ${colorRgb[2]})`;
         this.ctx.fillStyle = color;
         this.ctx.strokeStyle = 'white';
         this.ctx.lineWidth = 2;
+        this.ctx.shadowColor = color;
+        this.ctx.shadowBlur = 4;
         this.ctx.beginPath();
-        this.ctx.arc(xPos, y, 7, 0, 2 * Math.PI);
+        this.ctx.arc(xPos, y, 8, 0, 2 * Math.PI); // Slightly larger for better visibility
         this.ctx.fill();
         this.ctx.stroke();
+        this.ctx.shadowBlur = 0;
     }
   }
 
@@ -185,26 +217,67 @@ class PaintPlayheadRenderer {
   }
   
   /**
-   * UPDATED: Convert MIDI to absolute canvas Y coordinate (not viewport-relative)
-   * The transform system will handle the viewport positioning
+   * Convert MIDI to continuous Y coordinate with interpolation between rows
    */
   midiToY(midiValue) {
     if (midiValue === 0) return null;
 
-    const { fullRowData, cellHeight } = store.state;
-    if (!fullRowData || fullRowData.length === 0 || cellHeight === 0) return null;
+    const { fullRowData } = store.state;
+    if (!fullRowData || fullRowData.length === 0) {
+      return null;
+    }
 
-    // Find the row for this MIDI value
-    const rowIndex = fullRowData.findIndex(row => {
-      const rowMidi = Note.midi(row.toneNote);
-      return Math.abs(rowMidi - midiValue) < 0.5; // Allow for slight pitch variations
-    });
+    // Get the proper MIDI range (note: grid rows may be in descending order)
+    const minRowMidi = Math.min(...fullRowData.map(row => Note.midi(row.toneNote)));
+    const maxRowMidi = Math.max(...fullRowData.map(row => Note.midi(row.toneNote)));
+    
+    // Log data flow: input pitch vs available range
+    console.log('🎵 [Pitch->Y] Input:', midiValue.toFixed(1), 'Grid range:', minRowMidi, '-', maxRowMidi);
 
-    if (rowIndex === -1) return null;
+    // Simple canvas mapping for pitches outside grid range
+    if (midiValue < minRowMidi || midiValue > maxRowMidi) {
+      const canvasHeight = this.canvas.height;
+      let mappedY;
+      
+      if (midiValue > maxRowMidi) {
+        // Pitch higher than grid - map to top portion of canvas
+        const semitonesDiff = midiValue - maxRowMidi;
+        mappedY = Math.max(20, canvasHeight * 0.2 - (semitonesDiff * 5));
+        console.log('🔼 [Above Grid] Y:', mappedY.toFixed(1));
+      } else {
+        // Pitch lower than grid - map to bottom portion of canvas
+        const semitonesDiff = minRowMidi - midiValue;
+        mappedY = Math.min(canvasHeight - 20, canvasHeight * 0.8 + (semitonesDiff * 5));
+        console.log('🔽 [Below Grid] Y:', mappedY.toFixed(1));
+      }
+      
+      return Math.max(20, Math.min(mappedY, canvasHeight - 20));
+    }
 
-    // Return absolute canvas Y coordinate
-    const visualRowHeight = cellHeight * 0.5;
-    return rowIndex * visualRowHeight;
+    // Find the closest rows for interpolation within grid
+    let bestRowIndex = 0;
+    let smallestDiff = Math.abs(Note.midi(fullRowData[0].toneNote) - midiValue);
+    
+    for (let i = 1; i < fullRowData.length; i++) {
+      const rowMidi = Note.midi(fullRowData[i].toneNote);
+      const diff = Math.abs(rowMidi - midiValue);
+      if (diff < smallestDiff) {
+        smallestDiff = diff;
+        bestRowIndex = i;
+      }
+    }
+
+    // Use the grid's row positioning
+    const rowY = getRowY(bestRowIndex, store.state);
+    console.log('🎯 [Grid Match] Y:', rowY.toFixed(1), 'row:', bestRowIndex);
+    
+    // Ensure Y is within canvas bounds
+    const clampedY = Math.max(20, Math.min(rowY, this.canvas.height - 20));
+    if (clampedY !== rowY) {
+      console.log('🔒 [Clamped] From', rowY.toFixed(1), 'to', clampedY.toFixed(1));
+    }
+    
+    return clampedY;
   }
 
   /**

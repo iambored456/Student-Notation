@@ -60,20 +60,32 @@ class StaticWaveformVisualizer {
         if (!container) return;
         
         const { clientWidth, clientHeight } = container;
+        const currentCanvasWidth = this.canvas.width;
+        const currentCanvasHeight = this.canvas.height;
         
         // If container is collapsed (hidden tab), don't resize to 0
         // This prevents the canvas from collapsing when tabs are switched
-        if (clientWidth === 0 || clientHeight === 0) {
+        // However, allow initial sizing by checking if we already have dimensions
+        const shouldSkipResize = (clientWidth === 0 || clientHeight === 0) && 
+            (this.canvas.width > 0 && this.canvas.height > 0);
+            
+        if (shouldSkipResize) {
             return;
         }
         
-        // Set canvas size
-        this.canvas.width = clientWidth;
-        this.canvas.height = clientHeight;
+        // Only resize if there's a significant change (prevent 1px cascade loops)
+        const widthDiff = Math.abs(clientWidth - currentCanvasWidth);
+        const heightDiff = Math.abs(clientHeight - currentCanvasHeight);
+        const significantChange = widthDiff > 2 || heightDiff > 2;
         
-        
-        // Redraw after resize
-        this.draw();
+        if (significantChange) {
+            // Set canvas size
+            this.canvas.width = clientWidth;
+            this.canvas.height = clientHeight;
+            
+            // Redraw after resize
+            this.draw();
+        }
     }
 
     setupEventListeners() {

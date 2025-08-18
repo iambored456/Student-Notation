@@ -2,12 +2,12 @@
 
 /* --- Tab Buttons --- */
 .tab-button {
-    padding: var(--space-2) var(--space-3);
+    padding: 0.84rem 0.3rem;
     background-color: transparent; 
     border: 1px solid transparent;
     border-bottom-color: var(--c-border); 
     color: var(--c-text-muted);
-    font-family: var(--main-font); font-size: 1.0em; font-weight: 500;
+    font-family: var(--main-font); font-size: 1.2em; font-weight: 500;
     cursor: pointer; text-align: left;
     transition: all 0.2s ease; position: relative;
     border-top-left-radius: var(--border-radius-md);
@@ -89,28 +89,30 @@
 }
 .toolkit-icon-button {
     font-size: 14px; 
-    width: 36px; 
-    height: 36px; 
-    padding: var(--space-1); 
+    width: 2rem; 
+    height: 2rem; 
+    padding: 0.2rem; 
     display: flex; align-items: center; justify-content: center;
     background-color: transparent; 
     border: none; 
     color: var(--c-text-muted); 
     border-radius: var(--border-radius-md);
     transition: background-color 0.2s, transform 0.1s ease; /* Added transition */
+    position: relative;
 }
 .toolkit-icon-button img {
     width: 100%;
     height: 100%;
     object-fit: contain;
     pointer-events: none; /* So the img doesn't interfere with button events */
+    transition: background-color 0.2s, transform 0.1s ease;
 }
-.toolkit-icon-button:hover { 
+.toolkit-icon-button:hover img { 
     background-color: var(--c-gridline); 
 }
 
 /* Override global button:focus for toolkit buttons */
-.toolkit-icon-button:focus {
+.toolkit-icon-button:focus img {
     background-color: var(--c-gridline); /* Same as hover */
     outline: none;
 }
@@ -118,8 +120,10 @@
 /* NEW: Feedback for the moment a button is clicked (for one-off actions like Zoom, Stop, etc.) */
 .toolkit-icon-button:active {
     transform: scale(0.92);
-    background-color: rgba(0, 0, 0, 0.15); /* A slightly darker momentary press */
     transition-duration: 0.05s;
+}
+.toolkit-icon-button:active img {
+    background-color: rgba(0, 0, 0, 0.15); /* A slightly darker momentary press */
 }
 
 
@@ -1041,12 +1045,12 @@
 
 .stamps-row-2 {
     grid-template-columns: repeat(6, 1fr);
-    padding-top: 0.42rem
+    padding-top: 0.42rem;
 }
 
 .stamps-row-3 {
     grid-template-columns: repeat(5, 1fr);
-    padding-top: 0.42rem
+    padding-top: 0.42rem;
 }
 
 .stamp-button {

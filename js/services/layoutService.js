@@ -181,12 +181,6 @@ function recalcAndApplyLayout() {
     const modulatedCanvasWidth = LayoutService.getModulatedCanvasWidth();
     const finalCanvasWidth = modulatedCanvasWidth > totalCanvasWidth ? modulatedCanvasWidth : totalCanvasWidth;
     
-    console.log('[LAYOUT] Canvas width calculation:', {
-        baseWidth: totalCanvasWidth,
-        modulatedWidth: modulatedCanvasWidth,
-        finalWidth: finalCanvasWidth,
-        usingModulation: modulatedCanvasWidth > totalCanvasWidth
-    });
 
     // Only update dimensions if they actually changed to prevent resize loops
     const totalCanvasWidthPx = Math.round(finalCanvasWidth);
@@ -427,21 +421,17 @@ const LayoutService = {
      * @returns {number} Canvas width in pixels including modulation expansion/compression
      */
     getModulatedCanvasWidth() {
-        console.log('[LAYOUT] getModulatedCanvasWidth called');
         
         const baseWidth = this.getCanvasWidth();
-        console.log('[LAYOUT] Base canvas width:', baseWidth);
         
         // If no modulation markers, return base width
         if (!store.state.modulationMarkers || store.state.modulationMarkers.length === 0) {
-            console.log('[LAYOUT] No modulation markers, returning base width:', baseWidth);
             return baseWidth;
         }
         
         // Use a simple approach: import the function directly
         // This avoids circular dependency issues by importing at call time
         try {
-            console.log('[LAYOUT] Attempting to access coordinate mapping from global scope');
             
             // Check if we can access the coordinate mapping from rendererUtils
             const baseMicrobeatPx = store.state.baseMicrobeatPx || store.state.cellWidth || 40;
@@ -454,18 +444,14 @@ const LayoutService = {
                 if (marker.ratio > 1) {
                     // Expansion marker - increase width estimate
                     estimatedWidth *= marker.ratio;
-                    console.log('[LAYOUT] Found expansion marker, ratio:', marker.ratio, 'new estimate:', estimatedWidth);
                 } else if (marker.ratio < 1) {
                     // Compression marker - might actually reduce width, but we'll be conservative
-                    console.log('[LAYOUT] Found compression marker, ratio:', marker.ratio);
                 }
             });
             
-            console.log('[LAYOUT] Estimated modulated width:', estimatedWidth);
             
             // Return a conservative estimate (base width + 50% for expansions)
             const finalWidth = Math.max(baseWidth, estimatedWidth);
-            console.log('[LAYOUT] Final modulated canvas width:', finalWidth);
             
             return finalWidth;
             

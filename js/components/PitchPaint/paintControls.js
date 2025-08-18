@@ -2,16 +2,19 @@
 import store from '../../state/index.js';
 import PitchPaintService from '../../services/pitchPaintService.js';
 import PaintCanvas from './paintCanvas.js';
+import DraggableNumber from '../DraggableNumber.js';
 
 class PaintControls {
   constructor() {
     this.elements = {};
+    this.draggableControls = {};
   }
 
   initialize() {
     this.cacheDOMElements();
     if (!this.elements.toggleBtn) return;
 
+    this.initializeDraggableControls();
     this.setupEventListeners();
     this.updateUI();
     
@@ -24,27 +27,46 @@ class PaintControls {
   cacheDOMElements() {
     this.elements.toggleBtn = document.getElementById('mic-paint-toggle');
     this.elements.clearBtn = document.getElementById('paint-clear-btn');
-    this.elements.thicknessSlider = document.getElementById('trail-thickness');
-    this.elements.thicknessValue = document.getElementById('thickness-value');
-    this.elements.opacitySlider = document.getElementById('trail-opacity');
-    this.elements.opacityValue = document.getElementById('opacity-value');
+  }
+
+  initializeDraggableControls() {
+    // Draggable number config similar to tempo controls
+    const paintControlConfig = {
+      size: [45, 24],
+      step: 1,
+      decimalPlaces: 0,
+      useAppStyling: true
+    };
+
+    // Initialize Thickness draggable (2-20, default 6)
+    this.draggableControls.thickness = new DraggableNumber('#trail-thickness', {
+      ...paintControlConfig,
+      value: 6,
+      min: 2,
+      max: 20
+    });
+
+    // Initialize Opacity draggable (20-100, default 80)
+    this.draggableControls.opacity = new DraggableNumber('#trail-opacity', {
+      ...paintControlConfig,
+      value: 80,
+      min: 20,
+      max: 100
+    });
   }
 
   setupEventListeners() {
     this.elements.toggleBtn.addEventListener('click', () => this.handleMicPaintToggle());
     this.elements.clearBtn.addEventListener('click', () => this.handleClearPaint());
 
-    this.elements.thicknessSlider.addEventListener('input', (e) => {
-      const value = parseInt(e.target.value, 10);
-      this.elements.thicknessValue.textContent = value;
+    // Set up draggable number change listeners
+    this.draggableControls.thickness.onChange = (value) => {
       store.setPaintSettings({ thickness: value });
-    });
+    };
 
-    this.elements.opacitySlider.addEventListener('input', (e) => {
-      const value = parseInt(e.target.value, 10);
-      this.elements.opacityValue.textContent = `${value}%`;
+    this.draggableControls.opacity.onChange = (value) => {
       store.setPaintSettings({ opacity: value });
-    });
+    };
   }
 
   async handleMicPaintToggle() {
@@ -81,10 +103,13 @@ class PaintControls {
     
     this.elements.clearBtn.disabled = paintHistory.length === 0;
 
-    this.elements.thicknessSlider.value = paintSettings.thickness;
-    this.elements.thicknessValue.textContent = paintSettings.thickness;
-    this.elements.opacitySlider.value = paintSettings.opacity;
-    this.elements.opacityValue.textContent = `${paintSettings.opacity}%`;
+    // Update draggable controls with current values
+    if (this.draggableControls.thickness && this.draggableControls.thickness.value !== paintSettings.thickness) {
+      this.draggableControls.thickness.passiveUpdate(paintSettings.thickness);
+    }
+    if (this.draggableControls.opacity && this.draggableControls.opacity.value !== paintSettings.opacity) {
+      this.draggableControls.opacity.passiveUpdate(paintSettings.opacity);
+    }
   }
 }
 

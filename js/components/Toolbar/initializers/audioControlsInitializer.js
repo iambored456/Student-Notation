@@ -1,12 +1,39 @@
 // js/components/Toolbar/initializers/audioControlsInitializer.js
 import store from '../../../state/index.js';
 import { PRESETS } from '../../../services/presetData.js';
+import DraggableNumber from '../../DraggableNumber.js';
 
 export function initAudioControls() {
     const tempoSlider = document.getElementById('tempo-slider');
-    const eighthNoteInput = document.getElementById('eighth-note-tempo');
-    const quarterNoteInput = document.getElementById('quarter-note-tempo');
-    const dottedQuarterInput = document.getElementById('dotted-quarter-tempo');
+    
+    // Initialize DraggableNumber components for tempo inputs with app styling
+    const tempoInputConfig = {
+        size: [45, 24],
+        step: 1,
+        decimalPlaces: 0,
+        useAppStyling: true
+    };
+    
+    const eighthNoteInput = new DraggableNumber('#eighth-note-tempo', {
+        ...tempoInputConfig,
+        value: 180,
+        min: 60,
+        max: 480
+    });
+    
+    const quarterNoteInput = new DraggableNumber('#quarter-note-tempo', {
+        ...tempoInputConfig,
+        value: 90,
+        min: 30,
+        max: 240
+    });
+    
+    const dottedQuarterInput = new DraggableNumber('#dotted-quarter-tempo', {
+        ...tempoInputConfig,
+        value: 60,
+        min: 20,
+        max: 160
+    });
 
     function updateTempoDisplays(baseBPM) {
         const quarterBPM = Math.round(baseBPM);
@@ -15,18 +42,18 @@ export function initAudioControls() {
         const eighthBPM = quarterBPM * 2;
         const dottedQuarterBPM = Math.round(quarterBPM / 1.5);
         
-        if (parseInt(eighthNoteInput.value, 10) !== eighthBPM) eighthNoteInput.value = eighthBPM;
-        if (parseInt(quarterNoteInput.value, 10) !== quarterBPM) quarterNoteInput.value = quarterBPM;
-        if (parseInt(dottedQuarterInput.value, 10) !== dottedQuarterBPM) dottedQuarterInput.value = dottedQuarterBPM;
+        if (eighthNoteInput.value !== eighthBPM) eighthNoteInput.passiveUpdate(eighthBPM);
+        if (quarterNoteInput.value !== quarterBPM) quarterNoteInput.passiveUpdate(quarterBPM);
+        if (dottedQuarterInput.value !== dottedQuarterBPM) dottedQuarterInput.passiveUpdate(dottedQuarterBPM);
         
         if (store.state.tempo !== quarterBPM) store.setTempo(quarterBPM);
     }
 
-    if (tempoSlider && eighthNoteInput && quarterNoteInput && dottedQuarterInput) {
+    if (tempoSlider) {
         tempoSlider.addEventListener('input', (e) => updateTempoDisplays(parseInt(e.target.value, 10)));
-        eighthNoteInput.addEventListener('change', (e) => { const val = parseInt(e.target.value, 10); if (!isNaN(val) && val > 0) updateTempoDisplays(val / 2); });
-        quarterNoteInput.addEventListener('change', (e) => { const val = parseInt(e.target.value, 10); if (!isNaN(val) && val > 0) updateTempoDisplays(val); });
-        dottedQuarterInput.addEventListener('change', (e) => { const val = parseInt(e.target.value, 10); if (!isNaN(val) && val > 0) updateTempoDisplays(val * 1.5); });
+        eighthNoteInput.on('change', (val) => { if (!isNaN(val) && val > 0) updateTempoDisplays(val / 2); });
+        quarterNoteInput.on('change', (val) => { if (!isNaN(val) && val > 0) updateTempoDisplays(val); });
+        dottedQuarterInput.on('change', (val) => { if (!isNaN(val) && val > 0) updateTempoDisplays(val * 1.5); });
         tempoSlider.addEventListener('mouseup', function() { this.blur(); });
         updateTempoDisplays(store.state.tempo);
     }

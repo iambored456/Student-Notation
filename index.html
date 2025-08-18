@@ -54,11 +54,9 @@
             </button>
         </div>
         <div class="tool-subcontainer" id="note-bank-container">
-            <div class="note-bank-row">
+            <div class="note-bank-column">
                 <div class="note-pair" data-color="#4a90e2"><div class="note circle-note" data-type="circle"></div><div class="note oval-note" data-type="oval"></div></div>
                 <div class="note-pair" data-color="#2d2d2d"><div class="note circle-note" data-type="circle"></div><div class="note oval-note" data-type="oval"></div></div>
-            </div>
-            <div class="note-bank-row">
                 <div class="note-pair" data-color="#d66573"><div class="note circle-note" data-type="circle"></div><div class="note oval-note" data-type="oval"></div></div>
                 <div class="note-pair" data-color="#68a03f"><div class="note circle-note" data-type="circle"></div><div class="note oval-note" data-type="oval"></div></div>
             </div>
@@ -72,16 +70,16 @@
             </div>
         </div>
     </div>
-    <!-- Container 3: Tabbed Interface -->
+    <!-- Container 2: Tabbed Interface -->
     <div id="container-3">
         <div class="tab-sidebar">
-            <button class="tab-button active" data-tab="timbre">Timbre</button>
+            <button class="tab-button" data-tab="timbre">Timbre</button>
             <button class="tab-button" data-tab="pitch">Pitch</button>
             <button class="tab-button" data-tab="rhythm">Rhythm</button>
         </div>
         <div class="tab-content">
             <!-- Timbre Tab -->
-            <div class="tab-panel active" id="timbre-panel">
+            <div class="tab-panel" id="timbre-panel">
                 <div class="control-section preset-effects-container">
                     <div class="preset-effects-tabs">
                         <button class="preset-tab-button active" data-preset-tab="presets">Presets</button>
@@ -225,24 +223,52 @@
                     <h4>Pitch Painting</h4>
                     <div class="paint-layout-grid">
                         <div class="paint-main-controls">
-                            <button class="toolkit-button" id="mic-paint-toggle">Mic Paint (OFF)</button>
-                            <button class="toolkit-button" id="paint-clear-btn" disabled>Clear Paint</button>
+                            <div class="paint-buttons-row">
+                                <button class="toolkit-button" id="mic-paint-toggle">Mic Paint (OFF)</button>
+                                <button class="toolkit-button" id="paint-clear-btn" disabled>Clear Paint</button>
+                            </div>
+                            <div class="paint-controls-row">
+                                <div class="paint-control-group">
+                                    <label>Thickness</label>
+                                    <div id="trail-thickness"></div>
+                                </div>
+                                <div class="paint-control-group">
+                                    <label>Opacity</label>
+                                    <div id="trail-opacity"></div>
+                                </div>
+                            </div>
                         </div>
-                        <div class="paint-settings">
-                            <div class="paint-setting-group">
-                                <label for="trail-thickness">Thickness:</label>
-                                <div class="slider-wrapper">
-                                    <input type="range" id="trail-thickness" min="2" max="20" value="6" class="paint-slider">
-                                    <span id="thickness-value">6</span>
+                        <div class="mic-meter-container-vertical">
+                            <div class="mic-meter-wrapper-vertical" id="mic-meter-wrapper">
+                                <div class="meter-placeholder" id="meter-placeholder">
                                 </div>
                             </div>
-                            <div class="paint-setting-group">
-                                <label for="trail-opacity">Opacity:</label>
-                                <div class="slider-wrapper">
-                                    <input type="range" id="trail-opacity" min="20" max="100" value="80" class="paint-slider">
-                                    <span id="opacity-value">80%</span>
-                                </div>
-                            </div>
+                        </div>
+                    </div>
+                    <div class="meter-settings-panel hidden" id="meter-settings-panel">
+                        <div class="meter-setting-group">
+                            <label for="meter-size-select">Size:</label>
+                            <select id="meter-size-select" class="meter-control">
+                                <option value="compact">Compact</option>
+                                <option value="wide" selected>Wide</option>
+                            </select>
+                        </div>
+                        <div class="meter-setting-group">
+                            <label for="meter-fps-select">Frame Rate:</label>
+                            <select id="meter-fps-select" class="meter-control">
+                                <option value="12">12 FPS</option>
+                                <option value="20">20 FPS</option>
+                                <option value="30" selected>30 FPS</option>
+                                <option value="60">60 FPS</option>
+                            </select>
+                        </div>
+                        <div class="meter-setting-group">
+                            <label for="meter-battery-saver">Battery Saver:</label>
+                            <input type="checkbox" id="meter-battery-saver" class="meter-control">
+                        </div>
+                        <div class="meter-setting-group">
+                            <button class="toolkit-button" id="meter-calibrate-btn">Auto-Calibrate</button>
+                            <button class="toolkit-button" id="meter-reset-btn">Reset</button>
                         </div>
                     </div>
                 </div>
@@ -264,22 +290,24 @@
                     </div>
                 </div>
                 <div class="control-section">
-                    <div class="tempo-row">
-                        <div class="tempo-input-group">
-                            <img src="/public/assets/tabicons/eigthNote.svg" alt="Eighth Note Tempo" class="tempo-label-icon">
-                            <input type="number" class="tempo-input" id="eighth-note-tempo" value="180">
+                    <div class="tempo-container">
+                        <div class="tempo-column">
+                            <div class="tempo-input-group">
+                                <img src="/public/assets/tabicons/eigthNote.svg" alt="Eighth Note Tempo" class="tempo-label-icon">
+                                <div id="eighth-note-tempo"></div>
+                            </div>
+                            <div class="tempo-input-group">
+                                <img src="/public/assets/tabicons/quarterNote.svg" alt="Quarter Note Tempo" class="tempo-label-icon">
+                                <div id="quarter-note-tempo"></div>
+                            </div>
+                            <div class="tempo-input-group">
+                                <img src="/public/assets/tabicons/dottedQuarterNote.svg" alt="Dotted Quarter Note Tempo" class="tempo-label-icon">
+                                <div id="dotted-quarter-tempo"></div>
+                            </div>
                         </div>
-                        <div class="tempo-input-group">
-                            <img src="/public/assets/tabicons/quarterNote.svg" alt="Quarter Note Tempo" class="tempo-label-icon">
-                            <input type="number" class="tempo-input" id="quarter-note-tempo" value="90">
+                        <div class="tempo-column-2">
+                            <input type="range" id="tempo-slider" min="30" max="240" value="90">
                         </div>
-                        <div class="tempo-input-group">
-                            <img src="/public/assets/tabicons/dottedQuarterNote.svg" alt="Dotted Quarter Note Tempo" class="tempo-label-icon">
-                            <input type="number" class="tempo-input" id="dotted-quarter-tempo" value="60">
-                        </div>
-                    </div>
-                    <div class="tempo-slider-row">
-                        <input type="range" id="tempo-slider" min="30" max="240" value="90">
                     </div>
                 </div>
                 <div class="control-section rhythm-stamps-container">
@@ -393,6 +421,29 @@
 <div id="print-staging-area"></div>
 
 <script>
+    // Function to save the current tab to localStorage
+    function saveCurrentTab(tabId) {
+        localStorage.setItem('selectedTab', tabId);
+    }
+    
+    // Function to restore the saved tab on page load
+    function restoreSavedTab() {
+        const savedTab = localStorage.getItem('selectedTab') || 'timbre'; // Default to timbre if none saved
+        
+        // Remove active class from all tabs
+        document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+        document.querySelectorAll('.tab-panel').forEach(panel => panel.classList.remove('active'));
+        
+        // Activate the saved tab (or default)
+        const targetButton = document.querySelector(`[data-tab="${savedTab}"]`);
+        const targetPanel = document.getElementById(`${savedTab}-panel`);
+        
+        if (targetButton && targetPanel) {
+            targetButton.classList.add('active');
+            targetPanel.classList.add('active');
+        }
+    }
+    
     document.querySelectorAll('.tab-button').forEach(button => {
         button.addEventListener('click', () => {
             const tabId = button.dataset.tab;
@@ -400,8 +451,15 @@
             button.classList.add('active');
             document.querySelectorAll('.tab-panel').forEach(panel => panel.classList.remove('active'));
             document.getElementById(`${tabId}-panel`).classList.add('active');
+            
+            // Save the selected tab to localStorage
+            saveCurrentTab(tabId);
         });
     });
+    
+    // Restore the saved tab immediately (before DOMContentLoaded)
+    // This prevents layout issues with hidden tab panels
+    restoreSavedTab();
     
     document.querySelectorAll('.preset-tab-button').forEach(button => {
         button.addEventListener('click', () => {

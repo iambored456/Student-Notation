@@ -12,14 +12,8 @@ export function drawPitchGrid(ctx, options) {
     const fullOptions = { ...options, ...store.state };
     
     // Debug modulation markers
-    console.log('[MODULATION] State passed to renderer:', {
-        hasModulationMarkers: !!fullOptions.modulationMarkers,
-        markerCount: fullOptions.modulationMarkers ? fullOptions.modulationMarkers.length : 0,
-        markers: fullOptions.modulationMarkers
-    });
     
     if (fullOptions.modulationMarkers && fullOptions.modulationMarkers.length > 0) {
-        console.log('[MODULATION] Rendering with markers:', fullOptions.modulationMarkers);
     }
     
     ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);

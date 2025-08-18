@@ -9,7 +9,7 @@ export const MIN_VISUAL_ROWS = 5;
 
 // Layout and Grid Constants
 export const DEFAULT_ZOOM_LEVEL = 1.0;
-export const DEFAULT_SCROLL_POSITION = 0.4;
+export const DEFAULT_SCROLL_POSITION = 0.52;
 export const GRID_HEIGHT_MULTIPLIER = 2;
 export const GRID_WIDTH_RATIO = 0.5;
 export const SIDE_COLUMN_WIDTH = 3;

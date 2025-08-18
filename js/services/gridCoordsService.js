@@ -11,7 +11,6 @@ const GridCoordsService = {
         if (cellWidth === 0) return 0;
         
         const hasModulation = modulationMarkers && modulationMarkers.length > 0;
-        console.log(`[GRID-COORDS] getColumnIndex(${x.toFixed(1)}) - hasModulation: ${hasModulation}`);
         
         if (hasModulation) {
             // Use modulation-aware column positions
@@ -25,9 +24,7 @@ const GridCoordsService = {
             
             for (let i = 0; i < columnWidths.length; i++) {
                 const columnX = getColumnX(i + 1, renderOptions); // Get end of this column
-                console.log(`[GRID-COORDS] Column ${i} ends at x=${columnX.toFixed(1)} (modulated)`);
                 if (x < columnX) {
-                    console.log(`[GRID-COORDS] Found column ${i} (modulated)`);
                     return i;
                 }
             }
@@ -36,15 +33,12 @@ const GridCoordsService = {
             let cumulative = 0;
             for (let i = 0; i < columnWidths.length; i++) {
                 cumulative += columnWidths[i] * cellWidth;
-                console.log(`[GRID-COORDS] Column ${i} ends at x=${cumulative.toFixed(1)} (base)`);
                 if (x < cumulative) {
-                    console.log(`[GRID-COORDS] Found column ${i} (base)`);
                     return i;
                 }
             }
         }
         
-        console.log(`[GRID-COORDS] Defaulting to last column ${columnWidths.length - 1}`);
         return columnWidths.length - 1;
     },
 

@@ -12,19 +12,15 @@ logger.moduleLoaded('ToolbarComponent', 'toolbar');
 
 const Toolbar = {
     init() {
-        console.log('🎵 [TOOLBAR] Toolbar.init() starting...');
         initSidebarAndVolume();
         initFileActions();
         initToolSelectors();
         initPlaybackControls();
         initAudioControls();
         initGridControls();
-        console.log('🎵 [TOOLBAR] About to call initModulationControls()...');
         initModulationControls();
-        console.log('🎵 [TOOLBAR] initModulationControls() call completed');
         
         logger.info('ToolbarComponent', 'All controls initialized', null, 'toolbar');
-        console.log('🎵 [TOOLBAR] Toolbar.init() completed');
     },
 
 };

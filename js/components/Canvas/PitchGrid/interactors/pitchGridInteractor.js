@@ -17,7 +17,7 @@ import StampsToolbar from '../../../StampsToolbar/StampsToolbar.js';
 import TripletsToolbar from '../../../StampsToolbar/TripletsToolbar.js';
 import { renderStampPreview } from '../renderers/stampRenderer.js';
 import { renderTripletPreview } from '../renderers/tripletRenderer.js';
-import { hitTestModulationMarker, getModulationMarkerCursor } from '../renderers/modulationRenderer.js';
+// import { hitTestModulationMarker, getModulationMarkerCursor } from '../renderers/modulationRenderer.js'; // Temporarily commented out
 import { getModulationDisplayText, getModulationColor, MODULATION_RATIOS } from '../../../../rhythm/modulationMapping.js';
 
 // --- Interaction State ---
@@ -97,15 +97,6 @@ function drawHoverHighlight(colIndex, rowIndex, color) {
     const centerY = getRowY(rowIndex, store.state);
     const y = centerY - (store.state.cellHeight / 2);
     
-    console.log('[HOVER-ALIGN] Drawing hover highlight:', {
-        colIndex,
-        rowIndex,
-        calculatedX: x,
-        y,
-        hasModulation: !!(store.state.modulationMarkers && store.state.modulationMarkers.length > 0),
-        modulationCount: (store.state.modulationMarkers || []).length,
-        usingModulatedPosition: true
-    });
 
     const toolType = store.state.selectedTool;
     
@@ -116,20 +107,9 @@ function drawHoverHighlight(colIndex, rowIndex, color) {
         // between this column position and the next column position
         const nextX = getColumnX(colIndex + 1, fullOptions);
         highlightWidth = nextX - x;
-        console.log('[HOVER-WIDTH] Using modulated width calculation:', {
-            colIndex,
-            currentX: x,
-            nextX,
-            calculatedWidth: highlightWidth,
-            baseWidth: store.state.columnWidths[colIndex] * store.state.cellWidth
-        });
     } else {
         // No modulation - use standard calculation
         highlightWidth = store.state.columnWidths[colIndex] * store.state.cellWidth;
-        console.log('[HOVER-WIDTH] Using standard width calculation:', {
-            colIndex,
-            calculatedWidth: highlightWidth
-        });
     }
     
     // Apply tool-specific width overrides, but account for modulation scaling
@@ -138,7 +118,6 @@ function drawHoverHighlight(colIndex, rowIndex, color) {
             // For modulated grids, calculate 2-column span using actual positions
             const twoColumnsEndX = getColumnX(colIndex + 2, fullOptions);
             highlightWidth = twoColumnsEndX - x;
-            console.log('[HOVER-WIDTH] Modulated eraser width:', { highlightWidth, span: '2 columns' });
         } else {
             highlightWidth = store.state.cellWidth * 2;
         }
@@ -147,7 +126,6 @@ function drawHoverHighlight(colIndex, rowIndex, color) {
             // For modulated grids, calculate 2-column span using actual positions
             const twoColumnsEndX = getColumnX(colIndex + 2, fullOptions);
             highlightWidth = twoColumnsEndX - x;
-            console.log('[HOVER-WIDTH] Modulated circle note width:', { highlightWidth, span: '2 columns' });
         } else {
             highlightWidth = store.state.cellWidth * 2;
         }
@@ -156,7 +134,6 @@ function drawHoverHighlight(colIndex, rowIndex, color) {
             // For modulated grids, calculate 2-column span using actual positions
             const twoColumnsEndX = getColumnX(colIndex + 2, fullOptions);
             highlightWidth = twoColumnsEndX - x;
-            console.log('[HOVER-WIDTH] Modulated stamp width:', { highlightWidth, span: '2 columns' });
         } else {
             highlightWidth = store.state.cellWidth * 2;
         }
@@ -169,7 +146,6 @@ function drawHoverHighlight(colIndex, rowIndex, color) {
             if (store.state.modulationMarkers && store.state.modulationMarkers.length > 0) {
                 const spanEndX = getColumnX(colIndex + cellSpan, fullOptions);
                 highlightWidth = spanEndX - x;
-                console.log('[HOVER-WIDTH] Modulated triplet width:', { highlightWidth, span: `${cellSpan} columns` });
             } else {
                 highlightWidth = store.state.cellWidth * cellSpan;
             }
@@ -181,7 +157,6 @@ function drawHoverHighlight(colIndex, rowIndex, color) {
             // For modulated grids, calculate 2-column span using actual positions
             const twoColumnsEndX = getColumnX(colIndex + 2, fullOptions);
             highlightWidth = twoColumnsEndX - x;
-            console.log('[HOVER-WIDTH] Modulated tonicization width:', { highlightWidth, span: '2 columns' });
         } else {
             highlightWidth = store.state.cellWidth * 2;
         }
@@ -279,7 +254,8 @@ function handleMouseDown(e) {
         
         // Test if we clicked on an existing modulation marker
         for (const marker of store.state.modulationMarkers || []) {
-            const hitResult = hitTestModulationMarker(actualX, y, marker, fullOptions);
+            // const hitResult = hitTestModulationMarker(actualX, y, marker, fullOptions); // Temporarily commented out
+            const hitResult = null;
             if (hitResult) {
                 if (hitResult.type === 'label') {
                     // Clicked on label - toggle ratio
@@ -551,7 +527,8 @@ function handleMouseMove(e) {
     
     // Check for existing modulation marker hover
     for (const marker of store.state.modulationMarkers || []) {
-        const hitResult = hitTestModulationMarker(actualX, y, marker, fullOptions);
+        // const hitResult = hitTestModulationMarker(actualX, y, marker, fullOptions); // Temporarily commented out
+        const hitResult = null;
         if (hitResult) {
             hoveredMarker = hitResult;
             break;
@@ -569,7 +546,8 @@ function handleMouseMove(e) {
     // Update cursor based on hover state
     const canvas = e.target;
     if (hoveredMarker) {
-        canvas.style.cursor = getModulationMarkerCursor(hoveredMarker);
+        // canvas.style.cursor = getModulationMarkerCursor(hoveredMarker); // Temporarily commented out
+        canvas.style.cursor = 'pointer';
         lastModulationHoverResult = hoveredMarker;
     } else if (lastModulationHoverResult) {
         canvas.style.cursor = 'default';

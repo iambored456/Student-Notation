@@ -1,20 +1,46 @@
 /* style/components/_tempo-display.css */
 
-.tempo-row {
-    display: flex;
-    justify-content: center;
-    gap: 0.5em;
-    background-color: transparent;
-    border: none;
-    padding: var(--space-2);
-    border-radius: 0;
+.control-section:has(.tempo-container) {
+    width: auto;
+    min-width: max-content;
 }
 
-.tempo-slider-row {
+.tempo-container {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    grid-template-rows: 1fr;
+    gap: var(--space-3);
     background-color: transparent;
     border: none;
     padding: var(--space-2);
     border-radius: 0;
+    height: 100%;
+    flex: 1;
+    width: auto;
+    min-width: max-content;
+    align-items: stretch;
+}
+
+.tempo-column {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-around;
+    align-items: center;
+    gap: 0.5em;
+    grid-column: 1;
+    grid-row: 1;
+    height: 100%;
+}
+
+.tempo-column-2 {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    grid-column: 2;
+    grid-row: 1;
+    min-width: max-content;
+    width: max-content;
+    padding: 0rem;
 }
 
 .tempo-input-group {
@@ -42,4 +68,18 @@
 .tempo-input::-webkit-inner-spin-button {
   -webkit-appearance: none;
   margin: 0;
+}
+
+.draggable-number-input {
+  cursor: ns-resize;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.draggable-number-input:hover {
+  border-color: var(--c-accent);
+}
+
+.draggable-number-input:focus {
+  cursor: text;
+  box-shadow: 0 0 0 2px var(--c-accent-light);
 }

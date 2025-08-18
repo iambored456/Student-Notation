@@ -363,6 +363,44 @@ export const rhythmActions = {
             return null;
         }
 
+        // Check for existing marker at the same location
+        const existingMarkerIndex = this.state.modulationMarkers.findIndex(marker => {
+            // Check by measureIndex first (primary location identifier)
+            if (marker.measureIndex === measureIndex) {
+                return true;
+            }
+            
+            // If macrobeatIndex is provided, also check for conflicts there
+            if (macrobeatIndex !== null && marker.macrobeatIndex === macrobeatIndex) {
+                return true;
+            }
+            
+            // If columnIndex is provided, also check for conflicts there
+            if (columnIndex !== null && marker.columnIndex === columnIndex) {
+                return true;
+            }
+            
+            return false;
+        });
+
+        if (existingMarkerIndex !== -1) {
+            // Replace existing marker at the same location
+            const existingMarker = this.state.modulationMarkers[existingMarkerIndex];
+            logger.info('rhythmActions', `Replacing existing modulation marker ${existingMarker.id} at measure ${measureIndex} (old ratio: ${existingMarker.ratio}, new ratio: ${ratio})`, null, 'state');
+            
+            // Update the existing marker with new values
+            existingMarker.ratio = ratio;
+            existingMarker.xPosition = xPosition;
+            if (columnIndex !== null) existingMarker.columnIndex = columnIndex;
+            if (macrobeatIndex !== null) existingMarker.macrobeatIndex = macrobeatIndex;
+            
+            this.emit('modulationMarkersChanged');
+            this.recordState();
+            
+            return existingMarker.id;
+        }
+
+        // No existing marker, create new one
         const marker = createModulationMarker(measureIndex, ratio, xPosition, columnIndex, macrobeatIndex);
         this.state.modulationMarkers.push(marker);
         
