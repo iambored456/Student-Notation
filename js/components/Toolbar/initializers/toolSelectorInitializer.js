@@ -124,7 +124,7 @@ export function initToolSelectors() {
                 const modeLabel = btn.querySelector('.mode-label').textContent;
                 store.setSelectedTool('tonicization', tonicNumber);
                 if (tonicDropdownLabel) {
-                    tonicDropdownLabel.innerHTML = `<img src="/public/assets/tabicons/tonicShape_${tonicNumber}.svg" alt="Tonic ${tonicNumber}" class="tonic-shape-icon"> ${modeLabel}`;
+                    tonicDropdownLabel.innerHTML = `<img src="/Student-Notation/assets/tabicons/tonicShape_${tonicNumber}.svg" alt="Tonic ${tonicNumber}" class="tonic-shape-icon"> ${modeLabel}`;
                 }
                 tonicDropdownContainer.classList.remove('open');
                 
