@@ -4,10 +4,10 @@ import { HARMONIC_BINS } from '../../constants.js';
 import SynthEngine from '../../services/synthEngine.js';
 import { hexToRgba, shadeHexColor } from '../../utils/colorUtils.js';
 import logger from '../../utils/logger.js';
-import phaseIcon0 from '/public/assets/tabicons/phaseButton_0.svg?raw';
-import phaseIcon90 from '/public/assets/tabicons/phaseButton_90.svg?raw';
-import phaseIcon180 from '/public/assets/tabicons/phaseButton_180.svg?raw';
-import phaseIcon270 from '/public/assets/tabicons/phaseButton_270.svg?raw';
+import phaseIcon0 from '../../../src/assets/tabicons/phaseButton_0.svg?raw';
+import phaseIcon90 from '../../../src/assets/tabicons/phaseButton_90.svg?raw';
+import phaseIcon180 from '../../../src/assets/tabicons/phaseButton_180.svg?raw';
+import phaseIcon270 from '../../../src/assets/tabicons/phaseButton_270.svg?raw';
 
 logger.moduleLoaded('HarmonicBins with Columnar Structure');
 
