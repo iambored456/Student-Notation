@@ -1,0 +1,122 @@
+/* ==========================================================================
+   TOOLBAR AND TAB SYSTEM LAYOUT
+   ========================================================================= */
+
+/* --- Toolbar Container Layout --- */
+#toolbar-container-1, #toolbar-container-2 {
+    display: flex;
+    border: 1px solid var(--c-border);
+    border-radius: var(--border-radius-md);
+    background-color: var(--c-bg);
+}
+
+#toolbar-container-1 {
+    padding: 0.1em;
+    flex: 0 0 auto;
+    gap: 0.2rem;
+    align-items: stretch;
+    height: 100%;
+    overflow: visible;
+}
+
+#toolbar-container-2 {
+    height: 100%;
+    overflow: hidden;
+}
+
+.tool-subcontainer {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    align-items: center;
+    padding: 0.rem;
+    background-color: transparent;
+    border-radius: 0;
+    border-right: 1px solid var(--c-border);
+    height: 100%;
+    justify-content: center;
+    overflow: visible;
+    min-height: 0;
+}
+
+.tool-subcontainer:last-child, .control-section:last-child {
+    border-right: none;
+}
+
+.tab-sidebar {
+    flex: 0 0 fit-content;
+    display: flex;
+    flex-direction: column;
+    background-color: var(--c-gridline);
+    border-right: 1px solid var(--c-border);
+}
+
+.tab-content {
+    flex: 1;
+    padding: 0.1em;
+    background-color: var(--c-bg);
+    overflow: auto;
+    min-width: 0;
+    height: 100%;
+}
+
+/* Allow dropdown to escape tab content when open */
+.tab-content:has(.dropdown-container.open) {
+    overflow: visible;
+}
+
+/* Fallback for browsers without :has() support */
+.tab-content.dropdown-open {
+    overflow: visible;
+}
+
+/* Also allow toolbar-container-2 to overflow when dropdown is open */
+#toolbar-container-2:has(.dropdown-container.open) {
+    overflow: visible;
+}
+
+#toolbar-container-2.dropdown-open {
+    overflow: visible;
+}
+
+.tab-panel { 
+    display: none; 
+    height: 100%; 
+    align-items: stretch; 
+}
+
+.tab-panel.active { 
+    display: flex;
+    gap: var(--space-2);
+}
+
+.control-section {
+    flex: 0 1 fit-content;
+    padding: 0em;
+    background-color: transparent;
+    border-right: none;
+    display: flex;
+    flex-direction: column;
+    min-width: fit-content;
+    width: fit-content;
+    border-radius: 0;
+}
+
+.preset-effects-container {
+    align-items: center;
+    justify-content: flex-start;
+    flex: 0 0 auto;
+    width: fit-content;
+}
+
+.control-section h4 {
+    margin: 0 0 var(--space-1) 0;
+    color: var(--c-text-muted);
+    font-size: 0.9em;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    flex-shrink: 0;
+    width: 100%;
+    text-align: center;
+}
+

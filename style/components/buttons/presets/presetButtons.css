@@ -1,0 +1,251 @@
+/* ==========================================================================
+   PRESET AND EFFECTS BUTTON STYLES
+   ========================================================================= */
+
+/* --- Preset/Effects Container Styles --- */
+.preset-effects-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    flex: 0 0 auto;
+    width: fit-content;
+    gap: 0;
+}
+
+.preset-effects-tabs {
+    display: flex;
+    gap: 0;
+    margin-bottom: 0;
+}
+
+.preset-tab-button {
+    padding: var(--space-1) var(--space-3);
+    background-color: transparent; 
+    border: 1px solid var(--c-border);
+    border-bottom: none;
+    color: var(--c-text-muted);
+    font-family: var(--main-font); 
+    font-size: 0.875rem; 
+    font-weight: 500;
+    cursor: pointer; 
+    text-align: center;
+    transition: all 0.2s ease; 
+    position: relative;
+    border-top-left-radius: var(--border-radius-md);
+    border-top-right-radius: var(--border-radius-md);
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+}
+
+.preset-tab-button:first-child {
+    border-right: none;
+}
+
+.preset-tab-button:hover {
+    background-color: rgba(0, 0, 0, 0.05); 
+    color: var(--c-text);
+}
+
+.preset-tab-button.active {
+    background-color: var(--c-surface);
+    color: var(--c-text);
+    font-weight: 600; 
+    border-color: var(--c-border);
+    border-bottom-color: var(--c-surface);
+    z-index: 2;
+    margin-bottom: -1px;
+}
+
+.preset-effects-content {
+    position: relative;
+    width: 100%;
+}
+
+.preset-tab-panel {
+    display: none;
+}
+
+.preset-tab-panel.active {
+    display: block;
+}
+
+.preset-content-box, .effects-content-box {
+    background-color: var(--c-surface);
+    border: 1px solid var(--c-border);
+    border-radius: 16px;
+    padding: var(--space-1);
+    box-shadow: var(--box-shadow-sm);
+    position: relative;
+    z-index: 1;
+    width: 16rem;
+    min-width: 280px;
+    overflow: visible;
+}
+
+.effects-content-box {
+    height: fit-content;
+}
+
+.preset-tab-panel.active .preset-content-box::before {
+    content: '';
+    position: absolute;
+    top: -1px;
+    left: calc(50% - 80px);
+    width: 80px;
+    height: 1px;
+    background-color: var(--c-surface);
+    z-index: 3;
+}
+
+.preset-tab-panel.active .effects-content-box::before {
+    content: '';
+    position: absolute;
+    top: -1px;
+    left: calc(50%);
+    width: 70px;
+    height: 1px;
+    background-color: var(--c-surface);
+    z-index: 3;
+}
+
+/* --- Preset Voice Buttons --- */
+.preset-grid { display: flex; gap: var(--space-2); }
+.preset-column { display: flex; flex-direction: column; gap: var(--space-1); }
+.preset-button { 
+  width: 95px; justify-content: center; display: flex; align-items: center;
+  padding: var(--space-1); background-color: var(--c-surface);
+  color: var(--c-text); border: 1px solid var(--c-border); font-size: 13px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.preset-button:hover { background-color: var(--c-border); }
+
+.preset-effects-container .preset-button.selected {
+    background-color: var(--c-accent-light, #63a9fd) !important;
+    color: var(--c-text, #212529) !important;
+    border-color: var(--c-accent, #4A90E2) !important;
+    font-weight: 600 !important;
+    box-shadow: 0 0 0 1px var(--c-accent, #4A90E2) !important;
+    transform: scale(0.98) !important;
+    opacity: 1 !important;
+}
+
+/* --- Effects Buttons --- */
+.effects-grid { 
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: repeat(2, 1fr);
+    row-gap: 0.15rem;
+    column-gap: 0.15rem;
+    margin-bottom: 0;
+}
+
+.effect-button { 
+    width: 4.5rem; 
+    justify-content: center; 
+    display: flex; 
+    align-items: center;
+    padding: 0.1rem; 
+    background-color: var(--c-surface);
+    color: var(--c-text); 
+    border: 1px solid var(--c-border); 
+    border-radius: var(--border-radius-sm);
+    font-size: 13px;
+    white-space: nowrap; 
+    overflow: hidden; 
+    text-overflow: ellipsis;
+    transition: background-color 0.2s ease;
+}
+
+.effect-button:hover { 
+    background-color: var(--c-border); 
+}
+
+.effect-button.active {
+    background-color: var(--c-accent-light, #63a9fd);
+    color: var(--c-text, #212529);
+    border-color: var(--c-accent, #4A90E2);
+    font-weight: 600;
+    box-shadow: 0 0 0 2px var(--c-accent, rgba(74, 144, 226, 0.2));
+    transform: scale(0.98);
+}
+
+/* --- Effect Controls Container --- */
+.effect-controls-container {
+    padding-top: 0.15rem;
+    margin-top: 0rem;
+    min-height: 2rem;
+    display: none;
+}
+
+.effect-controls-container.active {
+    display: block;
+    min-height: auto;
+    height: fit-content;
+}
+
+.effect-controls {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+    gap: var(--space-3);
+    align-items: start;
+    justify-items: center;
+    padding: var(--space-2) 0;
+}
+
+.effect-control-group {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+    align-items: center;
+    min-width: 80px;
+    position: relative;
+}
+
+.effect-control-label {
+    font-size: 0.5rem;
+    color: var(--c-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 500;
+}
+
+.effect-control-slider {
+    width: 100%;
+    height: 4px;
+    background: var(--c-border);
+    border-radius: 2px;
+    outline: none;
+    -webkit-appearance: none;
+    appearance: none;
+}
+
+.effect-control-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: var(--c-accent);
+    cursor: pointer;
+    border: 2px solid var(--c-surface);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.effect-control-slider::-moz-range-thumb {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: var(--c-accent);
+    cursor: pointer;
+    border: 2px solid var(--c-surface);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.effect-control-value {
+    font-size: 0.75rem;
+    color: var(--c-text);
+    font-weight: 600;
+    min-width: 30px;
+    text-align: center;
+}

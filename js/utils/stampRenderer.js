@@ -1,5 +1,5 @@
 // js/utils/stampRenderer.js
-import { diamondPath } from '../ui/glyphs/diamond.js';
+import { diamondPath } from '../components/Rhythm/glyphs/diamond.js';
 
 /**
  * Shared stamp rendering utility for both canvas and SVG contexts

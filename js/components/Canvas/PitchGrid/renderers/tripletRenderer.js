@@ -1,6 +1,6 @@
 // js/components/Canvas/PitchGrid/renderers/tripletRenderer.js
 import { getTripletStampById, tripletCenterPercents } from '../../../../rhythm/triplets.js';
-import { createTripletNotehead } from '../../../../ui/glyphs/tripletGlyphs.js';
+import { createTripletNotehead } from '../../../Rhythm/glyphs/tripletGlyphs.js';
 import { getRowY, getColumnX } from './rendererUtils.js';
 import store from '../../../../state/index.js';
 import logger from '../../../../utils/logger.js';

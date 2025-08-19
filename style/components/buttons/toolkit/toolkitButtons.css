@@ -1,0 +1,61 @@
+/* ==========================================================================
+   TOOLKIT BUTTON STYLES
+   ========================================================================= */
+
+/* --- General Toolkit Buttons --- */
+.toolkit-button { line-height: 1.2; padding: var(--space-2); }
+
+.toolkit-icon-button {
+    font-size: 14px; 
+    width: 2rem; 
+    height: 2rem; 
+    padding: 0.2rem; 
+    display: flex; align-items: center; justify-content: center;
+    background-color: transparent; 
+    border: none; 
+    color: var(--c-text-muted); 
+    border-radius: var(--border-radius-md);
+    transition: background-color 0.2s, transform 0.1s ease; /* Added transition */
+    position: relative;
+}
+.toolkit-icon-button img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    pointer-events: none; /* So the img doesn't interfere with button events */
+    transition: background-color 0.2s, transform 0.1s ease;
+}
+.toolkit-icon-button:hover img { 
+    background-color: var(--c-gridline); 
+}
+
+/* Override global button:focus for toolkit buttons */
+.toolkit-icon-button:focus img {
+    background-color: var(--c-gridline); /* Same as hover */
+    outline: none;
+}
+
+/* NEW: Feedback for the moment a button is clicked (for one-off actions like Zoom, Stop, etc.) */
+.toolkit-icon-button:active {
+    transform: scale(0.92);
+    transition-duration: 0.05s;
+}
+.toolkit-icon-button:active img {
+    background-color: rgba(0, 0, 0, 0.15); /* A slightly darker momentary press */
+}
+
+/* --- Playback Control Buttons --- */
+.playback-row {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: center;
+    gap: var(--space-2);
+    padding: var(--space-1);
+}
+
+.playback-row .toolkit-icon-button {
+    flex: 1;
+    text-align: center;
+    justify-content: center;
+}

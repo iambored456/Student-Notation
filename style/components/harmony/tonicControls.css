@@ -1,0 +1,88 @@
+/* ==========================================================================
+   TONIC CONTROLS AND DROPDOWN
+   ========================================================================= */
+
+/* --- Tonic Dropdown Styles --- */
+.dropdown-container {
+    position: relative;
+    display: inline-block;
+}
+
+.dropdown-container.open {
+    z-index: 1000;
+}
+
+.tonic-dropdown-toggle {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    min-width: 60px;
+    width: fit-content;
+    justify-content: center;
+    background-color: var(--c-surface);
+    color: var(--c-text);
+    border: 1px solid var(--c-border);
+}
+
+#tonic-dropdown-label {
+    display: flex;
+    align-items: center;
+    gap: var(--space-1);
+}
+
+#tonic-dropdown-label .tonic-shape-icon {
+    display: inline-block;
+    flex-shrink: 0;
+}
+
+.dropdown-arrow {
+    font-size: 10px;
+    transition: transform 0.2s ease;
+}
+
+.dropdown-container.open .dropdown-arrow {
+    transform: rotate(180deg);
+}
+
+.dropdown-menu {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    background-color: var(--c-surface);
+    border: 1px solid var(--c-border);
+    border-radius: var(--border-radius-md);
+    box-shadow: var(--box-shadow-md);
+    z-index: 1001;
+    padding: var(--space-1);
+    flex-direction: column;
+    gap: var(--space-1);
+}
+
+.dropdown-container.open .dropdown-menu {
+    display: flex;
+}
+
+.dropdown-menu .tonic-sign-button {
+    width: 100%;
+    border: 2px solid transparent; 
+}
+
+.dropdown-menu .tonic-sign-button.selected {
+    border-color: var(--c-accent) !important;
+    background-color: var(--c-accent-hover);
+    color: var(--c-surface);
+}
+
+.tonic-dropdown-toggle.selected {
+    border: 2px solid var(--c-accent);
+    box-shadow: 0 0 5px var(--c-accent);
+}
+
+/* --- Tonal Center Tools Wrapper --- */
+.tonic-tools-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    align-items: center;
+}

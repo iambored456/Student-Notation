@@ -1,0 +1,139 @@
+/* ==========================================================================
+   PAINT CONTROLS AND LAYOUT
+   ========================================================================= */
+
+/* Main container for all paint controls */
+#pitch-paint-container {
+    display: flex;
+    flex-direction: column;
+    gap: 0rem;
+    flex: 1; /* Expand to fill available height */
+    width: fit-content; /* Shrink width to fit contents */
+}
+
+.paint-layout-grid {
+    display: grid;
+    grid-template-columns: auto auto auto;
+    gap: 0rem;
+    align-items: stretch;
+    grid-template-areas: "buttons meter settings";
+    height: 100%; /* Fill parent height */
+}
+
+.paint-main-controls {
+    grid-area: buttons;
+    display: flex;
+    flex-direction: column;
+    gap: 0rem;
+}
+
+.paint-buttons-row {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem
+}
+
+.paint-buttons-row > .toolkit-button {
+    flex: 1;
+}
+
+.paint-controls-row {
+    display: flex;
+    gap: var(--space-3);
+    justify-content: center;
+    margin-top: var(--space-2);
+}
+
+.paint-control-group {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-1);
+}
+
+.paint-control-group label {
+    font-size: 0.9em;
+    color: var(--c-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 500;
+}
+
+#mic-paint-toggle {
+    background-color: var(--c-surface);
+    color: var(--c-text);
+    border: 1px solid var(--c-border);
+}
+
+/* Active state for the main toggle button */
+#mic-paint-toggle.active {
+    background-color: var(--c-danger);
+    color: var(--c-surface);
+    border-color: var(--c-danger);
+    font-weight: bold;
+}
+
+#paint-clear-btn {
+    background-color: var(--c-surface);
+    color: var(--c-text);
+    border: 1px solid var(--c-border);
+}
+
+#paint-clear-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    background-color: var(--c-gridline);
+}
+
+#paint-clear-btn:not(:disabled):hover {
+    background-color: var(--c-warning);
+    border-color: var(--c-warning);
+    color: var(--c-text);
+}
+
+/* Generic slider style for our new controls */
+#trail-thickness, #trail-opacity {
+    width: 60px;
+    height: 60px;
+    background-color: var(--c-surface);
+    border: 1px solid var(--c-border);
+    border-radius: var(--border-radius-md);
+    box-shadow: var(--box-shadow-sm);
+    position: relative;
+}
+
+/* Nexus UI override for paint controls */
+#trail-thickness svg, #trail-opacity svg {
+    width: 100% !important;
+    height: 100% !important;
+}
+
+#trail-thickness circle, #trail-opacity circle {
+    fill: var(--c-surface) !important;
+    stroke: var(--c-border) !important;
+    stroke-width: 2 !important;
+}
+
+#trail-thickness path, #trail-opacity path {
+    stroke: var(--c-accent) !important;
+    fill: none !important;
+    stroke-width: 3 !important;
+}
+
+/* Value display next to the sliders */
+.slider-value {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    background-color: var(--c-accent);
+    color: var(--c-surface);
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.7em;
+    font-weight: bold;
+    pointer-events: none;
+}

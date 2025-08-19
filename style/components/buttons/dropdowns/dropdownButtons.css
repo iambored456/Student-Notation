@@ -1,0 +1,167 @@
+/* ==========================================================================
+   DROPDOWN BUTTON STYLES
+   ========================================================================= */
+
+/* --- Dropdown Container and Menu Styles --- */
+.dropdown-container { position: relative; display: inline-block; }
+.dropdown-container.open { z-index: 1000; }
+
+.tonic-dropdown-toggle, .degree-dropdown-toggle {
+    display: flex; align-items: center; gap: var(--space-2);
+    justify-content: center; background-color: var(--c-surface);
+    color: var(--c-text); border: 1px solid var(--c-border);
+}
+.tonic-dropdown-toggle {
+    padding: var(--space-1) var(--space-2);
+}
+.dropdown-arrow { font-size: 10px; transition: transform 0.2s ease; }
+.dropdown-container.open .dropdown-arrow { transform: rotate(180deg); }
+.dropdown-menu {
+    display: none; position: absolute; top: 100%; left: 50%;
+    transform: translateX(-50%); background-color: var(--c-surface);
+    border: 1px solid var(--c-border); border-radius: var(--border-radius-md);
+    box-shadow: var(--box-shadow-md); z-index: 1001;
+    padding: var(--space-1); flex-direction: column; gap: 0rem;
+    margin-top: 0rem; 
+    overflow-y: auto;
+    white-space: nowrap; width: max-content;
+}
+.dropdown-container.open .dropdown-menu { display: flex; }
+
+/* --- Tonic Sign Buttons --- */
+.tonic-sign-button {
+    background: transparent;
+    border: none;
+    padding: var(--space-1);
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    white-space: nowrap;
+}
+.tonic-sign-button:hover {
+    background-color: var(--c-border);
+}
+.mode-label {
+    font-size: var(--font-size-sm);
+    color: var(--c-text-muted);
+    font-weight: normal;
+}
+.tonic-shape-icon {
+    width: 1.5rem;
+    height: 1.5rem;
+    object-fit: contain;
+    display: block;
+}
+.dropdown-menu .tonic-shape-icon {
+    width: 32px;
+    height: 32px;
+}
+.tonic-dropdown-toggle.selected, #degree-dropdown-menu .toolkit-button.active {
+    border-color: var(--c-accent); box-shadow: 0 0 5px var(--c-accent);
+}
+
+/* --- Dropdown Hover State Fixes --- */
+/* Fix dropdown hover states to use gray instead of blue */
+.dropdown-menu .tonic-sign-button:hover {
+    background-color: var(--c-border) !important;
+    color: var(--c-text) !important;
+}
+.dropdown-menu .tonic-sign-button.selected:hover {
+    background-color: var(--c-border) !important;
+    color: var(--c-text) !important;
+}
+#degree-dropdown-menu .toolkit-button:hover {
+    background-color: var(--c-border) !important;
+    color: var(--c-text) !important;
+}
+#degree-dropdown-menu .toolkit-button:not(.active):hover {
+    background-color: var(--c-border) !important;
+    color: var(--c-text) !important;
+}
+
+.tonic-dropdown-toggle:hover {
+    background-color: var(--c-border) !important;
+    color: var(--c-text) !important;
+}
+.degree-dropdown-toggle:hover {
+    background-color: var(--c-border) !important;
+    color: var(--c-text) !important;
+}
+
+/* --- Time Signature Dropdown --- */
+.time-signature-label {
+    cursor: pointer;
+    padding: 2px 6px;
+    border-radius: var(--border-radius-sm);
+    transition: background-color 0.2s ease;
+}
+
+.time-signature-label:hover {
+    background-color: var(--c-gridline);
+}
+
+.time-signature-dropdown {
+    position: fixed;
+    background-color: var(--c-surface);
+    border: 1px solid var(--c-border);
+    border-radius: var(--border-radius-md);
+    box-shadow: var(--box-shadow-md);
+    z-index: 1000;
+    max-width: 300px;
+    max-height: 400px;
+    overflow-y: auto;
+    padding: var(--space-2);
+}
+
+.time-signature-dropdown.hidden {
+    display: none;
+}
+
+.dropdown-category {
+    margin-bottom: var(--space-3);
+}
+
+.dropdown-category:last-child {
+    margin-bottom: 0;
+}
+
+.dropdown-category-header {
+    font-size: var(--font-size-sm);
+    font-weight: 600;
+    color: var(--c-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: var(--space-2);
+    padding-bottom: var(--space-1);
+    border-bottom: 1px solid var(--c-gridline);
+}
+
+.dropdown-option {
+    display: flex;
+    flex-direction: column;
+    padding: var(--space-2);
+    cursor: pointer;
+    border-radius: var(--border-radius-sm);
+    transition: background-color 0.2s ease;
+    margin-bottom: var(--space-1);
+}
+
+.dropdown-option:hover {
+    background-color: var(--c-gridline);
+}
+
+.dropdown-option:last-child {
+    margin-bottom: 0;
+}
+
+.dropdown-label {
+    font-weight: 600;
+    font-size: var(--font-size-base);
+    color: var(--c-text);
+}
+
+.dropdown-description {
+    font-size: var(--font-size-sm);
+    color: var(--c-text-muted);
+    margin-top: 2px;
+}

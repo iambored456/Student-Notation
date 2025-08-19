@@ -2,27 +2,44 @@
    Main Stylesheet - Imports Only
    ========================================================================== */
 
-/* --- Global & Layout --- */
-@import url('style/_variables.css');
-@import url('style/_globals.css');
-@import url('style/_typography.css');
-@import url('style/_layout.css');
+/* --- Base Styles --- */
+@import url('style/base/variables.css');
+@import url('style/base/globals.css');
+@import url('style/base/typography.css');
+@import url('style/layout/appLayout.css');
+@import url('style/layout/toolbarLayout.css');
+@import url('style/layout/toolbar/timbreToolbar.css');
+@import url('style/layout/toolbar/pitchToolbar.css');
+@import url('style/layout/toolbar/rhythmToolbar.css');
+@import url('style/layout/canvasLayout.css');
 
 /* --- Main UI Sections --- */
-@import url('style/_sidebar.css');
-@import url('style/_modal.css');
-@import url('style/_print.css');
-@import url('style/_harmony.css');
+@import url('style/layout/sidebarLayout.css');
+@import url('style/components/modals/printPreview.css');
+@import url('style/components/print/printStyles.css');
 
 /* --- Component-Specific Styles --- */
-@import url('style/components/_sliders.css');
-@import url('style/components/_buttons.css');
-@import url('style/components/_note-bank.css');
-@import url('style/components/_tempo-display.css');
-@import url('style/components/_grid-ui.css');
-@import url('style/components/_adsr.css');
-@import url('style/components/_harmonic-bins.css');
-@import url('style/components/_filter-controls.css');
-@import url('style/components/_paint.css');
-@import url('style/components/_ui-states.css');
-@import url('style/waveform-visualizer.css');
+@import url('style/components/canvas/gridUI.css');
+@import url('style/components/controls/sliders.css');
+@import url('style/components/display/tempoDisplay.css');
+@import url('style/components/tools/noteBank.css');
+@import url('style/components/buttons/navigation/navigationButtons.css');
+@import url('style/components/buttons/toolkit/toolkitButtons.css');
+@import url('style/components/buttons/presets/presetButtons.css');
+@import url('style/components/buttons/harmony/harmonyButtons.css');
+@import url('style/components/buttons/dropdowns/dropdownButtons.css');
+@import url('style/components/buttons/controls/controlComponents.css');
+@import url('style/components/buttons/tabButtons.css');
+@import url('style/components/harmony/chordTools.css');
+@import url('style/components/harmony/tonicControls.css');
+@import url('style/components/harmony/degreeToggles.css');
+@import url('style/components/paint/paintControls.css');
+@import url('style/components/paint/pitchPainting.css');
+@import url('style/components/paint/meterEffects.css');
+@import url('style/components/audio/adsrEnvelope.css');
+@import url('style/components/audio/harmonicBins.css');
+@import url('style/components/audio/filterControls.css');
+@import url('style/components/waveform/waveformVisualizer.css');
+
+/* --- UI States --- */
+@import url('style/base/uiStates.css');

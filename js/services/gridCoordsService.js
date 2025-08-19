@@ -1,7 +1,7 @@
 // js/services/gridCoordsService.js
 import store from '../state/index.js';
 import LayoutService from './layoutService.js';
-import { BASE_DRUM_ROW_HEIGHT, DRUM_HEIGHT_SCALE_FACTOR } from '../constants.js';
+import { BASE_DRUM_ROW_HEIGHT, DRUM_HEIGHT_SCALE_FACTOR } from '../core/constants.js';
 import { getColumnX } from '../components/Canvas/PitchGrid/renderers/rendererUtils.js';
 
 const GridCoordsService = {

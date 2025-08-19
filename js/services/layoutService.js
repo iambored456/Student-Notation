@@ -4,9 +4,9 @@ import {
     DEFAULT_ZOOM_LEVEL, DEFAULT_SCROLL_POSITION, GRID_HEIGHT_MULTIPLIER, GRID_WIDTH_RATIO,
     SIDE_COLUMN_WIDTH, TONIC_COLUMN_WIDTH, BEAT_COLUMN_WIDTH, BASE_DRUM_ROW_HEIGHT,
     DRUM_HEIGHT_SCALE_FACTOR, DRUM_ROW_COUNT, MAX_ZOOM_LEVEL, MIN_ZOOM_LEVEL, ZOOM_IN_FACTOR, ZOOM_OUT_FACTOR
-} from '../constants.js';
+} from '../core/constants.js';
 import { getPlacedTonicSigns } from '../state/selectors.js';
-import { RESIZE_DEBOUNCE_DELAY } from '../constants.js';
+import { RESIZE_DEBOUNCE_DELAY } from '../core/constants.js';
 import { Note } from 'tonal';
 import logger from '../utils/logger.js';
 

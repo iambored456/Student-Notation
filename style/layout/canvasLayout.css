@@ -1,0 +1,84 @@
+/* ==========================================================================
+   GRID & CANVAS STYLES
+   ========================================================================= */
+   
+#pitch-grid-wrapper {
+  width: fit-content;
+  min-width: 100%;
+  display: flex;
+  flex-direction: column;
+  flex: 1 0 auto;
+  min-height: 200px;
+  overflow: hidden;
+  border: 1px solid var(--c-border);
+  border-bottom: none;
+  border-radius: var(--border-radius-md) var(--border-radius-md) 0 0;
+  position: relative;
+  background-color: var(--c-surface);
+}
+
+#time-signature-display, #canvas-macrobeat-tools {
+    flex-shrink: 0; 
+}
+
+#pitch-grid-container { 
+  flex: 1;
+  position: relative; 
+  width: fit-content; 
+  overflow-x: visible; 
+  overflow-y: hidden;
+  min-height: 0;
+}
+
+#grid-container {
+  position: relative;
+  height: 100%;
+  width: fit-content;
+}
+
+#pitch-canvas-wrapper {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+#notation-grid, #playhead-canvas, #hover-canvas, #pitch-paint-canvas {
+  position: absolute; top: 0; left: 0; display: block;
+}
+
+#playhead-canvas, #hover-canvas, #drum-hover-canvas, #pitch-paint-canvas {
+  pointer-events: none;
+}
+
+#harmonyAnalysisGrid {
+  flex: 0 0 auto;
+  width: fit-content;
+  min-height: 40px;
+  position: relative;
+  background-color: var(--c-surface);
+  border-left: 1px solid var(--c-border);
+  border-right: 1px solid var(--c-border);
+}
+
+#harmony-analysis-canvas {
+    position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none;
+}
+
+#drum-grid-wrapper {
+  flex: 0 0 auto;
+  width: fit-content;
+  min-height: 90px; 
+  overflow: hidden;
+  position: relative;
+  background-color: var(--c-surface);
+  border: 1px solid var(--c-border);
+  border-top: none;
+  border-radius: 0 0 var(--border-radius-md) var(--border-radius-md);
+}
+
+#drum-grid, #drum-hover-canvas {
+  display: block;
+  position: absolute; top: 0; left: 0;
+}

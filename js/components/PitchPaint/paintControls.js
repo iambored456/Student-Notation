@@ -2,7 +2,7 @@
 import store from '../../state/index.js';
 import PitchPaintService from '../../services/pitchPaintService.js';
 import PaintCanvas from './paintCanvas.js';
-import DraggableNumber from '../DraggableNumber.js';
+import DraggableNumber from '../UI/DraggableNumber.js';
 
 class PaintControls {
   constructor() {

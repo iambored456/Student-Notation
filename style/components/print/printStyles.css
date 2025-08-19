@@ -1,0 +1,28 @@
+/* --- style/_print.css --- */
+@media print {
+  /* Hide the entire application */
+  body > #app-container, body > #print-preview-overlay {
+    display: none !important;
+  }
+
+  /* Only show the staging area and its contents */
+  #print-staging-area {
+    display: block !important;
+    visibility: visible !important;
+    margin: 0;
+    padding: 0;
+  }
+  
+  /*Target the img tag specifically */
+  #print-staging-area img {
+    display: block !important;
+    visibility: visible !important;
+    width: 100%;
+    height: auto;
+  }
+}
+
+/* Hide staging area during normal view */
+#print-staging-area {
+  display: none;
+}

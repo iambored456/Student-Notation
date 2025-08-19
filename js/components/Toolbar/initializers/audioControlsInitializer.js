@@ -1,7 +1,7 @@
 // js/components/Toolbar/initializers/audioControlsInitializer.js
 import store from '../../../state/index.js';
 import { PRESETS } from '../../../services/presetData.js';
-import DraggableNumber from '../../DraggableNumber.js';
+import DraggableNumber from '../../UI/DraggableNumber.js';
 
 export function initAudioControls() {
     const tempoSlider = document.getElementById('tempo-slider');

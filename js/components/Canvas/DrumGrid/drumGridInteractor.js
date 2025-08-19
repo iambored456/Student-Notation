@@ -3,7 +3,7 @@ import store from '../../../state/index.js'; // <-- UPDATED PATH
 import GridCoordsService from '../../../services/gridCoordsService.js';
 import LayoutService from '../../../services/layoutService.js';
 import { drawDrumShape } from './drumGridRenderer.js';
-import { BASE_DRUM_ROW_HEIGHT, DRUM_HEIGHT_SCALE_FACTOR } from '../../../constants.js';
+import { BASE_DRUM_ROW_HEIGHT, DRUM_HEIGHT_SCALE_FACTOR } from '../../../core/constants.js';
 import { getColumnX as getModulatedColumnX } from '../PitchGrid/renderers/rendererUtils.js';
 
 // --- Interaction State ---

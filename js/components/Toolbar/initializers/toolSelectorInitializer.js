@@ -2,6 +2,7 @@
 import store from '../../../state/index.js';
 import { Chord, ChordType } from 'tonal';
 import domCache from '../../../services/domCache.js';
+import { getTabIconPath } from '../../../utils/assetPaths.js';
 
 // UPDATED: Matched keys to new button labels and added the new chord types.
 const CHORD_SHAPES = {
@@ -124,7 +125,7 @@ export function initToolSelectors() {
                 const modeLabel = btn.querySelector('.mode-label').textContent;
                 store.setSelectedTool('tonicization', tonicNumber);
                 if (tonicDropdownLabel) {
-                    tonicDropdownLabel.innerHTML = `<img src="/Student-Notation/assets/tabicons/tonicShape_${tonicNumber}.svg" alt="Tonic ${tonicNumber}" class="tonic-shape-icon"> ${modeLabel}`;
+                    tonicDropdownLabel.innerHTML = `<img src="${getTabIconPath(`tonicShape_${tonicNumber}.svg`)}" alt="Tonic ${tonicNumber}" class="tonic-shape-icon"> ${modeLabel}`;
                 }
                 tonicDropdownContainer.classList.remove('open');
                 

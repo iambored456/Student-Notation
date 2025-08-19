@@ -7,7 +7,7 @@ import {
     MIN_STROKE_WIDTH_THICK, MIN_STROKE_WIDTH_THIN, STROKE_WIDTH_RATIO,
     TAIL_LINE_WIDTH_RATIO, MIN_TAIL_LINE_WIDTH, SHADOW_BLUR_RADIUS,
     TONIC_RADIUS_RATIO, MIN_TONIC_RADIUS, TONIC_BORDER_WIDTH, TONIC_FONT_SIZE_RATIO
-} from '../../../../constants.js';
+} from '../../../../core/constants.js';
 
 // Helper function to calculate visual offset for overlapping notes
 function calculateColorOffset(note, allNotes, options) {

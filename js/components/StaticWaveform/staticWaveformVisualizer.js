@@ -1,6 +1,6 @@
 // js/components/StaticWaveform/staticWaveformVisualizer.js
 import store from '../../state/index.js';
-import { HARMONIC_BINS } from '../../constants.js';
+import { HARMONIC_BINS } from '../../core/constants.js';
 import * as Tone from 'tone';
 import { hexToRgba } from '../../utils/colorUtils.js';
 

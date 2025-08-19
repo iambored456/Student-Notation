@@ -1,0 +1,60 @@
+/* ==========================================================================
+   SCALE DEGREE TOGGLE CONTROLS
+   ========================================================================= */
+
+/* --- Degree Toggle Buttons Styles --- */
+.degree-toggle-container {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+}
+
+/* Visibility Toggle - Hide (grayed) by default, Show (white) when active */
+.degree-visibility-toggle {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: var(--space-2);
+    background-color: var(--c-surface);
+    color: var(--c-text);
+    border: 1px solid var(--c-border);
+    border-radius: var(--border-radius-sm);
+    opacity: 0.6;
+    transition: background-color 0.2s, color 0.2s, opacity 0.2s;
+}
+
+.degree-visibility-toggle.active {
+    background-color: var(--c-surface);
+    color: var(--c-text);
+    opacity: 1.0;
+}
+
+.degree-visibility-toggle:not(.active):hover {
+    background-color: var(--c-border);
+}
+
+/* Mode Toggle - simple styling matching accidental pattern */
+.degree-mode-toggle {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: var(--space-2);
+    background-color: var(--c-surface);
+    color: var(--c-text);
+    border: 1px solid var(--c-border);
+    border-radius: var(--border-radius-sm);
+    opacity: 0.6;
+    transition: background-color 0.2s, color 0.2s, opacity 0.2s;
+}
+
+.degree-mode-toggle.active {
+    background-color: var(--c-warning);
+    color: var(--c-text);
+    opacity: 1.0;
+}
+
+.degree-mode-toggle:not(.active):hover {
+    background-color: var(--c-border);
+}

@@ -1,0 +1,243 @@
+/* ==========================================================================
+   RHYTHM TAB BUTTON STYLES
+   ========================================================================= */
+
+/* --- Rhythm Tab Navigation Buttons --- */
+.rhythm-tab-button {
+    padding: var(--space-2) var(--space-1);
+    background-color: transparent; 
+    border: 1px solid transparent;
+    border-bottom-color: var(--c-border); 
+    color: var(--c-text-muted);
+    font-family: var(--main-font); 
+    font-size: 0.75rem; 
+    font-weight: 500;
+    cursor: pointer; 
+    text-align: center;
+    transition: all 0.2s ease; 
+    position: relative;
+    border-top-left-radius: var(--border-radius-md);
+    border-bottom-left-radius: var(--border-radius-md);
+}
+
+.rhythm-tab-button:hover {
+    background-color: rgba(0, 0, 0, 0.05); 
+    color: var(--c-text);
+}
+
+.rhythm-tab-button.active {
+    background-color: var(--c-bg); /* Match content area */
+    color: var(--c-accent);
+    font-weight: 600; 
+    margin-right: -1px; /* Pull over the sidebar's right border */
+    position: relative;
+    z-index: 1; /* Ensure this tab is on top */
+    border-color: var(--c-border);
+    border-right-color: transparent;
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+}
+
+/* --- Stamp Buttons --- */
+.stamp-button {
+    position: relative;
+    width: fit-content;
+    height: fit-content;
+    min-width: 0rem;
+    min-height: 0rem;
+    background-color: var(--c-surface);
+    border: 2px solid var(--c-border);
+    border-radius: var(--border-radius-md);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 0rem;
+}
+
+.stamp-button:hover {
+    background-color: var(--c-gridline);
+    transform: scale(1.05);
+    border-color: var(--c-accent);
+}
+
+.stamp-button.active {
+    background-color: var(--c-accent-light, #63a9fd) !important;
+    color: var(--c-text, #212529) !important;
+    border-color: var(--c-accent, #4A90E2) !important;
+    font-weight: 600 !important;
+    box-shadow: 0 0 0 1px var(--c-accent, #4A90E2) !important;
+    transform: scale(0.98) !important;
+    opacity: 1 !important;
+}
+
+.stamp-button svg {
+    flex-shrink: 0;
+}
+
+.stamp-number {
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: var(--c-text-muted);
+    line-height: 1;
+}
+
+.stamp-button.active .stamp-number {
+    color: var(--c-text);
+}
+
+/* --- Triplet Buttons --- */
+.triplet-button {
+    position: relative;
+    width: fit-content;
+    height: fit-content;
+    min-width: 0rem;
+    min-height: 0rem;
+    background-color: var(--c-surface);
+    border: 2px solid var(--c-border);
+    border-radius: var(--border-radius-md);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 0rem;
+}
+
+.triplet-button:hover {
+    background-color: var(--c-gridline);
+    transform: scale(1.05);
+    border-color: var(--c-accent);
+}
+
+.triplet-button.active {
+    background-color: var(--c-accent-light, #63a9fd) !important;
+    color: var(--c-text, #212529) !important;
+    border-color: var(--c-accent, #4A90E2) !important;
+    font-weight: 600 !important;
+    box-shadow: 0 0 0 1px var(--c-accent, #4A90E2) !important;
+    transform: scale(0.98) !important;
+    opacity: 1 !important;
+}
+
+.triplet-button svg {
+    flex-shrink: 0;
+}
+
+.triplet-button-wide {
+    /* Quarter triplet buttons are wider to show their 2-cell span */
+    min-width: 96px;
+    position: relative;
+}
+
+.triplet-button-wide::after {
+    content: '';
+    position: absolute;
+    top: 10%;
+    bottom: 10%;
+    left: 50%;
+    width: 1px;
+    border-left: 1px dashed var(--c-border);
+    pointer-events: none;
+    z-index: 1;
+}
+
+.triplets-header {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--c-text);
+    margin: 0;
+    text-align: center;
+}
+
+/* --- Anacrusis and Macrobeat Buttons --- */
+.sidebar-toggle-button {
+    flex: 1; 
+    padding: var(--space-2); 
+    text-align: center;
+    background-color: var(--c-surface); 
+    color: var(--c-text); 
+    border: 1px solid var(--c-border);
+    opacity: 0.6;
+}
+
+.sidebar-toggle-button.active {
+    background-color: var(--c-warning); 
+    color: var(--c-text); 
+    border-color: var(--c-border);
+    opacity: 1.0;
+}
+
+.sidebar-toggle-button:not(.active):hover { 
+    background-color: var(--c-border); 
+}
+
+/* --- Macrobeat Structure Buttons --- */
+.macrobeat-adjust-group .toolkit-button {
+    background-color: var(--c-surface);
+    border: 1px solid var(--c-border);
+    color: var(--c-text);
+    transition: background-color 0.1s ease, transform 0.1s ease;
+}
+
+.macrobeat-adjust-group .toolkit-button:hover {
+    background-color: var(--c-border);
+}
+
+.macrobeat-adjust-group .toolkit-button:active {
+    background-color: var(--c-warning);
+    transform: scale(0.95);
+    transition: background-color 0.1s ease, transform 0.1s ease;
+}
+
+/* --- Modulation Controls --- */
+.modulation-controls .toolkit-button {
+    font-size: 12px;
+    padding: var(--space-1) var(--space-2);
+    background-color: var(--c-bg-muted);
+    border: 1px solid var(--c-border);
+    border-radius: var(--border-radius-sm);
+    color: var(--c-text);
+    transition: all 0.2s ease;
+    cursor: pointer;
+    min-width: 50px;
+}
+
+.modulation-controls .toolkit-button:hover {
+    background-color: var(--c-bg-accent);
+    border-color: var(--c-accent);
+    color: var(--c-accent);
+}
+
+.modulation-controls .toolkit-button.active {
+    background-color: var(--c-accent);
+    border-color: var(--c-accent);
+    color: white;
+    font-weight: 600;
+}
+
+/* Ratio buttons with specific colors */
+.modulation-ratio-btn[data-ratio="2:3"].active {
+    background-color: #dc3545; /* Red for compression */
+    border-color: #dc3545;
+}
+
+.modulation-ratio-btn[data-ratio="3:2"].active {
+    background-color: #007bff; /* Blue for expansion */
+    border-color: #007bff;
+}
+
+.modulation-ratio-btn[data-ratio="2:3"]:hover {
+    background-color: rgba(220, 53, 69, 0.1);
+    border-color: #dc3545;
+    color: #dc3545;
+}
+
+.modulation-ratio-btn[data-ratio="3:2"]:hover {
+    background-color: rgba(0, 123, 255, 0.1);
+    border-color: #007bff;
+    color: #007bff;
+}

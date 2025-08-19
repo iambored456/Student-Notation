@@ -1,5 +1,5 @@
 // js/components/Canvas/DrumGrid/drumGridRenderer.js
-import { BASE_DRUM_ROW_HEIGHT, DRUM_HEIGHT_SCALE_FACTOR } from '../../../constants.js';
+import { BASE_DRUM_ROW_HEIGHT, DRUM_HEIGHT_SCALE_FACTOR } from '../../../core/constants.js';
 import { shouldDrawVerticalLineAtColumn, isTonicColumn } from '../../../utils/tonicColumnUtils.js';
 
 import LayoutService from '../../../services/layoutService.js';

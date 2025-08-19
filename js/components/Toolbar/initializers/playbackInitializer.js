@@ -2,6 +2,7 @@ import store from '../../../state/index.js';
 import TransportService from '../../../services/transportService.js';
 import { clearAllStamps } from '../../../rhythm/stampPlacements.js';
 import { clearAllTripletPlacements } from '../../../rhythm/tripletPlacements.js';
+import { getIconPath } from '../../../utils/assetPaths.js';
 
 export function initPlaybackControls() {
     const playBtn = document.getElementById('play-button');
@@ -61,8 +62,8 @@ export function initPlaybackControls() {
 
     store.on('playbackStateChanged', ({ isPlaying, isPaused }) => {
         if (playBtn) {
-            const playIcon = '<img src="/Student-Notation/assets/icons/Play.svg" alt="Play">';
-            const pauseIcon = '<img src="/Student-Notation/assets/icons/Pause.svg" alt="Pause">';
+            const playIcon = `<img src="${getIconPath('Play.svg')}" alt="Play">`;
+            const pauseIcon = `<img src="${getIconPath('Pause.svg')}" alt="Pause">`;
             playBtn.innerHTML = (isPlaying && !isPaused) ? pauseIcon : playIcon;
             
         }

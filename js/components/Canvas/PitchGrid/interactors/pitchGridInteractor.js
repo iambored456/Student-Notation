@@ -13,8 +13,8 @@ import { isNotePlayableAtColumn, isWithinTonicSpan } from '../../../../utils/ton
 import { setGhostNotePosition, clearGhostNotePosition } from '../../../../services/spacebarHandler.js';
 import { placeStamp, removeStampsInEraserArea } from '../../../../rhythm/stampPlacements.js';
 import { placeTripletGroup, eraseTripletGroups } from '../../../../rhythm/tripletPlacements.js';
-import StampsToolbar from '../../../StampsToolbar/StampsToolbar.js';
-import TripletsToolbar from '../../../StampsToolbar/TripletsToolbar.js';
+import StampsToolbar from '../../../Rhythm/StampsToolbar/StampsToolbar.js';
+import TripletsToolbar from '../../../Rhythm/StampsToolbar/TripletsToolbar.js';
 import { renderStampPreview } from '../renderers/stampRenderer.js';
 import { renderTripletPreview } from '../renderers/tripletRenderer.js';
 // import { hitTestModulationMarker, getModulationMarkerCursor } from '../renderers/modulationRenderer.js'; // Temporarily commented out

@@ -1,0 +1,145 @@
+/* ==========================================================================
+   HARMONY BUTTON STYLES
+   ========================================================================= */
+
+/* --- Accidental Toggle Buttons --- */
+#accidental-controls-container-v2 { display: flex; justify-content: center; gap: var(--space-2); }
+.accidental-button {
+    width: 40px; height: 40px; font-size: 22px; font-weight: bold; padding: 0;
+    line-height: 1; border: 1px solid var(--c-border); border-radius: var(--border-radius-sm);
+    background-color: var(--c-surface); color: var(--c-text); opacity: 0.6;
+}
+.accidental-button.active { background-color: var(--c-warning); color: var(--c-text); opacity: 1.0; }
+.accidental-button:not(.active):hover { background-color: var(--c-border); }
+
+/* --- Chord Shape Container Styles --- */
+.chord-shape-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    flex: 0 0 auto;
+    width: fit-content;
+    gap: 0;
+}
+
+.chord-shape-tabs {
+    display: flex;
+    gap: 0;
+    margin-bottom: 0;
+}
+
+.chord-tab-button {
+    padding: var(--space-1) var(--space-3);
+    background-color: transparent; 
+    border: 1px solid var(--c-border);
+    border-bottom: none;
+    color: var(--c-text-muted);
+    font-family: var(--main-font); 
+    font-size: 0.875rem; 
+    font-weight: 500;
+    cursor: pointer; 
+    text-align: center;
+    transition: all 0.2s ease; 
+    position: relative;
+    border-top-left-radius: var(--border-radius-md);
+    border-top-right-radius: var(--border-radius-md);
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+}
+
+.chord-tab-button:first-child {
+    border-right: none;
+}
+
+.chord-tab-button:hover {
+    background-color: rgba(0, 0, 0, 0.05); 
+    color: var(--c-text);
+}
+
+.chord-tab-button.active {
+    background-color: var(--c-surface);
+    color: var(--c-text);
+    font-weight: 600; 
+    border-color: var(--c-border);
+    border-bottom-color: var(--c-surface);
+    z-index: 2;
+    margin-bottom: -1px;
+}
+
+.chord-shape-content {
+    position: relative;
+    width: 100%;
+}
+
+.chord-tab-panel {
+    display: none;
+}
+
+.chord-tab-panel.active {
+    display: block;
+}
+
+.intervals-content-box, .chords-content-box {
+    background-color: var(--c-surface);
+    border: 1px solid var(--c-border);
+    border-radius: 16px;
+    padding: 0.45rem;
+    box-shadow: var(--box-shadow-sm);
+    position: relative;
+    z-index: 1;
+    width: 18rem;
+}
+
+.chord-tab-panel.active .intervals-content-box::before {
+    content: '';
+    position: absolute;
+    top: -1px;
+    left: calc(50% - 50px);
+    width: 60px;
+    height: 1px;
+    background-color: var(--c-surface);
+    z-index: 3;
+}
+
+.chord-tab-panel.active .chords-content-box::before {
+    content: '';
+    position: absolute;
+    top: -1px;
+    left: calc(50% + 10px);
+    width: 50px;
+    height: 1px;
+    background-color: var(--c-surface);
+    z-index: 3;
+}
+
+/* --- Harmony Preset Button Styles --- */
+.harmony-preset-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--space-1); flex: 1; }
+.harmony-preset-button {
+    background-color: var(--c-surface); color: var(--c-text);
+    border: 1px solid var(--c-border); border-radius: var(--border-radius-sm);
+    font-size: 18px; font-weight: bold; min-height: 40px;
+}
+.harmony-preset-button:hover { background-color: var(--c-border); }
+
+/* Override focus state for harmony preset buttons to prevent lingering blue highlight */
+.harmony-preset-button:focus {
+    background-color: var(--c-surface);
+    color: var(--c-text);
+    outline: none;
+}
+.harmony-preset-button:focus:hover {
+    background-color: var(--c-border);
+}
+.harmony-preset-button.selected:focus {
+    background-color: var(--c-accent);
+    color: var(--c-surface);
+}
+
+/* Style for the selected harmony button, using the dynamic accent color */
+.harmony-preset-button.selected {
+    background-color: var(--c-accent-light, #63a9fd);
+    color: var(--c-text, #212529);
+    border-color: var(--c-accent, #4A90E2);
+    font-weight: 600;
+}
