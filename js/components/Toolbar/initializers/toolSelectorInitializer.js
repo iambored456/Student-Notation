@@ -26,16 +26,16 @@ const CHORD_SHAPES = {
  * This ensures only one button is illuminated at a time.
  */
 function updateChordButtonSelection() {
-    const harmonyPresetGrid = document.querySelector('.harmony-preset-grid');
-    if (!harmonyPresetGrid) return;
+    const chordsPanel = document.querySelector('#chords-panel .harmony-preset-grid');
+    if (!chordsPanel) return;
 
-    // First, clear the 'selected' class from all buttons in this grid.
-    harmonyPresetGrid.querySelectorAll('.harmony-preset-button').forEach(el => el.classList.remove('selected'));
+    // First, clear the 'selected' class from all chord buttons in the chords panel.
+    chordsPanel.querySelectorAll('.harmony-preset-button').forEach(el => el.classList.remove('selected'));
 
     // If the current tool is 'chord', find the matching button and apply the 'selected' class.
     if (store.state.selectedTool === 'chord') {
         const currentIntervals = store.state.activeChordIntervals.toString();
-        for (const button of harmonyPresetGrid.children) {
+        for (const button of chordsPanel.children) {
             const buttonIntervals = CHORD_SHAPES[button.textContent]?.toString();
             if (buttonIntervals === currentIntervals) {
                 button.classList.add('selected');
@@ -74,8 +74,10 @@ export function initToolSelectors() {
         eraserBtn.addEventListener('click', () => store.setSelectedTool('eraser'));
     }
     
-    if (harmonyPresetGrid) {
-        harmonyPresetGrid.querySelectorAll('.harmony-preset-button').forEach(button => {
+    // Only attach chord shape handlers to buttons in the chords panel (not intervals panel)
+    const chordsPanel = document.querySelector('#chords-panel .harmony-preset-grid');
+    if (chordsPanel) {
+        chordsPanel.querySelectorAll('.harmony-preset-button').forEach(button => {
             button.addEventListener('click', () => {
                 const intervals = CHORD_SHAPES[button.textContent];
                 if (intervals && intervals.length > 0) {
@@ -202,7 +204,12 @@ export function initToolSelectors() {
     // --- UI State Change Listeners (Visual Feedback) ---
     store.on('toolChanged', ({ newTool }) => {
         // Clear selected state from tool buttons, but preserve note selection unless switching to note tool
-        document.querySelectorAll('.harmony-preset-button, #tonic-dropdown-button, #eraser-tool-button').forEach(el => el.classList.remove('selected'));
+        // Only clear chord buttons from the chords panel
+        const chordsPanel = document.querySelector('#chords-panel .harmony-preset-grid');
+        if (chordsPanel) {
+            chordsPanel.querySelectorAll('.harmony-preset-button').forEach(el => el.classList.remove('selected'));
+        }
+        document.querySelectorAll('#tonic-dropdown-button, #eraser-tool-button').forEach(el => el.classList.remove('selected'));
         if(harmonyContainer) harmonyContainer.classList.remove('active-tool');
 
         if (newTool === 'eraser') {

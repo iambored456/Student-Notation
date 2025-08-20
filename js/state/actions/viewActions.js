@@ -57,6 +57,53 @@ export const viewActions = {
     setPlaybackState(isPlaying, isPaused = false) { this.state.isPlaying = isPlaying; this.state.isPaused = isPaused; this.emit('playbackStateChanged', { isPlaying, isPaused }); },
     
     // Layout & Viewport
+    setLayoutConfig(config) {
+        console.log('🔧 [STATE] setLayoutConfig called with:', config);
+        const oldConfig = {
+            cellWidth: this.state.cellWidth,
+            cellHeight: this.state.cellHeight,
+            columnWidths: [...(this.state.columnWidths || [])]
+        };
+        
+        let hasChanges = false;
+        
+        if (config.cellWidth !== undefined && this.state.cellWidth !== config.cellWidth) {
+            console.log('🔧 [STATE] cellWidth changed:', this.state.cellWidth, '->', config.cellWidth);
+            this.state.cellWidth = config.cellWidth;
+            hasChanges = true;
+        }
+        
+        if (config.cellHeight !== undefined && this.state.cellHeight !== config.cellHeight) {
+            console.log('🔧 [STATE] cellHeight changed:', this.state.cellHeight, '->', config.cellHeight);
+            this.state.cellHeight = config.cellHeight;
+            hasChanges = true;
+        }
+        
+        if (config.columnWidths !== undefined) {
+            const oldWidths = JSON.stringify(this.state.columnWidths || []);
+            const newWidths = JSON.stringify(config.columnWidths);
+            if (oldWidths !== newWidths) {
+                console.log('🔧 [STATE] columnWidths changed:', this.state.columnWidths?.length || 0, '->', config.columnWidths.length, 'columns');
+                this.state.columnWidths = [...config.columnWidths];
+                hasChanges = true;
+            }
+        }
+        
+        if (hasChanges) {
+            console.log('🔧 [STATE] Layout config updated, emitting layoutConfigChanged');
+            this.emit('layoutConfigChanged', {
+                oldConfig,
+                newConfig: {
+                    cellWidth: this.state.cellWidth,
+                    cellHeight: this.state.cellHeight,
+                    columnWidths: [...(this.state.columnWidths || [])]
+                }
+            });
+        } else {
+            console.log('🔧 [STATE] No layout changes detected, skipping emission');
+        }
+    },
+    
     setGridPosition(newPosition) {
         const maxPosition = this.state.fullRowData.length - (this.state.visualRows * 2);
         const clampedPosition = Math.max(0, Math.min(newPosition, maxPosition));
@@ -72,5 +119,12 @@ export const viewActions = {
     setPrintOptions(newOptions) {
         this.state.printOptions = { ...this.state.printOptions, ...newOptions };
         this.emit('printOptionsChanged', this.state.printOptions);
+    },
+
+    setPrintPreviewActive(isActive) {
+        const wasActive = this.state.isPrintPreviewActive;
+        this.state.isPrintPreviewActive = isActive;
+        console.log('🖨️ [PRINT STATE] Preview active state changed:', wasActive, '->', isActive);
+        this.emit('printPreviewStateChanged', isActive);
     },
 };

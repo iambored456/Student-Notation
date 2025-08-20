@@ -47,7 +47,10 @@ class ZoomIndicator {
             if (viewportInfo.canSeeFullRange) {
                 visibilityText = ' (Full Range)';
             } else {
-                const visibleSemitones = Math.floor((viewportInfo.endRow - viewportInfo.startRow + 1));
+                // Fixed: use startRank/endRank instead of startRow/endRow
+                const startRank = viewportInfo.startRank || viewportInfo.startRow;
+                const endRank = viewportInfo.endRank || viewportInfo.endRow;
+                const visibleSemitones = Math.floor((endRank - startRank + 1));
                 visibilityText = ` (~${visibleSemitones} semitones)`;
             }
         }

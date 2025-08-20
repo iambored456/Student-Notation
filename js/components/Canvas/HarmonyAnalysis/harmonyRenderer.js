@@ -5,6 +5,35 @@ import LayoutService from '../../../services/layoutService.js';
 import { getPlacedTonicSigns } from '../../../state/selectors.js';
 import { Scale, Interval } from 'tonal';
 import { renderModulationMarkers } from '../PitchGrid/renderers/modulationRenderer.js';
+import { getColumnX as getModulatedColumnX } from '../PitchGrid/renderers/rendererUtils.js';
+
+/**
+ * Get column X position with modulation awareness
+ * @param {number} index - Column index
+ * @param {Object} options - Options containing state data
+ * @returns {number} X position (modulated if modulation exists)
+ */
+function getColumnX(index, options) {
+    const hasModulation = options.modulationMarkers && options.modulationMarkers.length > 0;
+    
+    if (hasModulation) {
+        return getModulatedColumnX(index, {
+            ...options,
+            modulationMarkers: options.modulationMarkers,
+            cellWidth: options.cellWidth,
+            columnWidths: options.columnWidths,
+            baseMicrobeatPx: options.cellWidth
+        });
+    } else {
+        // Fallback to original calculation
+        let x = 0;
+        for (let i = 0; i < index; i++) {
+            const widthMultiplier = options.columnWidths[i] || 0;
+            x += widthMultiplier * options.cellWidth;
+        }
+        return x;
+    }
+}
 
 function drawVerticalHarmonyLines(ctx, options) {
     const { columnWidths, macrobeatGroupings, macrobeatBoundaryStyles, cellWidth } = options;
@@ -22,17 +51,8 @@ function drawVerticalHarmonyLines(ctx, options) {
         macrobeatBoundaries.push(current_col);
     }
 
-    function getColumnX(index) {
-        let x = 0;
-        for (let i = 0; i < index; i++) {
-            const widthMultiplier = columnWidths[i] || 0;
-            x += widthMultiplier * cellWidth;
-        }
-        return x;
-    }
-
     for (let i = 0; i <= totalColumns; i++) {
-        const x = getColumnX(i);
+        const x = getColumnX(i, options);
         let style;
         const isBoundary = i === 2 || i === totalColumns - 2;
         const isTonicCol = placedTonicSigns.some(ts => ts.columnIndex === i);
@@ -68,17 +88,8 @@ function drawAnalysisForMacrobeat(ctx, state, macrobeatIndex) {
     const { startColumn, grouping } = getMacrobeatInfo(state, macrobeatIndex);
     const { keyTonic, keyMode } = getKeyContextForBeat(state, startColumn);
     
-    // Use zoom-aware positioning like other grids
-    function getColumnX(index) {
-        let x = 0;
-        for (let i = 0; i < index; i++) {
-            const widthMultiplier = state.columnWidths[i] || 0;
-            x += widthMultiplier * state.cellWidth;
-        }
-        return x;
-    }
-    
-    const x = getColumnX(startColumn);
+    // Use modulation-aware positioning like other grids
+    const x = getColumnX(startColumn, state);
     const width = grouping * state.cellWidth;
     const centerX = x + width / 2;
 

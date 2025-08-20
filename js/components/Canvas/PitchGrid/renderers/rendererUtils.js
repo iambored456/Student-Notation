@@ -8,9 +8,24 @@ store.on('modulationMarkersChanged', () => {
     invalidateCoordinateMapping();
 });
 
+// Set up cache invalidation when viewport changes
+store.on('scrollChanged', () => {
+    cachedViewportInfo = null;
+    lastViewportFrame = null;
+});
+
+store.on('zoomChanged', () => {
+    cachedViewportInfo = null;
+    lastViewportFrame = null;
+});
+
 // Cache for coordinate mapping to avoid recalculating on every frame
 let cachedCoordinateMapping = null;
 let lastMappingHash = null;
+
+// Cache for viewport info to avoid recalculating on every row
+let cachedViewportInfo = null;
+let lastViewportFrame = null;
 
 /**
  * Gets or creates a coordinate mapping for modulation markers
@@ -51,6 +66,22 @@ function getCoordinateMapping(options) {
     return cachedCoordinateMapping;
 }
 
+/**
+ * Gets cached viewport info to avoid recalculating on every row
+ * @returns {Object} Viewport info object
+ */
+function getCachedViewportInfo() {
+    const currentFrame = performance.now();
+    
+    // Invalidate cache if it's from a different frame (1ms threshold)
+    if (!cachedViewportInfo || !lastViewportFrame || (currentFrame - lastViewportFrame) > 1) {
+        cachedViewportInfo = LayoutService.getViewportInfo();
+        lastViewportFrame = currentFrame;
+    }
+    
+    return cachedViewportInfo;
+}
+
 export function getColumnX(index, options) {
     // Calculate original position first
     let originalX = 0;
@@ -87,10 +118,15 @@ export function getColumnX(index, options) {
 }
 
 export function getRowY(rowIndex, options) {
-    const viewportInfo = LayoutService.getViewportInfo();
-    const absoluteY = rowIndex * viewportInfo.rowHeight;
-    // THE FIX: Don't apply zoom again since rowHeight already includes zoom
-    return absoluteY - viewportInfo.scrollOffset;
+    const viewportInfo = getCachedViewportInfo();
+    // Calculate row position relative to viewport start using dual-parity grid spacing
+    // cellHeight represents the full unit, ranks are spaced at cellHeight/2 intervals
+    const relativeRowIndex = rowIndex - viewportInfo.startRank;
+    const halfUnit = options.cellHeight / 2; // Dual-parity grid: ranks at half-unit spacing
+    const yPosition = relativeRowIndex * halfUnit;
+    
+    
+    return yPosition;
 }
 
 export function getPitchClass(pitchWithOctave) {
@@ -115,8 +151,9 @@ export function getLineStyleFromPitchClass(pc) {
 }
 
 export function getVisibleRowRange() {
-    const { startRow, endRow } = LayoutService.getViewportInfo();
-    return { startRow, endRow };
+    const viewportInfo = LayoutService.getViewportInfo();
+    const { startRank, endRank } = viewportInfo; // FIXED: use startRank/endRank instead of startRow/endRow
+    return { startRow: startRank, endRow: endRank };
 }
 
 /**

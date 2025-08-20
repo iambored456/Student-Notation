@@ -5,20 +5,35 @@ import { shouldDrawVerticalLineAtColumn, isTonicColumn } from '../../../../utils
 function drawHorizontalMusicLines(ctx, options, startRow, endRow) {
     const musicAreaStartX = getColumnX(2, options);
     const musicAreaEndX = getColumnX(options.columnWidths.length - 2, options);
+    
 
+    let linesDrawn = 0;
+    let linesSkipped = 0;
+    
     for (let rowIndex = startRow; rowIndex <= endRow; rowIndex++) {
         const row = options.fullRowData[rowIndex];
-        if (!row) continue;
+        if (!row) {
+            linesSkipped++;
+            continue;
+        }
 
         const y = getRowY(rowIndex, options);
         // Add a small buffer to prevent lines from disappearing at the very edge
-        if (y < -10 || y > options.viewportHeight + 10) continue;
+        if (y < -10 || y > options.viewportHeight + 10) {
+            linesSkipped++;
+            continue;
+        }
 
         const pitchClass = getPitchClass(row.pitch);
         const style = getLineStyleFromPitchClass(pitchClass);
         
         // If style is null, it's a pitch that shouldn't have a line (F, A, etc.)
-        if (!style) continue;
+        if (!style) {
+            linesSkipped++;
+            continue;
+        }
+        
+        linesDrawn++;
 
         // THE FIX: Check if the color is the special fill color for the G-line
         if (style.color === '#dee2e6') { 
@@ -37,6 +52,7 @@ function drawHorizontalMusicLines(ctx, options, startRow, endRow) {
             ctx.setLineDash([]);
         }
     }
+    
 }
 
 export function drawHorizontalLines(ctx, options, startRow, endRow) {

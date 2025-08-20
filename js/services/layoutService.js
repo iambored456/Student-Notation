@@ -11,7 +11,7 @@ import { Note } from 'tonal';
 import logger from '../utils/logger.js';
 
 
-const DEFAULT_VISIBLE_SEMITONES = 24;
+const DEFAULT_VISIBLE_RANKS = 60; // 2.5 octaves (30 semitones × 2 ranks per semitone)
 
 let currentZoomLevel = DEFAULT_ZOOM_LEVEL;
 let currentScrollPosition = DEFAULT_SCROLL_POSITION;
@@ -87,49 +87,51 @@ function recalcAndApplyLayout() {
     // Prevent recursive calls during recalculation
     if (isRecalculating) {
         logger.warn('Layout Service', 'Skipping recalculation - already in progress', null, 'layout');
+        console.log('⚠️ [LAYOUT] Race condition prevented - recalculation already in progress');
         return;
     }
     
     logger.debug('Layout Service', 'Beginning layout recalculation', null, 'layout');
+    console.log('🏗️ [LAYOUT] Starting recalculation cycle');
     isRecalculating = true;
 
     const pitchGridContainer = document.getElementById('pitch-grid-container');
-    const newViewportHeight = pitchGridContainer.clientHeight;
-    const newViewportWidth = pitchGridWrapper.clientWidth;
+    const containerWidth = pitchGridWrapper.clientWidth;
     
-    // Log viewport changes
-    const heightDiff = Math.abs(newViewportHeight - viewportHeight);
-    const widthDiff = Math.abs(newViewportWidth - (pitchGridWrapper._lastViewportWidth || 0));
+    // For zoom stability, use window.innerHeight as reference, but scale appropriately for container
+    const windowHeight = window.innerHeight;
+    const referenceDiff = Math.abs(windowHeight - viewportHeight);
     
-    if (heightDiff > 0 || widthDiff > 0) {
-        logger.debug('Layout Service', 'Viewport changed', `${newViewportWidth}×${newViewportHeight}`, 'layout');
-        
-        // Only update viewport dimensions for significant changes
-        // This helps prevent micro-adjustments from causing layout instability
-        if (heightDiff > 3 || viewportHeight === 0) {
-            viewportHeight = newViewportHeight;
-        }
-        if (widthDiff > 3 || !pitchGridWrapper._lastViewportWidth) {
-            pitchGridWrapper._lastViewportWidth = newViewportWidth;
-        }
+    if (referenceDiff > 3 || viewportHeight === 0) {
+        logger.debug('Layout Service', 'Reference viewport changed', `${containerWidth}×${windowHeight}`, 'layout');
+        viewportHeight = windowHeight;
     }
     
-    // Always use the current values for calculations
-    const viewportWidth = newViewportWidth;
+    // Use available container space for height calculations
+    const availableHeight = pitchGridContainer.clientHeight || (windowHeight * 0.7); // Use 70% of window as fallback
+    const viewportWidth = containerWidth;
 
-    // FIXED: Maintain proper aspect ratio by scaling both dimensions independently
-    const baseHeight = (viewportHeight / DEFAULT_VISIBLE_SEMITONES) * GRID_HEIGHT_MULTIPLIER;
+
+    // Calculate cell height accounting for dual-parity grid spacing
+    // Since ranks use half-unit spacing, we need cellHeight such that:
+    // DEFAULT_VISIBLE_RANKS * (cellHeight / 2) = availableHeight
+    // Therefore: cellHeight = (availableHeight * 2) / DEFAULT_VISIBLE_RANKS
+    const baseHeight = (availableHeight * 2) / DEFAULT_VISIBLE_RANKS;
     const baseWidth = baseHeight * GRID_WIDTH_RATIO;
     const newCellHeight = baseHeight * currentZoomLevel;
     const newCellWidth = baseWidth * currentZoomLevel;
+    
     
     // Log cell size changes
     if (store.state.cellWidth !== newCellWidth || store.state.cellHeight !== newCellHeight) {
         logger.debug('Layout Service', 'Cell size changed', `${newCellWidth.toFixed(1)}×${newCellHeight.toFixed(1)}`, 'layout');
     }
     
-    store.state.cellHeight = newCellHeight;
-    store.state.cellWidth = newCellWidth;
+    // ✅ FIXED: Use proper action instead of direct state mutation
+    store.setLayoutConfig({
+        cellHeight: newCellHeight,
+        cellWidth: newCellWidth
+    });
 
 
     const { macrobeatGroupings } = store.state;
@@ -172,7 +174,15 @@ function recalcAndApplyLayout() {
     logger.debug('Layout Service', 'Old total width units', oldColumnWidths.reduce((sum, w) => sum + w, 0), 'layout');
     logger.debug('Layout Service', 'New total width units', newColumnWidths.reduce((sum, w) => sum + w, 0), 'layout');
     
-    store.state.columnWidths = newColumnWidths;
+    // ✅ FIXED: Use proper action instead of direct state mutation
+    console.log('🏗️ [LAYOUT] Column widths changing:', {
+        from: { count: oldColumnWidths.length, widths: oldColumnWidths.slice(0, 10) }, // Show first 10
+        to: { count: newColumnWidths.length, widths: newColumnWidths.slice(0, 10) },
+        totalUnitsChange: newColumnWidths.reduce((sum, w) => sum + w, 0) - oldColumnWidths.reduce((sum, w) => sum + w, 0)
+    });
+    store.setLayoutConfig({
+        columnWidths: newColumnWidths
+    });
 
     const totalWidthUnits = newColumnWidths.reduce((sum, w) => sum + w, 0);
     const totalCanvasWidth = totalWidthUnits * store.state.cellWidth;
@@ -196,9 +206,16 @@ function recalcAndApplyLayout() {
     // Set all containers to exactly match canvas width BEFORE resizing canvases
     const targetWidth = totalCanvasWidthPx + 'px';
     
+    // Set pitch-grid-container as the primary width controller
     if (pitchGridContainer) {
         pitchGridContainer.style.width = targetWidth;
     }
+    
+    // Make pitch-grid-wrapper match the container width
+    if (pitchGridWrapper) {
+        pitchGridWrapper.style.width = targetWidth;
+    }
+    
     if (drumGridWrapper) {
         drumGridWrapper.style.width = targetWidth;
     }
@@ -206,12 +223,41 @@ function recalcAndApplyLayout() {
         harmonyAnalysisGrid.style.width = targetWidth;
     }
     
+    // DEBUG: Check time-signature and macrobeat tools width behavior
+    const timeSignatureDisplay = document.getElementById('time-signature-display');
+    const canvasMacrobeatTools = document.getElementById('canvas-macrobeat-tools');
+    
+    console.log('🔍 [WIDTH DEBUG] Before setting widths:', {
+        targetWidth,
+        pitchGridWrapper: {
+            clientWidth: pitchGridWrapper?.clientWidth + 'px',
+            computedWidth: pitchGridWrapper ? window.getComputedStyle(pitchGridWrapper).width : 'N/A',
+            styleWidth: pitchGridWrapper?.style.width || 'not set'
+        },
+        pitchGridContainer: {
+            clientWidth: pitchGridContainer?.clientWidth + 'px',
+            computedWidth: pitchGridContainer ? window.getComputedStyle(pitchGridContainer).width : 'N/A',
+            styleWidth: pitchGridContainer?.style.width || 'not set'
+        },
+        timeSignatureDisplay: {
+            clientWidth: timeSignatureDisplay?.clientWidth + 'px',
+            computedWidth: timeSignatureDisplay ? window.getComputedStyle(timeSignatureDisplay).width : 'N/A',
+            styleWidth: timeSignatureDisplay?.style.width || 'not set'
+        },
+        canvasMacrobeatTools: {
+            clientWidth: canvasMacrobeatTools?.clientWidth + 'px',
+            computedWidth: canvasMacrobeatTools ? window.getComputedStyle(canvasMacrobeatTools).width : 'N/A',
+            styleWidth: canvasMacrobeatTools?.style.width || 'not set'
+        }
+    });
+    
     logger.debug('Layout Service', 'Container Width Sync', {
         pitchGridContainer: pitchGridContainer?.clientWidth + 'px',
+        pitchGridWrapper: pitchGridWrapper?.clientWidth + 'px',
         drumGridWrapper: drumGridWrapper?.clientWidth + 'px',
         harmonyAnalysisGrid: harmonyAnalysisGrid?.clientWidth + 'px',
         setTo: targetWidth,
-        allMatch: 'Containers synchronized with canvas widths'
+        strategy: 'Container controls wrapper width'
     }, 'layout');
     
     // Don't set grid-container width - let CSS and natural layout handle it
@@ -222,6 +268,33 @@ function recalcAndApplyLayout() {
             c.width = totalCanvasWidthPx; 
         }
     });
+    
+    // DEBUG: Check width behavior AFTER setting widths
+    setTimeout(() => {
+        console.log('🔍 [WIDTH DEBUG] After setting widths:', {
+            targetWidth,
+            pitchGridWrapper: {
+                clientWidth: pitchGridWrapper?.clientWidth + 'px',
+                computedWidth: pitchGridWrapper ? window.getComputedStyle(pitchGridWrapper).width : 'N/A',
+                styleWidth: pitchGridWrapper?.style.width || 'not set'
+            },
+            pitchGridContainer: {
+                clientWidth: pitchGridContainer?.clientWidth + 'px',
+                computedWidth: pitchGridContainer ? window.getComputedStyle(pitchGridContainer).width : 'N/A',
+                styleWidth: pitchGridContainer?.style.width || 'not set'
+            },
+            timeSignatureDisplay: {
+                clientWidth: timeSignatureDisplay?.clientWidth + 'px',
+                computedWidth: timeSignatureDisplay ? window.getComputedStyle(timeSignatureDisplay).width : 'N/A',
+                styleWidth: timeSignatureDisplay?.style.width || 'not set'
+            },
+            canvasMacrobeatTools: {
+                clientWidth: canvasMacrobeatTools?.clientWidth + 'px',
+                computedWidth: canvasMacrobeatTools ? window.getComputedStyle(canvasMacrobeatTools).width : 'N/A',
+                styleWidth: canvasMacrobeatTools?.style.width || 'not set'
+            }
+        });
+    }, 10); // Small delay to let DOM updates settle
     
     // Drum grid height scales with zoom but has minimum size
     const drumRowHeight = Math.max(BASE_DRUM_ROW_HEIGHT, DRUM_HEIGHT_SCALE_FACTOR * store.state.cellHeight);
@@ -255,20 +328,19 @@ function recalcAndApplyLayout() {
     // DEFER canvas height setting until containers stabilize
     setTimeout(() => {
         const finalPitchGridContainer = document.getElementById('pitch-grid-container');
-        const finalViewportHeight = finalPitchGridContainer.clientHeight;
+        const finalContainerHeight = finalPitchGridContainer.clientHeight;
         
         logger.debug('Layout Service', 'Canvas Heights (DEFERRED)', {
-            oldViewportHeight: viewportHeight,
-            finalViewportHeight,
+            finalContainerHeight,
             pitchGridContainer: finalPitchGridContainer?.clientHeight,
             pitchGridWrapper: pitchGridWrapper?.clientHeight
         }, 'layout');
 
         [canvas, playheadCanvas, hoverCanvas].forEach((c, index) => { 
-            if(c && Math.abs(c.height - finalViewportHeight) > 1) { 
+            if(c && Math.abs(c.height - finalContainerHeight) > 1) { 
                 const canvasNames = ['notation-grid', 'playhead-canvas', 'hover-canvas'];
-                logger.debug('Layout Service', `Setting ${canvasNames[index]} height (DEFERRED): ${c.height} → ${finalViewportHeight}`, null, 'layout');
-                c.height = finalViewportHeight; 
+                logger.debug('Layout Service', `Setting ${canvasNames[index]} height (DEFERRED): ${c.height} → ${finalContainerHeight}`, null, 'layout');
+                c.height = finalContainerHeight; 
             } 
         });
         
@@ -296,6 +368,7 @@ function recalcAndApplyLayout() {
     }, 50); // Small delay to ensure DOM updates are complete
     
     // Reset the recalculation flag
+    console.log('🏗️ [LAYOUT] Recalculation cycle completed');
     isRecalculating = false;
 }
 
@@ -356,11 +429,11 @@ const LayoutService = {
         const invertedDeltaY = -deltaY;
         
         // Convert pixel delta to scroll position delta
-        const totalRows = store.state.fullRowData.length;
-        const baseRowHeight = (viewportHeight / DEFAULT_VISIBLE_SEMITONES);
-        const rowHeight = baseRowHeight * currentZoomLevel;
-        const fullVirtualHeight = totalRows * rowHeight;
-        const paddedVirtualHeight = fullVirtualHeight + rowHeight;
+        const totalRanks = store.state.fullRowData.length;
+        const baseRankHeight = (viewportHeight / DEFAULT_VISIBLE_RANKS);
+        const rankHeight = baseRankHeight * currentZoomLevel;
+        const fullVirtualHeight = totalRanks * rankHeight;
+        const paddedVirtualHeight = fullVirtualHeight + rankHeight;
         const scrollableDist = Math.max(0, paddedVirtualHeight - viewportHeight);
         
         if (scrollableDist > 0) {
@@ -372,31 +445,43 @@ const LayoutService = {
     },
     
     getViewportInfo() {
-        const totalRows = store.state.fullRowData.length;
-        // Use base row height without zoom scaling to avoid double-scaling
-        const baseRowHeight = (viewportHeight / DEFAULT_VISIBLE_SEMITONES);
-        const rowHeight = baseRowHeight * currentZoomLevel;
-        const fullVirtualHeight = totalRows * rowHeight;
+        const totalRanks = store.state.fullRowData.length;
+        // Use cellHeight from state to ensure consistency with layout calculations
+        // For dual-parity grid: each rank is spaced at cellHeight/2 intervals
+        const cellHeight = store.state.cellHeight || (viewportHeight / DEFAULT_VISIBLE_RANKS);
+        const halfUnit = cellHeight / 2; // Dual-parity grid spacing
+        const fullVirtualHeight = totalRanks * halfUnit;
         
-        // Add padding to ensure first and last rows are fully visible
-        // Use half-row padding to prevent excess whitespace at bottom
-        const paddedVirtualHeight = fullVirtualHeight + (rowHeight * 0.5);
-        const scrollableDist = Math.max(0, paddedVirtualHeight - viewportHeight);
-        // Subtract full row height to align grid content properly with container bounds
-        const scrollOffset = (scrollableDist * currentScrollPosition) - rowHeight;
+        
+        // Use container height for scroll calculations and visible range
+        const pitchGridContainer = document.getElementById('pitch-grid-container');
+        const containerHeight = pitchGridContainer?.clientHeight || (viewportHeight * 0.7);
+        // Calculate effective visible height respecting zoom level
+        // At zoom 1.0, we should see DEFAULT_VISIBLE_RANKS (60) ranks
+        const baseVisibleHeight = DEFAULT_VISIBLE_RANKS * halfUnit;
+        const effectiveVisibleHeight = Math.min(containerHeight, baseVisibleHeight / currentZoomLevel);
+        
+        // Add padding to ensure first and last ranks are fully visible
+        const paddedVirtualHeight = fullVirtualHeight + halfUnit;
+        const scrollableDist = Math.max(0, paddedVirtualHeight - effectiveVisibleHeight);
+        const scrollOffset = scrollableDist * currentScrollPosition;
+        const startRank = Math.max(0, Math.floor(scrollOffset / halfUnit) - 2);
+        const visibleRankCount = effectiveVisibleHeight / halfUnit;
+        const endRank = Math.min(totalRanks - 1, Math.ceil(startRank + visibleRankCount + 2));
+        
 
-        const startRow = Math.max(0, Math.floor(scrollOffset / rowHeight) - 2);
-        const visibleRowCount = viewportHeight / rowHeight;
-        const endRow = Math.min(totalRows - 1, Math.ceil(startRow + visibleRowCount + 2));
 
         const info = {
             zoomLevel: currentZoomLevel,
             viewportHeight: viewportHeight,
-            rowHeight: rowHeight,
-            startRow: startRow,
-            endRow: endRow,
+            containerHeight: containerHeight,
+            cellHeight: cellHeight,
+            halfUnit: halfUnit,
+            startRank: startRank,
+            endRank: endRank,
             scrollOffset: scrollOffset
         };
+        
         return info;
     },
     

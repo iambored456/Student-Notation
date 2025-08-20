@@ -53,8 +53,8 @@ const StampsToolbar = {
         
         container.appendChild(grid);
         
-        // Set initial selection
-        this.selectStamp(this.selectedStampId);
+        // Set initial selection UI without triggering tool change during initialization
+        this.setInitialSelection(this.selectedStampId);
     },
 
     createStampButton(stamp, index) {
@@ -160,6 +160,21 @@ const StampsToolbar = {
         });
     },
 
+    setInitialSelection(stampId) {
+        // Set initial selection without triggering tool change during initialization
+        this.selectedStampId = stampId;
+        
+        // Update UI only
+        const container = document.getElementById('stamps-toolbar-container');
+        if (container) {
+            container.querySelectorAll('.stamp-button').forEach(btn => {
+                btn.classList.toggle('active', parseInt(btn.getAttribute('data-stamp-id')) === stampId);
+            });
+        }
+        
+        logger.info('StampsToolbar', `Initial stamp selection set to ${stampId} (no tool change during init)`, { stampId }, 'stamps');
+    },
+
     selectStamp(stampId) {
         this.selectedStampId = stampId;
         
@@ -171,7 +186,8 @@ const StampsToolbar = {
             });
         }
         
-        // Auto-select the stamp tool when a stamp is selected
+        // Auto-select the stamp tool when a stamp is selected (only after initialization)
+        console.log('🛠️ [STAMPS] Selecting stamp tool via proper action');
         store.setSelectedTool('stamp');
         
         // Emit event for other components

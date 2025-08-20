@@ -93,19 +93,20 @@
 
 /* Generic slider style for our new controls */
 #trail-thickness, #trail-opacity {
-    width: 60px;
-    height: 60px;
-    background-color: var(--c-surface);
-    border: 1px solid var(--c-border);
-    border-radius: var(--border-radius-md);
-    box-shadow: var(--box-shadow-sm);
+    width: 45px;  /* Exact size of the control */
+    height: 24px; /* Exact size of the control */
+    background: transparent;
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
     position: relative;
+    padding: 0;
 }
 
 /* Nexus UI override for paint controls */
 #trail-thickness svg, #trail-opacity svg {
-    width: 100% !important;
-    height: 100% !important;
+    width: 45px !important;
+    height: 24px !important;
 }
 
 #trail-thickness circle, #trail-opacity circle {
@@ -128,12 +129,12 @@
     background-color: var(--c-accent);
     color: var(--c-surface);
     border-radius: 50%;
-    width: 20px;
-    height: 20px;
+    width: 18px;
+    height: 18px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 0.7em;
+    font-size: 0.65em;
     font-weight: bold;
     pointer-events: none;
 }

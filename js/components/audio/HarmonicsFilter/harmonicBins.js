@@ -327,6 +327,60 @@ function handleBinPointerEvent(e, binIndex = null) {
     updateSliderVisuals();
 }
 
+// ✅ State synchronization validation helper
+function validateStateSync(localCoeffs, localPhases, storeTimbre, context) {
+    const storeCoeffs = storeTimbre.coeffs;
+    const storePhases = storeTimbre.phases || new Float32Array(storeCoeffs.length).fill(0);
+    
+    let coeffsMatch = true;
+    let phasesMatch = true;
+    
+    if (localCoeffs.length !== storeCoeffs.length) {
+        coeffsMatch = false;
+    } else {
+        for (let i = 0; i < localCoeffs.length; i++) {
+            if (Math.abs(localCoeffs[i] - storeCoeffs[i]) > 0.001) {
+                coeffsMatch = false;
+                break;
+            }
+        }
+    }
+    
+    if (localPhases.length !== storePhases.length) {
+        phasesMatch = false;
+    } else {
+        for (let i = 0; i < localPhases.length; i++) {
+            if (Math.abs(localPhases[i] - storePhases[i]) > 0.001) {
+                phasesMatch = false;
+                break;
+            }
+        }
+    }
+    
+    const isSync = coeffsMatch && phasesMatch;
+    
+    console.log(`🎵 [HARMONIC SYNC] ${context} validation:`, {
+        coeffsMatch,
+        phasesMatch,
+        isSync,
+        localCoeffsLength: localCoeffs.length,
+        storeCoeffsLength: storeCoeffs.length,
+        localPhasesLength: localPhases.length,
+        storePhasesLength: storePhases.length
+    });
+    
+    if (!isSync) {
+        console.warn(`⚠️ [HARMONIC SYNC] State mismatch detected in ${context}!`, {
+            localCoeffs: Array.from(localCoeffs).slice(0, 5), // First 5 for debug
+            storeCoeffs: Array.from(storeCoeffs).slice(0, 5),
+            localPhases: Array.from(localPhases).slice(0, 5),
+            storePhases: Array.from(storePhases).slice(0, 5)
+        });
+    }
+    
+    return isSync;
+}
+
 function updateForNewColor(color) {
     if (!color) return;
     currentColor = color;
@@ -341,6 +395,10 @@ function updateForNewColor(color) {
         logger.debug('HarmonicBins', 'updateForNewColor - timbre.coeffs', { coeffs: timbre.coeffs }, 'filter');
         logger.debug('HarmonicBins', 'updateForNewColor - timbre.phases', { phases: timbre.phases }, 'filter');
         
+        // Store old values for comparison
+        const oldCoeffs = coeffs ? Array.from(coeffs) : [];
+        const oldPhases = phases ? Array.from(phases) : [];
+        
         // Direct copy without zero threshold manipulation
         coeffs = new Float32Array(timbre.coeffs);
         
@@ -350,6 +408,14 @@ function updateForNewColor(color) {
         } else {
             phases = new Float32Array(coeffs.length).fill(0);
         }
+        
+        // ✅ Validate synchronization after update
+        validateStateSync(coeffs, phases, timbre, 'updateForNewColor');
+        
+        console.log('🎵 [HARMONIC UPDATE] State synchronized for color:', color, {
+            coeffsChanged: oldCoeffs.length !== coeffs.length || !oldCoeffs.every((v, i) => Math.abs(v - coeffs[i]) < 0.001),
+            phasesChanged: oldPhases.length !== phases.length || !oldPhases.every((v, i) => Math.abs(v - phases[i]) < 0.001)
+        });
         
         logger.debug('HarmonicBins', 'updateForNewColor - final coeffs', { coeffs }, 'filter');
         logger.debug('HarmonicBins', 'updateForNewColor - final phases', { phases }, 'filter');
@@ -564,7 +630,28 @@ export function initHarmonicBins() {
             
             // ALWAYS sync local coeffs with store to prevent drift (no threshold manipulation)
             logger.debug('HarmonicBins', 'Force syncing local coeffs with store', null, 'filter');
+            
+            // ✅ Validate state before sync
+            const wasSynced = validateStateSync(coeffs || new Float32Array(12), phases || new Float32Array(12), timbre, 'timbreChanged-before');
+            
             coeffs = new Float32Array(newCoeffs);
+            
+            // Always update phases (they change more frequently)
+            if (newPhases) {
+                phases = new Float32Array(newPhases);
+            } else {
+                phases = new Float32Array(coeffs.length).fill(0);
+            }
+            
+            // ✅ Validate state after sync
+            const isSyncedNow = validateStateSync(coeffs, phases, timbre, 'timbreChanged-after');
+            
+            console.log('🎵 [HARMONIC TIMBRE] State sync status:', {
+                wasSynced,
+                isSyncedNow,
+                coeffsChanged,
+                syncRecovered: !wasSynced && isSyncedNow
+            });
             
             if (coeffsChanged) {
                 logger.debug('HarmonicBins', 'Coefficients changed - updating visuals', null, 'filter');
@@ -573,13 +660,6 @@ export function initHarmonicBins() {
                 logger.debug('HarmonicBins', 'No coefficient changes detected - but local coeffs synced', null, 'filter');
                 // Still need to redraw overlay in case filter settings changed
                 drawFilterOverlay();
-            }
-            
-            // Always update phases (they change more frequently)
-            if (newPhases) {
-                phases = new Float32Array(newPhases);
-            } else {
-                phases = new Float32Array(coeffs.length).fill(0);
             }
             
             // Update phase button visuals

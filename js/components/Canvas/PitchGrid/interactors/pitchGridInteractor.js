@@ -176,7 +176,8 @@ function drawGhostNote(colIndex, rowIndex, isFaint = false) {
     
     if (toolType === 'tonicization') {
         const ghostTonic = { row: rowIndex, columnIndex: colIndex, tonicNumber: store.state.selectedToolTonicNumber };
-        drawTonicShape(pitchHoverCtx, store.state, ghostTonic);
+        const fullOptions = { ...store.state, zoomLevel: LayoutService.getViewportInfo().zoomLevel };
+        drawTonicShape(pitchHoverCtx, fullOptions, ghostTonic);
     } else if (toolType === 'note') { 
         // Create ghost note that snaps to grid positions like normal notes
         const ghostNote = { 
@@ -664,9 +665,10 @@ function handleMouseMove(e) {
                 lastHoveredOctaveRows = octaveRows;
 
                 pitchHoverCtx.globalAlpha = 0.5;
+                const fullOptions = { ...store.state, zoomLevel: LayoutService.getViewportInfo().zoomLevel };
                 octaveRows.forEach(rowIdx => {
                     const ghostTonic = { row: rowIdx, columnIndex: snapPoint.drawColumn, tonicNumber: store.state.selectedToolTonicNumber };
-                    drawTonicShape(pitchHoverCtx, store.state, ghostTonic);
+                    drawTonicShape(pitchHoverCtx, fullOptions, ghostTonic);
                 });
                 pitchHoverCtx.globalAlpha = 1.0;
             }

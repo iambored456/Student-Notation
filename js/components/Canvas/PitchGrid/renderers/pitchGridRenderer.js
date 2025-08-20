@@ -11,6 +11,7 @@ import { renderModulationMarkers } from './modulationRenderer.js';
 export function drawPitchGrid(ctx, options) {
     const fullOptions = { ...options, ...store.state };
     
+    
     // Debug modulation markers
     
     if (fullOptions.modulationMarkers && fullOptions.modulationMarkers.length > 0) {
@@ -20,6 +21,7 @@ export function drawPitchGrid(ctx, options) {
 
     // 1. Get the range of rows that are actually visible
     const { startRow, endRow } = getVisibleRowRange();
+    
     
     // 2. Pass the visible range to the renderers that draw row-based elements
     drawLegends(ctx, fullOptions, startRow, endRow);

@@ -76,3 +76,18 @@ export const getNotesInMacrobeat = (state, macrobeatIndex) => {
     const finalNotes = Array.from(allPitches);
     return finalNotes;
 };
+
+export const getUniqueNotesInRegion = (state, regionContext) => {
+    const allPitches = new Set();
+    const { startBeat, length } = regionContext;
+    
+    for (let i = 0; i < length; i++) {
+        const beatIndex = startBeat + i;
+        const notesAtThisBeat = getNotesAtBeat(state, beatIndex);
+        notesAtThisBeat.forEach(noteName => {
+            allPitches.add(Note.pitchClass(noteName));
+        });
+    }
+
+    return Array.from(allPitches);
+};

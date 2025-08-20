@@ -29,6 +29,7 @@ import TransportService from '../services/transportService.js';
 import domCache from '../services/domCache.js';
 import logger from '../utils/logger.js';
 import { initSpacebarHandler } from '../services/spacebarHandler.js';
+import { enableStateMutationDetection, snapshotState, checkForMutations, createProtectedStore } from '../utils/stateMutationGuard.js';
 import { initGridScrollHandler } from '../services/gridScrollHandler.js';
 import { initKeyboardHandler } from '../services/keyboardHandler.js';
 import scrollSyncService from '../services/scrollSyncService.js';
@@ -135,12 +136,67 @@ window.initAudio = async () => {
     }
 };
 
-document.addEventListener("DOMContentLoaded", () => {
+// ✅ Component readiness tracking for initialization order safeguards
+const componentReadiness = {
+    domCache: false,
+    layoutService: false,
+    canvasContextService: false,
+    synthEngine: false,
+    transportService: false,
+    scrollSync: false,
+    uiComponents: false,
+    audioComponents: false,
+    initialized: false
+};
+
+function markComponentReady(componentName) {
+    componentReadiness[componentName] = true;
+    console.log('🚀 [INIT] Component ready:', componentName, {
+        readiness: componentReadiness,
+        totalReady: Object.values(componentReadiness).filter(r => r).length,
+        totalComponents: Object.keys(componentReadiness).length
+    });
+}
+
+function waitForComponent(componentName, timeout = 5000) {
+    return new Promise((resolve, reject) => {
+        if (componentReadiness[componentName]) {
+            resolve();
+            return;
+        }
+        
+        const startTime = Date.now();
+        const checkReady = () => {
+            if (componentReadiness[componentName]) {
+                resolve();
+            } else if (Date.now() - startTime > timeout) {
+                reject(new Error(`Component ${componentName} not ready within ${timeout}ms`));
+            } else {
+                setTimeout(checkReady, 50);
+            }
+        };
+        checkReady();
+    });
+}
+
+document.addEventListener("DOMContentLoaded", async () => {
+    window.initStartTime = Date.now();
     logger.info('Main.js', 'DOMContentLoaded event fired');
     logger.section('STARTING INITIALIZATION');
+    console.log('🚀 [INIT] Starting initialization sequence');
+    
+    try {
+    
+    // ✅ Enable state mutation detection in development mode
+    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+        console.log('🛡️ [DEV MODE] Enabling state mutation detection');
+        enableStateMutationDetection();
+    }
     
     // Initialize DOM cache first
+    console.log('🚀 [INIT] Phase 1: Initializing DOM cache');
     domCache.init();
+    markComponentReady('domCache');
 
     // Setup user gesture handlers for audio initialization
     const setupAudioGesture = () => {
@@ -155,27 +211,52 @@ document.addEventListener("DOMContentLoaded", () => {
     setupAudioGesture();
 
     // Initialize core data and services
+    console.log('🚀 [INIT] Phase 2: Initializing core services');
+    
+    // ✅ Take initial state snapshot before any mutations
+    snapshotState(store.state);
+    
+    // TEMPORARY: This is the one allowed direct state mutation during initialization
     store.state.fullRowData = fullRowData;
+    console.log('🛡️ [STATE GUARD] Allowed initialization mutation: fullRowData assignment');
     
+    console.log('🚀 [INIT] Phase 2a: Initializing LayoutService');
     const contexts = LayoutService.init();
-    CanvasContextService.setContexts(contexts);
+    markComponentReady('layoutService');
     
+    console.log('🚀 [INIT] Phase 2b: Initializing CanvasContextService');
+    CanvasContextService.setContexts(contexts);
+    markComponentReady('canvasContextService');
+    
+    console.log('🚀 [INIT] Phase 2c: Initializing SynthEngine');
     SynthEngine.init();
+    markComponentReady('synthEngine');
+    
+    console.log('🚀 [INIT] Phase 2d: Initializing TransportService');
     TransportService.init();
+    markComponentReady('transportService');
+    
+    console.log('🚀 [INIT] Phase 2e: Initializing input handlers');
     initSpacebarHandler();
     initGridScrollHandler(); // This will now work correctly
     initKeyboardHandler();
     
-    // Initialize scroll synchronization after all grid components are ready
+    // Wait for core services before initializing scroll sync
+    await waitForComponent('layoutService');
+    await waitForComponent('canvasContextService');
+    console.log('🚀 [INIT] Phase 2f: Initializing scroll synchronization');
     scrollSyncService.init();
+    markComponentReady('scrollSync');
     
-    // Initialize UI components
+    // ✅ Check for unauthorized state mutations after core services
+    checkForMutations(store.state, 'core-services-initialization');
+    
+    // Wait for scroll sync before UI components  
+    await waitForComponent('scrollSync');
+    console.log('🚀 [INIT] Phase 3: Initializing UI components');
     Toolbar.init();
     GridManager.init();
     Harmony.init();
-    initAdsrComponent();
-    initHarmonicBins();
-    initFilterControls();
     PrintPreview.init();
     
     // Initialize Stamps Toolbar
@@ -183,6 +264,20 @@ document.addEventListener("DOMContentLoaded", () => {
     
     // Initialize Triplets Toolbar
     TripletsToolbar.init();
+    
+    markComponentReady('uiComponents');
+    
+    // Wait for UI components before audio components
+    await waitForComponent('uiComponents');
+    console.log('🚀 [INIT] Phase 4: Initializing audio components');
+    initAdsrComponent();
+    initHarmonicBins();
+    initFilterControls();
+    
+    markComponentReady('audioComponents');
+    
+    // ✅ Check for unauthorized state mutations after audio components
+    checkForMutations(store.state, 'audio-components-initialization');
     
     // Initialize Rhythm Tabs
     initRhythmTabs();
@@ -210,19 +305,41 @@ document.addEventListener("DOMContentLoaded", () => {
     initializeNewZoomSystem();
     setupDebugTools();
     
+    // Wait for all components before setting up event subscriptions
+    await waitForComponent('audioComponents');
+    console.log('🚀 [INIT] Phase 5: Setting up event subscriptions');
     logger.section('SETTING UP STATE SUBSCRIPTIONS');
     
     const renderAll = () => {
+        console.log('🔄 [EVENTS] renderAll() called - checking component readiness');
+        if (!componentReadiness.uiComponents) {
+            console.warn('⚠️ [EVENTS] UI components not ready, skipping render');
+            return;
+        }
         GridManager.renderPitchGrid();
         GridManager.renderDrumGrid();
         Harmony.render();
     };
 
-    store.on('notesChanged', renderAll);
-    store.on('stampPlacementsChanged', renderAll);
-    store.on('tripletPlacementsChanged', renderAll);
+    store.on('notesChanged', () => {
+        console.log('🔄 [EVENTS] notesChanged event received');
+        renderAll();
+    });
+    store.on('stampPlacementsChanged', () => {
+        console.log('🔄 [EVENTS] stampPlacementsChanged event received');
+        renderAll();
+    });
+    store.on('tripletPlacementsChanged', () => {
+        console.log('🔄 [EVENTS] tripletPlacementsChanged event received');
+        renderAll();
+    });
     store.on('modulationMarkersChanged', () => {
+        console.log('🔄 [EVENTS] modulationMarkersChanged event received');
         logger.event('Main', 'modulationMarkersChanged event received, recalculating layout', null, 'state');
+        if (!componentReadiness.layoutService) {
+            console.warn('⚠️ [EVENTS] LayoutService not ready, skipping layout recalculation');
+            return;
+        }
         LayoutService.recalculateLayout();
         logger.debug('Main', 'Layout recalculated for modulation, calling renderAll()', null, 'state');
         renderAll();
@@ -262,6 +379,12 @@ document.addEventListener("DOMContentLoaded", () => {
     store.setSelectedTool('note');
     store.setSelectedNote('circle', '#4a90e2');
     
+    markComponentReady('initialized');
+    console.log('🚀 [INIT] ✅ Initialization sequence completed successfully!', {
+        totalTime: Date.now() - (window.initStartTime || Date.now()),
+        allComponentsReady: Object.values(componentReadiness).every(r => r)
+    });
+    
     logger.section('INITIALIZATION COMPLETE');
     
     // Initialize modulation testing (keep for advanced debugging)
@@ -272,6 +395,31 @@ document.addEventListener("DOMContentLoaded", () => {
         if (LayoutService.getViewportInfo) {
         }
     }, 1000);
+    
+    } catch (error) {
+        console.error('❌ [INIT] Initialization failed:', error);
+        console.error('❌ [INIT] Component readiness at failure:', componentReadiness);
+        logger.error('Main.js', 'Initialization failed', error);
+        
+        // Show user-friendly error message
+        const errorDiv = document.createElement('div');
+        errorDiv.style.cssText = `
+            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            background: #ff4444; color: white; padding: 20px; border-radius: 8px;
+            z-index: 10000; font-family: monospace; max-width: 80vw;
+        `;
+        errorDiv.innerHTML = `
+            <h3>🚫 Initialization Error</h3>
+            <p>The application failed to initialize properly.</p>
+            <details>
+                <summary>Technical Details</summary>
+                <pre>${error.message}</pre>
+                <pre>Stack: ${error.stack}</pre>
+            </details>
+            <button onclick="location.reload()">Reload Page</button>
+        `;
+        document.body.appendChild(errorDiv);
+    }
 });
 
 // Rhythm Tabs Functionality

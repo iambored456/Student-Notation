@@ -77,17 +77,20 @@ class PitchPaintService {
 
   startDetection() {
     if (!this.isInitialized || store.state.paint.isDetecting) return;
-    store.state.paint.isDetecting = true;
+    // ✅ FIXED: Use proper action instead of direct state mutation
     console.log('🎨 [PitchPaintService] Starting detection loop.');
-    console.log('🎨 [PitchPaintService] Paint state:', store.state.paint);
+    console.log('🎨 [PitchPaintService] Paint state before:', store.state.paint);
     console.log('🎨 [PitchPaintService] Config:', this.config);
     console.log('🎨 [PitchPaintService] Pitchy detector initialized:', !!this.detector);
+    store.setPaintDetectionState(true);
     this.animationLoop();
   }
 
   stopDetection() {
     if (!store.state.paint.isDetecting) return;
-    store.state.paint.isDetecting = false;
+    // ✅ FIXED: Use proper action instead of direct state mutation
+    console.log('🎨 [PitchPaintService] Stopping detection, current state:', store.state.paint.isDetecting);
+    store.setPaintDetectionState(false);
     if (this.animationFrameId) {
       cancelAnimationFrame(this.animationFrameId);
       this.animationFrameId = null;

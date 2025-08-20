@@ -96,7 +96,7 @@ const RhythmService = {
             const centerX = (startX + endX) / 2;
 
 
-            buttons.push({ type: 'grouping', content: group, x: centerX, y: 0, index });
+            buttons.push({ type: 'grouping', content: group, x: centerX, y: 20, index });
 
             if (index < store.state.macrobeatGroupings.length - 1) {
                 const style = store.state.macrobeatBoundaryStyles[index];
@@ -106,7 +106,7 @@ const RhythmService = {
                     case 'anacrusis': content = 'x'; break;
                     default: content = '○'; break;
                 }
-                buttons.push({ type: 'boundary', content, x: endX, y: 22, index });
+                buttons.push({ type: 'boundary', content, x: endX, y: 35, index });
             }
         });
         

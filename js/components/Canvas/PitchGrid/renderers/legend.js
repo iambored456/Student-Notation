@@ -17,6 +17,7 @@ function drawSpecialBorder(ctx, x, y, width, style) {
 export function drawLegends(ctx, options) {
     const { fullRowData, columnWidths, cellWidth, cellHeight, colorMode } = options;
     const { sharp, flat } = store.state.accidentalMode;
+    
 
     const processLabel = (label) => {
         if (!label.includes('/')) return label;
@@ -38,6 +39,7 @@ export function drawLegends(ctx, options) {
         const xStart = getColumnX(startCol, options);
         const colWidthsPx = columnWidths.slice(startCol, startCol + 2).map(w => w * cellWidth);
         let cumulativeX = xStart;
+        
 
         columnsOrder.forEach((colLabel, colIndex) => {
             const colWidth = colWidthsPx[colIndex];
@@ -87,6 +89,7 @@ export function drawLegends(ctx, options) {
         });
     }
 
+    
     drawLegendColumn(0, ['B', 'A']);
     drawLegendColumn(columnWidths.length - 2, ['A', 'B']);
 }
