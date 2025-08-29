@@ -8,14 +8,12 @@
 @import url('style/base/typography.css');
 @import url('style/layout/appLayout.css');
 @import url('style/layout/toolbarLayout.css');
-@import url('style/layout/toolbar/timbreToolbar.css');
-@import url('style/layout/toolbar/pitchToolbar.css');
-@import url('style/layout/toolbar/rhythmToolbar.css');
 @import url('style/layout/canvasLayout.css');
 
 /* --- Main UI Sections --- */
 @import url('style/layout/sidebarLayout.css');
 @import url('style/components/modals/printPreview.css');
+@import url('style/components/notifications/notification.css');
 @import url('style/components/print/printStyles.css');
 
 /* --- Component-Specific Styles --- */
@@ -37,8 +35,7 @@
 @import url('style/components/paint/pitchPainting.css');
 @import url('style/components/paint/meterEffects.css');
 @import url('style/components/audio/adsrEnvelope.css');
-@import url('style/components/audio/harmonicBins.css');
-@import url('style/components/audio/filterControls.css');
+@import url('style/components/audio/harmonicsFilter.css');
 @import url('style/components/waveform/waveformVisualizer.css');
 
 /* --- UI States --- */

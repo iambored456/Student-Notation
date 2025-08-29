@@ -7,13 +7,14 @@
   min-width: fit-content; /* Allow shrinking below 100% viewport when JS sets smaller width */
   display: flex;
   flex-direction: column;
-  flex: 1 0 auto;
+  flex: 1;
   min-height: 200px;
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: hidden;
   position: relative;
 }
 
-#time-signature-display, #canvas-macrobeat-tools {
+#canvas-macrobeat-tools {
     flex-shrink: 0; 
 }
 
@@ -24,6 +25,7 @@
   overflow-x: visible; 
   overflow-y: hidden;
   min-height: 0;
+  background-color: white;
 }
 
 #grid-container {
@@ -48,24 +50,6 @@
   pointer-events: none;
 }
 
-#harmonyAnalysisGrid {
-  flex: 0 0 auto;
-  width: fit-content;
-  height: fit-content;
-  position: relative;
-  background-color: var(--c-surface);
-  border-left: 1px solid var(--c-border);
-  border-right: 1px solid var(--c-border);
-  display: flex;
-  flex-direction: column;
-}
-
-#analysis-degree-canvas,
-#analysis-roman-canvas {
-  display: block;
-  width: 100%;
-  flex: 1;
-}
 
 
 #drum-grid-wrapper {
@@ -75,8 +59,6 @@
   overflow: hidden;
   position: relative;
   background-color: var(--c-surface);
-  border: 1px solid var(--c-border);
-  border-top: none;
   border-radius: 0 0 var(--border-radius-md) var(--border-radius-md);
 }
 

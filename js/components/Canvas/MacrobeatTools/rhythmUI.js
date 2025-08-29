@@ -44,5 +44,5 @@ export function renderRhythmUI() {
         container.appendChild(btn);
     });
     
-    console.log('[RHYTHM-UI] renderRhythmUI() complete');
+    // renderRhythmUI() complete
 }

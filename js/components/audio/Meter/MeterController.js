@@ -26,7 +26,7 @@ class MeterController {
   initialize() {
     if (this.isInitialized) return;
     
-    console.log('📊 [MeterController] Starting initialization...');
+    // Starting initialization
     
     this.cacheDOMElements();
     this.setupEventListeners();
@@ -36,15 +36,11 @@ class MeterController {
     store.on('micPaintStateChanged', (isActive) => this.handlePitchPaintingToggle(isActive));
     
     this.isInitialized = true;
-    console.log('📊 [MeterController] Initialization complete. Elements found:', {
-      meterWrapper: !!this.meterWrapper,
-      meterPlaceholder: !!this.meterPlaceholder,
-      settingsPanel: !!this.settingsPanel
-    });
+    // Initialization complete
   }
 
   cacheDOMElements() {
-    console.log('🔍 [MeterController] Caching DOM elements...');
+    // console.log('🔍 [MeterController] Caching DOM elements...');
     
     this.meterWrapper = document.getElementById('mic-meter-wrapper');
     this.meterPlaceholder = document.getElementById('meter-placeholder');
@@ -58,21 +54,10 @@ class MeterController {
     this.calibrateBtn = document.getElementById('meter-calibrate-btn');
     this.resetBtn = document.getElementById('meter-reset-btn');
     
-    console.log('🔍 [MeterController] DOM Elements status:', {
-      meterWrapper: this.meterWrapper ? 'found' : 'NOT FOUND',
-      meterPlaceholder: this.meterPlaceholder ? 'found' : 'NOT FOUND',
-      settingsBtn: this.settingsBtn ? 'found' : 'NOT FOUND',
-      settingsPanel: this.settingsPanel ? 'found' : 'NOT FOUND'
-    });
+    // DOM Elements status logged
     
     if (this.meterWrapper) {
-      console.log('🔍 [MeterWrapper] Current state:', {
-        innerHTML: this.meterWrapper.innerHTML.substring(0, 100) + '...',
-        classList: Array.from(this.meterWrapper.classList),
-        clientWidth: this.meterWrapper.clientWidth,
-        clientHeight: this.meterWrapper.clientHeight,
-        style: this.meterWrapper.style.cssText
-      });
+      // MeterWrapper current state logged
     }
   }
 
@@ -103,7 +88,7 @@ class MeterController {
   }
 
   async handlePitchPaintingToggle(isActive) {
-    console.log('📊 [Meter] Pitch painting toggled:', isActive);
+    // console.log('📊 [Meter] Pitch painting toggled:', isActive);
     
     if (isActive) {
       await this.startMeter();
@@ -113,25 +98,21 @@ class MeterController {
   }
 
   async startMeter() {
-    console.log('📊 [MeterController] startMeter() called');
+    // console.log('📊 [MeterController] startMeter() called');
     
     if (this.meter) {
-      console.log('📊 [MeterController] Meter already running');
+      // console.log('📊 [MeterController] Meter already running');
       return;
     }
 
     try {
-      console.log('📊 [MeterController] Checking microphone access...');
+      // console.log('📊 [MeterController] Checking microphone access...');
       // Check if microphone access is available
       await this.ensureMicrophoneAccess();
       
       // Get the current audio context and mic source from PitchPaintService
       const audioContext = Tone.context;
-      console.log('📊 [MeterController] Audio context state:', {
-        exists: !!audioContext,
-        state: audioContext ? audioContext.state : 'no context',
-        sampleRate: audioContext ? audioContext.sampleRate : 'no context'
-      });
+      // Audio context state logged
       
       if (!audioContext || audioContext.state === 'suspended') {
         throw new Error('Audio context not available or suspended');
@@ -139,14 +120,14 @@ class MeterController {
 
       // We need to tap into the existing microphone stream
       // This should be done non-intrusively so we don't affect pitch detection
-      console.log('📊 [MeterController] Creating meter from existing mic...');
+      // console.log('📊 [MeterController] Creating meter from existing mic...');
       await this.createMeterFromExistingMic();
       
       this.updateUI();
-      console.log('🎉 [MeterController] Meter started successfully!');
+      // console.log('🎉 [MeterController] Meter started successfully!');
       
     } catch (error) {
-      console.error('❌ [MeterController] Failed to start meter:', error);
+      // console.error('❌ [MeterController] Failed to start meter:', error);
       this.handleMeterError(error);
     }
   }
@@ -167,7 +148,7 @@ class MeterController {
   }
 
   async createMeterFromExistingMic() {
-    console.log('📊 [Meter] Creating custom meter from existing mic...');
+    // console.log('📊 [Meter] Creating custom meter from existing mic...');
     
     if (!this.meterWrapper) {
       throw new Error('Meter wrapper not found - cannot create meter');
@@ -178,7 +159,7 @@ class MeterController {
     
     // Get the dimensions based on current size setting
     const dimensions = this.getMeterDimensions();
-    console.log('📊 [Meter] Dimensions:', dimensions);
+    // console.log('📊 [Meter] Dimensions:', dimensions);
     
     // Import custom Meter class and PitchPaintService
     const Meter = (await import('./Meter.js')).default;
@@ -201,9 +182,9 @@ class MeterController {
         floorDb: this.settings.noiseFloor,
         ceilingDb: 5
       });
-      console.log('📊 [Meter] Custom meter created successfully');
+      // console.log('📊 [Meter] Custom meter created successfully');
     } catch (meterError) {
-      console.error('❌ [Meter] Failed to create custom meter:', meterError);
+      // console.error('❌ [Meter] Failed to create custom meter:', meterError);
       throw meterError;
     }
 
@@ -211,9 +192,9 @@ class MeterController {
     try {
       this.meter.connect(PitchPaintService.micSplitter);
       this.meterSource = PitchPaintService.micSplitter;
-      console.log('📊 [Meter] Connected to mic splitter successfully');
+      // console.log('📊 [Meter] Connected to mic splitter successfully');
     } catch (connectionError) {
-      console.error('❌ [Meter] Audio connection failed:', connectionError);
+      // console.error('❌ [Meter] Audio connection failed:', connectionError);
       throw connectionError;
     }
     
@@ -221,7 +202,7 @@ class MeterController {
     this.meterWrapper.classList.add('active');
     this.meterWrapper.classList.remove('error');
     
-    console.log('✅ [Meter] Meter fully created and connected');
+    // console.log('✅ [Meter] Meter fully created and connected');
   }
 
   stopMeter() {
@@ -252,7 +233,7 @@ class MeterController {
     
     this.meterWrapper.classList.remove('active');
     this.updateUI();
-    console.log('MeterController: Custom Meter stopped');
+    // console.log('MeterController: Custom Meter stopped');
   }
 
   getMeterDimensions() {
@@ -407,10 +388,10 @@ class MeterController {
         this.calibrateBtn.disabled = false;
       }, 1500);
       
-      console.log('MeterController: Auto-calibration complete (simulated), noise floor:', this.settings.noiseFloor);
+      // console.log('MeterController: Auto-calibration complete (simulated), noise floor:', this.settings.noiseFloor);
       
     } catch (error) {
-      console.error('Calibration failed:', error);
+      // console.error('Calibration failed:', error);
       this.calibrateBtn.textContent = 'Auto-Calibrate';
       this.calibrateBtn.disabled = false;
     }
@@ -440,7 +421,7 @@ class MeterController {
     this.meterWrapper.classList.add('error');
     
     // Log the error for debugging
-    console.error('MeterController: Error occurred:', error);
+    // console.error('MeterController: Error occurred:', error);
     
     // Show retry option for permission errors
     if (error.message.includes('denied') || error.message.includes('permission')) {
@@ -515,7 +496,7 @@ To enable the microphone level meter:
   dispose() {
     this.stopMeter();
     this.isInitialized = false;
-    console.log('MeterController: Disposed');
+    // console.log('MeterController: Disposed');
   }
 }
 

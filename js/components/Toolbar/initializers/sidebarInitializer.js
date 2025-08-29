@@ -1,5 +1,6 @@
 // js/components/Toolbar/initializers/sidebarInitializer.js
 import store from '../../../state/index.js';
+import LayoutService from '../../../services/layoutService.js';
 
 function initAnacrusisToggle() {
     const anacrusisOnBtn = document.getElementById('anacrusis-on-btn');
@@ -18,6 +19,27 @@ function initAnacrusisToggle() {
     // Set initial state
     anacrusisOnBtn.classList.toggle('active', store.state.hasAnacrusis);
     anacrusisOffBtn.classList.toggle('active', !store.state.hasAnacrusis);
+}
+
+function initGridVisibilityToggles() {
+    const drumGridToggleBtn = document.getElementById('hide-drumgrid-toggle');
+    const drumGridWrapper = document.getElementById('drum-grid-wrapper');
+
+    // State tracking for grid visibility
+    let isDrumGridVisible = true;
+
+    // Drum Grid Toggle
+    if (drumGridToggleBtn && drumGridWrapper) {
+        drumGridToggleBtn.addEventListener('click', () => {
+            isDrumGridVisible = !isDrumGridVisible;
+            drumGridWrapper.style.display = isDrumGridVisible ? 'flex' : 'none';
+            drumGridToggleBtn.querySelector('.sidebar-button-text').textContent = 
+                isDrumGridVisible ? 'Hide Drum Grid' : 'Show Drum Grid';
+            
+            // Recalculate layout to make other containers expand
+            setTimeout(() => LayoutService.recalculateLayout(), 10);
+        });
+    }
 }
 
 export function initSidebarAndVolume() {
@@ -64,4 +86,7 @@ export function initSidebarAndVolume() {
     
     // Initialize the anacrusis toggle from the "Rhythm" tab
     initAnacrusisToggle();
+    
+    // Initialize grid visibility toggles
+    initGridVisibilityToggles();
 }

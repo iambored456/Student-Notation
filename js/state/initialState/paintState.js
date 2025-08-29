@@ -9,7 +9,9 @@ export function getInitialPaintState() {
     paintSettings: {
       thickness: 6,
       opacity: 80,
-      minClarity: 0.1  // Very low threshold for sensitive detection
+      minClarity: 0.1,  // Very low threshold for sensitive detection
+      colorMode: 'chromatic',  // 'chromatic' or 'shapenote'
+      playbackEnabled: true  // Whether paint is played back during transport
     }
   };
 }

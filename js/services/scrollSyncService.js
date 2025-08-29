@@ -8,7 +8,6 @@ class ScrollSyncService {
         this.canvasContainer = null;
         this.pitchGridWrapper = null;
         this.drumGridWrapper = null;
-        this.harmonyAnalysisGrid = null;
         this.isInitialized = false;
         
         // Prevent infinite scroll loops
@@ -21,7 +20,6 @@ class ScrollSyncService {
         this.canvasContainer = document.getElementById('canvas-container');
         this.pitchGridWrapper = document.getElementById('pitch-grid-wrapper');
         this.drumGridWrapper = document.getElementById('drum-grid-wrapper');
-        this.harmonyAnalysisGrid = document.getElementById('harmonyAnalysisGrid');
 
         if (!this.canvasContainer || !this.pitchGridWrapper || !this.drumGridWrapper) {
             console.error('ScrollSyncService: Required elements not found');
@@ -45,7 +43,6 @@ class ScrollSyncService {
         const allSyncTargets = [
             ...scrollableContainers,
             this.drumGridWrapper,
-            this.harmonyAnalysisGrid
         ].filter(el => el !== null);
 
         // Listen to scroll events on all potential containers
@@ -100,7 +97,6 @@ class ScrollSyncService {
             this.pitchGridWrapper,
             document.getElementById('pitch-grid-container'),
             this.drumGridWrapper,
-            this.harmonyAnalysisGrid
         ].filter(el => el !== null);
         
         this.syncAllTargets(null, scrollLeft, allTargets);

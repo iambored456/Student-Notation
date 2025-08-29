@@ -69,14 +69,26 @@ function findMeasureSnapPoint(columnIndex) {
 }
 
 // --- Chord Calculation Logic (with Enharmonic Correction) ---
-function getChordNotesFromIntervals(rootNote) {
-    const { activeChordIntervals } = store.state;
+function getChordNotesFromIntervals(rootNote, clickedRowIndex) {
+    const { activeChordIntervals, isIntervalsInverted, chordPositionState } = store.state;
     if (!rootNote || !activeChordIntervals || activeChordIntervals.length === 0) return [];
     
-    return activeChordIntervals.map(interval => {
+    // For 2-note intervals: inversion means placing second note below cursor
+    if (isIntervalsInverted && activeChordIntervals.length === 2 && activeChordIntervals[0] === '1P') {
+        const interval = activeChordIntervals[1];
+        const invertedInterval = '-' + interval;
+        const transposedNote = Note.transpose(rootNote, invertedInterval);
+        const simplifiedNote = Note.simplify(transposedNote);
+        const correctedNote = simplifiedNote.includes('#') ? 
+            Note.enharmonic(simplifiedNote).includes('b') ? Note.enharmonic(simplifiedNote) : simplifiedNote :
+            simplifiedNote;
+        return [rootNote, correctedNote];
+    }
+    
+    // Generate all chord tones first
+    const chordTones = activeChordIntervals.map(interval => {
         const transposedNote = Note.transpose(rootNote, interval);
         const simplifiedNote = Note.simplify(transposedNote);
-
         if (simplifiedNote.includes('#')) {
             const flatEquivalent = Note.enharmonic(simplifiedNote);
             if (flatEquivalent.includes('b')) {
@@ -85,6 +97,48 @@ function getChordNotesFromIntervals(rootNote) {
         }
         return simplifiedNote;
     });
+    
+    // For chords (3+ notes): inversion means reordering chord tones
+    if (activeChordIntervals.length >= 3 && chordPositionState > 0) {
+        // Apply chord inversion by rotating the array
+        const inverted = [...chordTones];
+        for (let i = 0; i < chordPositionState; i++) {
+            const first = inverted.shift();
+            // Move the inverted note up an octave by transposing it
+            const octaveUp = Note.transpose(first, '8P');
+            inverted.push(Note.simplify(octaveUp));
+        }
+        
+        // Now transpose the entire chord so the bass note (first note) matches the clicked position
+        const bassNote = inverted[0]; // This is the bass note of the inversion
+        const targetNote = rootNote; // This is where the user clicked
+        
+        // Calculate the interval needed to move the bass note to the cursor position
+        const bassNoteMidi = Note.midi(bassNote);
+        const targetNoteMidi = Note.midi(targetNote);
+        
+        // Find the octave adjustment needed to get the bass note close to the target
+        let octaveAdjustment = 0;
+        let adjustedBassMidi = bassNoteMidi;
+        
+        // Move bass note to the same octave as target or just below
+        while (adjustedBassMidi > targetNoteMidi) {
+            adjustedBassMidi -= 12;
+            octaveAdjustment -= 12;
+        }
+        while (adjustedBassMidi + 12 <= targetNoteMidi) {
+            adjustedBassMidi += 12;
+            octaveAdjustment += 12;
+        }
+        
+        // Apply the octave adjustment to all chord tones
+        return inverted.map(note => {
+            const adjustedMidi = Note.midi(note) + octaveAdjustment;
+            return Note.fromMidi(adjustedMidi);
+        });
+    }
+    
+    return chordTones;
 }
 
 // --- Hover Drawing Logic ---
@@ -95,7 +149,7 @@ function drawHoverHighlight(colIndex, rowIndex, color) {
     const fullOptions = { ...store.state, zoomLevel: LayoutService.getViewportInfo().zoomLevel };
     const x = getColumnX(colIndex, fullOptions);
     const centerY = getRowY(rowIndex, store.state);
-    const y = centerY - (store.state.cellHeight / 2);
+    const y = centerY - (store.state.cellHeight / 2); // Center the full-height highlight on the rank
     
 
     const toolType = store.state.selectedTool;
@@ -164,7 +218,7 @@ function drawHoverHighlight(colIndex, rowIndex, color) {
     
     
     pitchHoverCtx.fillStyle = color;
-    pitchHoverCtx.fillRect(x, y, highlightWidth, store.state.cellHeight);
+    pitchHoverCtx.fillRect(x, y, highlightWidth, store.state.cellHeight); // Full height to cover rank space
 }
 
 function drawGhostNote(colIndex, rowIndex, isFaint = false) {
@@ -230,14 +284,6 @@ function handleMouseDown(e) {
         const eraseEndCol = colIndex + 2 - 1;
         const eraseStartRow = rowIndex - 1;
         const eraseEndRow = rowIndex + 1;
-        console.log('[RIGHT CLICK STAMP ERASE] Attempting to erase stamps in area:', {
-            colIndex,
-            rowIndex,
-            eraseStartCol: colIndex,
-            eraseEndCol,
-            eraseStartRow,
-            eraseEndRow
-        });
         if (store.eraseStampsInArea(colIndex, eraseEndCol, eraseStartRow, eraseEndRow)) rightClickActionTaken = true;
         
         // Also erase triplets with right-click
@@ -283,7 +329,7 @@ function handleMouseDown(e) {
             
             const rootNote = getPitchForRow(rowIndex);
             if (!rootNote) return;
-            const chordNotes = getChordNotesFromIntervals(rootNote);
+            const chordNotes = getChordNotesFromIntervals(rootNote, rowIndex);
             const { shape, color } = store.state.selectedNote;
 
             // NEW: Trigger audio preview for all notes in the chord
@@ -298,7 +344,6 @@ function handleMouseDown(e) {
 
             // Place chord notes and track them for dragging
             activeChordNotes = [];
-            console.log('[CHORD DEBUG] Placing chord notes:', chordNotes);
             chordNotes.forEach(noteName => {
                 const noteRow = store.state.fullRowData.findIndex(r => r.toneNote === noteName);
                 if (noteRow !== -1) {
@@ -306,16 +351,13 @@ function handleMouseDown(e) {
                     const addedNote = store.addNote(newNote);
                     if (addedNote) {
                         activeChordNotes.push(addedNote);
-                        console.log('[CHORD DEBUG] Added chord note:', { noteName, noteRow, addedNote });
                     } else {
-                        console.log('[CHORD DEBUG] Skipped duplicate chord note:', { noteName, noteRow, color });
                     }
                 }
             });
             
             // Enable dragging for chord shapes
             isDragging = true;
-            console.log('[CHORD DEBUG] Enabled dragging, activeChordNotes:', activeChordNotes.length);
             
             // Don't record state immediately - wait for drag to complete
             return;
@@ -337,13 +379,6 @@ function handleMouseDown(e) {
         }
 
         if (toolType === 'eraser') {
-            console.log('[ERASER] Using eraser tool at:', {
-                mouseX: x,
-                mouseY: y,
-                colIndex, 
-                rowIndex,
-                scrollOffset: scrollLeft
-            });
             
             isEraserDragActive = true; // Enable drag mode for eraser
             
@@ -354,36 +389,17 @@ function handleMouseDown(e) {
             const eraseStartRow = rowIndex - 1; // Eraser starts 1 row above
             const eraseEndRow = rowIndex + 1; // Eraser covers 3 rows: row-1, row, row+1
             
-            console.log('[STAMP ERASE] Eraser area:', { 
-                colIndex, 
-                rowIndex, 
-                eraseStartCol: colIndex, 
-                eraseEndCol, 
-                eraseStartRow, 
-                eraseEndRow 
-            });
             
             const removedStamps = removeStampsInEraserArea(colIndex, eraseEndCol, eraseStartRow, eraseEndRow);
-            console.log('[STAMP ERASE] Removed stamps:', removedStamps);
             
             // Also remove triplets that intersect with the eraser area
             const removedTriplets = eraseTripletGroups(colIndex, eraseEndCol, eraseStartRow, eraseEndRow);
-            console.log('[TRIPLET ERASE] Removed triplets:', removedTriplets);
             return;
         }
         
         if (toolType === 'stamp') {
             const selectedStamp = StampsToolbar.getSelectedStamp();
             if (selectedStamp) {
-                console.log('[STAMP PLACE] Placing stamp:', {
-                    stampId: selectedStamp.id,
-                    mouseX: x,
-                    mouseY: y,
-                    colIndex,
-                    rowIndex,
-                    pitch: getPitchForRow(rowIndex),
-                    scrollOffset: scrollLeft
-                });
                 
                 const { color } = store.state.selectedNote;
                 placeStamp(selectedStamp.id, colIndex, rowIndex, color);
@@ -403,15 +419,6 @@ function handleMouseDown(e) {
         if (toolType === 'triplet') {
             const selectedTriplet = TripletsToolbar.getSelectedTripletStamp();
             if (selectedTriplet) {
-                console.log('[TRIPLET PLACE] Placing triplet:', {
-                    stampId: selectedTriplet.id,
-                    mouseX: x,
-                    mouseY: y,
-                    colIndex,
-                    rowIndex,
-                    pitch: getPitchForRow(rowIndex),
-                    scrollOffset: scrollLeft
-                });
                 
                 // Convert column index to cell index for triplets (cell = 2 microbeats)
                 const cellIndex = Math.floor(colIndex / 2);
@@ -596,7 +603,7 @@ function handleMouseMove(e) {
     if (store.state.selectedTool === 'chord') {
         const ghostRootNote = getPitchForRow(rowIndex);
         if (ghostRootNote) {
-            const finalNotes = getChordNotesFromIntervals(ghostRootNote);
+            const finalNotes = getChordNotesFromIntervals(ghostRootNote, rowIndex);
             const { shape, color } = store.state.selectedNote;
             
             pitchHoverCtx.globalAlpha = 0.4;
@@ -694,14 +701,6 @@ function handleMouseMove(e) {
             // Show stamp preview
             const selectedStamp = StampsToolbar.getSelectedStamp();
             if (selectedStamp) {
-                console.log('[STAMP HOVER] Preview at:', {
-                    mouseX: x,
-                    mouseY: y,
-                    colIndex,
-                    rowIndex,
-                    pitch: getPitchForRow(rowIndex),
-                    scrollOffset: scrollLeft
-                });
                 
                 const options = {
                     cellWidth: store.state.cellWidth,
@@ -715,14 +714,6 @@ function handleMouseMove(e) {
             // Show triplet preview
             const selectedTriplet = TripletsToolbar.getSelectedTripletStamp();
             if (selectedTriplet) {
-                console.log('[TRIPLET HOVER] Preview at:', {
-                    mouseX: x,
-                    mouseY: y,
-                    colIndex,
-                    rowIndex,
-                    pitch: getPitchForRow(rowIndex),
-                    scrollOffset: scrollLeft
-                });
                 
                 // Convert column index to cell index for triplet preview
                 const cellIndex = Math.floor(colIndex / 2);

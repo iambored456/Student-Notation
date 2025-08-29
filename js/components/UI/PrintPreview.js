@@ -43,9 +43,11 @@ const PrintPreview = {
     },
     
     show() {
-        // ✅ FIXED: Use proper action instead of direct state mutation
         console.log('🖨️ [PRINT PREVIEW] Showing preview');
-        store.setPrintPreviewActive(true);
+        // Only update state if not already active to prevent circular events
+        if (!store.state.isPrintPreviewActive) {
+            store.setPrintPreviewActive(true);
+        }
         this.overlay.classList.remove('hidden');
         
         const pitchNotes = store.state.placedNotes.filter(n => !n.isDrum);
@@ -68,9 +70,11 @@ const PrintPreview = {
     },
 
     hide() {
-        // ✅ FIXED: Use proper action instead of direct state mutation  
         console.log('🖨️ [PRINT PREVIEW] Hiding preview');
-        store.setPrintPreviewActive(false);
+        // Only update state if currently active to prevent circular events
+        if (store.state.isPrintPreviewActive) {
+            store.setPrintPreviewActive(false);
+        }
         this.overlay.classList.add('hidden');
     },
 

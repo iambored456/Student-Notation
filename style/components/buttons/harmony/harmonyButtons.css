@@ -5,7 +5,7 @@
 /* --- Accidental Toggle Buttons --- */
 #accidental-controls-container-v2 { display: flex; justify-content: center; gap: var(--space-2); }
 .accidental-button {
-    width: 40px; height: 40px; font-size: 22px; font-weight: bold; padding: 0;
+    width: 30px; height: 30px; font-size: 18px; font-weight: bold; padding: 0;
     line-height: 1; border: 1px solid var(--c-border); border-radius: var(--border-radius-sm);
     background-color: var(--c-surface); color: var(--c-text); opacity: 0.6;
 }
@@ -119,6 +119,238 @@
     background-color: var(--c-surface); color: var(--c-text);
     border: 1px solid var(--c-border); border-radius: var(--border-radius-sm);
     font-size: 18px; font-weight: bold; min-height: 40px;
+}
+
+/* --- Intervals Panel Layout --- */
+.intervals-layout {
+    display: flex;
+    gap: var(--space-2);
+    align-items: flex-start;
+}
+
+.inversion-column {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-2);
+    flex: 0 0 auto;
+}
+
+.inversion-column h4 {
+    margin: 0;
+    color: var(--c-text-muted);
+    font-size: 0.8em;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    text-align: center;
+}
+
+.toggle-switch {
+    width: 20px;
+    height: 40px;
+    background-color: var(--c-border);
+    border-radius: 10px;
+    position: relative;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.toggle-switch.active {
+    background-color: var(--c-accent);
+}
+
+.toggle-slider {
+    width: 16px;
+    height: 16px;
+    background-color: var(--c-surface);
+    border-radius: 50%;
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    transition: transform 0.3s ease;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.toggle-switch.active .toggle-slider {
+    transform: translateY(20px);
+}
+
+/* --- Chords Panel Layout --- */
+.chords-layout {
+    display: flex;
+    gap: var(--space-2);
+    align-items: flex-start;
+}
+
+.chord-inversion-column {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-2);
+    flex: 0 0 auto;
+}
+
+.chord-inversion-column h4 {
+    margin: 0;
+    color: var(--c-text-muted);
+    font-size: 0.8em;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    text-align: center;
+}
+
+/* --- 3-State Toggle Switch - Vertical --- */
+.three-state-toggle {
+    width: 20px;
+    height: 60px;
+    background-color: var(--c-border);
+    border-radius: 10px;
+    position: relative;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.three-state-toggle.state-1 {
+    background-color: var(--c-accent);
+}
+
+.three-state-toggle.state-2 {
+    background-color: var(--c-warning);
+}
+
+.three-state-slider {
+    width: 16px;
+    height: 16px;
+    background-color: var(--c-surface);
+    border-radius: 50%;
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    transition: transform 0.3s ease;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.three-state-toggle.state-1 .three-state-slider {
+    transform: translateY(20px);
+}
+
+.three-state-toggle.state-2 .three-state-slider {
+    transform: translateY(40px);
+}
+
+.state-labels {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    height: 60px;
+    margin-left: var(--space-3);
+    position: absolute;
+    left: 100%;
+    top: 0;
+    font-size: 0.6em;
+    color: var(--c-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+.state-label {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    height: 20px;
+}
+
+/* --- 4-State Toggle Switch - Vertical --- */
+.four-state-toggle {
+    width: 20px;
+    height: 80px;
+    background-color: var(--c-border);
+    border-radius: 10px;
+    position: relative;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.four-state-toggle.state-1 {
+    background-color: var(--c-accent);
+}
+
+.four-state-toggle.state-2 {
+    background-color: var(--c-warning);
+}
+
+.four-state-toggle.state-3 {
+    background-color: var(--c-danger);
+}
+
+.four-state-slider {
+    width: 16px;
+    height: 16px;
+    background-color: var(--c-surface);
+    border-radius: 50%;
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    transition: transform 0.3s ease;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.four-state-toggle.state-1 .four-state-slider {
+    transform: translateY(20px);
+}
+
+.four-state-toggle.state-2 .four-state-slider {
+    transform: translateY(40px);
+}
+
+.four-state-toggle.state-3 .four-state-slider {
+    transform: translateY(60px);
+}
+
+.state-labels-4 {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    height: 80px;
+    margin-left: var(--space-3);
+    position: absolute;
+    left: 100%;
+    top: 0;
+    font-size: 0.6em;
+    color: var(--c-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+.state-labels-4 .state-label {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    height: 20px;
+}
+
+/* --- Utility Classes --- */
+.hidden {
+    display: none;
+}
+
+.intervals-grid-column,
+.chords-grid-column {
+    flex: 1;
+}
+
+/* --- Intervals 4x4 Grid Specific Styles --- */
+.intervals-4x4-grid {
+    gap: 2px;
+}
+.intervals-4x4-grid .harmony-preset-button {
+    width: 40px;
+    height: 30px;
+    min-height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
 }
 .harmony-preset-button:hover { background-color: var(--c-border); }
 

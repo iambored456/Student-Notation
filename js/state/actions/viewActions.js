@@ -58,7 +58,6 @@ export const viewActions = {
     
     // Layout & Viewport
     setLayoutConfig(config) {
-        console.log('🔧 [STATE] setLayoutConfig called with:', config);
         const oldConfig = {
             cellWidth: this.state.cellWidth,
             cellHeight: this.state.cellHeight,
@@ -68,13 +67,11 @@ export const viewActions = {
         let hasChanges = false;
         
         if (config.cellWidth !== undefined && this.state.cellWidth !== config.cellWidth) {
-            console.log('🔧 [STATE] cellWidth changed:', this.state.cellWidth, '->', config.cellWidth);
             this.state.cellWidth = config.cellWidth;
             hasChanges = true;
         }
         
         if (config.cellHeight !== undefined && this.state.cellHeight !== config.cellHeight) {
-            console.log('🔧 [STATE] cellHeight changed:', this.state.cellHeight, '->', config.cellHeight);
             this.state.cellHeight = config.cellHeight;
             hasChanges = true;
         }
@@ -83,14 +80,12 @@ export const viewActions = {
             const oldWidths = JSON.stringify(this.state.columnWidths || []);
             const newWidths = JSON.stringify(config.columnWidths);
             if (oldWidths !== newWidths) {
-                console.log('🔧 [STATE] columnWidths changed:', this.state.columnWidths?.length || 0, '->', config.columnWidths.length, 'columns');
                 this.state.columnWidths = [...config.columnWidths];
                 hasChanges = true;
             }
         }
         
         if (hasChanges) {
-            console.log('🔧 [STATE] Layout config updated, emitting layoutConfigChanged');
             this.emit('layoutConfigChanged', {
                 oldConfig,
                 newConfig: {
@@ -100,14 +95,20 @@ export const viewActions = {
                 }
             });
         } else {
-            console.log('🔧 [STATE] No layout changes detected, skipping emission');
         }
     },
     
     setGridPosition(newPosition) {
-        const maxPosition = this.state.fullRowData.length - (this.state.visualRows * 2);
+        const maxPosition = this.state.fullRowData.length - (this.state.viewportRows * 2);
         const clampedPosition = Math.max(0, Math.min(newPosition, maxPosition));
         if (this.state.gridPosition !== clampedPosition) {
+            console.log('🎯 [STORE] Grid position changed:', {
+                oldPosition: this.state.gridPosition,
+                newPosition: clampedPosition,
+                maxPosition,
+                viewportRows: this.state.viewportRows,
+                source: 'setGridPosition'
+            });
             this.state.gridPosition = clampedPosition;
             this.emit('layoutConfigChanged');
         }
@@ -124,7 +125,6 @@ export const viewActions = {
     setPrintPreviewActive(isActive) {
         const wasActive = this.state.isPrintPreviewActive;
         this.state.isPrintPreviewActive = isActive;
-        console.log('🖨️ [PRINT STATE] Preview active state changed:', wasActive, '->', isActive);
         this.emit('printPreviewStateChanged', isActive);
     },
 };

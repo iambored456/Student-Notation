@@ -10,7 +10,7 @@ let stateSnapshot = null;
  */
 export function enableStateMutationDetection() {
     isDevMode = true;
-    console.log('🛡️ [STATE GUARD] State mutation detection enabled');
+    // State mutation detection enabled
 }
 
 /**
@@ -18,7 +18,7 @@ export function enableStateMutationDetection() {
  */
 export function disableStateMutationDetection() {
     isDevMode = false;
-    console.log('🛡️ [STATE GUARD] State mutation detection disabled');
+    // State mutation detection disabled
 }
 
 /**
@@ -34,7 +34,7 @@ function createStateSnapshot(state) {
             return value;
         }));
     } catch (error) {
-        console.warn('🛡️ [STATE GUARD] Failed to create state snapshot:', error);
+        // Failed to create state snapshot
         return null;
     }
 }
@@ -137,7 +137,7 @@ export function snapshotState(state) {
     if (!isDevMode) return;
     
     stateSnapshot = createStateSnapshot(state);
-    console.log('🛡️ [STATE GUARD] State snapshot taken');
+    // State snapshot taken
 }
 
 /**
@@ -182,13 +182,10 @@ export function checkForMutations(currentState, actionName = 'unknown') {
                 timestamp: Date.now()
             });
         } else {
-            console.log('🛡️ [STATE GUARD] Non-critical state changes detected:', {
-                action: actionName,
-                allowedMutations: mutations.length
-            });
+            // Non-critical state changes detected
         }
     } else {
-        console.log('🛡️ [STATE GUARD] No mutations detected for action:', actionName);
+        // No mutations detected
     }
     
     // Update snapshot for next check
@@ -207,7 +204,7 @@ export function getMutationLog() {
  */
 export function clearMutationLog() {
     mutationLog = [];
-    console.log('🛡️ [STATE GUARD] Mutation log cleared');
+    // Mutation log cleared
 }
 
 /**

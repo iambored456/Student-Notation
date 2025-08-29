@@ -2,12 +2,26 @@
 
 #canvas-macrobeat-tools {
   position: relative;
-  height: 2em;
+  display: flex;
+  flex-direction: column;
   margin-block-end: var(--space-1);
+}
+
+#canvas-macrobeat-tools #accidental-controls-container-v2 {
+  position: absolute;
+  right: 100%;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 10;
+  margin-right: var(--space-1);
 }
 #time-signature-display {
   height: 20px;
   width: 100%;
+  position: relative;
+}
+#beat-line-controls {
+  height: 2em;
   position: relative;
 }
 .rhythm-ui-button {
@@ -31,8 +45,6 @@
 }
 .time-signature-label {
   background: rgba(255, 255, 255, 0.5);
-  padding-block: 4px;
-  padding-inline: var(--space-3);
   border-radius: 12px;
   font-weight: bold;
   font-size: 1.1em;
@@ -40,6 +52,7 @@
   user-select: none;
   position: absolute;
   transform: translateX(-50%);
+  top: var(--time-sig-vertical-offset, 0.25rem);
   backdrop-filter: blur(2px);
   border: 2px solid var(--c-border);
 }

@@ -1,6 +1,6 @@
 // js/services/tonalService.js
 import { Note, Interval, Scale, Chord, RomanNumeral, Progression } from 'tonal';
-import { getKeyContextForBeat } from '../state/selectors.js';
+import { getKeyContextForColumn } from '../state/selectors.js';
 
 
 function formatInterval(interval) {
@@ -17,7 +17,7 @@ function formatInterval(interval) {
 
 const TonalService = {
     getDegreeForNote(note, state) {
-        const { keyTonic } = getKeyContextForBeat(state, note.startColumnIndex);
+        const { keyTonic } = getKeyContextForColumn(state, note.startColumnIndex);
         if (!keyTonic) return null;
         const notePitch = state.fullRowData[note.row]?.toneNote;
         if (!notePitch) return null;

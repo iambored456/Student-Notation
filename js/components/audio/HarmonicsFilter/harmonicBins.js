@@ -359,15 +359,6 @@ function validateStateSync(localCoeffs, localPhases, storeTimbre, context) {
     
     const isSync = coeffsMatch && phasesMatch;
     
-    console.log(`🎵 [HARMONIC SYNC] ${context} validation:`, {
-        coeffsMatch,
-        phasesMatch,
-        isSync,
-        localCoeffsLength: localCoeffs.length,
-        storeCoeffsLength: storeCoeffs.length,
-        localPhasesLength: localPhases.length,
-        storePhasesLength: storePhases.length
-    });
     
     if (!isSync) {
         console.warn(`⚠️ [HARMONIC SYNC] State mismatch detected in ${context}!`, {
@@ -412,10 +403,6 @@ function updateForNewColor(color) {
         // ✅ Validate synchronization after update
         validateStateSync(coeffs, phases, timbre, 'updateForNewColor');
         
-        console.log('🎵 [HARMONIC UPDATE] State synchronized for color:', color, {
-            coeffsChanged: oldCoeffs.length !== coeffs.length || !oldCoeffs.every((v, i) => Math.abs(v - coeffs[i]) < 0.001),
-            phasesChanged: oldPhases.length !== phases.length || !oldPhases.every((v, i) => Math.abs(v - phases[i]) < 0.001)
-        });
         
         logger.debug('HarmonicBins', 'updateForNewColor - final coeffs', { coeffs }, 'filter');
         logger.debug('HarmonicBins', 'updateForNewColor - final phases', { phases }, 'filter');
@@ -646,12 +633,6 @@ export function initHarmonicBins() {
             // ✅ Validate state after sync
             const isSyncedNow = validateStateSync(coeffs, phases, timbre, 'timbreChanged-after');
             
-            console.log('🎵 [HARMONIC TIMBRE] State sync status:', {
-                wasSynced,
-                isSyncedNow,
-                coeffsChanged,
-                syncRecovered: !wasSynced && isSyncedNow
-            });
             
             if (coeffsChanged) {
                 logger.debug('HarmonicBins', 'Coefficients changed - updating visuals', null, 'filter');

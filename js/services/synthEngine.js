@@ -173,7 +173,9 @@ const SynthEngine = {
     },
 
     async playNote(pitch, duration, time = Tone.now()) {
-        await Tone.start();
+        // Use global audio initialization to ensure user gesture compliance
+        const audioInit = window.initAudio || (() => Tone.start());
+        await audioInit();
         const color = store.state.selectedNote.color;
         const synth = synths[color];
         if (synth) {

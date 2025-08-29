@@ -2,7 +2,7 @@
 import * as Tone from 'tone';
 import { PitchDetector } from 'pitchy';
 import store from '../state/index.js';
-import { Note } from 'tonal'; // NEW: Import Tonal for MIDI to Note conversion
+import { Note } from 'tonal';
 
 class PitchPaintService {
   constructor() {
@@ -15,59 +15,49 @@ class PitchPaintService {
     this.lastLogTime = 0;
     this.logThrottleMs = 5000; // Only log every 5 seconds
 
+    // Pitch filtering for noise reduction
+    this.pitchHistory = []; // Store last few pitch values with timestamps
+    this.maxHistoryLength = 3;
+    this.maxPitchJumpSemitones = 24; // Maximum allowed pitch jump in semitones
+    this.maxJumpTimeMs = 20; // Time window for detecting jumps
+
     this.config = {
       FFT_SIZE: 2048,
-      MIN_PITCH_HZ: 60,
-      MAX_PITCH_HZ: 1600,
-      MIN_VOLUME_DB: -60
+      MIN_PITCH_HZ: 75,
+      MAX_PITCH_HZ: 1300,
+      MIN_VOLUME_DB: -50
     };
 
   }
 
   async initialize() {
     if (this.isInitialized) return;
-    console.log('PitchPaintService: Starting initialization...');
     try {
-      console.log('PitchPaintService: Starting Tone.js...');
-      await Tone.start();
+      // Use global audio initialization to ensure user gesture compliance
+      const audioInit = window.initAudio || (() => Tone.start());
+      await audioInit();
       
-      console.log('PitchPaintService: Creating UserMedia...');
       this.mic = new Tone.UserMedia();
       
-      console.log('PitchPaintService: Creating Analyser...');
       this.analyser = new Tone.Analyser('waveform', this.config.FFT_SIZE);
       
-      console.log('PitchPaintService: Creating gain node for microphone...');
       this.micGain = new Tone.Gain(2.0); // Amplify mic input
       
-      console.log('🔍 [Pitchy] Initializing PitchDetector with analyser size:', this.analyser.size);
-      console.log('🔍 [Pitchy] PitchDetector class available:', !!PitchDetector);
-      console.log('🔍 [Pitchy] PitchDetector.forFloat32Array method:', typeof PitchDetector.forFloat32Array);
       
       this.detector = PitchDetector.forFloat32Array(this.analyser.size);
       
-      console.log('🎯 [Pitchy] Detector created successfully:', {
-        detectorExists: !!this.detector,
-        detectorType: this.detector ? this.detector.constructor.name : 'null',
-        analyserSize: this.analyser.size,
-        fftSize: this.config.FFT_SIZE
-      });
       
       // Create a splitter for non-intrusive meter tapping
-      console.log('PitchPaintService: Creating splitter...');
       this.micSplitter = new Tone.Gain(1.0);
       
-      console.log('PitchPaintService: Requesting microphone access...');
       await this.mic.open();
       
       // Connect: mic -> gain -> splitter -> analyser (for pitch detection)
-      console.log('PitchPaintService: Connecting audio chain...');
       this.mic.connect(this.micGain);
       this.micGain.connect(this.micSplitter);
       this.micSplitter.connect(this.analyser);
       
       this.isInitialized = true;
-      console.log('PitchPaintService: Initialized successfully');
     } catch (error) {
       console.error('PitchPaintService: Failed to initialize microphone:', error);
       store.setMicPaintActive(false);
@@ -78,10 +68,6 @@ class PitchPaintService {
   startDetection() {
     if (!this.isInitialized || store.state.paint.isDetecting) return;
     // ✅ FIXED: Use proper action instead of direct state mutation
-    console.log('🎨 [PitchPaintService] Starting detection loop.');
-    console.log('🎨 [PitchPaintService] Paint state before:', store.state.paint);
-    console.log('🎨 [PitchPaintService] Config:', this.config);
-    console.log('🎨 [PitchPaintService] Pitchy detector initialized:', !!this.detector);
     store.setPaintDetectionState(true);
     this.animationLoop();
   }
@@ -89,12 +75,10 @@ class PitchPaintService {
   stopDetection() {
     if (!store.state.paint.isDetecting) return;
     // ✅ FIXED: Use proper action instead of direct state mutation
-    console.log('🎨 [PitchPaintService] Stopping detection, current state:', store.state.paint.isDetecting);
     store.setPaintDetectionState(false);
     if (this.animationFrameId) {
       cancelAnimationFrame(this.animationFrameId);
       this.animationFrameId = null;
-      console.log('PitchPaintService: Stopped detection loop.');
     }
   }
 
@@ -125,7 +109,6 @@ class PitchPaintService {
         
         // Log successful pitch detections occasionally
         if (pitch && clarity > 0.1 && now - this.lastLogTime > this.logThrottleMs) {
-          console.log('🎯 [Pitch] Detected:', pitch.toFixed(1) + 'Hz, clarity:', clarity.toFixed(2));
           this.lastLogTime = now;
         }
       } catch (error) {
@@ -143,9 +126,37 @@ class PitchPaintService {
 
     if (isValidPitch) {
       const midi = this.frequencyToMidi(pitch);
-      const pitchData = { frequency: pitch, clarity: clarity, midi: midi, pitchClass: Math.round(midi) % 12, timestamp: now };
       
-      store.setDetectedPitch(pitchData);
+      // Apply pitch jump filtering
+      if (this.isPitchJumpValid(midi, now)) {
+        this.addPitchToHistory(midi, now);
+        const smoothedMidi = this.getSmoothedPitch();
+        
+        const pitchData = { 
+          frequency: pitch, 
+          clarity: clarity, 
+          midi: smoothedMidi, 
+          pitchClass: Math.round(smoothedMidi) % 12, 
+          timestamp: now 
+        };
+        
+        store.setDetectedPitch(pitchData);
+      } else {
+        // Pitch jump was too large - use previous smoothed value or nothing
+        const smoothedMidi = this.getSmoothedPitch();
+        if (smoothedMidi !== null) {
+          const pitchData = { 
+            frequency: pitch, 
+            clarity: clarity, 
+            midi: smoothedMidi, 
+            pitchClass: Math.round(smoothedMidi) % 12, 
+            timestamp: now 
+          };
+          store.setDetectedPitch(pitchData);
+        } else {
+          store.setDetectedPitch({ frequency: 0, clarity: 0, midi: 0, pitchClass: 0, timestamp: now });
+        }
+      }
     } else {
       store.setDetectedPitch({ frequency: 0, clarity: 0, midi: 0, pitchClass: 0, timestamp: now });
     }
@@ -157,26 +168,57 @@ class PitchPaintService {
     return 12 * Math.log2(frequency / 440) + 69;
   }
 
+  // Add pitch to history and check for validity
+  addPitchToHistory(midi, timestamp) {
+    this.pitchHistory.push({ midi, timestamp });
+    
+    // Keep only recent history
+    if (this.pitchHistory.length > this.maxHistoryLength) {
+      this.pitchHistory.shift();
+    }
+  }
+
+  // Check if a pitch jump is too large/fast (indicating noise)
+  isPitchJumpValid(newMidi, timestamp) {
+    if (this.pitchHistory.length === 0) return true; // First pitch is always valid
+    
+    const lastPitch = this.pitchHistory[this.pitchHistory.length - 1];
+    const timeDiff = timestamp - lastPitch.timestamp;
+    const semitoneDiff = Math.abs(newMidi - lastPitch.midi);
+    
+    // Allow large jumps if enough time has passed
+    if (timeDiff > this.maxJumpTimeMs) return true;
+    
+    // Reject jumps that are too large in too short a time
+    if (semitoneDiff > this.maxPitchJumpSemitones) {
+      console.log('🚫 [Filter] Pitch jump rejected:', 
+                  semitoneDiff.toFixed(1), 'semitones in', timeDiff.toFixed(0) + 'ms');
+      return false;
+    }
+    
+    return true;
+  }
+
+  // Get smoothed pitch from recent history (median filtering)
+  getSmoothedPitch() {
+    if (this.pitchHistory.length < 3) {
+      return this.pitchHistory.length > 0 ? this.pitchHistory[this.pitchHistory.length - 1].midi : null;
+    }
+    
+    // Use median of last 3 pitches for smoothing
+    const recentPitches = this.pitchHistory.slice(-3).map(p => p.midi).sort((a, b) => a - b);
+    return recentPitches[1]; // Middle value
+  }
+
   // Debug method to test microphone input
   testMicrophoneInput() {
     if (!this.isInitialized) {
-      console.log('❌ [MicTest] PitchPaintService not initialized');
-      return false;
+        return false;
     }
 
     const waveform = this.analyser.getValue();
     const rms = Math.sqrt(waveform.reduce((sum, val) => sum + val * val, 0) / waveform.length);
     
-    console.log('🎤 [MicTest] Microphone Test Results:', {
-      isInitialized: this.isInitialized,
-      micOpen: this.mic && this.mic.state === 'started',
-      contextState: Tone.context.state,
-      sampleRate: Tone.context.sampleRate,
-      waveformLength: waveform.length,
-      rms: rms.toFixed(6),
-      hasInput: rms > 0.0001,
-      suggestion: rms <= 0.0001 ? 'Try speaking, singing, or making noise near your microphone' : 'Microphone is detecting audio!'
-    });
 
     return rms > 0.0001;
   }
@@ -198,7 +240,6 @@ class PitchPaintService {
     this.analyser = null;
     this.detector = null;
     this.isInitialized = false;
-    console.log('PitchPaintService: Disposed.');
   }
 }
 

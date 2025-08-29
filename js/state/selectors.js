@@ -29,9 +29,9 @@ export const getMacrobeatInfo = (state, macrobeatIndex) => {
 export const getPitchNotes = (state) => state.placedNotes.filter(n => !n.isDrum);
 export const getDrumNotes = (state) => state.placedNotes.filter(n => n.isDrum);
 
-export const getKeyContextForBeat = (state, beatIndex) => {
+export const getKeyContextForColumn = (state, columnIndex) => {
     const allTonicSigns = getPlacedTonicSigns(state);
-    const relevantTonicSigns = allTonicSigns.filter(ts => ts.columnIndex <= beatIndex);
+    const relevantTonicSigns = allTonicSigns.filter(ts => ts.columnIndex <= columnIndex);
 
     if (relevantTonicSigns.length === 0) {
         return { keyTonic: 'C', keyMode: 'major' };
@@ -44,18 +44,18 @@ export const getKeyContextForBeat = (state, beatIndex) => {
     return { keyTonic, keyMode };
 };
 
-export const getNotesAtBeat = (state, beatIndex) => {
+export const getNotesAtColumn = (state, columnIndex) => {
     const notes = [];
     const { fullRowData, placedNotes, placedChords } = state;
 
     placedNotes.forEach(note => {
-        if (!note.isDrum && beatIndex >= note.startColumnIndex && beatIndex <= note.endColumnIndex) {
+        if (!note.isDrum && columnIndex >= note.startColumnIndex && columnIndex <= note.endColumnIndex) {
             const pitch = fullRowData[note.row]?.toneNote;
             if (pitch) notes.push(pitch);
         }
     });
     placedChords.forEach(chord => {
-        if (chord.position.xBeat === beatIndex) {
+        if (chord.position.xBeat === columnIndex) {
             notes.push(...chord.notes);
         }
     });
@@ -67,8 +67,8 @@ export const getNotesInMacrobeat = (state, macrobeatIndex) => {
     const { startColumn, endColumn } = getMacrobeatInfo(state, macrobeatIndex);
     
     for (let i = startColumn; i <= endColumn; i++) {
-        const notesAtThisBeat = getNotesAtBeat(state, i);
-        notesAtThisBeat.forEach(noteName => {
+        const notesAtThisColumn = getNotesAtColumn(state, i);
+        notesAtThisColumn.forEach(noteName => {
             allPitches.add(Note.pitchClass(noteName));
         });
     }
@@ -82,9 +82,9 @@ export const getUniqueNotesInRegion = (state, regionContext) => {
     const { startBeat, length } = regionContext;
     
     for (let i = 0; i < length; i++) {
-        const beatIndex = startBeat + i;
-        const notesAtThisBeat = getNotesAtBeat(state, beatIndex);
-        notesAtThisBeat.forEach(noteName => {
+        const columnIndex = startBeat + i;
+        const notesAtThisColumn = getNotesAtColumn(state, columnIndex);
+        notesAtThisColumn.forEach(noteName => {
             allPitches.add(Note.pitchClass(noteName));
         });
     }

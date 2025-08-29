@@ -30,13 +30,11 @@ import domCache from '../services/domCache.js';
 import logger from '../utils/logger.js';
 import { initSpacebarHandler } from '../services/spacebarHandler.js';
 import { enableStateMutationDetection, snapshotState, checkForMutations, createProtectedStore } from '../utils/stateMutationGuard.js';
-import { initGridScrollHandler } from '../services/gridScrollHandler.js';
 import { initKeyboardHandler } from '../services/keyboardHandler.js';
 import scrollSyncService from '../services/scrollSyncService.js';
 import Toolbar from '../components/Toolbar/Toolbar.js';
 import GridManager from '../components/Canvas/PitchGrid/gridManager.js';
 import PitchGridController from '../components/Canvas/PitchGrid/PitchGrid.js';
-import Harmony from '../components/Canvas/HarmonyAnalysis/Harmony.js';
 import { initHarmonicBins } from '../components/audio/HarmonicsFilter/harmonicBins.js';
 import { initAdsrComponent } from '../components/audio/ADSR/adsrComponent.js';
 import { initFilterControls } from '../components/audio/HarmonicsFilter/filterControls.js';
@@ -48,6 +46,7 @@ import simpleEffectsTest from '../components/audio/Effects/simpleEffectsTest.js'
 import PaintCanvas from '../components/PitchPaint/paintCanvas.js';
 import PaintPlayheadRenderer from '../components/PitchPaint/paintPlayheadRenderer.js';
 import PaintControls from '../components/PitchPaint/paintControls.js';
+import PaintPlaybackService from '../services/paintPlaybackService.js';
 
 // Meter Components
 import MeterController from '../components/audio/Meter/MeterController.js';
@@ -120,21 +119,47 @@ function setupDebugTools() {
 
 // Global audio initialization function
 let audioInitialized = false;
+let audioInitPromise = null;
 window.initAudio = async () => {
     if (audioInitialized) return true;
-    try {
-        // Only start if the context is not already running
-        if (Tone.context.state !== 'running') {
-            await Tone.start();
-            logger.info('Main.js', 'AudioContext started successfully');
+    if (audioInitPromise) return audioInitPromise; // Return existing promise to prevent multiple attempts
+    
+    audioInitPromise = (async () => {
+        try {
+            // Only start if the context is not already running
+            if (Tone.context.state !== 'running') {
+                await Tone.start();
+                logger.info('Main.js', 'AudioContext started successfully');
+            }
+            audioInitialized = true;
+            return true;
+        } catch (e) {
+            logger.error('Main.js', 'Could not start AudioContext', e);
+            audioInitPromise = null; // Reset promise on failure so it can be retried
+            return false;
         }
-        audioInitialized = true;
-        return true;
-    } catch (e) {
-        logger.error('Main.js', 'Could not start AudioContext', e);
-        return false;
+    })();
+    
+    return audioInitPromise;
+};
+
+// Auto-initialize audio on first user interaction to prevent console warnings
+let userInteractionReceived = false;
+const initAudioOnInteraction = () => {
+    if (!userInteractionReceived) {
+        userInteractionReceived = true;
+        window.initAudio().catch(e => console.warn('Failed to initialize audio:', e));
+        // Remove listeners after first interaction
+        document.removeEventListener('click', initAudioOnInteraction, true);
+        document.removeEventListener('keydown', initAudioOnInteraction, true);
+        document.removeEventListener('touchstart', initAudioOnInteraction, true);
     }
 };
+
+// Listen for any user interaction to initialize audio
+document.addEventListener('click', initAudioOnInteraction, true);
+document.addEventListener('keydown', initAudioOnInteraction, true);
+document.addEventListener('touchstart', initAudioOnInteraction, true);
 
 // ✅ Component readiness tracking for initialization order safeguards
 const componentReadiness = {
@@ -151,11 +176,7 @@ const componentReadiness = {
 
 function markComponentReady(componentName) {
     componentReadiness[componentName] = true;
-    console.log('🚀 [INIT] Component ready:', componentName, {
-        readiness: componentReadiness,
-        totalReady: Object.values(componentReadiness).filter(r => r).length,
-        totalComponents: Object.keys(componentReadiness).length
-    });
+    // Component ready
 }
 
 function waitForComponent(componentName, timeout = 5000) {
@@ -183,18 +204,18 @@ document.addEventListener("DOMContentLoaded", async () => {
     window.initStartTime = Date.now();
     logger.info('Main.js', 'DOMContentLoaded event fired');
     logger.section('STARTING INITIALIZATION');
-    console.log('🚀 [INIT] Starting initialization sequence');
+    // Starting initialization sequence
     
     try {
     
     // ✅ Enable state mutation detection in development mode
     if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-        console.log('🛡️ [DEV MODE] Enabling state mutation detection');
+        // Enabling state mutation detection
         enableStateMutationDetection();
     }
     
     // Initialize DOM cache first
-    console.log('🚀 [INIT] Phase 1: Initializing DOM cache');
+    // Phase 1: Initializing DOM cache
     domCache.init();
     markComponentReady('domCache');
 
@@ -211,40 +232,39 @@ document.addEventListener("DOMContentLoaded", async () => {
     setupAudioGesture();
 
     // Initialize core data and services
-    console.log('🚀 [INIT] Phase 2: Initializing core services');
+    // Phase 2: Initializing core services
     
     // ✅ Take initial state snapshot before any mutations
     snapshotState(store.state);
     
     // TEMPORARY: This is the one allowed direct state mutation during initialization
     store.state.fullRowData = fullRowData;
-    console.log('🛡️ [STATE GUARD] Allowed initialization mutation: fullRowData assignment');
+    // Allowed initialization mutation: fullRowData assignment
     
-    console.log('🚀 [INIT] Phase 2a: Initializing LayoutService');
+    // Phase 2a: Initializing LayoutService
     const contexts = LayoutService.init();
     markComponentReady('layoutService');
     
-    console.log('🚀 [INIT] Phase 2b: Initializing CanvasContextService');
+    // Phase 2b: Initializing CanvasContextService
     CanvasContextService.setContexts(contexts);
     markComponentReady('canvasContextService');
     
-    console.log('🚀 [INIT] Phase 2c: Initializing SynthEngine');
+    // Phase 2c: Initializing SynthEngine
     SynthEngine.init();
     markComponentReady('synthEngine');
     
-    console.log('🚀 [INIT] Phase 2d: Initializing TransportService');
+    // Phase 2d: Initializing TransportService
     TransportService.init();
     markComponentReady('transportService');
     
-    console.log('🚀 [INIT] Phase 2e: Initializing input handlers');
+    // Phase 2e: Initializing input handlers
     initSpacebarHandler();
-    initGridScrollHandler(); // This will now work correctly
     initKeyboardHandler();
     
     // Wait for core services before initializing scroll sync
     await waitForComponent('layoutService');
     await waitForComponent('canvasContextService');
-    console.log('🚀 [INIT] Phase 2f: Initializing scroll synchronization');
+    // Phase 2f: Initializing scroll synchronization
     scrollSyncService.init();
     markComponentReady('scrollSync');
     
@@ -253,10 +273,9 @@ document.addEventListener("DOMContentLoaded", async () => {
     
     // Wait for scroll sync before UI components  
     await waitForComponent('scrollSync');
-    console.log('🚀 [INIT] Phase 3: Initializing UI components');
+    // Phase 3: Initializing UI components
     Toolbar.init();
     GridManager.init();
-    Harmony.init();
     PrintPreview.init();
     
     // Initialize Stamps Toolbar
@@ -269,7 +288,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     
     // Wait for UI components before audio components
     await waitForComponent('uiComponents');
-    console.log('🚀 [INIT] Phase 4: Initializing audio components');
+    // Phase 4: Initializing audio components
     initAdsrComponent();
     initHarmonicBins();
     initFilterControls();
@@ -298,6 +317,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     PaintCanvas.initialize();
     PaintPlayheadRenderer.initialize();
     PaintControls.initialize();
+    await PaintPlaybackService.initialize();
+    window.PaintPlaybackService = PaintPlaybackService;
     MeterController.initialize();
     logger.initSuccess('Paint components');
     
@@ -307,34 +328,29 @@ document.addEventListener("DOMContentLoaded", async () => {
     
     // Wait for all components before setting up event subscriptions
     await waitForComponent('audioComponents');
-    console.log('🚀 [INIT] Phase 5: Setting up event subscriptions');
+    // Phase 5: Setting up event subscriptions
     logger.section('SETTING UP STATE SUBSCRIPTIONS');
     
     const renderAll = () => {
-        console.log('🔄 [EVENTS] renderAll() called - checking component readiness');
+        // renderAll() called - checking component readiness
         if (!componentReadiness.uiComponents) {
-            console.warn('⚠️ [EVENTS] UI components not ready, skipping render');
+            // UI components not ready, skipping render
             return;
         }
         GridManager.renderPitchGrid();
         GridManager.renderDrumGrid();
-        Harmony.render();
     };
 
     store.on('notesChanged', () => {
-        console.log('🔄 [EVENTS] notesChanged event received');
         renderAll();
     });
     store.on('stampPlacementsChanged', () => {
-        console.log('🔄 [EVENTS] stampPlacementsChanged event received');
         renderAll();
     });
     store.on('tripletPlacementsChanged', () => {
-        console.log('🔄 [EVENTS] tripletPlacementsChanged event received');
         renderAll();
     });
     store.on('modulationMarkersChanged', () => {
-        console.log('🔄 [EVENTS] modulationMarkersChanged event received');
         logger.event('Main', 'modulationMarkersChanged event received, recalculating layout', null, 'state');
         if (!componentReadiness.layoutService) {
             console.warn('⚠️ [EVENTS] LayoutService not ready, skipping layout recalculation');
@@ -380,10 +396,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     store.setSelectedNote('circle', '#4a90e2');
     
     markComponentReady('initialized');
-    console.log('🚀 [INIT] ✅ Initialization sequence completed successfully!', {
-        totalTime: Date.now() - (window.initStartTime || Date.now()),
-        allComponentsReady: Object.values(componentReadiness).every(r => r)
-    });
+    // Initialization sequence completed successfully
     
     logger.section('INITIALIZATION COMPLETE');
     

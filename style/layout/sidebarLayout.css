@@ -119,3 +119,73 @@ input[type="range"][orient="vertical"] {
   height: 8px;
   padding: 5px 0;
 }
+
+/* --- Sidebar Paint Controls --- */
+.sidebar-section-title {
+  margin: 0 0 var(--space-2) 0;
+  color: var(--c-text-muted);
+  font-size: 0.9em;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 600;
+  text-align: center;
+}
+
+.sidebar-paint-controls {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.sidebar-paint-controls .paint-control-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.sidebar-paint-controls .paint-control-group label {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--c-text-muted);
+  margin-bottom: var(--space-1);
+}
+
+.paint-control-select {
+  width: 100%;
+  padding: var(--space-1) var(--space-2);
+  border: 1px solid var(--c-border);
+  border-radius: var(--border-radius-sm);
+  background-color: var(--c-surface);
+  color: var(--c-text);
+  font-family: var(--main-font);
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.paint-control-select:focus {
+  outline: none;
+  border-color: var(--c-accent);
+  box-shadow: 0 0 0 2px rgba(var(--c-accent-rgb), 0.2);
+}
+
+.paint-control-select:hover {
+  border-color: var(--c-text-muted);
+}
+
+/* Microphone device selector styling */
+.mic-device-selector {
+  width: 100%;
+  padding: var(--space-1) var(--space-2);
+  border: 1px solid var(--c-border);
+  border-radius: var(--border-radius-sm);
+  background-color: var(--c-surface);
+  color: var(--c-text);
+  font-family: var(--main-font);
+  font-size: 0.9rem;
+}
+
+.mic-device-selector:focus {
+  outline: none;
+  border-color: var(--c-accent);
+  box-shadow: 0 0 0 2px rgba(var(--c-accent-rgb), 0.2);
+}

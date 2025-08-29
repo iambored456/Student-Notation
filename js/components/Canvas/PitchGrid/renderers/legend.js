@@ -14,20 +14,21 @@ function drawSpecialBorder(ctx, x, y, width, style) {
     ctx.setLineDash([]);
 }
 
-export function drawLegends(ctx, options) {
+export function drawLegends(ctx, options, startRow, endRow) {
     const { fullRowData, columnWidths, cellWidth, cellHeight, colorMode } = options;
     const { sharp, flat } = store.state.accidentalMode;
+    
     
 
     const processLabel = (label) => {
         if (!label.includes('/')) return label;
 
-        // --- FIX for Issue #2: Preserve the octave number ---
+        // ---Preserve the octave number ---
         const octave = label.slice(-1);
         const pitches = label.substring(0, label.length - 1);
         const [flatName, sharpName] = pitches.split('/');
         
-        // --- FIX for Issue #1: Corrected toggle logic ---
+        // --- toggle logic ---
         if (sharp && flat) return `${flatName}/${sharpName}${octave}`;
         if (sharp) return `${sharpName}${octave}`;
         if (flat) return `${flatName}${octave}`;
@@ -43,8 +44,10 @@ export function drawLegends(ctx, options) {
 
         columnsOrder.forEach((colLabel, colIndex) => {
             const colWidth = colWidthsPx[colIndex];
-            fullRowData.forEach((row, rowIndex) => {
-                if (row.isDummy) return;
+            // Only process rows within the visible viewport bounds
+            for (let rowIndex = startRow; rowIndex <= endRow; rowIndex++) {
+                const row = fullRowData[rowIndex];
+                if (!row || row.isDummy) continue;
 
                 if (row.column === colLabel) {
                     const y = getRowY(rowIndex, options);
@@ -84,7 +87,7 @@ export function drawLegends(ctx, options) {
                     ctx.fillStyle = '#ffffff';
                     ctx.fillText(pitchToDraw, textX, textY);
                 }
-            });
+            }
             cumulativeX += colWidth;
         });
     }

@@ -19,6 +19,16 @@ export const harmonyActions = {
         this.state.activeChordIntervals = intervals;
         this.emit('activeChordIntervalsChanged', intervals);
     },
+    
+    setIntervalsInversion(isInverted) {
+        this.state.isIntervalsInverted = isInverted;
+        this.emit('intervalsInversionChanged', isInverted);
+    },
+    
+    setChordPosition(positionState) {
+        this.state.chordPositionState = positionState;
+        this.emit('chordPositionChanged', positionState);
+    },
 
 
     // --- NEW ACTIONS FOR CHORD CANDIDATE MENU ---

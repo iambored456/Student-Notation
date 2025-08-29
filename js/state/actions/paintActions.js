@@ -13,7 +13,6 @@ export const paintActions = {
   setPaintDetectionState(isDetecting) {
     const wasDetecting = this.state.paint.isDetecting;
     this.state.paint.isDetecting = isDetecting;
-    console.log('🎨 [PAINT STATE] Detection state changed:', wasDetecting, '->', isDetecting);
     logger.debug('paintActions', `Paint detection state set to: ${isDetecting}`, null, 'paint');
     this.emit('paintDetectionStateChanged', isDetecting);
   },

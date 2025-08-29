@@ -67,7 +67,7 @@ export function shouldDrawVerticalLineAtColumn(columnIndex, placedTonicSigns) {
     for (const ts of placedTonicSigns) {
         // Suppress the line that would appear between the tonic column and its extension
         if (columnIndex === ts.columnIndex + 1) {
-            console.log(`[TonicColumnUtils] Suppressing vertical line at column ${columnIndex} (middle of tonic at ${ts.columnIndex})`);
+            // Suppressing vertical line (middle of tonic)
             return false;
         }
     }
@@ -75,7 +75,7 @@ export function shouldDrawVerticalLineAtColumn(columnIndex, placedTonicSigns) {
     // Check if this is a right border of a tonic shape
     const isRightBorder = placedTonicSigns.some(ts => columnIndex === ts.columnIndex + 2);
     if (isRightBorder) {
-        console.log(`[TonicColumnUtils] Allowing vertical line at column ${columnIndex} (right border of tonic)`);
+        // Allowing vertical line (right border of tonic)
     }
     
     return true;

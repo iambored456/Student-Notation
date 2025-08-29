@@ -56,9 +56,12 @@ function generateScoreCanvas(printOptions, targetDimensions) {
     const totalWidthUnits = mainState.columnWidths.reduce((sum, w) => sum + w, 0);
     const baseCellWidth = 50;
     const baseCellHeight = baseCellWidth * 2;
+    const baseHalfUnit = baseCellHeight / 2; // Dual-parity grid spacing
 
     const contentWidth = totalWidthUnits * baseCellWidth;
-    const pitchGridHeight = (croppedRowData.length / 2) * baseCellHeight;
+    // Fix: Use dual-parity spacing - each row takes halfUnit space, not full cellHeight
+    const pitchGridHeight = croppedRowData.length * baseHalfUnit;
+    // Drum grid uses its own sizing, separate from dual-parity pitch grid
     const drumGridHeight = printOptions.includeDrums ? (3 * 0.5 * baseCellHeight) : 0;
     const DRUM_SPACING = drumGridHeight > 0 ? 30 : 0;
     const contentHeight = pitchGridHeight + DRUM_SPACING + drumGridHeight;
@@ -74,12 +77,13 @@ function generateScoreCanvas(printOptions, targetDimensions) {
     ctx.fillStyle = '#FFF';
     ctx.fillRect(0, 0, contentWidth, contentHeight);
 
+    // Render options for pitch grid with dual-parity compliance
     const pitchRenderOptions = {
         placedNotes: pitchNotes,
         placedTonicSigns: placedTonicSigns, 
         fullRowData: croppedRowData,
         columnWidths: mainState.columnWidths,
-        cellWidth: baseCellWidth, cellHeight: baseCellHeight,
+        cellWidth: baseCellWidth, cellHeight: baseCellHeight, // Note: cellHeight used for note sizing, halfUnit for positioning
         macrobeatGroupings: mainState.macrobeatGroupings,
         macrobeatBoundaryStyles: mainState.macrobeatBoundaryStyles,
         colorMode: printOptions.colorMode,
@@ -104,7 +108,8 @@ function generateScoreCanvas(printOptions, targetDimensions) {
         const scaleX = contentWidth / onScreenPitchCanvas.width;
         const scaleY = pitchGridHeight / (onScreenPitchCanvas.height * (croppedRowData.length / mainState.fullRowData.length));
         
-        const yOffset = printOptions.topRow * (baseCellHeight / 2);
+        // Use consistent dual-parity spacing for paint coordinate transformation
+        const yOffset = printOptions.topRow * baseHalfUnit;
 
         const transformedPaintHistory = mainState.paint.paintHistory.map(p => ({
             ...p,

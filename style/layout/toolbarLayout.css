@@ -110,7 +110,7 @@
 }
 
 .control-section h4 {
-    margin: 0 0 var(--space-1) 0;
+    margin: 0 0 0.1em 0;
     color: var(--c-text-muted);
     font-size: 0.9em;
     text-transform: uppercase;
@@ -119,4 +119,162 @@
     width: 100%;
     text-align: center;
 }
+
+/* ==========================================================================
+   RHYTHM TAB TOOLBAR LAYOUT
+   ========================================================================= */
+
+/* --- Main Structure Container (Add/Del Beat, Pickup, Modulation Column) --- */
+.rhythm-structure-container {
+    flex-direction: column;
+    gap: 0.4rem;
+}
+
+.control-subsection {
+    display: flex;
+    flex-direction: column;
+}
+
+.control-subsection h4 {
+    margin: 0 0 0 0;
+    color: var(--c-text-muted);
+    font-size: 0.9em;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    flex-shrink: 0;
+    width: 100%;
+}
+
+/* --- Add/Del Beat Controls --- */
+.macrobeat-adjust-group { 
+    display: flex; 
+    gap: var(--space-2); 
+    justify-content: center;
+}
+
+/* --- Pickup Controls --- */
+.toggle-button-group { 
+    display: flex; 
+    gap: var(--space-2); 
+    justify-content: center;
+}
+
+/* --- Modulation Controls --- */
+.modulation-controls {
+    display: flex;
+    gap: var(--space-2);
+    align-items: center;
+}
+
+/* --- Rhythm Stamps Tabs (Vertical Layout like Main Tabs) --- */
+.rhythm-stamps-container {
+    display: flex;
+    flex-direction: row !important; /* Override .control-section's column layout */
+    height: auto;
+}
+
+.rhythm-tab-sidebar {
+    flex: 0 0 80px;
+    display: flex;
+    flex-direction: column;
+    background-color: var(--c-gridline);
+    border-right: 1px solid var(--c-border);
+}
+
+.rhythm-tab-content {
+    flex: 1;
+    padding: 0.1em;
+    background-color: var(--c-bg);
+    overflow: auto;
+    min-width: 0;
+}
+
+.rhythm-tab-panel {
+    display: none;
+    padding: 0;
+}
+
+.rhythm-tab-panel.active {
+    display: block;
+}
+
+/* --- Stamps Toolbar Layout --- */
+.stamps-toolbar-container {
+    display: flex;
+    justify-content: center;
+    padding-left: 0.3rem;
+}
+
+.stamps-grid {
+    display: flex;
+    flex-direction: column;
+}
+
+.stamps-row {
+    display: grid;
+    gap: 0.5rem;
+    justify-items: center;
+}
+
+.stamps-row-1 {
+    grid-template-columns: repeat(4, 1fr);
+}
+
+.stamps-row-2 {
+    grid-template-columns: repeat(6, 1fr);
+    padding-top: 0.42rem;
+}
+
+.stamps-row-3 {
+    grid-template-columns: repeat(5, 1fr);
+    padding-top: 0.42rem;
+}
+
+/* --- Triplets Toolbar Layout --- */
+.triplets-toolbar-container {
+    display: flex;
+    justify-content: center;
+}
+
+.triplets-main-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.triplets-sections {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+}
+
+.triplets-section {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    align-items: center;
+}
+
+.triplets-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    justify-items: center;
+    gap: 0.5rem
+}
+
+.triplets-quarter-row {
+    grid-template-columns: repeat(3, 1fr);
+    margin-bottom: 0.2rem;
+}
+
+.triplets-quarter-row:nth-child(2) {
+    grid-template-columns: repeat(4, 1fr);
+    margin-bottom: 0;
+}
+
+/* ==========================================================================
+   TIMBRE TAB TOOLBAR LAYOUT
+   ========================================================================= */
+
+/* Timbre-specific toolbar layouts - currently minimal but reserved for future use */
 

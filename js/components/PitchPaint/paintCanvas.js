@@ -1,6 +1,6 @@
 // js/components/PitchPaint/paintCanvas.js
 import store from '../../state/index.js';
-import { getInterpolatedColor } from '../../utils/chromaticColors.js';
+import { getPaintColor } from '../../utils/chromaticColors.js';
 // We need the renderer to use its calculation methods
 import PaintPlayheadRenderer from './paintPlayheadRenderer.js';
 import logger from '../../utils/logger.js';
@@ -71,17 +71,15 @@ class PaintCanvas {
     // DEFER to get final measurements after layout settles
     setTimeout(() => {
         const pitchGridContainer = document.getElementById('pitch-grid-container');
-        const finalTargetHeight = pitchGridContainer ? pitchGridContainer.clientHeight : wrapper.clientHeight;
         
-        // DEBUG: Log paint canvas height measurements
-        logger.debug('PaintCanvas', 'Height Debug (DEFERRED)', {
-            canvasId: 'pitch-paint-canvas',
-            currentCanvasHeight: this.canvas.height,
-            pitchGridContainer: pitchGridContainer?.clientHeight,
-            pitchCanvasWrapper: wrapper?.clientHeight,
-            finalTargetHeight,
-            willResize: this.canvas.width !== wrapper.clientWidth || this.canvas.height !== finalTargetHeight
-        }, 'paint');
+        // FIXED: Use the same intended viewport height calculation as layoutService
+        // to ensure paint canvas matches the main notation grid canvas
+        const DEFAULT_VISIBLE_RANKS = 68; // Should match layoutService
+        const cellHeight = store.state.cellHeight || 18.35;
+        const intendedViewportHeight = DEFAULT_VISIBLE_RANKS * (cellHeight / 2);
+        
+        const finalTargetHeight = intendedViewportHeight;
+        
         
         if (this.canvas.width !== wrapper.clientWidth || this.canvas.height !== finalTargetHeight) {
             logger.debug('PaintCanvas', `Setting pitch-paint-canvas height (DEFERRED): ${this.canvas.height} → ${finalTargetHeight}`, null, 'paint');
@@ -97,6 +95,7 @@ class PaintCanvas {
     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
     
     const paintHistory = store.state.paint.paintHistory;
+    
     if (paintHistory.length === 0) return;
 
     this.renderPaintTrail(paintHistory);
@@ -157,7 +156,10 @@ class PaintCanvas {
 
   // MODIFIED: This function now stores musicalTime instead of pixel coordinates
   addPaintPoint(musicalTime, midiValue) {
-    const color = getInterpolatedColor(midiValue);
+    const { colorMode } = store.state.paint.paintSettings;
+    const selectedNoteColor = store.state.selectedNote?.color;
+    const color = getPaintColor(midiValue, colorMode, selectedNoteColor);
+    
     const point = {
       musicalTime, // Store this instead of x
       midi: midiValue, // Store this instead of y

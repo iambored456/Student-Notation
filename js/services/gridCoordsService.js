@@ -45,13 +45,15 @@ const GridCoordsService = {
     getPitchRowIndex(y) {
         const viewportInfo = LayoutService.getViewportInfo();
         
-        if (!viewportInfo || viewportInfo.rowHeight === 0) {
+        if (!viewportInfo || !viewportInfo.halfUnit || viewportInfo.halfUnit === 0) {
             return -1;
         }
         
-        // Since rowHeight already includes zoom scaling, convert mouse Y directly
-        const yInVirtualSpace = y + viewportInfo.scrollOffset;
-        const finalRowIndex = Math.floor(yInVirtualSpace / viewportInfo.rowHeight);
+        // For dual-parity grid: use halfUnit spacing (cellHeight/2) for row calculations
+        // Convert mouse Y to rank index accounting for viewport offset
+        const relativeRankFromMouse = Math.floor(y / viewportInfo.halfUnit);
+        const finalRowIndex = viewportInfo.startRank + relativeRankFromMouse;
+        
         
         return finalRowIndex;
     },

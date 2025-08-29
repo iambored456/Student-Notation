@@ -38,30 +38,16 @@ function getCoordinateMapping(options) {
         baseMicrobeatPx: options.baseMicrobeatPx || options.cellWidth || 40
     });
     
-    // console.log('[COORD] getCoordinateMapping called with:', {
-    //     markers: options.modulationMarkers,
-    //     baseMicrobeatPx: options.baseMicrobeatPx || options.cellWidth || 40,
-    //     currentHash,
-    //     hasCached: !!cachedCoordinateMapping,
-    //     hashMatch: currentHash === lastMappingHash
-    // });
     
     if (cachedCoordinateMapping && currentHash === lastMappingHash) {
-        // console.log('[COORD] Using cached mapping');
         return cachedCoordinateMapping;
     }
     
     const baseMicrobeatPx = options.baseMicrobeatPx || options.cellWidth || 40;
-    console.log('[COORD] Creating new coordinate mapping with:', {
-        markersCount: (options.modulationMarkers || []).length,
-        baseMicrobeatPx,
-        options: options
-    });
     
     cachedCoordinateMapping = createCoordinateMapping(options.modulationMarkers || [], baseMicrobeatPx, options);
     lastMappingHash = currentHash;
     
-    console.log('[COORD] Created mapping with segments:', cachedCoordinateMapping.segments);
     
     return cachedCoordinateMapping;
 }
@@ -104,15 +90,6 @@ export function getColumnX(index, options) {
     const microbeatIndex = originalX / baseMicrobeatPx;
     const modulatedX = mapping.microbeatToCanvasX(microbeatIndex);
     
-    console.log('[GETCOLUMNX] Modulated position calculation:', {
-        index,
-        originalX,
-        baseMicrobeatPx,
-        microbeatIndex,
-        modulatedX,
-        difference: modulatedX - originalX,
-        segmentCount: mapping.segments.length
-    });
     
     return modulatedX;
 }
@@ -122,7 +99,7 @@ export function getRowY(rowIndex, options) {
     // Calculate row position relative to viewport start using dual-parity grid spacing
     // cellHeight represents the full unit, ranks are spaced at cellHeight/2 intervals
     const relativeRowIndex = rowIndex - viewportInfo.startRank;
-    const halfUnit = options.cellHeight / 2; // Dual-parity grid: ranks at half-unit spacing
+    const halfUnit = options.cellHeight / 2;
     const yPosition = relativeRowIndex * halfUnit;
     
     
@@ -135,10 +112,10 @@ export function getPitchClass(pitchWithOctave) {
   return pc;
 }
 
-export function getLineStyleFromPitchClass(pc) {
+export function getLineStyleFromPitchClass(pc, zoomLevel = 1) {
     switch (pc) {
         case 'C': return { lineWidth: 3.33, dash: [], color: '#adb5bd' };
-        case 'E': return { lineWidth: 1, dash: [10, 20], color: '#adb5bd' };
+        case 'E': return { lineWidth: 1, dash: [5, 5], color: '#adb5bd' }; // Use same pattern as vertical dashed lines
         case 'G': return { lineWidth: 1, dash: [], color: '#dee2e6' };
         case 'D♭/C♯':
         case 'E♭/D♯':
@@ -153,7 +130,10 @@ export function getLineStyleFromPitchClass(pc) {
 export function getVisibleRowRange() {
     const viewportInfo = LayoutService.getViewportInfo();
     const { startRank, endRank } = viewportInfo; // FIXED: use startRank/endRank instead of startRow/endRow
-    return { startRow: startRank, endRow: endRank };
+    const result = { startRow: startRank, endRow: endRank };
+    
+    
+    return result;
 }
 
 /**

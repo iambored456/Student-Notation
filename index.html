@@ -26,6 +26,55 @@
 <button class="sidebar-button" id="print-button" title="Print"><img src="/assets/sidebar/Print.svg" alt="Print"><span class="sidebar-button-text">Print</span></button>
 <button class="sidebar-button" id="reset-canvas-button" title="New File"><img src="/assets/sidebar/New Page.svg" alt="New Page"><span class="sidebar-button-text">New Page</span></button>
 </div>
+<div class="sidebar-container">
+<button class="sidebar-button" id="hide-harmony-toggle" title="Toggle Harmony Analysis Grid"><img src="/assets/sidebar/Save As.svg" alt="Toggle Harmony"><span class="sidebar-button-text">Hide Analysis</span></button>
+<button class="sidebar-button" id="hide-drumgrid-toggle" title="Toggle Drum Grid"><img src="/assets/sidebar/Save As.svg" alt="Toggle Drum Grid"><span class="sidebar-button-text">Hide Drum Grid</span></button>
+</div>
+<div class="sidebar-container">
+<h4 class="sidebar-section-title">Paint Controls</h4>
+<div class="sidebar-paint-controls">
+<div class="paint-control-group">
+<label for="sidebar-trail-thickness">Thickness</label>
+<select id="sidebar-trail-thickness" class="paint-control-select">
+<option value="2">2px</option>
+<option value="4">4px</option>
+<option value="6" selected>6px</option>
+<option value="8">8px</option>
+<option value="10">10px</option>
+<option value="12">12px</option>
+<option value="14">14px</option>
+<option value="16">16px</option>
+<option value="18">18px</option>
+<option value="20">20px</option>
+</select>
+</div>
+<div class="paint-control-group">
+<label for="sidebar-trail-opacity">Opacity</label>
+<select id="sidebar-trail-opacity" class="paint-control-select">
+<option value="5">5%</option>
+<option value="10">10%</option>
+<option value="15">15%</option>
+<option value="20">20%</option>
+<option value="25">25%</option>
+<option value="30">30%</option>
+<option value="35">35%</option>
+<option value="40">40%</option>
+<option value="45">45%</option>
+<option value="50">50%</option>
+<option value="55">55%</option>
+<option value="60">60%</option>
+<option value="65">65%</option>
+<option value="70">70%</option>
+<option value="75">75%</option>
+<option value="80" selected>80%</option>
+<option value="85">85%</option>
+<option value="90">90%</option>
+<option value="95">95%</option>
+<option value="100">100%</option>
+</select>
+</div>
+</div>
+</div>
 </div>
 <div id="app-container">
   <!-- =======================================================
@@ -148,12 +197,6 @@
 
             <!-- Pitch Tab -->
             <div class="tab-panel" id="pitch-panel">
-                <div class="control-section">
-                    <div id="accidental-controls-container-v2">
-                        <button id="flat-toggle-btn" class="accidental-button active" aria-pressed="true">♭</button>
-                        <button id="sharp-toggle-btn" class="accidental-button active" aria-pressed="true">♯</button>
-                    </div>
-                </div>
                 <div class="control-section tonic-sign-container">
                     <h4>Tonal Center</h4>
                     <div class="tonic-tools-wrapper">
@@ -170,8 +213,16 @@
                            </div>
                        </div>
                        <div class="degree-toggle-container">
-                           <button id="degree-visibility-toggle" class="toolkit-button degree-visibility-toggle">Hide</button>
-                           <button id="degree-mode-toggle" class="toolkit-button degree-mode-toggle">Scale Degrees</button>
+                           <button id="degree-visibility-toggle" class="toolkit-button degree-visibility-toggle">Show Degrees (OFF)</button>
+                           <div class="degree-mode-toggle-container">
+                               <div class="two-state-toggle" id="degree-mode-toggle">
+                                   <div class="two-state-slider"></div>
+                                   <div class="toggle-labels">
+                                       <span class="toggle-label">Scale</span>
+                                       <span class="toggle-label">Mode</span>
+                                   </div>
+                               </div>
+                           </div>
                        </div>
                     </div>
                 </div>
@@ -183,37 +234,75 @@
                     <div class="chord-shape-content">
                         <div class="chord-tab-panel active" id="intervals-panel">
                             <div class="intervals-content-box">
-                                <div class="harmony-preset-grid">
-                                    <button class="harmony-preset-button">1</button>
-                                    <button class="harmony-preset-button">2</button>
-                                    <button class="harmony-preset-button">3</button>
-                                    <button class="harmony-preset-button">4</button>
-                                    <button class="harmony-preset-button">5</button>
-                                    <button class="harmony-preset-button">6</button>
-                                    <button class="harmony-preset-button">7</button>
-                                    <button class="harmony-preset-button">8</button>
-                                    <button class="harmony-preset-button">9</button>
-                                    <button class="harmony-preset-button">11</button>
-                                    <button class="harmony-preset-button">13</button>
-                                    <button class="harmony-preset-button">♯11</button>
+                                <div class="intervals-layout">
+                                    <div class="inversion-column">
+                                        <h4>Inversion</h4>
+                                        <div class="toggle-switch" id="inversion-toggle">
+                                            <div class="toggle-slider"></div>
+                                        </div>
+                                    </div>
+                                    <div class="intervals-grid-column">
+                                        <div class="harmony-preset-grid intervals-4x4-grid">
+                                            <button class="harmony-preset-button">6</button>
+                                            <button class="harmony-preset-button">#6</button>
+                                            <button class="harmony-preset-button">♭7</button>
+                                            <button class="harmony-preset-button">7</button>
+                                            <button class="harmony-preset-button">♭5</button>
+                                            <button class="harmony-preset-button">5</button>
+                                            <button class="harmony-preset-button">#5</button>
+                                            <button class="harmony-preset-button">♭6</button>
+                                            <button class="harmony-preset-button">♭3</button>
+                                            <button class="harmony-preset-button">3</button>
+                                            <button class="harmony-preset-button">4</button>
+                                            <button class="harmony-preset-button">#4</button>
+                                            <button class="harmony-preset-button">1</button>
+                                            <button class="harmony-preset-button">♭2</button>
+                                            <button class="harmony-preset-button">2</button>
+                                            <button class="harmony-preset-button">#2</button>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                         <div class="chord-tab-panel" id="chords-panel">
                             <div class="chords-content-box">
-                                <div class="harmony-preset-grid">
-                                    <button class="harmony-preset-button">X</button>
-                                    <button class="harmony-preset-button">x</button>
-                                    <button class="harmony-preset-button">x°</button>
-                                    <button class="harmony-preset-button">X+</button>
-                                    <button class="harmony-preset-button">X7</button>
-                                    <button class="harmony-preset-button">x⁷</button>
-                                    <button class="harmony-preset-button">ø⁷</button>
-                                    <button class="harmony-preset-button">Xadd6</button>
-                                    <button class="harmony-preset-button">Xsus4</button>
-                                    <button class="harmony-preset-button">Xsus2</button>
-                                    <button class="harmony-preset-button">Xmaj7</button>
-                                    <button class="harmony-preset-button">x°7</button>
+                                <div class="chords-layout">
+                                    <div class="chord-inversion-column">
+                                        <h4>Position</h4>
+                                        <div class="three-state-toggle" id="chord-position-toggle">
+                                            <div class="three-state-slider"></div>
+                                            <div class="state-labels">
+                                                <span class="state-label">Root</span>
+                                                <span class="state-label">1st</span>
+                                                <span class="state-label">2nd</span>
+                                            </div>
+                                        </div>
+                                        <div class="four-state-toggle hidden" id="chord-position-toggle-4">
+                                            <div class="four-state-slider"></div>
+                                            <div class="state-labels-4">
+                                                <span class="state-label">Root</span>
+                                                <span class="state-label">1st</span>
+                                                <span class="state-label">2nd</span>
+                                                <span class="state-label">3rd</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="chords-grid-column">
+                                        <div class="harmony-preset-grid">
+                                            <button class="harmony-preset-button">X</button>
+                                            <button class="harmony-preset-button">x</button>
+                                            <button class="harmony-preset-button">x°</button>
+                                            <button class="harmony-preset-button">X+</button>
+                                            <button class="harmony-preset-button">X7</button>
+                                            <button class="harmony-preset-button">x⁷</button>
+                                            <button class="harmony-preset-button">ø⁷</button>
+                                            <button class="harmony-preset-button">Xadd6</button>
+                                            <button class="harmony-preset-button">Xsus4</button>
+                                            <button class="harmony-preset-button">Xsus2</button>
+                                            <button class="harmony-preset-button">Xmaj7</button>
+                                            <button class="harmony-preset-button">x°7</button>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -227,14 +316,33 @@
                                 <button class="toolkit-button" id="mic-paint-toggle">Mic Paint (OFF)</button>
                                 <button class="toolkit-button" id="paint-clear-btn" disabled>Clear Paint</button>
                             </div>
+                            <div class="paint-color-toggle-container">
+                                <h5>Colour</h5>
+                                <div class="two-state-toggle" id="paint-color-toggle">
+                                    <div class="two-state-slider"></div>
+                                    <div class="toggle-labels">
+                                        <span class="toggle-label">Chromatic</span>
+                                        <span class="toggle-label">Shape Note</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="paint-playback-toggle-container">
+                                <h5>Playback</h5>
+                                <div class="two-state-toggle active" id="paint-playback-toggle">
+                                    <div class="two-state-slider"></div>
+                                    <div class="toggle-labels">
+                                        <span class="toggle-label">Off</span>
+                                        <span class="toggle-label">On</span>
+                                    </div>
+                                </div>
+                            </div>
                             <div class="paint-controls-row">
                                 <div class="paint-control-group">
-                                    <label>Thickness</label>
-                                    <div id="trail-thickness"></div>
-                                </div>
-                                <div class="paint-control-group">
-                                    <label>Opacity</label>
-                                    <div id="trail-opacity"></div>
+                                    <label for="mic-device-select">Microphone</label>
+                                    <select id="mic-device-select" class="mic-device-selector">
+                                        <option value="default">Default Device</option>
+                                        <option value="detecting">Detecting devices...</option>
+                                    </select>
                                 </div>
                             </div>
                         </div>
@@ -277,6 +385,7 @@
             <!-- Rhythm Tab -->
             <div class="tab-panel" id="rhythm-panel">
                 <div class="control-section">
+                    <h4>Tempo</h4>
                     <div class="tempo-container">
                         <div class="tempo-column">
                             <div class="tempo-input-group">
@@ -294,24 +403,6 @@
                         </div>
                         <div class="tempo-column-2">
                             <input type="range" id="tempo-slider" min="30" max="240" value="90">
-                        </div>
-                    </div>
-                </div>
-                <div class="control-section rhythm-stamps-container">
-                    <div class="rhythm-tab-sidebar">
-                        <button class="rhythm-tab-button active" data-rhythm-tab="stamps">Sixteenths</button>
-                        <button class="rhythm-tab-button" data-rhythm-tab="triplets">Triplets</button>
-                    </div>
-                    <div class="rhythm-tab-content">
-                        <div class="rhythm-tab-panel active" id="stamps-panel">
-                            <div id="stamps-toolbar-container" class="stamps-toolbar-container">
-                                <!-- Stamps toolbar will be rendered here by JavaScript -->
-                            </div>
-                        </div>
-                        <div class="rhythm-tab-panel" id="triplets-panel">
-                            <div id="triplets-toolbar-container" class="triplets-toolbar-container">
-                                <!-- Triplets toolbar will be rendered here by JavaScript -->
-                            </div>
                         </div>
                     </div>
                 </div>
@@ -336,6 +427,24 @@
                         </div>
                     </div>
                 </div>
+                <div class="control-section rhythm-stamps-container">
+                    <div class="rhythm-tab-sidebar">
+                        <button class="rhythm-tab-button active" data-rhythm-tab="stamps">Sixteenths</button>
+                        <button class="rhythm-tab-button" data-rhythm-tab="triplets">Triplets</button>
+                    </div>
+                    <div class="rhythm-tab-content">
+                        <div class="rhythm-tab-panel active" id="stamps-panel">
+                            <div id="stamps-toolbar-container" class="stamps-toolbar-container">
+                                <!-- Stamps toolbar will be rendered here by JavaScript -->
+                            </div>
+                        </div>
+                        <div class="rhythm-tab-panel" id="triplets-panel">
+                            <div id="triplets-toolbar-container" class="triplets-toolbar-container">
+                                <!-- Triplets toolbar will be rendered here by JavaScript -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -344,8 +453,14 @@
   <div id="canvas-container">
     <div id="canvas-content">
         <div id="pitch-grid-wrapper">
-            <div id="time-signature-display"></div>
-            <div id="canvas-macrobeat-tools"><div id="beat-line-controls"></div></div>
+            <div id="canvas-macrobeat-tools">
+                <div id="accidental-controls-container-v2">
+                    <button id="flat-toggle-btn" class="accidental-button active" aria-pressed="true">♭</button>
+                    <button id="sharp-toggle-btn" class="accidental-button active" aria-pressed="true">♯</button>
+                </div>
+                <div id="time-signature-display"></div>
+                <div id="beat-line-controls"></div>
+            </div>
             <div id="pitch-grid-container">
                 <div id="grid-container">
                     <div id="pitch-canvas-wrapper">
@@ -357,14 +472,10 @@
                 </div>
             </div>
         </div>
-        <div id="harmonyAnalysisGrid">
-            <canvas id="analysis-degree-canvas"></canvas>
-            <canvas id="analysis-roman-canvas"></canvas>
-        </div>
-        <div id="drum-grid-wrapper">
-            <canvas id="drum-grid"></canvas>
-            <canvas id="drum-hover-canvas"></canvas>
-        </div>
+    </div>
+    <div id="drum-grid-wrapper">
+        <canvas id="drum-grid"></canvas>
+        <canvas id="drum-hover-canvas"></canvas>
     </div>
 </div>
 
@@ -374,6 +485,20 @@
   </div>
   <div id="chord-candidate-overlay" class="hidden"></div>
 
+</div>
+
+<!-- Notification Overlay -->
+<div id="notification-overlay">
+    <div class="notification-modal">
+        <div class="notification-header">
+            <h3 class="notification-title">Notice</h3>
+            <button class="notification-close">×</button>
+        </div>
+        <div class="notification-message"></div>
+        <div class="notification-actions">
+            <button class="notification-button">OK</button>
+        </div>
+    </div>
 </div>
 
 <!-- ... (Print Preview Modal remains the same) ... -->
@@ -442,6 +567,17 @@
         if (targetButton && targetPanel) {
             targetButton.classList.add('active');
             targetPanel.classList.add('active');
+            
+            // Initialize tempo slider if rhythm tab is restored on page load
+            if (savedTab === 'rhythm') {
+                console.log('🎵 [TabRestore] Rhythm tab restored on load, scheduling tempo slider initialization...');
+                // Use a longer delay since page is still loading
+                setTimeout(() => {
+                    if (window.initTempoSliderIfNeeded) {
+                        window.initTempoSliderIfNeeded();
+                    }
+                }, 200);
+            }
         }
     }
     
@@ -455,6 +591,14 @@
             
             // Save the selected tab to localStorage
             saveCurrentTab(tabId);
+            
+            // Initialize tempo slider if rhythm tab is activated
+            if (tabId === 'rhythm' && window.initTempoSliderIfNeeded) {
+                console.log('🎵 [TabSwitch] Rhythm tab activated, initializing tempo slider...');
+                setTimeout(() => {
+                    window.initTempoSliderIfNeeded();
+                }, 50); // Small delay to ensure tab content is fully visible
+            }
         });
     });
     

@@ -78,9 +78,7 @@ function calculateTimeMap() {
     
     // PLAYHEAD FIX: Always use regular timing for consistent playhead speed
     // Note triggers will be calculated separately using modulation mapping
-    console.log('[TIMEMAP] Using regular timing for consistent playhead speed');
     if (modulationMarkers && modulationMarkers.length > 0) {
-        console.log('[TIMEMAP] Modulation markers present:', modulationMarkers.length, 'markers found - will affect note triggers only');
     }
     calculateRegularTimeMap(microbeatDuration, columnWidths, placedTonicSigns);
     
@@ -207,7 +205,6 @@ function scheduleNotes() {
         // The modulated time is just for musical calculation - transport scheduling uses regular time
         const scheduleTime = regularStartTime;
         
-        console.log(`[NOTE-SCHEDULE] ${hasModulation ? 'MODULATED' : 'REGULAR'} scheduling note ${note.uuid} at column ${note.startColumnIndex} → scheduleTime=${scheduleTime.toFixed(4)}s`);
         
         // Show timing comparison when modulation is active
         if (hasModulation) {
@@ -244,17 +241,6 @@ function scheduleNotes() {
             const defaultCircleDuration = 2 * microbeatDuration;
             
             // Log duration calculation for circle notes
-            console.log(`[DURATION] Circle note ${note.uuid}:`, {
-                startColumn: note.startColumnIndex,
-                endColumn: note.endColumnIndex,
-                regularStartTime: regularStartTime.toFixed(3),
-                regularEndTime: regularEndTime.toFixed(3),
-                modulatedStartTime: hasModulation ? modulatedStartTime.toFixed(3) : 'N/A',
-                modulatedEndTime: hasModulation ? modulatedEndTime.toFixed(3) : 'N/A',
-                scheduleDuration: duration.toFixed(3),
-                defaultCircleDuration: defaultCircleDuration.toFixed(3),
-                microbeatDuration: microbeatDuration.toFixed(3)
-            });
         } else {
             // Oval notes and others use the current duration (1 microbeat equivalent)
             duration = tailDuration;
@@ -287,21 +273,17 @@ function scheduleNotes() {
             }
             
             // Log when attack is scheduled
-            console.log(`[SCHEDULE] Attack for ${note.shape} note ${noteId} scheduled at time ${scheduleTime.toFixed(3)}`);
             
             Tone.Transport.schedule(time => {
                 if (store.state.isPaused) return;
-                console.log(`[ATTACK] Triggering attack for ${note.shape} note ${noteId} at time ${time.toFixed(3)}`);
                 SynthEngine.triggerAttack(pitch, toolColor, time);
                 GlobalService.adsrComponent?.playheadManager.trigger(noteId, 'attack', pitchColor, timbre.adsr);
             }, scheduleTime);
 
             // Log when release is scheduled
             const releaseTime = scheduleTime + duration;
-            console.log(`[SCHEDULE] Release for ${note.shape} note ${noteId} scheduled at time ${releaseTime.toFixed(3)} (duration: ${duration.toFixed(3)})`);
             
             Tone.Transport.schedule(time => {
-                console.log(`[RELEASE] Triggering release for ${note.shape} note ${noteId} at time ${time.toFixed(3)}`);
                 SynthEngine.triggerRelease(pitch, toolColor, time);
                 GlobalService.adsrComponent?.playheadManager.trigger(noteId, 'release', pitchColor, timbre.adsr);
             }, releaseTime);
@@ -329,12 +311,10 @@ function scheduleNotes() {
             const triggerTime = cellStartTime + offsetTime;
             const releaseTime = triggerTime + duration;
             
-            console.log(`[TRANSPORT DEBUG] Event: slot=${event.slot}, offset="${event.offset}" -> ${offsetTime}s, triggerTime=${triggerTime}s`);
             
             // Schedule attack
             Tone.Transport.schedule(time => {
                 if (store.state.isPaused) return;
-                console.log(`[TRANSPORT DEBUG] TRIGGERING: slot=${event.slot} at time=${time}s`);
                 SynthEngine.triggerAttack(stampData.pitch, stampData.color, time);
             }, triggerTime);
             
@@ -361,7 +341,6 @@ function scheduleNotes() {
         const columnIndex = tripletData.startCellIndex * 2; // cell index * 2 microbeats per cell
         const cellStartTime = timeMap[columnIndex];
         
-        console.log(`[TRIPLET DEBUG] Triplet ${tripletData.stampId} at cell ${tripletData.startCellIndex} -> column ${columnIndex} -> time ${cellStartTime}`);
         
         if (cellStartTime === undefined) return;
         
@@ -387,7 +366,6 @@ function scheduleNotes() {
             // Schedule attack
             Tone.Transport.schedule(time => {
                 if (store.state.isPaused) return;
-                console.log(`[TRIPLET] Triggering ${event.type} for triplet ${tripletData.stampId} slot ${event.slot} at time ${time.toFixed(3)} pitch ${pitch}`);
                 SynthEngine.triggerAttack(pitch, tripletData.color, time);
             }, triggerTime);
             
@@ -417,7 +395,6 @@ function animatePlayhead() {
     
     // DYNAMIC TEMPO: Track modulation markers and adjust BPM as playhead crosses them
     const hasModulation = store.state.modulationMarkers && store.state.modulationMarkers.length > 0;
-    console.log('[PLAYHEAD] Starting playhead animation at constant speed, modulation:', hasModulation ? 'ENABLED (dynamic tempo changes)' : 'DISABLED');
     const maxXPos = getBaseColumnX(store.state.columnWidths.length - 2);
     const musicalDuration = timeMap[store.state.columnWidths.length - 2] || 0;
     
@@ -474,9 +451,6 @@ function animatePlayhead() {
                 xPos = colStartX + ratio * colWidth;
                 
                 // Debug logging every 30 frames (~0.5 seconds at 60fps)
-                if (Math.floor(currentTime * 2) !== Math.floor((currentTime - 0.016) * 2)) {
-                    console.log(`[PLAYHEAD] CONSTANT-SPEED time=${currentTime.toFixed(3)}, col=${i}, baseX=${colStartX.toFixed(1)}, width=${colWidth.toFixed(1)}, finalX=${xPos.toFixed(1)} ${hasModulation ? '(modulation affects notes only)' : ''}`);
-                }
                 break;
             }
         }
@@ -644,6 +618,11 @@ const TransportService = {
             // Always start from anacrusis (pickup) on first play, but loops will skip anacrusis
             Tone.Transport.start(Tone.now(), anacrusisOffset); 
             
+            // Initialize paint playback if enabled
+            if (window.PaintPlaybackService && window.PaintPlaybackService.onTransportStart) {
+                window.PaintPlaybackService.onTransportStart();
+            }
+            
             if (store.state.paint.isMicPaintActive) {
                 store.emit('playbackStateChanged', { isPlaying: true, isPaused: false });
                 logger.debug('TransportService', 'Paint playhead is active, skipping regular playhead animation', null, 'transport');
@@ -659,6 +638,12 @@ const TransportService = {
         const audioInit = window.initAudio || (() => Tone.start());
         audioInit().then(() => {
             Tone.Transport.start();
+            
+            // Initialize paint playback if enabled
+            if (window.PaintPlaybackService && window.PaintPlaybackService.onTransportStart) {
+                window.PaintPlaybackService.onTransportStart();
+            }
+            
             if (!store.state.paint.isMicPaintActive) {
                 animatePlayhead();
             }
@@ -677,6 +662,11 @@ const TransportService = {
     stop() {
         logger.info('TransportService', 'Stopping playback and clearing visuals', null, 'transport');
         Tone.Transport.stop(); 
+        
+        // Clear paint playback events if enabled
+        if (window.PaintPlaybackService && window.PaintPlaybackService.onTransportStop) {
+            window.PaintPlaybackService.onTransportStop();
+        }
         
         Tone.Transport.cancel();
         SynthEngine.releaseAll();

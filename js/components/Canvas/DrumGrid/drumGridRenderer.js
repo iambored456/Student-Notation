@@ -51,7 +51,7 @@ export function drawDrumShape(ctx, drumRow, x, y, width, height) {
 
 function drawVerticalGridLines(ctx, options) {
     const { columnWidths, macrobeatGroupings, macrobeatBoundaryStyles, placedTonicSigns } = options;
-    const totalColumns = columnWidths.length;
+    const drumAreaEnd = columnWidths.length - 2; // Exclude right legend columns
     let macrobeatBoundaries = [];
 
     // This logic must exactly match the rhythmService logic for calculating positions
@@ -64,24 +64,28 @@ function drawVerticalGridLines(ctx, options) {
         macrobeatBoundaries.push(current_col);
     }
 
-
-    
-    for (let i = 0; i <= totalColumns; i++) {
+    // Only draw vertical lines up to the drum area end (excluding right legend)
+    for (let i = 0; i <= drumAreaEnd; i++) {
         const x = getColumnX(i, options);
+        
+        // Skip lines outside the canvas bounds
+        if (x < 0 || x > ctx.canvas.width) {
+            continue;
+        }
+        
         let style;
-        const isBoundary = i === 2 || i === totalColumns - 2;
+        const isMusicAreaBoundary = i === 2 || i === drumAreaEnd;
         const isTonicColumnStart = isTonicColumn(i, placedTonicSigns);
         const isTonicColumnEnd = placedTonicSigns.some(ts => i === ts.columnIndex + 2);
         const isMacrobeatEnd = macrobeatBoundaries.includes(i);
         const shouldDraw = shouldDrawVerticalLineAtColumn(i, placedTonicSigns);
-
 
         // Skip drawing vertical lines in the middle of tonic shapes
         if (!shouldDraw) {
             continue;
         }
 
-        if (isBoundary || isTonicColumnStart || isTonicColumnEnd) {
+        if (isMusicAreaBoundary || isTonicColumnStart || isTonicColumnEnd) {
             style = { lineWidth: 2, strokeStyle: '#adb5bd', dash: [] };
         } else if (isMacrobeatEnd) {
             const mbIndex = macrobeatBoundaries.indexOf(i);

@@ -54,7 +54,7 @@ function calculateColorOffset(note, allNotes, options) {
 // Helper function to calculate vertical offset for note tails
 function calculateTailYOffset(note, allNotes, options) {
     const { cellHeight } = options;
-    const tailOffsetAmount = cellHeight * 0.12; // Vertical offset for tails - 15% of cell height
+    const tailOffsetAmount = (cellHeight / 2) * 0.12; // Vertical offset for tails - dual-parity spacing
     
     // Safety check for ghost notes without UUIDs
     if (!note.uuid) {
@@ -146,10 +146,10 @@ export function drawTwoColumnOvalNote(ctx, options, note, rowIndex) {
         ctx.stroke();
     }
 
-    // Calculate ellipse dimensions without extra zoom scaling
+    // Calculate ellipse dimensions for dual-parity grid spacing
     // Use modulated cell width for proper scaling
     const rx = actualCellWidth - (dynamicStrokeWidth / 2);
-    const ry = (cellHeight / 2) - (dynamicStrokeWidth / 2);
+    const ry = (cellHeight / 2) - (dynamicStrokeWidth / 2); // Dual-parity: notes should fill the rank height
 
     // Save context state for cleaner rendering
     ctx.save();
@@ -173,7 +173,7 @@ export function drawTwoColumnOvalNote(ctx, options, note, rowIndex) {
 
     // Draw degree text if enabled
     if (options.degreeDisplayMode !== 'off') {
-        drawScaleDegreeText(ctx, note, options, centerX, y, (cellHeight / 2));
+        drawScaleDegreeText(ctx, note, options, centerX, y, (cellHeight / 2)); // Use full note height for text sizing
     }
 }
 
@@ -199,7 +199,7 @@ export function drawSingleColumnOvalNote(ctx, options, note, rowIndex) {
     const dynamicStrokeWidth = Math.max(0.5, currentCellWidth * 0.15);
     const cx = x + currentCellWidth / 2 + xOffset;
     const rx = (currentCellWidth / 2) - (dynamicStrokeWidth / 2);
-    const ry = (cellHeight / 2) - (dynamicStrokeWidth / 2);
+    const ry = (cellHeight / 2) - (dynamicStrokeWidth / 2); // Dual-parity: notes should fill the rank height
 
     // Save context state
     ctx.save();
@@ -223,7 +223,7 @@ export function drawSingleColumnOvalNote(ctx, options, note, rowIndex) {
 
     // Draw degree text if enabled
     if (options.degreeDisplayMode !== 'off') {
-        drawScaleDegreeText(ctx, note, options, cx, y, (cellHeight / 2));
+        drawScaleDegreeText(ctx, note, options, cx, y, (cellHeight / 2)); // Use full note height for text sizing
     }
 }
 

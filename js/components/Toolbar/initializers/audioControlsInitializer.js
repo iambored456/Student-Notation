@@ -4,7 +4,12 @@ import { PRESETS } from '../../../services/presetData.js';
 import DraggableNumber from '../../UI/DraggableNumber.js';
 
 export function initAudioControls() {
+    console.log('🎵 [AudioControls] Starting audio controls initialization...');
     const tempoSlider = document.getElementById('tempo-slider');
+    
+    if (!tempoSlider) {
+        console.warn('⚠️ [AudioControls] Tempo slider not found during initial load - will retry when rhythm tab is accessed');
+    }
     
     // Initialize DraggableNumber components for tempo inputs with app styling
     const tempoInputConfig = {
@@ -37,7 +42,12 @@ export function initAudioControls() {
 
     function updateTempoDisplays(baseBPM) {
         const quarterBPM = Math.round(baseBPM);
-        if (parseInt(tempoSlider.value, 10) !== quarterBPM) tempoSlider.value = quarterBPM;
+        
+        // Update slider if it exists (may not be available initially if rhythm tab isn't active)
+        const currentSlider = tempoSlider || document.getElementById('tempo-slider');
+        if (currentSlider && parseInt(currentSlider.value, 10) !== quarterBPM) {
+            currentSlider.value = quarterBPM;
+        }
         
         const eighthBPM = quarterBPM * 2;
         const dottedQuarterBPM = Math.round(quarterBPM / 1.5);
@@ -49,15 +59,75 @@ export function initAudioControls() {
         if (store.state.tempo !== quarterBPM) store.setTempo(quarterBPM);
     }
 
+    // Function to initialize tempo slider when it becomes available
+    function initializeTempoSlider() {
+        const slider = document.getElementById('tempo-slider');
+        if (!slider) {
+            console.warn('⚠️ [AudioControls] Tempo slider still not found during deferred initialization');
+            return false;
+        }
+        
+        console.log('✅ [AudioControls] Tempo slider found, setting up event listeners');
+        slider.addEventListener('input', (e) => updateTempoDisplays(parseInt(e.target.value, 10)));
+        slider.addEventListener('mouseup', function() { this.blur(); });
+        
+        // Set initial value from state
+        const currentTempo = store.state.tempo;
+        if (slider.value !== currentTempo.toString()) {
+            slider.value = currentTempo;
+        }
+        
+        return true;
+    }
+    
     if (tempoSlider) {
+        console.log('✅ [AudioControls] Tempo slider found immediately, setting up event listeners');
         tempoSlider.addEventListener('input', (e) => updateTempoDisplays(parseInt(e.target.value, 10)));
-        eighthNoteInput.on('change', (val) => { if (!isNaN(val) && val > 0) updateTempoDisplays(val / 2); });
-        quarterNoteInput.on('change', (val) => { if (!isNaN(val) && val > 0) updateTempoDisplays(val); });
-        dottedQuarterInput.on('change', (val) => { if (!isNaN(val) && val > 0) updateTempoDisplays(val * 1.5); });
         tempoSlider.addEventListener('mouseup', function() { this.blur(); });
         updateTempoDisplays(store.state.tempo);
+    } else {
+        // Tempo slider not found - set up deferred initialization
+        console.log('🔄 [AudioControls] Setting up deferred tempo slider initialization...');
+        
+        // Try again after a short delay
+        setTimeout(() => {
+            initializeTempoSlider();
+        }, 100);
+        
+        // Also try when the rhythm tab becomes visible
+        const rhythmPanel = document.getElementById('rhythm-panel');
+        if (rhythmPanel) {
+            const observer = new MutationObserver((mutations) => {
+                mutations.forEach((mutation) => {
+                    if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
+                        const target = mutation.target;
+                        if (target.classList.contains('active') || target.style.display !== 'none') {
+                            console.log('🎵 [AudioControls] Rhythm tab became visible, trying to initialize tempo slider');
+                            if (initializeTempoSlider()) {
+                                observer.disconnect(); // Stop observing once successful
+                            }
+                        }
+                    }
+                });
+            });
+            
+            observer.observe(rhythmPanel, {
+                attributes: true,
+                attributeFilter: ['class', 'style']
+            });
+        }
     }
+    
+    // Set up draggable number inputs (these should work regardless of tab visibility)
+    eighthNoteInput.on('change', (val) => { if (!isNaN(val) && val > 0) updateTempoDisplays(val / 2); });
+    quarterNoteInput.on('change', (val) => { if (!isNaN(val) && val > 0) updateTempoDisplays(val); });
+    dottedQuarterInput.on('change', (val) => { if (!isNaN(val) && val > 0) updateTempoDisplays(val * 1.5); });
+    
+    // Initialize tempo displays with current state value
+    updateTempoDisplays(store.state.tempo);
 
+    // Expose tempo slider initialization globally so it can be called when tabs are switched
+    window.initTempoSliderIfNeeded = initializeTempoSlider;
 
     const presetContainer = document.querySelector('.preset-effects-container');
     document.querySelectorAll('.preset-button').forEach(button => {

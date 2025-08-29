@@ -7,7 +7,7 @@
  * - pitch: The display name for the pitch (e.g., "B♭/A♯7").
  * - toneNote: The scientific pitch notation compatible with Tone.js (e.g., "Bb7").
  * - frequency: The frequency in Hz.
- * - column: The legend column ('A' or 'B') this pitch belongs to.
+ * - column: The legend column ('EVEN' or 'ODD') this pitch belongs to, corresponding to the dual-parity rank system.
  * - hex: The specific color code for this exact pitch.
  */
 export const fullRowData = [

@@ -22,7 +22,6 @@ class DOMCache {
         this.cacheElement('hoverCanvas', 'hover-canvas');
         this.cacheElement('drumGrid', 'drum-grid');
         this.cacheElement('drumHoverCanvas', 'drum-hover-canvas');
-        this.cacheElement('harmonyCanvas', 'harmony-analysis-canvas');
         this.cacheElement('pitchPaintCanvas', 'pitch-paint-canvas');
 
         // Layout containers
@@ -30,7 +29,6 @@ class DOMCache {
         this.cacheElement('gridContainer', 'grid-container');
         this.cacheElement('pitchGridWrapper', 'pitch-grid-wrapper');
         this.cacheElement('drumGridWrapper', 'drum-grid-wrapper');
-        this.cacheElement('harmonyContainer', 'harmonyAnalysisGrid');
 
         // Toolbar elements (frequently accessed)
         this.cacheElement('eraserButton', 'eraser-tool-button');

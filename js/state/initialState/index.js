@@ -30,6 +30,8 @@ export const initialState = {
     selectedNote: { shape: 'circle', color: '#4a90e2' },
     activeChordId: null,
     activeChordIntervals: ["1P", "3M", "5P"],
+    isIntervalsInverted: false,
+    chordPositionState: 0, // 0 = Root, 1 = 1st Inversion, 2 = 2nd Inversion
     
     isChordCandidateMenuOpen: false,
     chordCandidateMenuPosition: { x: 0, y: 0 },
@@ -37,7 +39,7 @@ export const initialState = {
     chordCandidates: [],
     
     gridPosition: 0,
-    visualRows: 0,
+    viewportRows: 0,
     logicRows: 0,
     cellWidth: 0,
     cellHeight: 0,

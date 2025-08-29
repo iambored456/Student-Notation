@@ -49,3 +49,16 @@ function hexToRgb(hex) {
 function interpolateRgb(c1, c2, factor) {
   return c1.map((v, i) => Math.round(v + factor * (c2[i] - v)));
 }
+
+// Get paint color based on the current paint color mode
+export function getPaintColor(midiValue, colorMode, selectedNoteColor) {
+  if (midiValue === 0 || !midiValue) return hexToRgb("#888888");
+  
+  if (colorMode === 'shapenote') {
+    // Use the selected note color for shape note mode
+    return selectedNoteColor ? hexToRgb(selectedNoteColor) : hexToRgb("#4A90E2");
+  } else {
+    // Use chromatic colors (default behavior)
+    return getInterpolatedColor(midiValue);
+  }
+}

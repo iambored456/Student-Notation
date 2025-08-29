@@ -2,19 +2,16 @@
 import store from '../../state/index.js';
 import PitchPaintService from '../../services/pitchPaintService.js';
 import PaintCanvas from './paintCanvas.js';
-import DraggableNumber from '../UI/DraggableNumber.js';
 
 class PaintControls {
   constructor() {
     this.elements = {};
-    this.draggableControls = {};
   }
 
   initialize() {
     this.cacheDOMElements();
     if (!this.elements.toggleBtn) return;
 
-    this.initializeDraggableControls();
     this.setupEventListeners();
     this.updateUI();
     
@@ -27,46 +24,32 @@ class PaintControls {
   cacheDOMElements() {
     this.elements.toggleBtn = document.getElementById('mic-paint-toggle');
     this.elements.clearBtn = document.getElementById('paint-clear-btn');
-  }
-
-  initializeDraggableControls() {
-    // Draggable number config similar to tempo controls
-    const paintControlConfig = {
-      size: [45, 24],
-      step: 1,
-      decimalPlaces: 0,
-      useAppStyling: true
-    };
-
-    // Initialize Thickness draggable (2-20, default 6)
-    this.draggableControls.thickness = new DraggableNumber('#trail-thickness', {
-      ...paintControlConfig,
-      value: 6,
-      min: 2,
-      max: 20
-    });
-
-    // Initialize Opacity draggable (20-100, default 80)
-    this.draggableControls.opacity = new DraggableNumber('#trail-opacity', {
-      ...paintControlConfig,
-      value: 80,
-      min: 20,
-      max: 100
-    });
+    this.elements.thicknessSelect = document.getElementById('sidebar-trail-thickness');
+    this.elements.opacitySelect = document.getElementById('sidebar-trail-opacity');
+    this.elements.colorToggle = document.getElementById('paint-color-toggle');
+    this.elements.playbackToggle = document.getElementById('paint-playback-toggle');
   }
 
   setupEventListeners() {
     this.elements.toggleBtn.addEventListener('click', () => this.handleMicPaintToggle());
     this.elements.clearBtn.addEventListener('click', () => this.handleClearPaint());
 
-    // Set up draggable number change listeners
-    this.draggableControls.thickness.onChange = (value) => {
-      store.setPaintSettings({ thickness: value });
-    };
+    // Set up dropdown change listeners
+    this.elements.thicknessSelect.addEventListener('change', (e) => {
+      const thickness = parseInt(e.target.value, 10);
+      store.setPaintSettings({ thickness });
+    });
 
-    this.draggableControls.opacity.onChange = (value) => {
-      store.setPaintSettings({ opacity: value });
-    };
+    this.elements.opacitySelect.addEventListener('change', (e) => {
+      const opacity = parseInt(e.target.value, 10);
+      store.setPaintSettings({ opacity });
+    });
+
+    // Set up color toggle listener
+    this.elements.colorToggle.addEventListener('click', () => this.handleColorToggle());
+    
+    // Set up playback toggle listener
+    this.elements.playbackToggle.addEventListener('click', () => this.handlePlaybackToggle());
   }
 
   async handleMicPaintToggle() {
@@ -95,6 +78,17 @@ class PaintControls {
     }
   }
 
+  handleColorToggle() {
+    const currentMode = store.state.paint.paintSettings.colorMode;
+    const newMode = currentMode === 'chromatic' ? 'shapenote' : 'chromatic';
+    store.setPaintSettings({ colorMode: newMode });
+  }
+
+  handlePlaybackToggle() {
+    const currentEnabled = store.state.paint.paintSettings.playbackEnabled;
+    store.setPaintSettings({ playbackEnabled: !currentEnabled });
+  }
+
   updateUI() {
     const { isMicPaintActive, paintHistory, paintSettings } = store.state.paint;
 
@@ -103,12 +97,23 @@ class PaintControls {
     
     this.elements.clearBtn.disabled = paintHistory.length === 0;
 
-    // Update draggable controls with current values
-    if (this.draggableControls.thickness && this.draggableControls.thickness.value !== paintSettings.thickness) {
-      this.draggableControls.thickness.passiveUpdate(paintSettings.thickness);
+    // Update dropdown selections with current values
+    if (this.elements.thicknessSelect && this.elements.thicknessSelect.value !== paintSettings.thickness.toString()) {
+      this.elements.thicknessSelect.value = paintSettings.thickness.toString();
     }
-    if (this.draggableControls.opacity && this.draggableControls.opacity.value !== paintSettings.opacity) {
-      this.draggableControls.opacity.passiveUpdate(paintSettings.opacity);
+    if (this.elements.opacitySelect && this.elements.opacitySelect.value !== paintSettings.opacity.toString()) {
+      this.elements.opacitySelect.value = paintSettings.opacity.toString();
+    }
+    
+    // Update color toggle state
+    if (this.elements.colorToggle) {
+      const isShapeNote = paintSettings.colorMode === 'shapenote';
+      this.elements.colorToggle.classList.toggle('active', isShapeNote);
+    }
+    
+    // Update playback toggle state
+    if (this.elements.playbackToggle) {
+      this.elements.playbackToggle.classList.toggle('active', paintSettings.playbackEnabled);
     }
   }
 }
