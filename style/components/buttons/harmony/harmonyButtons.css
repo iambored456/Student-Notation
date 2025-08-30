@@ -88,7 +88,7 @@
     box-shadow: var(--box-shadow-sm);
     position: relative;
     z-index: 1;
-    width: 18rem;
+    width: fit-content;
 }
 
 .chord-tab-panel.active .intervals-content-box::before {
@@ -131,7 +131,7 @@
 .inversion-column {
     display: flex;
     flex-direction: column;
-    align-items: center;
+    align-items: flex-start;
     gap: var(--space-2);
     flex: 0 0 auto;
 }
@@ -156,7 +156,7 @@
 }
 
 .toggle-switch.active {
-    background-color: var(--c-accent);
+    background-color: var(--c-border);
 }
 
 .toggle-slider {
@@ -185,7 +185,7 @@
 .chord-inversion-column {
     display: flex;
     flex-direction: column;
-    align-items: center;
+    align-items: flex-start;
     gap: var(--space-2);
     flex: 0 0 auto;
 }
@@ -211,11 +211,11 @@
 }
 
 .three-state-toggle.state-1 {
-    background-color: var(--c-accent);
+    background-color: var(--c-border);
 }
 
 .three-state-toggle.state-2 {
-    background-color: var(--c-warning);
+    background-color: var(--c-border);
 }
 
 .three-state-slider {
@@ -272,15 +272,15 @@
 }
 
 .four-state-toggle.state-1 {
-    background-color: var(--c-accent);
+    background-color: var(--c-border);
 }
 
 .four-state-toggle.state-2 {
-    background-color: var(--c-warning);
+    background-color: var(--c-border);
 }
 
 .four-state-toggle.state-3 {
-    background-color: var(--c-danger);
+    background-color: var(--c-border);
 }
 
 .four-state-slider {
@@ -323,6 +323,168 @@
 }
 
 .state-labels-4 .state-label {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    height: 20px;
+}
+
+/* --- 5-State Toggle Switch - Vertical --- */
+.five-state-toggle {
+    width: 20px;
+    height: 100px;
+    background-color: var(--c-border);
+    border-radius: 10px;
+    position: relative;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.five-state-toggle.state-1 {
+    background-color: var(--c-border);
+}
+
+.five-state-toggle.state-2 {
+    background-color: var(--c-border);
+}
+
+.five-state-toggle.state-3 {
+    background-color: var(--c-border);
+}
+
+.five-state-toggle.state-4 {
+    background-color: var(--c-border);
+}
+
+.five-state-slider {
+    width: 16px;
+    height: 16px;
+    background-color: var(--c-surface);
+    border-radius: 50%;
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    transition: transform 0.3s ease;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.five-state-toggle.state-1 .five-state-slider {
+    transform: translateY(20px);
+}
+
+.five-state-toggle.state-2 .five-state-slider {
+    transform: translateY(40px);
+}
+
+.five-state-toggle.state-3 .five-state-slider {
+    transform: translateY(60px);
+}
+
+.five-state-toggle.state-4 .five-state-slider {
+    transform: translateY(80px);
+}
+
+.state-labels-5 {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    height: 100px;
+    margin-left: var(--space-3);
+    position: absolute;
+    left: 100%;
+    top: 0;
+    font-size: 0.6em;
+    color: var(--c-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+.state-labels-5 .state-label {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    height: 20px;
+}
+
+/* --- 6-State Toggle Switch - Vertical --- */
+.six-state-toggle {
+    width: 20px;
+    height: 120px;
+    background-color: var(--c-border);
+    border-radius: 10px;
+    position: relative;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.six-state-toggle.state-1 {
+    background-color: var(--c-border);
+}
+
+.six-state-toggle.state-2 {
+    background-color: var(--c-border);
+}
+
+.six-state-toggle.state-3 {
+    background-color: var(--c-border);
+}
+
+.six-state-toggle.state-4 {
+    background-color: var(--c-border);
+}
+
+.six-state-toggle.state-5 {
+    background-color: var(--c-border);
+}
+
+.six-state-slider {
+    width: 16px;
+    height: 16px;
+    background-color: var(--c-surface);
+    border-radius: 50%;
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    transition: transform 0.3s ease;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.six-state-toggle.state-1 .six-state-slider {
+    transform: translateY(20px);
+}
+
+.six-state-toggle.state-2 .six-state-slider {
+    transform: translateY(40px);
+}
+
+.six-state-toggle.state-3 .six-state-slider {
+    transform: translateY(60px);
+}
+
+.six-state-toggle.state-4 .six-state-slider {
+    transform: translateY(80px);
+}
+
+.six-state-toggle.state-5 .six-state-slider {
+    transform: translateY(100px);
+}
+
+.state-labels-6 {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    height: 120px;
+    margin-left: var(--space-3);
+    position: absolute;
+    left: 100%;
+    top: 0;
+    font-size: 0.6em;
+    color: var(--c-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+.state-labels-6 .state-label {
     flex: 1;
     display: flex;
     align-items: center;

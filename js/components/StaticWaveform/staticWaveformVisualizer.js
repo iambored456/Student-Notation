@@ -3,6 +3,7 @@ import store from '../../state/index.js';
 import { HARMONIC_BINS } from '../../core/constants.js';
 import * as Tone from 'tone';
 import { hexToRgba } from '../../utils/colorUtils.js';
+import { getFilteredCoefficients } from '../audio/HarmonicsFilter/harmonicBins.js';
 
 
 class StaticWaveformVisualizer {
@@ -27,6 +28,10 @@ class StaticWaveformVisualizer {
         this.fromWaveform = null;
         this.toWaveform = null;
         this.transitionAnimationId = null;
+        
+        // Speed control for waveform oscillation
+        this.animationSpeed = 100; // Default 100%
+        this.frameSkipCounter = 0;
     }
 
     initialize() {
@@ -105,18 +110,24 @@ class StaticWaveformVisualizer {
         });
         // Listen for playback state changes to toggle live visualization
         store.on('playbackStateChanged', ({ isPlaying, isPaused }) => {
+            console.log(`[StaticWaveform] Playback state changed: isPlaying=${isPlaying}, isPaused=${isPaused}`);
             if (isPlaying && !isPaused) {
+                console.log(`[StaticWaveform] Starting live visualization`);
                 this.startLiveVisualization();
             } else {
+                console.log(`[StaticWaveform] Stopping live visualization`);
                 this.stopLiveVisualization();
             }
         });
 
         // Listen for spacebar-triggered audition of a single note
         store.on('spacebarPlayback', ({ color, isPlaying }) => {
+            console.log(`[StaticWaveform] Spacebar playback: color=${color}, isPlaying=${isPlaying}`);
             if (isPlaying) {
+                console.log(`[StaticWaveform] Starting single note visualization for ${color}`);
                 this.startSingleNoteVisualization(color);
             } else {
+                console.log(`[StaticWaveform] Stopping single note visualization`);
                 this.stopLiveVisualization();
             }
         });
@@ -133,6 +144,36 @@ class StaticWaveformVisualizer {
                 }
             });
         });
+        
+        // Setup speed control buttons
+        this.setupSpeedControls();
+    }
+    
+    setupSpeedControls() {
+        const speedButtons = document.querySelectorAll('.waveform-speed-btn');
+        speedButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const speed = parseInt(button.dataset.speed);
+                
+                // Toggle functionality - if already active, deactivate
+                if (button.classList.contains('active')) {
+                    button.classList.remove('active');
+                    this.setAnimationSpeed(100); // Default to 100% when no buttons active
+                    console.log(`[StaticWaveform] Animation speed reset to 100% (default)`);
+                } else {
+                    // Deactivate all other buttons and activate this one
+                    speedButtons.forEach(btn => btn.classList.remove('active'));
+                    button.classList.add('active');
+                    this.setAnimationSpeed(speed);
+                    console.log(`[StaticWaveform] Animation speed set to ${speed}%`);
+                }
+            });
+        });
+    }
+    
+    setAnimationSpeed(percentage) {
+        this.animationSpeed = percentage;
+        this.frameSkipCounter = 0; // Reset counter when speed changes
     }
 
     generateWaveform() {
@@ -144,7 +185,8 @@ class StaticWaveformVisualizer {
         const timbre = store.state.timbres[this.currentColor];
         if (!timbre || !timbre.coeffs) return;
 
-        const coeffs = timbre.coeffs;
+        // Use filtered coefficients to show the effect of filtering on the waveform
+        const coeffs = getFilteredCoefficients(this.currentColor);
         const phases = timbre.phases || [];
         const numSamples = this.waveformData.length;
         
@@ -186,7 +228,17 @@ class StaticWaveformVisualizer {
         }
  
 
-        // Skip aggressive normalization to preserve true amplitude
+        // Store the calculated amplitude for ADSR use
+        this.calculatedAmplitude = Math.min(1.0, maxGeneratedAmp);
+        
+        // Normalize amplitude to keep peak at 1.0
+        if (maxGeneratedAmp > 1.0) {
+            const normalizationFactor = 1.0 / maxGeneratedAmp;
+            for (let i = 0; i < this.waveformData.length; i++) {
+                this.waveformData[i] *= normalizationFactor;
+            }
+        }
+        
         this.draw();
     }
 
@@ -222,12 +274,14 @@ class StaticWaveformVisualizer {
         const timbre = store.state.timbres[this.currentColor];
         if (!timbre || !timbre.coeffs) return;
 
-        const coeffs = timbre.coeffs;
+        // Use filtered coefficients to show the effect of filtering on the waveform
+        const coeffs = getFilteredCoefficients(this.currentColor);
         const numSamples = this.waveformData.length;
         const masterAmplitude = 1.0;
         
         // Clear the waveform data
         this.waveformData.fill(0);
+        let maxGeneratedAmp = 0;
 
         for (let sample = 0; sample < numSamples; sample++) {
             // Extend phase to cover 480 degrees (4/3 * 2π)
@@ -244,6 +298,18 @@ class StaticWaveformVisualizer {
             }
 
             this.waveformData[sample] = amplitude * masterAmplitude;
+            maxGeneratedAmp = Math.max(maxGeneratedAmp, Math.abs(amplitude * masterAmplitude));
+        }
+
+        // Store the calculated amplitude for ADSR use
+        this.calculatedAmplitude = Math.min(1.0, maxGeneratedAmp);
+        
+        // Normalize amplitude to keep peak at 1.0
+        if (maxGeneratedAmp > 1.0) {
+            const normalizationFactor = 1.0 / maxGeneratedAmp;
+            for (let i = 0; i < this.waveformData.length; i++) {
+                this.waveformData[i] *= normalizationFactor;
+            }
         }
     }
 
@@ -297,19 +363,29 @@ class StaticWaveformVisualizer {
 
         const { width, height } = this.canvas;
         const centerY = height / 2;
-        const amplitude = height * 0.4; // Use 40% of height for amplitude
+        const amplitude = height / 2; // Use full height range from -1.0 to +1.0
 
         // Clear canvas
         this.ctx.fillStyle = '#FFFFFF';
         this.ctx.fillRect(0, 0, width, height);
 
         // Draw grid lines
-        this.drawGrid(width, height, centerY);
+        this.drawGrid(width, height, centerY, amplitude);
 
         if (this.isPlaybackActive && this.liveWaveforms.size > 0) {
+            // Log drawing mode occasionally 
+            if (!this.drawCounter) this.drawCounter = 0;
+            this.drawCounter++;
+            if (this.drawCounter % 120 === 0) { // Every 2 seconds
+                console.log(`[StaticWaveform] Drawing LIVE waveforms, count: ${this.liveWaveforms.size}`);
+            }
             // Draw live waveforms with colors
             this.drawLiveWaveforms(width, centerY, amplitude);
         } else {
+            if (!this.staticDrawLogged) {
+                console.log(`[StaticWaveform] Drawing STATIC waveform`);
+                this.staticDrawLogged = true;
+            }
             // Draw static waveform
             this.drawWaveform(width, centerY, amplitude);
         }
@@ -320,7 +396,7 @@ class StaticWaveformVisualizer {
         }
     }
 
-    drawGrid(width, height, centerY) {
+    drawGrid(width, height, centerY, amplitude) {
         this.ctx.strokeStyle = '#ced4da';
         this.ctx.lineWidth = 1;
         this.ctx.setLineDash([2, 2]);
@@ -331,25 +407,26 @@ class StaticWaveformVisualizer {
         this.ctx.lineTo(width, centerY);
         this.ctx.stroke();
 
-        // Vertical grid lines - now extended to show 480 degrees (5 sections)
-        for (let i = 1; i < 5; i++) {
-            const x = (width / 4) * i;
+        // Vertical grid lines at quartile positions (excluding 0° at left edge)
+        const gridDegrees = [90, 180, 270, 360, 450];
+        gridDegrees.forEach(degree => {
+            const x = (width / 480) * degree;
             this.ctx.beginPath();
             this.ctx.moveTo(x, 0);
             this.ctx.lineTo(x, height);
             this.ctx.stroke();
-        }
+        });
 
         // Add the 360-480° shaded region
         const deg360Position = (width / 480) * 360; // Position where 360° occurs
         this.ctx.fillStyle = 'rgba(128, 128, 128, 0.15)'; // Light gray overlay
         this.ctx.fillRect(deg360Position, 0, width - deg360Position, height);
 
-        // Amplitude reference lines
+        // Amplitude reference lines (dashed)
         const ampLines = [0.25, 0.5, 0.75];
         ampLines.forEach(amp => {
-            const y1 = centerY - (height * 0.4 * amp);
-            const y2 = centerY + (height * 0.4 * amp);
+            const y1 = centerY - (amplitude * amp);
+            const y2 = centerY + (amplitude * amp);
             
             this.ctx.beginPath();
             this.ctx.moveTo(0, y1);
@@ -360,6 +437,25 @@ class StaticWaveformVisualizer {
         });
 
         this.ctx.setLineDash([]);
+        
+        // Solid lines at +1.0 and -1.0 amplitude
+        this.ctx.strokeStyle = '#999999';
+        this.ctx.lineWidth = 1;
+        
+        const maxY = centerY - amplitude; // +1.0 position
+        const minY = centerY + amplitude; // -1.0 position
+        
+        // Draw +1.0 line
+        this.ctx.beginPath();
+        this.ctx.moveTo(0, maxY);
+        this.ctx.lineTo(width, maxY);
+        this.ctx.stroke();
+        
+        // Draw -1.0 line
+        this.ctx.beginPath();
+        this.ctx.moveTo(0, minY);
+        this.ctx.lineTo(width, minY);
+        this.ctx.stroke();
     }
 
     drawWaveform(width, centerY, amplitude) {
@@ -406,12 +502,22 @@ class StaticWaveformVisualizer {
     drawLiveWaveforms(width, centerY, amplitude) {
         const colors = Array.from(this.liveWaveforms.keys());
         
+        // Log once every 2 seconds what we're drawing
+        if (!this.liveDrawCounter) this.liveDrawCounter = 0;
+        this.liveDrawCounter++;
+        if (this.liveDrawCounter % 120 === 0) {
+            console.log(`[StaticWaveform] Drawing live waveforms for colors:`, colors);
+        }
+        
         if (colors.length === 1) {
             // Single color - draw normal waveform
             const color = colors[0];
             const waveform = this.liveWaveforms.get(color);
-            // We can use a slightly larger amplitude when only one sound is playing
-            this.drawSingleLiveWaveform(waveform, color, width, centerY, amplitude * 1.1);
+            if (this.liveDrawCounter % 120 === 0) {
+                console.log(`[StaticWaveform] Single live waveform data length:`, waveform?.length, 'first sample:', waveform?.[0]);
+            }
+            // Use the same amplitude as static waveform for consistent scaling
+            this.drawSingleLiveWaveform(waveform, color, width, centerY, amplitude);
         } else if (colors.length > 1) {
             // Multiple colors - draw layered waveforms with transparency
             colors.forEach((color, index) => {
@@ -422,35 +528,46 @@ class StaticWaveformVisualizer {
     }
 
     drawSingleLiveWaveform(waveform, color, width, centerY, amplitude) {
-        // For single note audition, use the static waveform data for immediate response
-        // instead of waiting for live audio analysis to catch up
-        if (this.waveformData && this.waveformData.length > 0) {
-            
-            this.ctx.strokeStyle = color;
-            this.ctx.lineWidth = 2;
-            this.ctx.beginPath();
+        // Use live audio data for dynamic waveform visualization
+        if (!waveform || waveform.length === 0) {
+            console.log(`[StaticWaveform] No waveform data for ${color}, falling back to static`);
+            // Fallback to static waveform data
+            if (this.waveformData && this.waveformData.length > 0) {
+                this.ctx.strokeStyle = color;
+                this.ctx.lineWidth = 2;
+                this.ctx.beginPath();
 
-            const samplesPerPixel = this.waveformData.length / width;
+                const samplesPerPixel = this.waveformData.length / width;
 
-            for (let x = 0; x < width; x++) {
-                const sampleIndex = Math.floor(x * samplesPerPixel);
-                const sample = this.waveformData[sampleIndex] || 0;
-                const y = centerY - (sample * amplitude);
+                for (let x = 0; x < width; x++) {
+                    const sampleIndex = Math.floor(x * samplesPerPixel);
+                    const sample = this.waveformData[sampleIndex] || 0;
+                    const y = centerY - (sample * amplitude);
 
-                if (x === 0) {
-                    this.ctx.moveTo(x, y);
-                } else {
-                    this.ctx.lineTo(x, y);
+                    if (x === 0) {
+                        this.ctx.moveTo(x, y);
+                    } else {
+                        this.ctx.lineTo(x, y);
+                    }
                 }
-            }
 
-            this.ctx.stroke();
+                this.ctx.stroke();
+            }
             return;
         }
 
-        // Fallback to live audio data if static data isn't available
-        if (!waveform || waveform.length === 0) return;
-
+        // Draw the live waveform data
+        console.log(`[StaticWaveform] Drawing LIVE data for ${color}, waveform length: ${waveform.length}`);
+        
+        // Apply the same normalization as static waveform to keep peak at 1.0
+        let maxAmp = 0;
+        for (let i = 0; i < waveform.length; i++) {
+            maxAmp = Math.max(maxAmp, Math.abs(waveform[i]));
+        }
+        
+        const normalizationFactor = maxAmp > 1.0 ? 1.0 / maxAmp : 1.0;
+        console.log(`[StaticWaveform] Live waveform max amplitude: ${maxAmp.toFixed(3)}, normalization factor: ${normalizationFactor.toFixed(3)}`);
+        
         this.ctx.strokeStyle = color;
         this.ctx.lineWidth = 2;
         this.ctx.beginPath();
@@ -459,9 +576,8 @@ class StaticWaveformVisualizer {
 
         for (let x = 0; x < width; x++) {
             const sampleIndex = Math.floor(x * samplesPerPixel);
-            const sample = waveform[sampleIndex] || 0;
+            const sample = (waveform[sampleIndex] || 0) * normalizationFactor;
             
-            // FIX: Removed the incorrect normalization. The sample is already a float from -1 to 1.
             const y = centerY - (sample * amplitude);
 
             if (x === 0) {
@@ -477,6 +593,13 @@ class StaticWaveformVisualizer {
     drawLayeredLiveWaveform(waveform, color, width, centerY, amplitude, totalLayers) {
         if (!waveform || waveform.length === 0) return;
 
+        // Apply the same normalization as static waveform
+        let maxAmp = 0;
+        for (let i = 0; i < waveform.length; i++) {
+            maxAmp = Math.max(maxAmp, Math.abs(waveform[i]));
+        }
+        const normalizationFactor = maxAmp > 1.0 ? 1.0 / maxAmp : 1.0;
+
         const alpha = Math.max(0.4, 1.0 / totalLayers);
         const strokeColor = hexToRgba(color, alpha * 2); 
         const fillColor = hexToRgba(color, alpha * 0.5);
@@ -489,9 +612,8 @@ class StaticWaveformVisualizer {
 
         for (let x = 0; x < width; x++) {
             const sampleIndex = Math.floor(x * samplesPerPixel);
-            const sample = waveform[sampleIndex] || 0;
+            const sample = (waveform[sampleIndex] || 0) * normalizationFactor;
 
-            // FIX: Removed the incorrect normalization here as well.
             const y = centerY - (sample * amplitude * 0.7); // Still reduce amplitude for layering
 
             if (x === 0) {
@@ -505,11 +627,14 @@ class StaticWaveformVisualizer {
     }
 
     startLiveVisualization() {
+        console.log(`[StaticWaveform] startLiveVisualization called, isPlaybackActive=${this.isPlaybackActive}`);
         if (this.isPlaybackActive) return;
         
         this.isPlaybackActive = true;
+        console.log(`[StaticWaveform] Setting up live analysers...`);
         this.setupLiveAnalysers();
         this.updateContainerState(true);
+        console.log(`[StaticWaveform] Starting animation loop...`);
         this.animateLiveWaveforms();
     }
 
@@ -557,6 +682,7 @@ class StaticWaveformVisualizer {
         // Access the synth engine's audio nodes for each color
         const synthEngine = window.synthEngine;
         if (!synthEngine) {
+            console.error(`[StaticWaveform] No synthEngine found on window object`);
             return;
         }
 
@@ -571,6 +697,7 @@ class StaticWaveformVisualizer {
                 this.liveWaveforms.set(color, new Float32Array(1024));
             }
         });
+        console.log(`[StaticWaveform] Live analyzers setup complete: ${this.liveAnalysers.size} analyzers`);
     }
 
     setupSingleAnalyser(color) {
@@ -602,16 +729,42 @@ class StaticWaveformVisualizer {
             playingColors.add(this.currentColor);
         }
 
-        return Array.from(playingColors);
+        const result = Array.from(playingColors);
+        console.log(`[StaticWaveform] Active colors for live visualization:`, result);
+        return result;
     }
 
     animateLiveWaveforms() {
         if (!this.isPlaybackActive) return;
 
-        // Update waveform data from each analyser
+        // Speed control: Skip frames based on animation speed
+        this.frameSkipCounter++;
+        const skipFrames = Math.floor(100 / this.animationSpeed);
+        
+        if (this.frameSkipCounter % skipFrames !== 0) {
+            // Skip this frame, but continue the animation loop
+            this.playbackAnimationId = requestAnimationFrame(() => this.animateLiveWaveforms());
+            return;
+        }
+
+        // Update waveform data from each analyser (no smoothing for accurate peaks)
         this.liveAnalysers.forEach((analyser, color) => {
-            const waveformArray = analyser.getValue();
-            this.liveWaveforms.set(color, waveformArray);
+            const newWaveformArray = analyser.getValue();
+            
+            // Use raw waveform data directly - no smoothing
+            this.liveWaveforms.set(color, newWaveformArray);
+            
+            // Log waveform data every 60 processed frames
+            if (!this.frameCounter) this.frameCounter = 0;
+            this.frameCounter++;
+            
+            if (this.frameCounter % 60 === 0) {
+                const firstFew = newWaveformArray.slice(0, 5);
+                const max = Math.max(...newWaveformArray);
+                const min = Math.min(...newWaveformArray);
+                const rms = Math.sqrt(newWaveformArray.reduce((sum, val) => sum + val*val, 0) / newWaveformArray.length);
+                console.log(`[StaticWaveform] ${color} raw waveform at ${this.animationSpeed}% speed - Range: ${min.toFixed(3)} to ${max.toFixed(3)}, RMS: ${rms.toFixed(3)}`);
+            }
         });
 
         // Redraw with live data
@@ -626,18 +779,22 @@ class StaticWaveformVisualizer {
         this.ctx.font = '12px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
         this.ctx.textAlign = 'center';
 
-        // Extended cycle labels to show 480 degrees
-        const labels = ['0°', '120°', '240°', '360°', '480°'];
+        // Quartile labels for sine wave - positioned in middle of waveform
+        const labels = ['0°', '90°', '180°', '270°', '360°', '450°'];
+        const degrees = [0, 90, 180, 270, 360, 450];
         labels.forEach((label, i) => {
-            const x = (width / 4) * i;
-            this.ctx.fillText(label, x, height - 8);
+            const x = (width / 480) * degrees[i] + 10; // Position based on actual degree value
+            this.ctx.fillText(label, x, height / 2 + 4);
         });
 
-        // Amplitude labels
+        // Amplitude labels (removed 0.0)
         this.ctx.textAlign = 'left';
         this.ctx.fillText('+1.0', 5, 15);
-        this.ctx.fillText('0.0', 5, height / 2 + 4);
         this.ctx.fillText('-1.0', 5, height - 8);
+    }
+
+    getNormalizedAmplitude() {
+        return this.calculatedAmplitude || 0;
     }
 
     dispose() {

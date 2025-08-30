@@ -49,6 +49,7 @@ class DOMCache {
         this.cacheElement('degreeModeToggle', 'degree-mode-toggle');
         this.cacheElement('flatBtn', 'flat-toggle-btn');
         this.cacheElement('sharpBtn', 'sharp-toggle-btn');
+        this.cacheElement('focusColoursToggle', 'focus-colours-toggle');
         this.cacheElement('harmonyContainerMain', 'chordShape-container');
 
         // Audio controls

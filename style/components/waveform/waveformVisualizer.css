@@ -173,11 +173,77 @@
     }
 }
 
+/* Waveform Speed Controls */
+.waveform-speed-controls {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    display: flex;
+    gap: 4px;
+    z-index: 20;
+}
+
+.waveform-speed-btn {
+    padding: var(--space-1);
+    font-size: 13px;
+    font-weight: 500;
+    background-color: #ffffff;
+    color: var(--c-text);
+    border: 1px solid var(--c-border);
+    border-radius: var(--border-radius-sm);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    min-width: 28px;
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.waveform-speed-btn:hover {
+    background-color: var(--c-border);
+}
+
+.waveform-speed-btn.active {
+    background-color: var(--c-accent-light, #63a9fd) !important;
+    color: var(--c-text, #212529) !important;
+    border-color: var(--c-accent, #4A90E2) !important;
+    font-weight: 600 !important;
+    box-shadow: 0 0 0 1px var(--c-accent, #4A90E2) !important;
+    transform: scale(0.98) !important;
+}
+
+.waveform-speed-btn.active:hover {
+    background-color: var(--c-accent-light, #63a9fd) !important;
+    color: var(--c-text, #212529) !important;
+    border-color: var(--c-accent, #4A90E2) !important;
+}
+
+/* Speed controls are always visible */
+.waveform-speed-controls {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+/* Dark mode support for speed controls */
+@media (prefers-color-scheme: dark) {
+    .waveform-speed-btn {
+        background-color: var(--c-surface-dark, #2d3748);
+        border-color: var(--c-border-dark, #4a5568);
+        color: var(--c-text-dark, #e2e8f0);
+    }
+    
+    .waveform-speed-btn:hover {
+        background-color: var(--c-border-dark, #4a5568);
+    }
+}
+
 /* Reduced motion support */
 @media (prefers-reduced-motion: reduce) {
     .waveform-display-wrapper,
     .waveform-display-wrapper::after,
-    .waveform-display-wrapper * {
+    .waveform-display-wrapper *,
+    .waveform-speed-btn {
         transition: none;
         animation: none;
     }

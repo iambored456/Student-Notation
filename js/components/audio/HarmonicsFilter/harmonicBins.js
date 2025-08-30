@@ -69,13 +69,76 @@ function applyFilterMix(filterAmp, mixAmount) {
 // Store discrete filter values for each bin
 let binFilterValues = new Float32Array(BINS).fill(1);
 
-// Export function for synth engine integration
+// Store filtered coefficients (separate from original coefficients)
+let filteredCoeffs = new Float32Array(BINS).fill(0);
+
+function applyDiscreteFiltering(originalCoeffs, filterSettings) {
+    const mixAmount = filterSettings.mix || 0;
+    
+    console.log(`[DEBUG] applyDiscreteFiltering - Original coeffs:`, Array.from(originalCoeffs));
+    console.log(`[DEBUG] Mix amount:`, mixAmount);
+    
+    if (mixAmount === 0) {
+        // No filtering - return original coefficients
+        console.log(`[DEBUG] No filtering applied - returning original coeffs`);
+        return new Float32Array(originalCoeffs);
+    }
+    
+    const filtered = new Float32Array(originalCoeffs.length);
+    const mixNormalized = mixAmount / 100; // 0-1 range
+    
+    for (let i = 0; i < originalCoeffs.length; i++) {
+        const harmonicAmplitude = originalCoeffs[i]; // Y position of harmonic (0-1)
+        
+        // Get discrete filter curve value at this bin's center
+        const binCenterFreq = (i + 0.5) / BINS; // Normalized frequency (0-1)
+        const filterCurveLevel = getFilterAmplitudeAt(binCenterFreq, filterSettings); // 0-1
+        
+        // Apply filtering logic
+        if (filterCurveLevel < harmonicAmplitude) {
+            // Filter curve is below harmonic - apply attenuation
+            const distance = harmonicAmplitude - filterCurveLevel;
+            const reduction = distance * mixNormalized;
+            
+            // When Mix = 100%, harmonic is reduced to exactly the filter curve level
+            filtered[i] = harmonicAmplitude - reduction;
+        } else {
+            // Filter curve is above or equal to harmonic - no attenuation needed
+            filtered[i] = harmonicAmplitude;
+        }
+        
+        // Ensure we don't go below zero
+        filtered[i] = Math.max(0, filtered[i]);
+    }
+    
+    console.log(`[DEBUG] Filtered coeffs result:`, Array.from(filtered));
+    return filtered;
+}
+
+// Export function to get filtered coefficients for waveform visualization
+export function getFilteredCoefficients(color) {
+    const timbre = store.state.timbres[color];
+    if (!timbre) {
+        return new Float32Array(BINS);
+    }
+    
+    const filterSettings = timbre.filter;
+    if (filterSettings && (filterSettings.enabled !== false) && (filterSettings.mix || 0) > 0) {
+        // Return filtered coefficients
+        return applyDiscreteFiltering(timbre.coeffs, filterSettings);
+    } else {
+        // No filtering - return original coefficients
+        return new Float32Array(timbre.coeffs);
+    }
+}
+
+// Export function for synth engine integration  
 export function getFilterDataForSynth(color) {
     const timbre = store.state.timbres[color];
     if (!timbre || !timbre.filter || !timbre.filter.enabled) {
         return {
             enabled: false,
-            binValues: new Float32Array(BINS).fill(1),
+            coefficients: new Float32Array(timbre?.coeffs || new Float32Array(BINS)),
             settings: null
         };
     }
@@ -83,26 +146,21 @@ export function getFilterDataForSynth(color) {
     const filterSettings = timbre.filter;
     const mixAmount = filterSettings.mix || 0;
     
-    // If mix is 0, return no filtering
+    // If mix is 0, return original coefficients (no filtering)
     if (mixAmount === 0) {
         return {
             enabled: false,
-            binValues: new Float32Array(BINS).fill(1),
+            coefficients: new Float32Array(timbre.coeffs),
             settings: filterSettings
         };
     }
     
-    // Calculate the actual filter multipliers for each harmonic bin
-    const outputBinValues = new Float32Array(BINS);
-    for (let i = 0; i < BINS; i++) {
-        const norm_pos = (i + 0.5) / BINS; // Center of each bin
-        const rawFilterAmp = getFilterAmplitudeAt(norm_pos, filterSettings);
-        outputBinValues[i] = applyFilterMix(rawFilterAmp, mixAmount);
-    }
+    // Apply discrete filtering to the coefficients
+    const filteredCoefficients = applyDiscreteFiltering(timbre.coeffs, filterSettings);
     
     return {
         enabled: true,
-        binValues: outputBinValues,
+        coefficients: filteredCoefficients,
         settings: {
             blend: filterSettings.blend,
             cutoff: filterSettings.cutoff,
@@ -132,15 +190,32 @@ function drawFilterOverlay() {
     
     overlayCtx.clearRect(0, 0, width, height);
     
+    // Draw horizontal reference lines at 0.25, 0.50, and 0.75 amplitude
+    const usableHeight = height;
+    const maxBarHeight = usableHeight * 0.95;
+    const barBaseY = height;
+    
+    overlayCtx.setLineDash([3, 3]); // Dashed line pattern
+    overlayCtx.strokeStyle = '#ced4da';
+    overlayCtx.lineWidth = 1;
+    
+    const ampLines = [0.25, 0.5, 0.75];
+    ampLines.forEach(amp => {
+        const y = barBaseY - (amp * maxBarHeight);
+        overlayCtx.beginPath();
+        overlayCtx.moveTo(0, y);
+        overlayCtx.lineTo(width, y);
+        overlayCtx.stroke();
+    });
+    
+    overlayCtx.setLineDash([]); // Reset to solid lines
+    
     const filterSettings = store.state.timbres[currentColor]?.filter;
     
     // Fix: Default enabled to true if undefined (handles legacy state or missing property)
     const isFilterEnabled = filterSettings && (filterSettings.enabled !== false);
     
     if (filterSettings && isFilterEnabled) {
-        const usableHeight = height;
-        const maxBarHeight = usableHeight * 0.95;
-        const barBaseY = height;
         const mixAmount = filterSettings.mix || 0;
         
         
@@ -181,15 +256,69 @@ function drawFilterOverlay() {
         overlayCtx.strokeStyle = hexToRgba(shadeHexColor(currentColor, -0.3), strokeAlpha);
         overlayCtx.lineWidth = 2.5;
         overlayCtx.stroke();
-        overlayCtx.lineTo(width, barBaseY);
-        overlayCtx.lineTo(0, barBaseY);
-        overlayCtx.closePath();
-        overlayCtx.fillStyle = hexToRgba(currentColor, fillAlpha);
-        overlayCtx.fill();
+        
+        // Draw discrete filter value circles for each bin
+        for (let i = 0; i < BINS; i++) {
+            const binCenterX = (i + 0.5) * (width / BINS); // Center X of each bin
+            const norm_pos = (i + 0.5) / BINS;
+            const rawFilterAmp = getFilterAmplitudeAt(norm_pos, filterSettings);
+            const circleY = barBaseY - rawFilterAmp * maxBarHeight;
+            
+            // Draw white circle with slight transparency
+            overlayCtx.beginPath();
+            overlayCtx.arc(binCenterX, circleY, 3, 0, 2 * Math.PI);
+            overlayCtx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+            overlayCtx.fill();
+            overlayCtx.strokeStyle = 'rgba(0, 0, 0, 0.3)';
+            overlayCtx.lineWidth = 1;
+            overlayCtx.stroke();
+        }
+        
+        // Draw white transparency overlay above the filter curve
+        const whiteOpacity = mixAmount / 100; // 0% mix = 0 opacity, 100% mix = 1.0 opacity
+        
+        if (whiteOpacity > 0) {
+            // Create the white overlay shape above the filter curve
+            overlayCtx.beginPath();
+            
+            // Start from top-left corner
+            overlayCtx.moveTo(0, 0);
+            
+            // Draw along the top edge to top-right
+            overlayCtx.lineTo(width, 0);
+            
+            // Draw down the right edge to the filter curve
+            const rightFilterAmp = getFilterAmplitudeAt(1.0, filterSettings); // Right edge
+            const rightY = barBaseY - rightFilterAmp * maxBarHeight;
+            overlayCtx.lineTo(width, rightY);
+            
+            // Draw the filter curve from right to left
+            for (let x = width; x >= 0; x -= 2) {
+                const norm_pos = x / width;
+                const rawFilterAmp = getFilterAmplitudeAt(norm_pos, filterSettings);
+                const y = barBaseY - rawFilterAmp * maxBarHeight;
+                overlayCtx.lineTo(x, y);
+            }
+            
+            // Close the path back to top-left
+            overlayCtx.closePath();
+            
+            // Fill the area above the filter curve with white transparency
+            overlayCtx.fillStyle = `rgba(255, 255, 255, ${whiteOpacity})`;
+            overlayCtx.fill();
+        }
         
     } else {
         // Reset filter values when filter is disabled
         binFilterValues.fill(1);
+    }
+}
+
+function drawFilterCurveThroughBin(fillElement, binIndex, binValue, filterSettings) {
+    // Remove any existing canvas overlay
+    const existingCanvas = fillElement.querySelector('canvas');
+    if (existingCanvas) {
+        existingCanvas.remove();
     }
 }
 
@@ -202,25 +331,17 @@ function updateSliderVisuals() {
         fill.style.height = `${val * 100}%`;
         
         if (val > 0) {
-            // Check if this bin's value is above or below the filter curve
-            const filterValue = binFilterValues[i] || 1;
-            const isFiltered = val > filterValue;
-            
-            // Base color and opacity
-            let fillColor = shadeHexColor(currentColor, -0.1);
-            let opacity = 1;
-            
-            // If the bar extends above the filter curve, make that portion more transparent
-            if (isFiltered) {
-                // Calculate how much of the bar is above the filter curve
-                const filteredPortion = (val - filterValue) / val;
-                // Reduce opacity based on how much is filtered (more filtered = more transparent)
-                opacity = 1 - (filteredPortion * 0.6); // Max 60% transparency for filtered portion
-            }
-            
-            fill.style.backgroundColor = hexToRgba(fillColor, opacity);
+            // Standard single-color rendering
+            const fillColor = shadeHexColor(currentColor, -0.1);
+            fill.style.backgroundColor = hexToRgba(fillColor, 1);
         } else {
             fill.style.backgroundColor = 'transparent';
+        }
+        
+        // Always clean up any canvas overlays
+        const existingCanvas = fill.querySelector('canvas');
+        if (existingCanvas) {
+            existingCanvas.remove();
         }
         
         // Update label color based on bin level
@@ -279,12 +400,9 @@ function handleBinPointerEvent(e, binIndex = null) {
     const releaseDelay = (store.state.timbres[currentColor]?.adsr?.release || 0) * 1000;
 
     if (clampedValue === 0) {
-        if (previous > 0 && isAuditioning) {
-            SynthEngine.triggerRelease('C4', currentColor);
-            store.emit('spacebarPlayback', { color: currentColor, isPlaying: false });
-            isAuditioning = false;
-        }
-
+        // Don't stop audio playback when setting individual harmonics to zero
+        // The playback should continue so user can hear the effect of removing this harmonic
+        
         // Immediately update store with zero value
         logger.debug('HarmonicBins', 'Setting coefficient to zero immediately for bin', { binIndex }, 'filter');
         const newCoeffs = new Float32Array(store.state.timbres[currentColor].coeffs);
@@ -297,6 +415,30 @@ function handleBinPointerEvent(e, binIndex = null) {
             clearTimeout(zeroUpdateTimeouts[binIndex]);
             zeroUpdateTimeouts[binIndex] = null;
         }
+        
+        // Start audio if not already playing (user is interacting)
+        if (!isAuditioning) {
+            SynthEngine.triggerAttack('C4', currentColor);
+            store.emit('spacebarPlayback', { color: currentColor, isPlaying: true });
+            isAuditioning = true;
+        }
+        
+        // Update filtered coefficients when harmonic bins change (including zero)
+        const filterSettings = store.state.timbres[currentColor]?.filter;
+        if (filterSettings && (filterSettings.enabled !== false) && (filterSettings.mix || 0) > 0) {
+            filteredCoeffs = applyDiscreteFiltering(newCoeffs, filterSettings);
+        } else {
+            // No filtering - use original coefficients
+            filteredCoeffs = new Float32Array(newCoeffs);
+        }
+        
+        // Update static waveform in real-time during dragging (including zero)
+        if (window.staticWaveformVisualizer && window.staticWaveformVisualizer.generateWaveform) {
+            window.staticWaveformVisualizer.generateWaveform();
+        }
+        
+        // DEBUG: Log zero coefficient updates
+        logger.debug('HarmonicBins', `Set coefficient H${binIndex + 1} to 0 for color ${currentColor}`, null, 'filter');
     } else {
         if (zeroUpdateTimeouts[binIndex]) {
             clearTimeout(zeroUpdateTimeouts[binIndex]);
@@ -318,6 +460,20 @@ function handleBinPointerEvent(e, binIndex = null) {
         
         // Update the timbre directly (amplitude normalization removed)
         store.setHarmonicCoefficients(currentColor, newCoeffs);
+        
+        // Update filtered coefficients when harmonic bins change
+        const filterSettings = store.state.timbres[currentColor]?.filter;
+        if (filterSettings && (filterSettings.enabled !== false) && (filterSettings.mix || 0) > 0) {
+            filteredCoeffs = applyDiscreteFiltering(newCoeffs, filterSettings);
+        } else {
+            // No filtering - use original coefficients
+            filteredCoeffs = new Float32Array(newCoeffs);
+        }
+        
+        // Update static waveform in real-time during dragging
+        if (window.staticWaveformVisualizer && window.staticWaveformVisualizer.generateWaveform) {
+            window.staticWaveformVisualizer.generateWaveform();
+        }
         
         // DEBUG: Log coefficient updates
         logger.debug('HarmonicBins', `Updated coefficient H${binIndex + 1} to ${clampedValue} for color ${currentColor}`, null, 'filter');
@@ -576,15 +732,6 @@ export function initHarmonicBins() {
     // Initialize with current color
     currentColor = store.state.selectedNote.color;
     
-    // TEMPORARY: Force clear H7 contamination
-    const timbre = store.state.timbres[currentColor];
-    if (timbre && timbre.coeffs[6] > 0.001) {
-        logger.debug('HarmonicBins', `CLEARING H7 contamination: ${timbre.coeffs[6]} -> 0`, null, 'filter');
-        const cleanCoeffs = new Float32Array(timbre.coeffs);
-        cleanCoeffs[6] = 0;
-        store.setHarmonicCoefficients(currentColor, cleanCoeffs);
-    }
-    
     updateForNewColor(currentColor);
 
     // Set up event listeners
@@ -664,6 +811,25 @@ export function initHarmonicBins() {
     store.on('noteChanged', ({ newNote }) => {
         if (newNote.color && newNote.color !== currentColor) {
             updateForNewColor(newNote.color);
+        }
+    });
+
+    // Listen for filter changes to update bin visuals and apply filtering
+    store.on('filterChanged', (color) => {
+        if (color === currentColor) {
+            // Update visuals
+            updateSliderVisuals();
+            
+            // Apply discrete filtering to coefficients and send to synth
+            const timbre = store.state.timbres[currentColor];
+            const filterSettings = timbre?.filter;
+            
+            if (filterSettings && (filterSettings.enabled !== false) && (filterSettings.mix || 0) > 0) {
+                filteredCoeffs = applyDiscreteFiltering(timbre.coeffs, filterSettings);
+            } else {
+                // No filtering - use original coefficients
+                filteredCoeffs = new Float32Array(timbre.coeffs);
+            }
         }
     });
 

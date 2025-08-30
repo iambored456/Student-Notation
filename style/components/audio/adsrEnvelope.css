@@ -56,6 +56,19 @@
     background-color: var(--c-accent);
     border-radius: var(--border-radius-sm);
 }
+
+/* Ineligible section overlay (dark gray area above normalized amplitude limit) */
+#sustain-slider-track::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: var(--ineligible-height, 0%);
+    background-color: rgba(128, 128, 128, 0.4);
+    border-radius: var(--border-radius-sm);
+    pointer-events: none;
+}
 #sustain-slider-thumb {
     position: absolute;
     left: 50%;

@@ -5,18 +5,28 @@ export const viewActions = {
     toggleAccidentalMode(type) {
         if (!this.state.accidentalMode.hasOwnProperty(type)) return;
         this.state.accidentalMode[type] = !this.state.accidentalMode[type];
-        if (!this.state.accidentalMode.sharp && !this.state.accidentalMode.flat) {
-            const otherType = type === 'sharp' ? 'flat' : 'sharp';
-            this.state.accidentalMode[otherType] = true;
-        }
+        // Removed constraint - both buttons can now be inactive simultaneously
         this.emit('accidentalModeChanged', this.state.accidentalMode);
         this.emit('layoutConfigChanged');
     },
 
-    setDegreeDisplayMode(mode) {
-        this.state.degreeDisplayMode = this.state.degreeDisplayMode === mode ? 'off' : mode;
+    toggleFocusColours() {
+        this.state.focusColours = !this.state.focusColours;
+        this.emit('focusColoursChanged', this.state.focusColours);
         this.emit('layoutConfigChanged');
-        this.emit('degreeDisplayModeChanged', this.state.degreeDisplayMode);
+    },
+
+    setDegreeDisplayMode(mode) {
+        const oldMode = this.state.degreeDisplayMode;
+        this.state.degreeDisplayMode = this.state.degreeDisplayMode === mode ? 'off' : mode;
+        const newMode = this.state.degreeDisplayMode;
+        
+        console.log(`🏪 [STORE] setDegreeDisplayMode called: ${oldMode} → ${newMode} (requested: ${mode})`);
+        
+        this.emit('layoutConfigChanged');
+        this.emit('degreeDisplayModeChanged', newMode);
+        
+        console.log(`📡 [STORE] Emitted events: layoutConfigChanged, degreeDisplayModeChanged(${newMode})`);
     },
 
     // REVISED: This now sets the tool type and optional tonic number

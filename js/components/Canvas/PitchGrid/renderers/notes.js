@@ -92,7 +92,20 @@ function calculateTailYOffset(note, allNotes, options) {
 }
 
 function drawScaleDegreeText(ctx, note, options, centerX, centerY, noteHeight) {
+    console.log(`🎵 [SCALE/MODE] drawScaleDegreeText called:`, {
+        degreeDisplayMode: options.degreeDisplayMode,
+        noteRow: note.row,
+        noteStartCol: note.startColumnIndex,
+        pitch: options.fullRowData[note.row]?.pitch
+    });
+    
     const degreeStr = TonalService.getDegreeForNote(note, options);
+    
+    console.log(`🎵 [SCALE/MODE] TonalService returned:`, {
+        degreeStr,
+        degreeDisplayMode: options.degreeDisplayMode
+    });
+    
     if (!degreeStr) return;
     
     // Scale font size with zoom level for clarity

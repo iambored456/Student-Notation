@@ -110,9 +110,13 @@ class AdsrComponent {
         const { attack, decay, sustain, release } = sourceAdsr;
         if (!this.width || !this.height) return [];
         const timeToX = (time) => (time / MAX_ADSR_TIME_SECONDS) * this.width;
+        
+        // Get normalized amplitude from waveform visualizer
+        const normalizedAmplitude = window.staticWaveformVisualizer?.getNormalizedAmplitude() || 1.0;
+        
         const p1 = { x: 0, y: this.height };
-        const p2 = { x: timeToX(attack), y: 0 };
-        const p3 = { x: timeToX(attack + decay), y: this.height * (1 - sustain) };
+        const p2 = { x: timeToX(attack), y: this.height * (1 - normalizedAmplitude) }; // Use normalized amplitude for attack peak
+        const p3 = { x: timeToX(attack + decay), y: this.height * (1 - Math.min(sustain, normalizedAmplitude)) }; // Constrain sustain to normalized amplitude
         const p4 = { x: timeToX(attack + decay + release), y: this.height };
         return [p1, p2, p3, p4];
     }
@@ -128,9 +132,25 @@ class AdsrComponent {
 
     updateControls() {
         if (!this.ui.sustainThumb) return; // Safety check
+        
+        // Get normalized amplitude and constrain sustain if needed
+        const normalizedAmplitude = window.staticWaveformVisualizer?.getNormalizedAmplitude() || 1.0;
+        const maxSustainPercent = normalizedAmplitude * 100;
+        
+        // If current sustain exceeds normalized amplitude, update it in store and component
+        if (this.sustain > normalizedAmplitude) {
+            const currentTimbre = store.state.timbres[this.currentColor];
+            store.setADSR(this.currentColor, { ...currentTimbre.adsr, sustain: normalizedAmplitude });
+            this.sustain = normalizedAmplitude; // Update local value immediately
+        }
+        
         const sustainPercent = this.sustain * 100;
         this.ui.sustainThumb.style.bottom = `${sustainPercent}%`;
         this.ui.sustainTrack.style.setProperty('--sustain-progress', `${sustainPercent}%`);
+        
+        // Update ineligible section styling
+        const ineligiblePercent = 100 - maxSustainPercent;
+        this.ui.sustainTrack.style.setProperty('--ineligible-height', `${ineligiblePercent}%`);
         
         const aPercent = (this.attack / MAX_ADSR_TIME_SECONDS) * 100;
         const dPercent = ((this.attack + this.decay) / MAX_ADSR_TIME_SECONDS) * 100;

@@ -11,8 +11,8 @@
 <link rel="manifest" href="/Student-Notation/site.webmanifest" />
 <meta name="theme-color" content="#ffffff" />
 <style id="print-style-rules"></style>
-  <script type="module" crossorigin src="/Student-Notation/assets/index-CImjFZB1.js"></script>
-  <link rel="stylesheet" crossorigin href="/Student-Notation/assets/index-DU3W3lEb.css">
+  <script type="module" crossorigin src="/Student-Notation/assets/index-Ckf5Q2wm.js"></script>
+  <link rel="stylesheet" crossorigin href="/Student-Notation/assets/index-CvM4SmcF.css">
 </head>
 <body>
 <!-- Sidebar for File/App Actions -->
@@ -179,6 +179,11 @@
                 <div class="control-section static-waveform-container">
                     <div class="waveform-display-wrapper">
                         <canvas id="static-waveform-canvas"></canvas>
+                        <div class="waveform-speed-controls">
+                            <button class="waveform-speed-btn" data-speed="50">50%</button>
+                            <button class="waveform-speed-btn" data-speed="10">10%</button>
+                            <button class="waveform-speed-btn" data-speed="5">5%</button>
+                        </div>
                     </div>
                 </div>
                 
@@ -225,12 +230,19 @@
                                </div>
                            </div>
                        </div>
+                       <div class="focus-colours-container">
+                           <label class="checkbox-label">
+                               <input type="checkbox" id="focus-colours-toggle" class="toolkit-checkbox">
+                               <span class="checkbox-text">Focus Colours</span>
+                           </label>
+                       </div>
                     </div>
                 </div>
                 <div class="control-section chord-shape-container">
                     <div class="chord-shape-tabs">
                         <button class="chord-tab-button active" data-chord-tab="intervals">Intervals</button>
-                        <button class="chord-tab-button" data-chord-tab="chords">Chords</button>
+                        <button class="chord-tab-button" data-chord-tab="basic-chords">Bas. Chords</button>
+                        <button class="chord-tab-button" data-chord-tab="advanced-chords">Adv. Chords</button>
                     </div>
                     <div class="chord-shape-content">
                         <div class="chord-tab-panel active" id="intervals-panel">
@@ -240,6 +252,10 @@
                                         <h4>Inversion</h4>
                                         <div class="toggle-switch" id="inversion-toggle">
                                             <div class="toggle-slider"></div>
+                                            <div class="state-labels">
+                                                <span class="state-label">Asc.</span>
+                                                <span class="state-label">Desc.</span>
+                                            </div>
                                         </div>
                                     </div>
                                     <div class="intervals-grid-column">
@@ -265,7 +281,7 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="chord-tab-panel" id="chords-panel">
+                        <div class="chord-tab-panel" id="basic-chords-panel">
                             <div class="chords-content-box">
                                 <div class="chords-layout">
                                     <div class="chord-inversion-column">
@@ -290,18 +306,81 @@
                                     </div>
                                     <div class="chords-grid-column">
                                         <div class="harmony-preset-grid">
-                                            <button class="harmony-preset-button">X</button>
-                                            <button class="harmony-preset-button">x</button>
-                                            <button class="harmony-preset-button">x°</button>
-                                            <button class="harmony-preset-button">X+</button>
-                                            <button class="harmony-preset-button">X7</button>
-                                            <button class="harmony-preset-button">x⁷</button>
-                                            <button class="harmony-preset-button">ø⁷</button>
-                                            <button class="harmony-preset-button">Xadd6</button>
-                                            <button class="harmony-preset-button">Xsus4</button>
-                                            <button class="harmony-preset-button">Xsus2</button>
-                                            <button class="harmony-preset-button">Xmaj7</button>
-                                            <button class="harmony-preset-button">x°7</button>
+                                            <button class="harmony-preset-button" data-chord-intervals='["1P", "3M", "5P"]' title="Major triad">X</button>
+                                            <button class="harmony-preset-button" data-chord-intervals='["1P", "3m", "5P"]' title="Minor triad">x</button>
+                                            <button class="harmony-preset-button" data-chord-intervals='["1P", "3m", "5d"]' title="Diminished triad">x°</button>
+                                            <button class="harmony-preset-button" data-chord-intervals='["1P", "3M", "6m"]' title="Augmented triad">X+</button>
+                                            <button class="harmony-preset-button" data-chord-intervals='["1P", "3M", "5P", "7m"]' title="Dominant 7">X7</button>
+                                            <button class="harmony-preset-button" data-chord-intervals='["1P", "3m", "5P", "7m"]' title="Minor 7">x⁷</button>
+                                            <button class="harmony-preset-button" data-chord-intervals='["1P", "3M", "5P", "7M"]' title="Major 7">Xmaj⁷</button>
+                                            <button class="harmony-preset-button" data-chord-intervals='["1P", "3m", "5d", "7m"]' title="Half-diminished 7">ø⁷</button>
+                                            <button class="harmony-preset-button" data-chord-intervals='["1P", "3m", "5d", "6M"]' title="Fully diminished 7">x°⁷</button>
+                                            <button class="harmony-preset-button" data-chord-intervals='["1P", "3M", "5P", "6M"]' title="Major 6 (add 6)">X⁶</button>
+                                            <button class="harmony-preset-button" data-chord-intervals='["1P", "2M", "5P"]' title="Suspended 2">Xsus2</button>
+                                            <button class="harmony-preset-button" data-chord-intervals='["1P", "4P", "5P"]' title="Suspended 4">Xsus4</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="chord-tab-panel" id="advanced-chords-panel">
+                            <div class="chords-content-box">
+                                <div class="chords-layout">
+                                    <div class="chord-inversion-column">
+                                        <h4>Position</h4>
+                                        <div class="three-state-toggle" id="chord-position-toggle-adv">
+                                            <div class="three-state-slider"></div>
+                                            <div class="state-labels">
+                                                <span class="state-label">Root</span>
+                                                <span class="state-label">1st</span>
+                                                <span class="state-label">2nd</span>
+                                            </div>
+                                        </div>
+                                        <div class="four-state-toggle hidden" id="chord-position-toggle-4-adv">
+                                            <div class="four-state-slider"></div>
+                                            <div class="state-labels-4">
+                                                <span class="state-label">Root</span>
+                                                <span class="state-label">1st</span>
+                                                <span class="state-label">2nd</span>
+                                                <span class="state-label">3rd</span>
+                                            </div>
+                                        </div>
+                                        <div class="five-state-toggle hidden" id="chord-position-toggle-5-adv">
+                                            <div class="five-state-slider"></div>
+                                            <div class="state-labels-5">
+                                                <span class="state-label">Root</span>
+                                                <span class="state-label">1st</span>
+                                                <span class="state-label">2nd</span>
+                                                <span class="state-label">3rd</span>
+                                                <span class="state-label">4th</span>
+                                            </div>
+                                        </div>
+                                        <div class="six-state-toggle hidden" id="chord-position-toggle-6-adv">
+                                            <div class="six-state-slider"></div>
+                                            <div class="state-labels-6">
+                                                <span class="state-label">Root</span>
+                                                <span class="state-label">1st</span>
+                                                <span class="state-label">2nd</span>
+                                                <span class="state-label">3rd</span>
+                                                <span class="state-label">4th</span>
+                                                <span class="state-label">5th</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="chords-grid-column">
+                                        <div class="harmony-preset-grid">
+                                            <button class="harmony-preset-button" data-chord-intervals='["1P", "3m", "5P", "7M"]' title="Minor-major 7">xmaj⁷</button>
+                                            <button class="harmony-preset-button" data-chord-intervals='["1P", "3M", "5P", "9M"]' title="Major add 9">Xadd9</button>
+                                            <button class="harmony-preset-button" data-chord-intervals='["1P", "3m", "5P", "9M"]' title="Minor add 9">xadd9</button>
+                                            <button class="harmony-preset-button" data-chord-intervals='["1P", "3M", "5P", "6M", "9M"]' title="Major 6/9">X6/9</button>
+                                            <button class="harmony-preset-button" data-chord-intervals='["1P", "3M", "5P", "7m", "9M"]' title="Dominant 9">X9</button>
+                                            <button class="harmony-preset-button" data-chord-intervals='["1P", "3M", "5P", "7m", "9M", "11P"]' title="Dominant 11">X11</button>
+                                            <button class="harmony-preset-button" data-chord-intervals='["1P", "3M", "5P", "7m", "9M", "13M"]' title="Dominant 13">X13</button>
+                                            <button class="harmony-preset-button" data-chord-intervals='["1P", "3M", "5P", "7M", "9M"]' title="Major 9">Xmaj9</button>
+                                            <button class="harmony-preset-button" data-chord-intervals='["1P", "3m", "5P", "7m", "9M"]' title="Minor 9">x⁹</button>
+                                            <button class="harmony-preset-button" data-chord-intervals='["1P", "3m", "5P", "6M"]' title="Minor 6">x⁶</button>
+                                            <button class="harmony-preset-button" data-chord-intervals='["1P", "3m", "5P", "7m", "9M", "11P"]' title="Minor 11">x¹¹</button>
+                                            <button class="harmony-preset-button" data-chord-intervals='["1P", "3M", "5P", "7M", "11A"]' title="Major 7 sharp 11 (Lydian)">Xmaj7♯11</button>
                                         </div>
                                     </div>
                                 </div>

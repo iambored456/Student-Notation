@@ -117,13 +117,13 @@ export function getLineStyleFromPitchClass(pc, zoomLevel = 1) {
         case 'C': return { lineWidth: 3.33, dash: [], color: '#adb5bd' };
         case 'E': return { lineWidth: 1, dash: [5, 5], color: '#adb5bd' }; // Use same pattern as vertical dashed lines
         case 'G': return { lineWidth: 1, dash: [], color: '#dee2e6' };
-        case 'D♭/C♯':
-        case 'E♭/D♯':
-        case 'F':
-        case 'A':
         case 'B':
-            return null;
-        default: return { lineWidth: 1, dash: [], color: '#ced4da' };
+        case 'A':
+        case 'F':
+        case 'E♭/D♯':
+        case 'D♭/C♯':
+            return { lineWidth: 1, dash: [], color: '#ced4da' }; // Simple solid gray lines for conditional pitches
+        default: return { lineWidth: 1, dash: [], color: '#ced4da' }; // D, Bb/A#, and others use default styling
     }
 }
 

@@ -8,7 +8,7 @@ import { drawSingleColumnOvalNote, drawTwoColumnOvalNote, drawTonicShape } from 
 import { getRowY, getColumnX } from '../renderers/rendererUtils.js';
 import GlobalService from '../../../../services/globalService.js';
 import domCache from '../../../../services/domCache.js';
-import { Note } from 'tonal';
+import { Note, Interval } from 'tonal';
 import { isNotePlayableAtColumn, isWithinTonicSpan } from '../../../../utils/tonicColumnUtils.js';
 import { setGhostNotePosition, clearGhostNotePosition } from '../../../../services/spacebarHandler.js';
 import { placeStamp, removeStampsInEraserArea } from '../../../../rhythm/stampPlacements.js';
@@ -109,27 +109,61 @@ function getChordNotesFromIntervals(rootNote, clickedRowIndex) {
             inverted.push(Note.simplify(octaveUp));
         }
         
-        // Now transpose the entire chord so the bass note (first note) matches the clicked position
-        const bassNote = inverted[0]; // This is the bass note of the inversion
+        // Find the root note in the inverted chord by comparing pitch classes
+        const rootPitchClass = Note.pitchClass(rootNote);
+        const rootNoteIndex = inverted.findIndex(note => {
+            return Note.pitchClass(note) === rootPitchClass;
+        });
+        
+        if (rootNoteIndex === -1) {
+            console.warn('Root note not found in inverted chord, using bass note positioning');
+            // Fallback to original bass note positioning
+            const bassNote = inverted[0];
+            const targetNote = rootNote;
+            const bassNoteMidi = Note.midi(bassNote);
+            const targetNoteMidi = Note.midi(targetNote);
+            
+            let octaveAdjustment = 0;
+            let adjustedBassMidi = bassNoteMidi;
+            
+            while (adjustedBassMidi > targetNoteMidi) {
+                adjustedBassMidi -= 12;
+                octaveAdjustment -= 12;
+            }
+            while (adjustedBassMidi + 12 <= targetNoteMidi) {
+                adjustedBassMidi += 12;
+                octaveAdjustment += 12;
+            }
+            
+            return inverted.map(note => {
+                const adjustedMidi = Note.midi(note) + octaveAdjustment;
+                return Note.fromMidi(adjustedMidi);
+            });
+        }
+        
+        // Position the root note at the cursor
+        const rootNoteInChord = inverted[rootNoteIndex];
         const targetNote = rootNote; // This is where the user clicked
         
-        // Calculate the interval needed to move the bass note to the cursor position
-        const bassNoteMidi = Note.midi(bassNote);
+        // Calculate the interval needed to move the root note to the cursor position
+        const rootNoteMidi = Note.midi(rootNoteInChord);
         const targetNoteMidi = Note.midi(targetNote);
         
-        // Find the octave adjustment needed to get the bass note close to the target
+        // Find the octave adjustment needed to get the root note close to the target
         let octaveAdjustment = 0;
-        let adjustedBassMidi = bassNoteMidi;
+        let adjustedRootMidi = rootNoteMidi;
         
-        // Move bass note to the same octave as target or just below
-        while (adjustedBassMidi > targetNoteMidi) {
-            adjustedBassMidi -= 12;
+        // Move root note to the same octave as target or just below
+        while (adjustedRootMidi > targetNoteMidi) {
+            adjustedRootMidi -= 12;
             octaveAdjustment -= 12;
         }
-        while (adjustedBassMidi + 12 <= targetNoteMidi) {
-            adjustedBassMidi += 12;
+        while (adjustedRootMidi + 12 <= targetNoteMidi) {
+            adjustedRootMidi += 12;
             octaveAdjustment += 12;
         }
+        
+        console.log(`🎸 [CHORD INVERSION] ${chordPositionState} inversion: Root note ${rootNoteInChord} at index ${rootNoteIndex} → cursor ${targetNote} (adjustment: ${octaveAdjustment})`);
         
         // Apply the octave adjustment to all chord tones
         return inverted.map(note => {
@@ -320,6 +354,40 @@ function handleMouseDown(e) {
             }
         }
         
+        // Check if clicking on an existing note to trigger dynamic waveform
+        const existingNote = store.state.placedNotes.find(note => 
+            !note.isDrum && 
+            note.row === rowIndex && 
+            colIndex >= note.startColumnIndex && 
+            colIndex <= note.endColumnIndex
+        );
+        
+        if (existingNote && store.state.selectedTool === 'note') {
+            // Found an existing note - start dynamic waveform visualization
+            const pitch = getPitchForRow(rowIndex);
+            if (pitch) {
+                console.log(`[PitchGrid] Triggering dynamic waveform for existing note: ${pitch} (${existingNote.color})`);
+                
+                // Start single note visualization in the waveform
+                const staticWaveform = window.staticWaveformVisualizer;
+                if (staticWaveform) {
+                    // Set the current color to the note's color for visualization
+                    staticWaveform.currentColor = existingNote.color;
+                    staticWaveform.generateWaveform(); // Update static waveform to match note color
+                    staticWaveform.startSingleNoteVisualization(existingNote.color);
+                }
+                
+                // Trigger audio for the existing note
+                SynthEngine.triggerAttack(pitch, existingNote.color);
+                const pitchColor = store.state.fullRowData[rowIndex]?.hex || '#888888';
+                GlobalService.adsrComponent?.playheadManager.trigger(existingNote.uuid, 'attack', pitchColor, store.state.timbres[existingNote.color].adsr);
+                
+                activePreviewPitches = [pitch];
+                activeNote = existingNote;
+            }
+            return; // Don't process as a new note placement
+        }
+
         const toolType = store.state.selectedTool;
 
         if (toolType === 'chord') {
@@ -500,6 +568,15 @@ function handleMouseDown(e) {
                 SynthEngine.triggerAttack(pitch, activeNote.color);
                 const pitchColor = store.state.fullRowData[rowIndex]?.hex || '#888888';
                 GlobalService.adsrComponent?.playheadManager.trigger(activeNote.uuid, 'attack', pitchColor, store.state.timbres[activeNote.color].adsr);
+                
+                // Start dynamic waveform visualization for new notes
+                const staticWaveform = window.staticWaveformVisualizer;
+                if (staticWaveform) {
+                    console.log(`[PitchGrid] Triggering dynamic waveform for new note: ${pitch} (${activeNote.color})`);
+                    staticWaveform.currentColor = activeNote.color;
+                    staticWaveform.generateWaveform(); // Update static waveform to match note color
+                    staticWaveform.startSingleNoteVisualization(activeNote.color);
+                }
             }
         }
     }
@@ -769,6 +846,13 @@ function handleGlobalMouseUp() {
             }
         }
         activePreviewPitches = [];
+        
+        // Stop dynamic waveform visualization when releasing note
+        const staticWaveform = window.staticWaveformVisualizer;
+        if (staticWaveform) {
+            staticWaveform.stopLiveVisualization();
+            console.log(`[PitchGrid] Stopped dynamic waveform visualization`);
+        }
     }
 
     if (isDragging) {

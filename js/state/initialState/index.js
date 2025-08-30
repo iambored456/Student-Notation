@@ -46,6 +46,7 @@ export const initialState = {
     columnWidths: [],
     degreeDisplayMode: 'off',
     accidentalMode: { sharp: true, flat: true },
+    focusColours: false,
     
     // --- Playback ---
     isPlaying: false,

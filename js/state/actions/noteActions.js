@@ -1,6 +1,7 @@
 // js/state/actions/noteActions.js
 import { getMacrobeatInfo } from '../selectors.js';
 import logger from '../../utils/logger.js';
+import TonalService from '../../services/tonalService.js';
 
 function generateUUID() {
     return `uuid-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
@@ -22,7 +23,30 @@ export const noteActions = {
         );
         
         if (existingNote) {
+            // Check if Show Degrees is ON and we can toggle enharmonic equivalents
+            if (this.state.degreeDisplayMode !== 'off') {
+                // Get the current degree for this existing note
+                const currentDegree = TonalService.getDegreeForNote(existingNote, this.state);
+                
+                // Check if the degree has an accidental that can be toggled
+                if (TonalService.hasAccidental(currentDegree)) {
+                    // Toggle the enharmonic preference
+                    existingNote.enharmonicPreference = !existingNote.enharmonicPreference;
+                    
+                    console.log(`🎵 [ENHARMONIC] Toggled enharmonic preference for note:`, {
+                        noteUuid: existingNote.uuid,
+                        currentDegree,
+                        enharmonicPreference: existingNote.enharmonicPreference
+                    });
+                    
+                    // Emit change to trigger re-render
+                    this.emit('notesChanged');
+                    return existingNote;
+                }
+            }
+            
             // Don't add the note if there's already one of the same color at this position
+            // and no enharmonic toggle was possible
             return null;
         }
         

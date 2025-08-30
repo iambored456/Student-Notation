@@ -3,6 +3,7 @@ import * as Tone from 'tone';
 import store from '../state/index.js';
 import { PRESETS } from './presetData.js';
 import logger from '../utils/logger.js';
+import { getFilteredCoefficients } from '../components/audio/HarmonicsFilter/harmonicBins.js';
 
 logger.moduleLoaded('SynthEngine');
 
@@ -113,14 +114,26 @@ const SynthEngine = {
         
         for (const color in store.state.timbres) {
             const timbre = store.state.timbres[color];
+            // Use filtered coefficients instead of raw store coefficients
+            const filteredCoeffs = getFilteredCoefficients(color);
+            
+            // Dynamic amplitude scaling: use direct sum if ≤ 1.0, normalize if > 1.0
+            const totalAmplitude = filteredCoeffs.reduce((sum, coeff) => sum + Math.abs(coeff), 0);
+            const initialGain = totalAmplitude <= 1.0 ? totalAmplitude : 1.0;
+            
+            // Apply normalization to coefficients if total > 1.0
+            const normalizedCoeffs = totalAmplitude > 1.0 
+                ? filteredCoeffs.map(coeff => coeff / totalAmplitude)
+                : filteredCoeffs;
+            
             const synth = new Tone.PolySynth({
                 polyphony: 8,
                 voice: FilteredVoice,
                 options: {
-                    oscillator: { type: 'custom', partials: Array.from(timbre.coeffs) },
+                    oscillator: { type: 'custom', partials: Array.from(normalizedCoeffs) },
                     envelope: timbre.adsr,
                     filter: timbre.filter,
-                    gain: store.state.timbres[color].activePresetName ? PRESETS[store.state.timbres[color].activePresetName].gain : 0.7 // Pass initial gain
+                    gain: initialGain
                 }
             }).connect(volumeControl);
             
@@ -129,6 +142,10 @@ const SynthEngine = {
         }
 
         store.on('timbreChanged', (color) => {
+            this.updateSynthForColor(color);
+        });
+        
+        store.on('filterChanged', (color) => {
             this.updateSynthForColor(color);
         });
         
@@ -145,25 +162,55 @@ const SynthEngine = {
         
         logger.debug('SynthEngine', `Updating timbre for color ${color}`, null, 'audio');
         
+        // Use filtered coefficients instead of raw store coefficients
+        const filteredCoeffs = getFilteredCoefficients(color);
+        
+        // Dynamic amplitude scaling: use direct sum if ≤ 1.0, normalize if > 1.0
+        const totalAmplitude = filteredCoeffs.reduce((sum, coeff) => sum + Math.abs(coeff), 0);
+        const dynamicGain = totalAmplitude <= 1.0 ? totalAmplitude : 1.0;
+        
+        // DEBUG: Log the coefficients being sent to the synth
+        console.log(`[SynthEngine] Updating ${color} with coefficients:`, Array.from(filteredCoeffs));
+        console.log(`[SynthEngine] Sum of coefficients:`, totalAmplitude);
+        console.log(`[SynthEngine] Dynamic gain applied:`, dynamicGain);
+        
+        // Apply normalization to coefficients if total > 1.0
+        const normalizedCoeffs = totalAmplitude > 1.0 
+            ? filteredCoeffs.map(coeff => coeff / totalAmplitude)
+            : filteredCoeffs;
+            
         synth.set({
-            oscillator: { partials: Array.from(timbre.coeffs) },
+            oscillator: { partials: Array.from(normalizedCoeffs) },
             envelope: timbre.adsr
         });
 
+        // Try setting gain on existing voices
         if (synth.voices && Array.isArray(synth.voices)) {
-            // Set both filter and gain on each voice
-            const preset = timbre.activePresetName ? PRESETS[timbre.activePresetName] : null;
-            const gainValue = preset ? preset.gain : 0.7; // Default gain if not from a preset
-
-            synth.voices.forEach(voice => {
+            console.log(`[SynthEngine] Setting gain on ${synth.voices.length} voices`);
+            synth.voices.forEach((voice, index) => {
                 if (voice._setFilter) {
                     voice._setFilter(timbre.filter);
                 }
                 if (voice._setPresetGain) {
-                    voice._setPresetGain(gainValue);
+                    console.log(`[SynthEngine] Voice ${index}: Setting presetGain to ${dynamicGain}`);
+                    voice._setPresetGain(dynamicGain);
+                    
+                    // Check if the gain was actually set
+                    if (voice.presetGain && voice.presetGain.gain) {
+                        console.log(`[SynthEngine] Voice ${index}: Actual gain value is ${voice.presetGain.gain.value}`);
+                    }
+                } else {
+                    console.log(`[SynthEngine] Voice ${index}: No _setPresetGain method found`);
                 }
             });
+        } else {
+            console.log(`[SynthEngine] No voices array found or not array`);
         }
+        
+        // Also try setting the synth volume directly as a backup
+        console.log(`[SynthEngine] Setting synth volume to ${dynamicGain}`);
+        synth.volume.value = 20 * Math.log10(dynamicGain); // Convert linear to dB
+        console.log(`[SynthEngine] Synth volume set to ${synth.volume.value} dB`);
     },
     
     setVolume(dB) {

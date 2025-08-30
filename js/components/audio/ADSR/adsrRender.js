@@ -5,6 +5,22 @@ import { hexToRgba, shadeHexColor } from '../../../utils/colorUtils.js';
 
 export function drawTempoGridlines(gridLayer, { width, height }, totalADRTime) {
     while (gridLayer.firstChild) gridLayer.removeChild(gridLayer.firstChild);
+    
+    // Draw horizontal amplitude reference lines at 0.25, 0.50, and 0.75
+    const ampLines = [0.25, 0.5, 0.75];
+    ampLines.forEach(amp => {
+        const y = height * amp; // In ADSR, y=0 is max amplitude, y=height is silence
+        const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+        line.setAttribute('x1', 0);
+        line.setAttribute('y1', y);
+        line.setAttribute('x2', width);
+        line.setAttribute('y2', y);
+        line.setAttribute('stroke', '#ced4da');
+        line.setAttribute('stroke-width', '1');
+        line.setAttribute('stroke-dasharray', '3,3'); // Dashed line pattern
+        gridLayer.appendChild(line);
+    });
+    
     const tempo = store.state.tempo;
     if (tempo <= 0 || totalADRTime <= 0) return;
     const microbeatDuration = 30 / tempo;

@@ -45,6 +45,11 @@ function initSustainSlider(elements, component) {
         let percent = 100 - (y / rect.height) * 100;
         percent = Math.max(0, Math.min(100, percent));
         
+        // Constrain sustain to normalized amplitude
+        const normalizedAmplitude = window.staticWaveformVisualizer?.getNormalizedAmplitude() || 1.0;
+        const maxSustainPercent = normalizedAmplitude * 100;
+        percent = Math.min(percent, maxSustainPercent);
+        
         const currentTimbre = store.state.timbres[component.currentColor];
         store.setADSR(component.currentColor, { ...currentTimbre.adsr, sustain: percent / 100 });
     };
@@ -130,11 +135,15 @@ function initNodeDragging(elements, component) {
 
         switch(activeNode.id) {
             case 'attack-node':
+                // Attack node: only allow X movement (time), Y is controlled by normalized amplitude
                 currentTimes.a = timeVal;
+                // Don't update sustain or Y position - it's locked to normalized amplitude
                 break;
             case 'decay-sustain-node':
                 currentTimes.d = timeVal;
-                sustain = yPercent; // Sustain is updated directly here
+                // Get normalized amplitude to constrain sustain level
+                const normalizedAmplitude = window.staticWaveformVisualizer?.getNormalizedAmplitude() || 1.0;
+                sustain = Math.min(yPercent, normalizedAmplitude); // Constrain sustain to normalized amplitude
                 break;
             case 'release-node':
                 currentTimes.r = timeVal;
