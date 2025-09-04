@@ -9,7 +9,9 @@
 .harmonic-bins-container {
   flex-direction: column;
   justify-content: flex-start;
-  flex-grow: 1; /* Reduced from 2 to 1 */
+  flex: 0 1 auto; /* Changed from flex-grow: 1 to prevent overflow */
+  max-height: fit-content; /* Constrain to content size */
+  margin-left: var(--space-2); /* Add gap from previous component (waveform) */
 }
 
 /* --- Filter Controls (Top Layer) --- */
@@ -17,6 +19,7 @@
     display: flex;
     align-items: center;
     width: 100%;
+    margin-top: 0.1rem;
     margin-bottom: 0.2rem;
     flex-shrink: 0;
     padding-left: 1px; /* Match grid border */
@@ -83,6 +86,8 @@
     flex-shrink: 0;
     max-height: 10px; /* Prevent container from expanding beyond blend slider height */
     /* Apply same alignment constraints as blend slider */
+    margin-top: 0.1rem;
+    margin-bottom: 0.1rem;
     margin-left: 1px; /* Match grid border */
     margin-right: calc(var(--space-2)); /* Account for vertical slider */
 }
@@ -170,8 +175,8 @@
 .harmonic-bins-grid {
   display: flex;
   flex-direction: row;
-  flex-grow: 1;
-  min-height: 100px; /* Reduced minimum height */
+  flex: 0 0 11rem; /* Fixed height of 5rem */
+  height: 7.8rem; /* Explicit height of 5rem */
   position: relative;
   gap: 0;
   padding: 0;
@@ -286,7 +291,7 @@
   top: 0;
   left: 0;
   width: 100%;
-  height: calc(100% - 28px); /* Exclude phase buttons (20px button + 4px margin + 4px padding) */
+  height: calc(100% - 24px); /* Reduced from 28px to account for space constraints */
   pointer-events: none;
   z-index: 2;
 }

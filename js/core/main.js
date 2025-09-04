@@ -40,13 +40,21 @@ import { initAdsrComponent } from '../components/audio/ADSR/adsrComponent.js';
 import { initFilterControls } from '../components/audio/HarmonicsFilter/filterControls.js';
 import PrintPreview from '../components/UI/PrintPreview.js';
 import { initStaticWaveformVisualizer } from '../components/StaticWaveform/staticWaveformVisualizer.js';
-import simpleEffectsTest from '../components/audio/Effects/simpleEffectsTest.js';
+// NOTE: effectsController.js handles UI dials and lives in ../components/audio/Effects/
+// All effects logic has been moved to ../services/timbreEffects/ architecture
+import animationEffectsManager from '../services/timbreEffects/effectsAnimation/animationEffectsManager.js';
+import audioEffectsManager from '../services/timbreEffects/effectsAudio/audioEffectsManager.js';
+import effectsController from '../components/audio/Effects/effectsController.js';
+import positionEffectsController from '../components/ui/positionEffectsController.js';
 
 // Paint Components
 import PaintCanvas from '../components/PitchPaint/paintCanvas.js';
 import PaintPlayheadRenderer from '../components/PitchPaint/paintPlayheadRenderer.js';
 import PaintControls from '../components/PitchPaint/paintControls.js';
 import PaintPlaybackService from '../services/paintPlaybackService.js';
+
+// Drum Components
+import DrumPlayheadRenderer from '../components/Canvas/DrumGrid/drumPlayheadRenderer.js';
 
 // Meter Components
 import MeterController from '../components/audio/Meter/MeterController.js';
@@ -309,8 +317,32 @@ document.addEventListener("DOMContentLoaded", async () => {
         logger.initFailed('Static Waveform Visualizer');
     }
 
-    // Initialize simple effects test
-    simpleEffectsTest.init();
+    // Initialize Effects Coordinator (must be before loading saved values)
+    const { default: effectsCoordinator } = await import('../services/timbreEffects/effectsCoordinator.js');
+    
+    // Make effectsCoordinator globally available for proper data flow
+    window.effectsCoordinator = effectsCoordinator;
+    
+    // Initialize new clean architecture effects managers FIRST (before loading saved values)
+    logger.initStart('Effects Managers');
+    animationEffectsManager.init();
+    audioEffectsManager.init();
+    
+    // NOW initialize coordinator which will load saved values and emit events to initialized listeners
+    effectsCoordinator.init();
+    
+    // Initialize effects UI controller
+    effectsController.init();
+    
+    // Initialize Position Effects Controller (2D controls)
+    positionEffectsController.init();
+    
+    // Make effects managers globally available
+    window.animationEffectsManager = animationEffectsManager;
+    window.audioEffectsManager = audioEffectsManager;
+    window.effectsController = effectsController;
+    window.positionEffectsController = positionEffectsController;
+    logger.initSuccess('Effects Managers');
 
     // Initialize Paint components
     logger.initStart('Paint components');
@@ -321,6 +353,11 @@ document.addEventListener("DOMContentLoaded", async () => {
     window.PaintPlaybackService = PaintPlaybackService;
     MeterController.initialize();
     logger.initSuccess('Paint components');
+
+    // Initialize Drum components
+    logger.initStart('Drum components');
+    DrumPlayheadRenderer.initialize();
+    logger.initSuccess('Drum components');
     
     // NEW: Initialize the enhanced zoom system
     initializeNewZoomSystem();

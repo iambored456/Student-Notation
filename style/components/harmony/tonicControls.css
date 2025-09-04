@@ -83,7 +83,7 @@
 .tonic-tools-wrapper {
     display: flex;
     flex-direction: column;
-    gap: var(--space-2);
+    gap: var(--space-1);
     align-items: center;
 }
 
@@ -93,6 +93,20 @@
     flex-direction: column;
     gap: var(--space-2);
     align-items: center;
+}
+
+.degree-visibility-toggle-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-1);
+    justify-content: center;
+}
+
+.degree-visibility-toggle-container .toggle-text {
+    font-size: 0.8em;
+    font-weight: 500;
+    color: var(--c-text);
 }
 
 .degree-mode-toggle-container {
@@ -159,4 +173,9 @@
 .degree-toggle-container .two-state-toggle.disabled .toggle-label {
     color: var(--c-text-muted);
     opacity: 0.7;
+}
+
+/* --- Focus Colours Container --- */
+.focus-colours-container .checkbox-text {
+    font-size: 0.7em;
 }

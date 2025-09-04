@@ -5,11 +5,17 @@ import LayoutService from '../../../services/layoutService.js';
 import { drawDrumShape } from './drumGridRenderer.js';
 import { BASE_DRUM_ROW_HEIGHT, DRUM_HEIGHT_SCALE_FACTOR } from '../../../core/constants.js';
 import { getColumnX as getModulatedColumnX } from '../PitchGrid/renderers/rendererUtils.js';
+import DrumPlayheadRenderer from './drumPlayheadRenderer.js';
 
 // --- Interaction State ---
 let drumHoverCtx;
 let isRightClickActive = false;
 let rightClickActionTaken = false;
+
+// --- Drum Volume Control ---
+let drumVolume = 1.0; // Default 100%
+let volumeSlider = null;
+let volumeIconState = 'normal'; // Track volume icon state: normal, hover, active
 
 // --- Helper Functions ---
 function getColumnX(index) {
@@ -63,9 +69,12 @@ function drawGhostNote(colIndex, rowIndex) {
     const drumRowHeight = Math.max(BASE_DRUM_ROW_HEIGHT, DRUM_HEIGHT_SCALE_FACTOR * store.state.cellHeight);
     const y = rowIndex * drumRowHeight;
     const cellWidth = getModulatedCellWidth(colIndex); // Use modulated cell width
+    const drumTrack = ['H', 'M', 'L'][rowIndex];
+    const animationScale = DrumPlayheadRenderer.getAnimationScale(colIndex, drumTrack);
+    
     drumHoverCtx.globalAlpha = 0.4;
     drumHoverCtx.fillStyle = store.state.selectedTool.color || '#212529';
-    drawDrumShape(drumHoverCtx, rowIndex, x, y, cellWidth, drumRowHeight);
+    drawDrumShape(drumHoverCtx, rowIndex, x, y, cellWidth, drumRowHeight, animationScale);
     drumHoverCtx.globalAlpha = 1.0;
 }
 
@@ -74,6 +83,29 @@ function handleMouseMove(e) {
     const rect = e.target.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
+    
+    // Check if mouse is over volume icon area (left legend column)
+    const volumeIconArea = getColumnX(2);
+    const isHoveringVolumeIcon = x < volumeIconArea;
+    
+    // Update volume icon state and trigger redraw if needed
+    const previousState = volumeIconState;
+    volumeIconState = isHoveringVolumeIcon ? 'hover' : 'normal';
+    
+    if (previousState !== volumeIconState) {
+        // Trigger drum grid redraw to update icon appearance
+        if (window.drumGridRenderer) {
+            window.drumGridRenderer.render();
+        }
+    }
+    
+    // Don't process drum grid interactions if hovering over volume icon
+    if (isHoveringVolumeIcon) {
+        if (drumHoverCtx) {
+            drumHoverCtx.clearRect(0, 0, drumHoverCtx.canvas.width, drumHoverCtx.canvas.height);
+        }
+        return;
+    }
     
     // Account for horizontal scroll position like harmony analysis grid does
     const scrollLeft = document.getElementById('canvas-container').scrollLeft;
@@ -104,6 +136,14 @@ function handleMouseLeave() {
     if (drumHoverCtx) {
         drumHoverCtx.clearRect(0, 0, drumHoverCtx.canvas.width, drumHoverCtx.canvas.height);
     }
+    
+    // Reset volume icon state when mouse leaves drum grid
+    if (volumeIconState !== 'normal') {
+        volumeIconState = 'normal';
+        if (window.drumGridRenderer) {
+            window.drumGridRenderer.render();
+        }
+    }
 }
 
 function handleMouseDown(e) {
@@ -111,6 +151,24 @@ function handleMouseDown(e) {
     const rect = e.target.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
+    
+    // Check if click is in volume icon area (left legend column)
+    const volumeIconArea = getColumnX(2); // Volume icon is before column 2
+    if (x < volumeIconArea) {
+        // Set active state and trigger redraw
+        volumeIconState = 'active';
+        if (window.drumGridRenderer) {
+            window.drumGridRenderer.render();
+        }
+        
+        // Toggle volume slider visibility
+        const volumeControl = document.querySelector('.drum-volume-control');
+        if (volumeControl) {
+            const isVisible = volumeControl.style.display === 'flex';
+            volumeControl.style.display = isVisible ? 'none' : 'flex';
+        }
+        return; // Don't process as drum grid interaction
+    }
     
     // Account for horizontal scroll position like harmony analysis grid does
     const scrollLeft = document.getElementById('canvas-container').scrollLeft;
@@ -149,6 +207,9 @@ function handleMouseDown(e) {
         
         if (window.transportService && window.transportService.drumPlayers) {
             window.transportService.drumPlayers.player(drumTrack).start();
+            
+            // Trigger drum note pop animation for immediate feedback
+            DrumPlayheadRenderer.triggerNotePop(colIndex, drumTrack);
         }
     }
 }
@@ -162,8 +223,116 @@ function handleGlobalMouseUp() {
         rightClickActionTaken = false;
         document.getElementById('eraser-tool-button')?.classList.remove('erasing-active');
     }
+    
+    // Reset volume icon active state on mouse up
+    if (volumeIconState === 'active') {
+        volumeIconState = 'normal';
+        if (window.drumGridRenderer) {
+            window.drumGridRenderer.render();
+        }
+    }
+    
     handleMouseLeave();
 }
+
+// --- Volume Control Functions ---
+function createVolumeSlider() {
+    const drumWrapper = document.getElementById('drum-grid-wrapper');
+    if (!drumWrapper) return;
+    
+    // Create volume control container
+    const volumeControl = document.createElement('div');
+    volumeControl.className = 'drum-volume-control';
+    volumeControl.style.cssText = `
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        background: rgba(255, 255, 255, 0.9);
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        padding: 8px;
+        display: none;
+        align-items: center;
+        gap: 8px;
+        font-size: 12px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        z-index: 10;
+    `;
+    
+    // Create slider
+    volumeSlider = document.createElement('input');
+    volumeSlider.type = 'range';
+    volumeSlider.min = '0';
+    volumeSlider.max = '100';
+    volumeSlider.value = '100';
+    volumeSlider.className = 'drum-volume-slider';
+    volumeSlider.style.cssText = 'width: 80px; margin: 0;';
+    
+    // Add event listener
+    volumeSlider.addEventListener('input', (e) => {
+        drumVolume = e.target.value / 100;
+        
+        console.log(`[DRUM VOLUME] Slider changed to ${e.target.value}% (linear: ${drumVolume})`);
+        
+        // Update actual drum volume in transport service
+        if (window.drumVolumeNode) {
+            // Convert linear scale to decibels: 0% = -60dB, 100% = 0dB
+            const volumeDb = drumVolume === 0 ? -60 : 20 * Math.log10(drumVolume);
+            console.log(`[DRUM VOLUME] Setting drumVolumeNode to ${volumeDb} dB`);
+            window.drumVolumeNode.volume.value = volumeDb;
+            console.log(`[DRUM VOLUME] Actual drumVolumeNode volume: ${window.drumVolumeNode.volume.value} dB`);
+            
+            // Also check the audio routing
+            console.log(`[DRUM VOLUME] drumVolumeNode connected to:`, window.drumVolumeNode.output);
+            console.log(`[DRUM VOLUME] drumVolumeNode input connected:`, window.drumVolumeNode.input.numberOfInputs);
+            
+            // Test drum sound immediately to hear the volume change
+            if (window.transportService && window.transportService.drumPlayers) {
+                console.log(`[DRUM VOLUME] Testing drum sound at new volume...`);
+                window.transportService.drumPlayers.player('M').start('+0.1');
+            }
+        } else {
+            console.log(`[DRUM VOLUME] ERROR: drumVolumeNode not found!`);
+        }
+    });
+    
+    // Only add the slider, no label
+    volumeControl.appendChild(volumeSlider);
+    drumWrapper.appendChild(volumeControl);
+    
+    // Add hover functionality to show/hide slider when hovering over volume icon area
+    const showSlider = () => {
+        volumeControl.style.display = 'flex';
+    };
+    
+    const hideSlider = () => {
+        volumeControl.style.display = 'none';
+    };
+    
+    // Show slider when hovering over the left side of drum grid (volume icon area)
+    drumWrapper.addEventListener('mouseenter', (e) => {
+        const rect = drumWrapper.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        if (x < 60) { // Left 60px area contains volume icon
+            showSlider();
+        }
+    });
+    
+    volumeControl.addEventListener('mouseenter', showSlider);
+    volumeControl.addEventListener('mouseleave', hideSlider);
+    drumWrapper.addEventListener('mouseleave', hideSlider);
+}
+
+export function getDrumVolume() {
+    return drumVolume;
+}
+
+export function getVolumeIconState() {
+    return volumeIconState;
+}
+
+// Make it globally accessible
+window.getDrumVolume = getDrumVolume;
 
 // --- Public Interface ---
 export function initDrumGridInteraction() {
@@ -181,4 +350,7 @@ export function initDrumGridInteraction() {
     drumCanvas.addEventListener('contextmenu', e => e.preventDefault());
     
     window.addEventListener('mouseup', handleGlobalMouseUp);
+    
+    // Create volume slider
+    createVolumeSlider();
 }

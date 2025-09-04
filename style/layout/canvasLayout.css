@@ -62,7 +62,11 @@
   border-radius: 0 0 var(--border-radius-md) var(--border-radius-md);
 }
 
-#drum-grid, #drum-hover-canvas {
+#drum-grid, #drum-playhead-canvas, #drum-hover-canvas {
   display: block;
   position: absolute; top: 0; left: 0;
+}
+
+#drum-playhead-canvas, #drum-hover-canvas {
+  pointer-events: none;
 }

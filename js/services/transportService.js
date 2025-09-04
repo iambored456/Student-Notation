@@ -7,6 +7,7 @@ import SynthEngine from './synthEngine.js';
 import GlobalService from './globalService.js';
 import domCache from './domCache.js';
 import logger from '../utils/logger.js';
+import DrumPlayheadRenderer from '../components/Canvas/DrumGrid/drumPlayheadRenderer.js';
 
 /**
  * Gets the base (non-modulated) column X position for playhead timing
@@ -102,12 +103,6 @@ function calculateModulatedTimeMap(microbeatDuration, columnWidths, placedTonicS
     const baseMicrobeatPx = store.state.baseMicrobeatPx || store.state.cellWidth || 40;
     const coordinateMapping = createCoordinateMapping(store.state.modulationMarkers, baseMicrobeatPx, store.state);
     
-    console.log('[MODULATED-TIMEMAP] Creating modulated time map with:', {
-        microbeatDuration: microbeatDuration.toFixed(4),
-        baseMicrobeatPx,
-        markersCount: store.state.modulationMarkers.length,
-        segmentsCount: coordinateMapping.segments.length
-    });
     
     // Calculate time for each column using modulation mapping
     for (let i = 0; i < columnWidths.length; i++) {
@@ -118,7 +113,6 @@ function calculateModulatedTimeMap(microbeatDuration, columnWidths, placedTonicS
         // Skip tonic columns (they don't consume time)
         const isTonicColumn = placedTonicSigns.some(ts => ts.columnIndex === i);
         
-        console.log(`[MODULATED-TIMEMAP] Column ${i}: x=${columnX.toFixed(1)}px → time=${timeSeconds.toFixed(4)}s ${isTonicColumn ? '(tonic)' : ''}`);
     }
     
     // Add final time point
@@ -126,8 +120,6 @@ function calculateModulatedTimeMap(microbeatDuration, columnWidths, placedTonicS
     const finalTime = canvasXToSeconds(finalX, coordinateMapping, microbeatDuration);
     timeMap.push(finalTime);
     
-    console.log(`[MODULATED-TIMEMAP] Final time point: x=${finalX.toFixed(1)}px → time=${finalTime.toFixed(4)}s`);
-    console.log('[MODULATED-TIMEMAP] Total duration with modulation:', finalTime.toFixed(4), 'seconds');
 }
 
 function getColumnXForTimeMap(columnIndex, columnWidths, baseMicrobeatPx) {
@@ -164,7 +156,6 @@ function calculateNoteTriggerTime(columnIndex) {
     // Convert canvas X to modulated time
     const modulatedTime = canvasXToSeconds(columnX, coordinateMapping, microbeatDuration);
     
-    console.log(`[MODULATED-TRIGGER] Column ${columnIndex}: x=${columnX.toFixed(1)}px → modulatedTime=${modulatedTime.toFixed(4)}s vs regularTime=${timeMap[columnIndex]?.toFixed(4)}s`);
     
     return modulatedTime;
 }
@@ -209,7 +200,6 @@ function scheduleNotes() {
         // Show timing comparison when modulation is active
         if (hasModulation) {
             const timeDifference = modulatedStartTime - regularStartTime;
-            console.log(`[TIMING-COMPARISON] Note ${note.uuid}: regular=${regularStartTime.toFixed(4)}s, modulated=${modulatedStartTime.toFixed(4)}s, difference=${timeDifference >= 0 ? '+' : ''}${timeDifference.toFixed(4)}s, using regular for scheduling`);
         }
 
         // Calculate duration based on note shape
@@ -245,20 +235,16 @@ function scheduleNotes() {
             // Oval notes and others use the current duration (1 microbeat equivalent)
             duration = tailDuration;
             
-            // Log duration calculation for oval notes
-            console.log(`[DURATION] Oval note ${note.uuid}:`, {
-                startColumn: note.startColumnIndex,
-                endColumn: note.endColumnIndex,
-                regularStartTime: regularStartTime.toFixed(3),
-                regularEndTime: regularEndTime.toFixed(3),
-                scheduleDuration: duration.toFixed(3)
-            });
         }
 
         if (note.isDrum) {
             Tone.Transport.schedule(time => {
                 if (store.state.isPaused) return;
+                console.log(`[TRANSPORT PLAYBACK] Playing drum ${note.drumTrack} at time ${time}, current drumVolumeNode volume: ${window.drumVolumeNode?.volume.value} dB`);
                 drumPlayers?.player(note.drumTrack)?.start(time);
+                
+                // Trigger drum note pop animation
+                DrumPlayheadRenderer.triggerNotePop(note.startColumnIndex, note.drumTrack);
             }, scheduleTime);
         } else {
             const pitch = getPitchForNote(note);
@@ -278,6 +264,9 @@ function scheduleNotes() {
                 if (store.state.isPaused) return;
                 SynthEngine.triggerAttack(pitch, toolColor, time);
                 GlobalService.adsrComponent?.playheadManager.trigger(noteId, 'attack', pitchColor, timbre.adsr);
+                
+                // Emit event for animation service to track note attack
+                store.emit('noteAttack', { noteId, color: toolColor });
             }, scheduleTime);
 
             // Log when release is scheduled
@@ -286,6 +275,9 @@ function scheduleNotes() {
             Tone.Transport.schedule(time => {
                 SynthEngine.triggerRelease(pitch, toolColor, time);
                 GlobalService.adsrComponent?.playheadManager.trigger(noteId, 'release', pitchColor, timbre.adsr);
+                
+                // Emit event for animation service to track note release
+                store.emit('noteRelease', { noteId, color: toolColor });
             }, releaseTime);
         }
     });
@@ -474,21 +466,17 @@ function animatePlayhead() {
                     if (Math.abs(marker.ratio - (2/3)) < 0.001) {
                         // 2:3 compression: tempo should increase (1/ratio = 1.5x faster)
                         tempoAdjustment = 1 / marker.ratio;
-                        console.log(`[TEMPO-MODULATION] 2:3 compression detected, applying 1/ratio = ${tempoAdjustment.toFixed(3)}`);
                     } else if (Math.abs(marker.ratio - (3/2)) < 0.001) {
                         // 3:2 expansion: tempo should decrease (1/ratio = 0.667x slower)
                         tempoAdjustment = 1 / marker.ratio;
-                        console.log(`[TEMPO-MODULATION] 3:2 expansion detected, applying 1/ratio = ${tempoAdjustment.toFixed(3)} (slower tempo)`);
                     } else {
                         // Other ratios: use inverted ratio as default
                         tempoAdjustment = 1 / marker.ratio;
-                        console.log(`[TEMPO-MODULATION] Other ratio detected, applying 1/ratio = ${tempoAdjustment.toFixed(3)}`);
                     }
                     
                     currentTempoMultiplier *= tempoAdjustment;
                     const newTempo = baseTempo * currentTempoMultiplier;
                     
-                    console.log(`[TEMPO-MODULATION] Playhead crossed marker ${marker.id} at x=${markerX}px, ratio=${marker.ratio}, newMultiplier=${currentTempoMultiplier.toFixed(3)}, newTempo=${newTempo.toFixed(1)}BPM`);
                     
                     // Apply the tempo change
                     Tone.Transport.bpm.value = newTempo;
@@ -512,11 +500,46 @@ function animatePlayhead() {
 
 const TransportService = {
     init() {
+        // Create drum volume control node
+        const drumVolumeNode = new Tone.Volume(0); // 0dB = 100% volume
+        console.log(`[TRANSPORT INIT] Created drumVolumeNode with initial volume: ${drumVolumeNode.volume.value} dB`);
+        
         drumPlayers = new Tone.Players({
             H: 'https://tonejs.github.io/audio/drum-samples/CR78/hihat.mp3',
             M: 'https://tonejs.github.io/audio/drum-samples/CR78/snare.mp3',
             L: 'https://tonejs.github.io/audio/drum-samples/CR78/kick.mp3'
-        }).toDestination();
+        }).connect(drumVolumeNode);
+        console.log(`[TRANSPORT INIT] Connected drumPlayers to drumVolumeNode`);
+        
+        // Connect drums to the same main audio chain as synths to avoid volume conflicts
+        // Check if main volume control exists from SynthEngine
+        if (window.synthEngine) {
+            console.log(`[TRANSPORT INIT] SynthEngine found, checking for main volume node...`);
+            // Try to connect to the main volume control chain
+            const synthEngineDestination = window.synthEngine.getMainVolumeNode && window.synthEngine.getMainVolumeNode();
+            if (synthEngineDestination) {
+                console.log(`[TRANSPORT INIT] Connecting drumVolumeNode to SynthEngine main volume chain`);
+                drumVolumeNode.connect(synthEngineDestination);
+                console.log(`[TRANSPORT INIT] Audio chain: drumPlayers -> drumVolumeNode -> synthEngine main volume -> destination`);
+            } else {
+                console.log(`[TRANSPORT INIT] No main volume node found, connecting directly to destination`);
+                drumVolumeNode.toDestination();
+                console.log(`[TRANSPORT INIT] Audio chain: drumPlayers -> drumVolumeNode -> destination`);
+            }
+        } else {
+            console.log(`[TRANSPORT INIT] SynthEngine not found, connecting directly to destination`);
+            drumVolumeNode.toDestination();
+            console.log(`[TRANSPORT INIT] Audio chain: drumPlayers -> drumVolumeNode -> destination`);
+        }
+        
+        // Store reference to drum volume node for external access
+        window.drumVolumeNode = drumVolumeNode;
+        console.log(`[TRANSPORT INIT] Stored drumVolumeNode reference globally`);
+        console.log(`[TRANSPORT INIT] Final drumVolumeNode state:`, {
+            volume: drumVolumeNode.volume.value,
+            connected: drumVolumeNode.output.numberOfOutputs > 0,
+            inputConnections: drumVolumeNode.input.numberOfInputs
+        });
         
         window.transportService = { drumPlayers };
         
@@ -612,7 +635,6 @@ const TransportService = {
             
             // Log modulation setup
             if (store.state.modulationMarkers && store.state.modulationMarkers.length > 0) {
-                console.log(`[TEMPO-MODULATION] Starting with base tempo ${store.state.tempo}BPM, ${store.state.modulationMarkers.length} modulation markers will affect tempo dynamically`);
             }
             
             // Always start from anacrusis (pickup) on first play, but loops will skip anacrusis
@@ -629,6 +651,9 @@ const TransportService = {
             } else {
                 animatePlayhead();
             }
+            
+            // Emit playback events for animation service
+            store.emit('playbackStarted');
         });
     },
 
@@ -647,6 +672,9 @@ const TransportService = {
             if (!store.state.paint.isMicPaintActive) {
                 animatePlayhead();
             }
+            
+            // Emit playback events for animation service
+            store.emit('playbackResumed');
         });
     },
 
@@ -657,6 +685,9 @@ const TransportService = {
             cancelAnimationFrame(playheadAnimationFrame);
             playheadAnimationFrame = null;
         }
+        
+        // Emit playback events for animation service
+        store.emit('playbackPaused');
     },
 
     stop() {
@@ -680,6 +711,9 @@ const TransportService = {
         if (store.state.paint.isMicPaintActive) {
             store.emit('playbackStateChanged', { isPlaying: false, isPaused: false });
         }
+        
+        // Emit playback events for animation service
+        store.emit('playbackStopped');
     }
 };
 

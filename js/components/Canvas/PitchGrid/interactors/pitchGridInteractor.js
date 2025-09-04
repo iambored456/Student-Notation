@@ -419,6 +419,11 @@ function handleMouseDown(e) {
                     const addedNote = store.addNote(newNote);
                     if (addedNote) {
                         activeChordNotes.push(addedNote);
+                        
+                        // Emit interaction start event for animation service
+                        if (addedNote.uuid) {
+                            store.emit('noteInteractionStart', { noteId: addedNote.uuid, color: addedNote.color });
+                        }
                     } else {
                     }
                 }
@@ -554,6 +559,11 @@ function handleMouseDown(e) {
             }
             
             activeNote = addedNote;
+            
+            // Emit interaction start event for animation service
+            if (addedNote.uuid) {
+                store.emit('noteInteractionStart', { noteId: addedNote.uuid, color: addedNote.color });
+            }
             
             isDragging = (shape === 'circle');
 
@@ -859,6 +869,17 @@ function handleGlobalMouseUp() {
         store.recordState();
     }
     isDragging = false;
+    
+    // Emit interaction end events for animation service before clearing
+    if (activeNote && activeNote.uuid) {
+        store.emit('noteInteractionEnd', { noteId: activeNote.uuid });
+    }
+    activeChordNotes.forEach(note => {
+        if (note.uuid) {
+            store.emit('noteInteractionEnd', { noteId: note.uuid });
+        }
+    });
+    
     activeNote = null;
     activeChordNotes = [];
 

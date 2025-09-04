@@ -14,7 +14,7 @@ let currentZoomLevel = 1.0;
 let currentScrollPosition = DEFAULT_SCROLL_POSITION;
 
 let viewportHeight = 0;
-let /* gridContainer, */ pitchGridWrapper, canvas, ctx, drumGridWrapper, drumCanvas, drumCtx, playheadCanvas, hoverCanvas, drumHoverCanvas, pitchPaintCanvas, macrobeatToolsWrapper;
+let /* gridContainer, */ pitchGridWrapper, canvas, ctx, drumGridWrapper, drumCanvas, drumCtx, drumPlayheadCanvas, playheadCanvas, hoverCanvas, drumHoverCanvas, pitchPaintCanvas, macrobeatToolsWrapper;
 let resizeTimeout;
 let isRecalculating = false;
 let isZooming = false;
@@ -27,6 +27,7 @@ function initDOMElements() {
     canvas = document.getElementById('notation-grid');
     drumGridWrapper = document.getElementById('drum-grid-wrapper');
     drumCanvas = document.getElementById('drum-grid');
+    drumPlayheadCanvas = document.getElementById('drum-playhead-canvas');
     playheadCanvas = document.getElementById('playhead-canvas');
     hoverCanvas = document.getElementById('hover-canvas');
     drumHoverCanvas = document.getElementById('drum-hover-canvas');
@@ -134,7 +135,7 @@ function recalcAndApplyLayout() {
         }
     });
     
-    [drumCanvas, drumHoverCanvas].forEach(c => { 
+    [drumCanvas, drumPlayheadCanvas, drumHoverCanvas].forEach(c => { 
         if(c && Math.abs(c.width - drumGridWidth) > 1) { 
             c.width = drumGridWidth; 
         }
@@ -153,6 +154,9 @@ function recalcAndApplyLayout() {
     }
     if (drumCanvas && Math.abs(drumCanvas.height - drumCanvasHeight) > 1) {
         drumCanvas.height = drumCanvasHeight;
+    }
+    if (drumPlayheadCanvas && Math.abs(drumPlayheadCanvas.height - drumCanvasHeight) > 1) {
+        drumPlayheadCanvas.height = drumCanvasHeight;
     }
     if (drumHoverCanvas && Math.abs(drumHoverCanvas.height - drumCanvasHeight) > 1) {
         drumHoverCanvas.height = drumCanvasHeight;

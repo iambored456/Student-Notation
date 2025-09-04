@@ -1,10 +1,17 @@
 // js/components/Toolbar/initializers/fileActionsInitializer.js
 import store from '../../../state/index.js';
 
+function generateDateBasedFilename() {
+    const now = new Date();
+    const month = now.toLocaleDateString('en-US', { month: 'long' });
+    const day = now.getDate();
+    return `SN-score-${month}${day}.csv`;
+}
+
 async function saveWithPicker(blob) {
     try {
         const options = {
-            suggestedName: 'student-notation-score.csv',
+            suggestedName: generateDateBasedFilename(),
             types: [{ description: 'Student Notation CSV File', accept: { 'text/csv': ['.csv'] } }],
         };
         const handle = await window.showSaveFilePicker(options);
@@ -20,7 +27,7 @@ function saveWithLegacyLink(blob) {
     const link = document.createElement("a");
     const url = URL.createObjectURL(blob);
     link.setAttribute("href", url);
-    link.setAttribute("download", "student-notation-export.csv");
+    link.setAttribute("download", generateDateBasedFilename());
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);

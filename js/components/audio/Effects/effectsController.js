@@ -1,7 +1,8 @@
 // js/components/Effects/effectsController.js
 
-import logger from '../../utils/logger.js';
-import store from '../../state/index.js';
+import logger from '../../../utils/logger.js';
+import store from '../../../state/index.js';
+import effectsCoordinator from '../../../services/timbreEffects/effectsCoordinator.js';
 
 class EffectsController {
     constructor() {
@@ -9,52 +10,37 @@ class EffectsController {
         this.effectControlsContainer = null;
         this.effectButtons = [];
         this.dials = [];
+        this.currentColor = null;
         
         this.effectConfigs = {
             reverb: {
                 name: 'Reverb',
                 controls: {
-                    roomSize: { label: 'Room Size', min: 0, max: 100, default: 50, unit: '%' },
-                    decay: { label: 'Decay', min: 0, max: 100, default: 30, unit: '%' },
-                    wet: { label: 'Wet/Dry', min: 0, max: 100, default: 25, unit: '%' }
+                    decay: { label: 'Time', min: 0, max: 100, default: 0, unit: '%' },     // x-axis
+                    roomSize: { label: 'Size', min: 0, max: 100, default: 0, unit: '%' },   // y-axis
+                    wet: { label: 'Mix', min: 0, max: 100, default: 10, unit: '%' }        // mix slider
                 }
             },
             delay: {
                 name: 'Delay',
                 controls: {
-                    time: { label: 'Time', min: 0, max: 100, default: 25, unit: '%' },
-                    feedback: { label: 'Feedback', min: 0, max: 95, default: 40, unit: '%' },
-                    wet: { label: 'Wet/Dry', min: 0, max: 100, default: 30, unit: '%' }
+                    time: { label: 'Time', min: 0, max: 100, default: 0, unit: '%' },      // x-axis
+                    feedback: { label: 'Echoes', min: 0, max: 95, default: 0, unit: '%' }, // y-axis
+                    wet: { label: 'Mix', min: 0, max: 100, default: 15, unit: '%' }        // mix slider
                 }
             },
-            phaser: {
-                name: 'Phaser',
-                controls: {
-                    rate: { label: 'Rate', min: 0, max: 100, default: 50, unit: '%' },
-                    depth: { label: 'Depth', min: 0, max: 100, default: 75, unit: '%' },
-                    stages: { label: 'Stages', min: 2, max: 12, default: 6, unit: '' }
-                }
-            },
-            vibratio: {
+            vibrato: {
                 name: 'Vibrato',
                 controls: {
-                    speed: { label: 'Speed', min: 0, max: 100, default: 40, unit: '%' },
-                    span: { label: 'Span', min: 0, max: 100, default: 60, unit: '%' }
+                    speed: { label: 'Speed', min: 0, max: 100, default: 0, unit: '%' },     // x-axis
+                    span: { label: 'Span', min: 0, max: 100, default: 0, unit: '%' }       // y-axis
                 }
             },
-            tremelo: {
+            tremolo: {
                 name: 'Tremolo',
                 controls: {
-                    speed: { label: 'Speed', min: 0, max: 100, default: 35, unit: '%' },
-                    span: { label: 'Span', min: 0, max: 100, default: 50, unit: '%' }
-                }
-            },
-            portamento: {
-                name: 'Portamento',
-                controls: {
-                    time: { label: 'Glide Time', min: 0, max: 100, default: 20, unit: '%' },
-                    curve: { label: 'Curve', min: 0, max: 100, default: 50, unit: '%' },
-                    legato: { label: 'Legato Only', min: 0, max: 1, default: 1, unit: '' }
+                    speed: { label: 'Speed', min: 0, max: 100, default: 0, unit: '%' },     // x-axis
+                    span: { label: 'Span', min: 0, max: 100, default: 0, unit: '%' }       // y-axis
                 }
             }
         };
@@ -72,6 +58,7 @@ class EffectsController {
         }
         
         this.setupEventListeners();
+        this.initializeSelectedColorTracking();
         logger.initSuccess('Effects Controller');
         return true;
     }
@@ -88,9 +75,9 @@ class EffectsController {
     selectEffect(effectType) {
         logger.debug('Effects', `Selecting effect: ${effectType}`, null, 'ui');
         
-        // Only allow Reverb for now
-        if (effectType !== 'reverb') {
-            logger.info('Effects', `Effect ${effectType} not implemented yet - only Reverb available for testing`, null, 'ui');
+        // Allow all configured effects (vibrato, tremolo, reverb, delay)
+        if (!this.effectConfigs[effectType]) {
+            logger.info('Effects', `Effect ${effectType} not configured`, null, 'ui');
             return;
         }
         
@@ -120,86 +107,80 @@ class EffectsController {
             return;
         }
 
-        // Clear existing dials
-        this.clearDials();
+        // Clear existing controls
+        this.clearControls();
         
         // Create controls container
         this.effectControlsContainer.innerHTML = '<div class="effect-controls"></div>';
         const controlsContainer = this.effectControlsContainer.querySelector('.effect-controls');
         
-        // Create dials for each control
+        // Create simple sliders for each control
         Object.entries(config.controls).forEach(([key, control]) => {
-            const dialContainer = document.createElement('div');
-            dialContainer.className = 'effect-control-group';
-            controlsContainer.appendChild(dialContainer);
+            // Get current value from effectsCoordinator for this color and effect
+            const effectParams = this.currentColor ? effectsCoordinator.getEffectParameters(this.currentColor, effectType) : null;
+            const currentValue = effectParams?.[key] || 0;
+            
+            const sliderContainer = document.createElement('div');
+            sliderContainer.className = 'effect-slider-group';
+            sliderContainer.style.cssText = 'margin-bottom: 15px; padding: 10px; border: 1px solid #ccc; border-radius: 5px;';
+            controlsContainer.appendChild(sliderContainer);
             
             // Add label
-            const label = document.createElement('div');
-            label.className = 'nexus-dial-label';
+            const label = document.createElement('label');
+            label.className = 'effect-slider-label';
             label.textContent = control.label;
-            dialContainer.appendChild(label);
+            label.style.cssText = 'display: block; margin-bottom: 5px; font-weight: bold; color: #333;';
+            sliderContainer.appendChild(label);
             
-            // Create dial container for nexus
-            const nexusContainer = document.createElement('div');
-            dialContainer.appendChild(nexusContainer);
-            
-            // Create custom dial (replace with your custom dial implementation)
-            const dial = this.createCustomDial(nexusContainer, {
-                min: control.min,
-                max: control.max,
-                value: control.default
-            });
+            // Create slider
+            const slider = document.createElement('input');
+            slider.type = 'range';
+            slider.min = control.min;
+            slider.max = control.max;
+            slider.value = currentValue; // Use current value from effectsCoordinator
+            slider.className = 'effect-slider';
+            slider.style.cssText = 'width: 100%; margin: 5px 0;';
+            sliderContainer.appendChild(slider);
             
             // Add value display
             const valueDisplay = document.createElement('div');
-            valueDisplay.className = 'nexus-dial-value';
-            const displayValue = control.unit ? `${control.default}${control.unit}` : control.default;
+            valueDisplay.className = 'effect-slider-value';
+            const displayValue = control.unit ? `${Math.round(currentValue)}${control.unit}` : Math.round(currentValue);
             valueDisplay.textContent = displayValue;
-            dialContainer.appendChild(valueDisplay);
+            valueDisplay.style.cssText = 'text-align: center; font-size: 12px; color: #666;';
+            sliderContainer.appendChild(valueDisplay);
             
-            // Store dial reference
-            this.dials.push({ dial, control: key, effectType, valueDisplay, controlConfig: control });
+            // Store slider reference
+            this.dials.push({ 
+                dial: { 
+                    element: slider, 
+                    value: currentValue,
+                    destroy: () => {} // No cleanup needed for native inputs
+                }, 
+                control: key, 
+                effectType, 
+                valueDisplay, 
+                controlConfig: control 
+            });
             
-            // Setup dial change listener
-            dial.on('change', (value) => {
+            // Setup slider change listeners - handle both dragging (input) and click-to-position (change)
+            const handleSliderChange = (e) => {
+                const value = parseFloat(e.target.value);
                 const displayValue = control.unit ? `${Math.round(value)}${control.unit}` : Math.round(value);
                 valueDisplay.textContent = displayValue;
                 logger.debug('Effects', `${effectType} ${key}: ${value}`, null, 'audio');
                 this.onEffectParameterChange(effectType, key, value);
-            });
+            };
+            
+            slider.addEventListener('input', handleSliderChange); // During dragging
+            slider.addEventListener('change', handleSliderChange); // Click-to-position
         });
-        
-        // Debug logging for dial wrapper contents and dimensions
-        console.log('=== DIAL WRAPPER DEBUG ===');
-        Object.entries(config.controls).forEach(([key, control], index) => {
-            const dialContainer = controlsContainer.children[index];
-            console.log(`Dial ${key}:`);
-            console.log('  Container children:', dialContainer.children.length);
-            Array.from(dialContainer.children).forEach((child, childIndex) => {
-                console.log(`    Child ${childIndex}:`, {
-                    tagName: child.tagName,
-                    className: child.className,
-                    textContent: child.textContent?.slice(0, 20) || '',
-                    offsetHeight: child.offsetHeight,
-                    computedHeight: window.getComputedStyle(child).height,
-                    marginTop: window.getComputedStyle(child).marginTop,
-                    marginBottom: window.getComputedStyle(child).marginBottom,
-                    paddingTop: window.getComputedStyle(child).paddingTop,
-                    paddingBottom: window.getComputedStyle(child).paddingBottom
-                });
-            });
-            console.log(`  Total container height: ${dialContainer.offsetHeight}px`);
-            console.log(`  Container computed height: ${window.getComputedStyle(dialContainer).height}`);
-            console.log(`  Container gap: ${window.getComputedStyle(dialContainer).gap}`);
-            console.log('  ---');
-        });
-        console.log('=== END DIAL WRAPPER DEBUG ===');
         
         this.effectControlsContainer.classList.add('active');
     }
 
     hideEffectControls() {
-        this.clearDials();
+        this.clearControls();
         this.effectControlsContainer.classList.remove('active');
         this.effectControlsContainer.innerHTML = '';
         
@@ -207,22 +188,42 @@ class EffectsController {
         this.effectButtons.forEach(btn => btn.classList.remove('active'));
     }
 
-    clearDials() {
-        // Destroy existing dials
+    clearControls() {
+        // Clean up existing controls (sliders don't need special cleanup)
         this.dials.forEach(({ dial }) => {
-            dial.destroy();
+            if (dial.destroy) {
+                dial.destroy();
+            }
         });
         this.dials = [];
     }
 
 
     onEffectParameterChange(effectType, parameter, value) {
+        console.log(`🎚️ [EFFECTS UI DEBUG] onEffectParameterChange called:`, { effectType, parameter, value });
+        
         // This method would be called when an effect parameter changes
-        // You can integrate this with your SynthEngine or audio processing system
         logger.debug('Effects', `Effect parameter changed: ${effectType}.${parameter} = ${value}`, null, 'audio');
         
-        // Emit an event that other parts of the system can listen to
-        // store.emit('effectParameterChanged', { effectType, parameter, value });
+        // Get the current color
+        const currentColor = store.state.selectedNote.color;
+        console.log(`🎚️ [EFFECTS UI DEBUG] Current selected color:`, currentColor);
+        
+        if (!currentColor) {
+            console.log(`🎚️ [EFFECTS UI DEBUG] No color selected, cannot update effect parameter`);
+            logger.warn('Effects', 'Cannot update effect parameter: no color selected', { effectType, parameter, value }, 'audio');
+            return;
+        }
+        
+        console.log(`🎚️ [EFFECTS UI DEBUG] Calling effectsCoordinator.updateParameter with:`, { effectType, parameter, value, currentColor });
+        
+        // Use the effects coordinator to handle all effect changes
+        effectsCoordinator.updateParameter(effectType, parameter, value, currentColor);
+        
+        // Emit general event that other parts of the system can listen to (for backward compatibility)
+        store.emit('effectParameterChanged', { effectType, parameter, value, color: currentColor });
+        
+        console.log(`🎚️ [EFFECTS UI DEBUG] effectParameterChanged event emitted`);
     }
 
     getCurrentEffect() {
@@ -234,15 +235,95 @@ class EffectsController {
             return null;
         }
 
+        // Get parameters from effectsCoordinator (single source of truth)
+        const currentColor = store.state.selectedNote?.color;
+        if (!currentColor) {
+            return null;
+        }
+
+        // Use effectsCoordinator if available, otherwise fall back to UI values
+        if (window.effectsCoordinator) {
+            return window.effectsCoordinator.getEffectParameters(currentColor, effectType);
+        }
+
+        // Fallback: get from UI sliders
         const parameters = {};
-        
-        this.dials.forEach(({ dial, control, effectType: dialEffectType }) => {
-            if (dialEffectType === effectType) {
-                parameters[control] = dial.value;
+        this.dials.forEach(({ dial, control, effectType: sliderEffectType }) => {
+            if (sliderEffectType === effectType) {
+                parameters[control] = parseFloat(dial.element.value);
             }
         });
         
         return parameters;
+    }
+
+
+    /**
+     * Initialize tracking of selected color changes
+     */
+    initializeSelectedColorTracking() {
+        // Track current selected color
+        this.currentColor = store.state.selectedNote?.color;
+        
+        // Listen for color changes
+        store.on('selectedNoteChanged', () => {
+            const newColor = store.state.selectedNote?.color;
+            if (newColor !== this.currentColor) {
+                this.currentColor = newColor;
+                this.updateEffectButtonIndicators();
+            }
+        });
+
+        // Listen for effect parameter changes to update indicators
+        store.on('audioEffectChanged', () => {
+            this.updateEffectButtonIndicators();
+        });
+        
+        // Initial update
+        this.updateEffectButtonIndicators();
+    }
+
+    /**
+     * Update effect button indicators based on current color's active effects
+     * Extracted from simpleEffectsTest.js
+     */
+    updateEffectButtonIndicators() {
+        if (!this.effectButtons || !this.currentColor) return;
+        
+        this.effectButtons.forEach(button => {
+            const effectType = button.getAttribute('data-effect');
+            let isActive = false;
+            
+            // Get effect parameters from effectsCoordinator (single source of truth)
+            const effectParams = effectsCoordinator.getEffectParameters(this.currentColor, effectType);
+            
+            // Check if this effect is active
+            switch (effectType) {
+                case 'vibrato':
+                    isActive = effectParams.speed > 0 && effectParams.span > 0;
+                    break;
+                case 'tremolo':
+                    isActive = effectParams.speed > 0 && effectParams.span > 0;
+                    break;
+                case 'reverb':
+                    isActive = effectParams.roomSize > 0 || effectParams.decay > 0 || (effectParams.wet > 0 && (effectParams.roomSize > 0 || effectParams.decay > 0));
+                    break;
+                case 'delay':
+                    isActive = effectParams.time > 0 || effectParams.feedback > 0 || (effectParams.wet > 0 && (effectParams.time > 0 || effectParams.feedback > 0));
+                    break;
+            }
+            
+            // Apply sub-active styling: background color without border
+            if (isActive) {
+                button.style.backgroundColor = this.currentColor;
+                button.style.color = 'white';
+                button.classList.add('effect-active');
+            } else {
+                button.style.backgroundColor = '';
+                button.style.color = '';
+                button.classList.remove('effect-active');
+            }
+        });
     }
 }
 

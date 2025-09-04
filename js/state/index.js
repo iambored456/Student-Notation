@@ -109,6 +109,8 @@ const actions = {
     clearSavedState() {
         try {
             localStorage.removeItem(STORAGE_KEY);
+            // Also clear effect dial values when creating a new page
+            localStorage.removeItem('effectDialValues');
             window.location.reload(); 
         } catch (err) {
             logger.error('Store', 'Could not clear state from localStorage', err, 'general');

@@ -8,6 +8,16 @@ export const createDefaultFilterState = () => ({
     type: 'lowpass'
 });
 
+export const createDefaultVibratoState = () => ({
+    speed: 0,  // 0-100% → 0-16 Hz (linear mapping) - Start with vibrato off
+    span: 0    // 0-100% → 0-100 cents (linear mapping) - Start with vibrato off
+});
+
+export const createDefaultTremoloState = () => ({
+    speed: 0,  // 0-100% → 0-16 Hz (linear mapping) - Start with tremolo off
+    span: 0    // 0-100% → 0-100% amplitude modulation - Start with tremolo off
+});
+
 export const defaultColorPalette = {
     '#4a90e2': { primary: '#4a90e2', light: '#63a9fd' },
     '#68a03f': { primary: '#68a03f', light: '#80b958' },
@@ -42,6 +52,8 @@ export function getInitialTimbresState() {
             phases,
             activePresetName: 'sine',
             filter: createDefaultFilterState(),
+            vibrato: createDefaultVibratoState(),
+            tremelo: createDefaultTremoloState(), // Note: keeping 'tremelo' spelling for consistency with UI
         };
     };
 

@@ -1,0 +1,85 @@
+/* ==========================================================================
+   KEYBOARD SHORTCUTS STYLES
+   ========================================================================== */
+
+.keyboard-shortcuts-container {
+    margin-top: 1rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid var(--c-border-light, #e8ecf0);
+}
+
+.keyboard-shortcuts-container h4 {
+    margin-bottom: 0.5rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--c-text-muted, #6c757d);
+}
+
+.shortcuts-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.shortcut-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.125rem 0;
+    font-size: 0.75rem;
+}
+
+.shortcut-key {
+    font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
+    background-color: var(--c-surface, #f8f9fa);
+    color: var(--c-text, #212529);
+    padding: 0.125rem 0.25rem;
+    border-radius: 3px;
+    border: 1px solid var(--c-border, #dee2e6);
+    font-weight: 500;
+    min-width: 3rem;
+    text-align: center;
+    white-space: nowrap;
+}
+
+.shortcut-desc {
+    color: var(--c-text-muted, #6c757d);
+    font-weight: 400;
+    text-align: right;
+    flex: 1;
+    margin-left: 0.5rem;
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+    .keyboard-shortcuts-container {
+        border-top-color: var(--c-border-dark, #495057);
+    }
+    
+    .keyboard-shortcuts-container h4 {
+        color: var(--c-text-dark, #e2e8f0);
+    }
+    
+    .shortcut-key {
+        background-color: var(--c-surface-dark, #2d3748);
+        color: var(--c-text-dark, #e2e8f0);
+        border-color: var(--c-border-dark, #4a5568);
+    }
+    
+    .shortcut-desc {
+        color: var(--c-text-muted-dark, #a0aec0);
+    }
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .shortcut-item {
+        font-size: 0.7rem;
+    }
+    
+    .shortcut-key {
+        font-size: 0.65rem;
+        padding: 0.1rem 0.2rem;
+        min-width: 2.5rem;
+    }
+}

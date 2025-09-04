@@ -116,6 +116,7 @@
     border-right: 1px solid var(--c-border-light);
     width: 3.5rem;
     height: 100%;
+    align-self: stretch;
 }
 
 .mic-meter-header-vertical {
@@ -134,7 +135,7 @@
     border: 1px solid var(--c-border);
     border-radius: var(--border-radius-md);
     overflow: hidden;
-    min-height: 100px; /* Ensure minimum height taller than width */
+    min-height: 150px; /* Ensure minimum height taller than width */
 }
 
 .meter-placeholder {

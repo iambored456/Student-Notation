@@ -8,9 +8,13 @@
     flex-direction: column;
     align-items: center;
     justify-content: flex-start;
-    flex: 0 0 auto;
-    width: fit-content;
+    flex: 1;
+    width: 100%;
+    max-width: 100%;
+    min-width: fit-content;
     gap: 0;
+    box-sizing: border-box;
+    
 }
 
 .preset-effects-tabs {
@@ -20,7 +24,7 @@
 }
 
 .preset-tab-button {
-    padding: var(--space-1) var(--space-3);
+    padding: 0.15rem var(--space-3);
     background-color: transparent; 
     border: 1px solid var(--c-border);
     border-bottom: none;
@@ -60,6 +64,12 @@
 .preset-effects-content {
     position: relative;
     width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    
 }
 
 .preset-tab-panel {
@@ -67,20 +77,29 @@
 }
 
 .preset-tab-panel.active {
-    display: block;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
 }
 
 .preset-content-box, .effects-content-box {
     background-color: var(--c-surface);
     border: 1px solid var(--c-border);
     border-radius: 16px;
-    padding: var(--space-1);
+    padding-top: 0.1rem;
+    padding-right: 0.3rem;
+    padding-left: 0.3rem;
     box-shadow: var(--box-shadow-sm);
     position: relative;
     z-index: 1;
-    width: 16rem;
-    min-width: 280px;
+    width: 100%;
+    max-width: 100%;
+    min-width: fit-content;
     overflow: visible;
+    flex: 1;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
 }
 
 .effects-content-box {
@@ -110,13 +129,38 @@
 }
 
 /* --- Preset Voice Buttons --- */
-.preset-grid { display: flex; gap: var(--space-2); }
-.preset-column { display: flex; flex-direction: column; gap: var(--space-1); }
+.preset-grid { 
+  display: flex; 
+  gap: var(--space-2); 
+  width: 100%;
+  height: 100%;
+  justify-content: center;
+  align-items: stretch;
+}
+.preset-column { 
+  display: flex; 
+  flex-direction: column; 
+  gap: var(--space-1); 
+  flex: 1;
+  height: 100%;
+  align-items: stretch;
+  justify-content: space-evenly;
+  container-type: inline-size;
+}
 .preset-button { 
-  width: 95px; justify-content: center; display: flex; align-items: center;
-  padding: var(--space-1); background-color: var(--c-surface);
-  color: var(--c-text); border: 1px solid var(--c-border); font-size: 13px;
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  width: 100%; 
+  min-width: fit-content;
+  justify-content: center; 
+  display: flex; 
+  align-items: center;
+  padding: 0.1rem 0.5rem; 
+  background-color: var(--c-surface);
+  color: var(--c-text); 
+  border: 1px solid var(--c-border); 
+  font-size: 0.75rem;
+  white-space: nowrap; 
+  box-sizing: border-box;
+  container-type: inline-size;
 }
 .preset-button:hover { background-color: var(--c-border); }
 

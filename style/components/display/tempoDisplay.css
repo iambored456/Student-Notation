@@ -53,6 +53,16 @@
     height: 1.5rem;
     width: auto;
     user-select: none;
+    transform-origin: center;
+    transition: transform 0.08s ease-out;
+}
+
+/* Tempo number boxes (DraggableNumber components) */
+#eighth-note-tempo,
+#quarter-note-tempo, 
+#dotted-quarter-tempo {
+    transform-origin: center;
+    transition: transform 0.08s ease-out;
 }
 
 .tempo-input {

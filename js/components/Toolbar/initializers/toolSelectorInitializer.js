@@ -41,22 +41,22 @@ const CHORD_SHAPES = { ...BASIC_CHORD_SHAPES, ...ADVANCED_CHORD_SHAPES };
 
 // Define interval mappings for each button in the 4x4 grid
 const INTERVAL_SHAPES = {
-    '6':   ['6M'],       // Major 6th
-    '#6':  ['7m'],       // Minor 7th (enharmonic)
-    '♭7':  ['7m'],       // Minor 7th
-    '7':   ['7M'],       // Major 7th
-    '♭5':  ['5d'],       // Tritone (diminished 5th)
-    '5':   ['5P'],       // Perfect 5th
-    '#5':  ['6m'],       // Minor 6th (enharmonic)
-    '♭6':  ['6m'],       // Minor 6th
-    '♭3':  ['3m'],       // Minor 3rd
-    '3':   ['3M'],       // Major 3rd
-    '4':   ['4P'],       // Perfect 4th
-    '#4':  ['4A'],       // Tritone (augmented 4th)
-    '1':   ['1P'],       // Unison
-    '♭2':  ['2m'],       // Minor 2nd
-    '2':   ['2M'],       // Major 2nd
-    '#2':  ['3m']        // Minor 3rd (enharmonic)
+    'M6':  ['6M'],       // Major 6th
+    'A6':  ['6A'],       // Augmented 6th  
+    'm7':  ['7m'],       // Minor 7th
+    'M7':  ['7M'],       // Major 7th
+    'd5':  ['5d'],       // Diminished 5th (Tritone)
+    'P5':  ['5P'],       // Perfect 5th
+    'A5':  ['5A'],       // Augmented 5th
+    'm6':  ['6m'],       // Minor 6th
+    'm3':  ['3m'],       // Minor 3rd
+    'M3':  ['3M'],       // Major 3rd
+    'P4':  ['4P'],       // Perfect 4th
+    'A4':  ['4A'],       // Augmented 4th (Tritone)
+    'U':   ['1P'],       // Unison (Perfect 1st)
+    'm2':  ['2m'],       // Minor 2nd
+    'M2':  ['2M'],       // Major 2nd
+    'A2':  ['2A']        // Augmented 2nd
 };
 
 /**
@@ -132,11 +132,13 @@ function updateIntervalButtonSelection() {
     // Clear selection from all interval buttons
     intervalsPanel.querySelectorAll('.harmony-preset-button').forEach(el => el.classList.remove('selected'));
 
-    // If the current tool is 'interval' and we have active intervals, highlight matching buttons
-    if (store.state.selectedTool === 'interval' && store.state.activeIntervals) {
-        const activeIntervals = store.state.activeIntervals;
+    // If the current tool is 'chord' and we have active chord intervals, highlight matching buttons
+    if (store.state.selectedTool === 'chord' && store.state.activeChordIntervals) {
+        const activeIntervals = store.state.activeChordIntervals;
         intervalsPanel.querySelectorAll('.harmony-preset-button').forEach(button => {
-            const buttonInterval = INTERVAL_SHAPES[button.textContent];
+            const intervalLabel = button.textContent.trim();
+            const buttonInterval = INTERVAL_SHAPES[intervalLabel];
+            // Check if this interval button matches any of the active chord intervals
             if (buttonInterval && activeIntervals.includes(buttonInterval[0])) {
                 button.classList.add('selected');
             }
@@ -563,14 +565,18 @@ export function initToolSelectors() {
     if (intervalsPanel) {
         intervalsPanel.querySelectorAll('.harmony-preset-button').forEach(button => {
             button.addEventListener('click', () => {
-                const intervalData = INTERVAL_SHAPES[button.textContent];
+                const intervalLabel = button.textContent.trim();
+                const intervalData = INTERVAL_SHAPES[intervalLabel];
                 if (intervalData && intervalData.length > 0) {
-                    // For intervals, always use root + interval (positioning handled in interactor)
+                    // For intervals, always use root + interval (inversion handled by state)
                     const intervals = ['1P', intervalData[0]];
                     store.setActiveChordIntervals(intervals);
                     store.setSelectedTool('chord'); // Reuse chord functionality for intervals
+                    
+                    console.log(`Interval ${intervalLabel} selected:`, intervals);
                 } else {
-                    console.error(`Failed to retrieve valid interval for symbol: "${button.textContent}"`);
+                    console.error(`Failed to retrieve valid interval for symbol: "${intervalLabel}"`);
+                    console.error('Available interval shapes:', Object.keys(INTERVAL_SHAPES));
                 }
                 button.blur(); // Remove focus to prevent lingering highlight
             });
@@ -632,7 +638,9 @@ export function initToolSelectors() {
     if (degreeVisibilityToggle) {
         degreeVisibilityToggle.addEventListener('click', () => {
             const currentMode = store.state.degreeDisplayMode;
-            if (currentMode === 'off') {
+            const isCurrentlyOff = currentMode === 'off';
+            
+            if (isCurrentlyOff) {
                 // Check if there are tonic shapes on canvas before turning on
                 if (!hasTonicShapesOnCanvas()) {
                     notificationSystem.alert(
@@ -774,9 +782,11 @@ export function initToolSelectors() {
 
     store.on('degreeDisplayModeChanged', (mode) => {
         
-        // Update visibility toggle button text and state
+        // Update visibility toggle switch state (Show/Hide)
         if (degreeVisibilityToggle) {
-            degreeVisibilityToggle.textContent = mode === 'off' ? 'Show Degrees (OFF)' : 'Show Degrees (ON)';
+            // Set toggle switch position based on mode: false = Show (left), true = Hide (right)
+            // When mode is 'off', toggle should show "Show" (inactive state, slider on left)
+            // When mode is not 'off', toggle should show "Hide" (active state, slider on right)
             degreeVisibilityToggle.classList.toggle('active', mode !== 'off');
         }
         

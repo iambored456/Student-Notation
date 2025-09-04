@@ -21,6 +21,21 @@ const GridManager = {
             this.renderDrumGrid();
         });
         
+        // Import store for animation events
+        import('../../../state/index.js').then(({ default: store }) => {
+            // Listen for animation updates to trigger canvas redraws
+            store.on('animationUpdate', (data) => {
+                // Only redraw if we have vibrato animations
+                if (data.type === 'vibrato' && data.activeColors && data.activeColors.length > 0) {
+                    this.renderPitchGrid();
+                }
+                // Also handle combined animations (both vibrato and tremolo)
+                else if (data.type === 'combined' && data.vibratoColors && data.vibratoColors.length > 0) {
+                    this.renderPitchGrid();
+                }
+            });
+        });
+        
     },
 
     // Expose the render methods from the controller modules.

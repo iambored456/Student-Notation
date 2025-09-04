@@ -75,6 +75,16 @@ class AdsrComponent {
 
         store.on('tempoChanged', () => this.render());
         
+        // Listen for tremolo amplitude updates to animate Attack and Sustain nodes
+        store.on('tremoloAmplitudeUpdate', ({ activeColors }) => {
+            // Only re-render ADSR during dynamic display (playback), not static
+            const isDynamicDisplay = window.staticWaveformVisualizer?.dynamicVisualizer?.isLiveMode() || false;
+            
+            if (isDynamicDisplay && activeColors && activeColors.includes(this.currentColor)) {
+                this.render();
+            }
+        });
+        
         store.on('playbackStateChanged', ({ isPlaying, isPaused }) => {
             if (!isPlaying) {
                 this.playheadManager.clearAll();
@@ -82,6 +92,14 @@ class AdsrComponent {
                 this.playheadManager.pause();
             } else {
                 this.playheadManager.resume();
+            }
+        });
+        
+        // Listen for tremolo amplitude updates (only tremolo affects ADSR)
+        store.on('tremoloAmplitudeUpdate', ({ activeColors }) => {
+            // Redraw if current color is affected by tremolo
+            if (activeColors && activeColors.includes(this.currentColor)) {
+                this.render();
             }
         });
     }
@@ -111,12 +129,24 @@ class AdsrComponent {
         if (!this.width || !this.height) return [];
         const timeToX = (time) => (time / MAX_ADSR_TIME_SECONDS) * this.width;
         
-        // Get normalized amplitude from waveform visualizer
-        const normalizedAmplitude = window.staticWaveformVisualizer?.getNormalizedAmplitude() || 1.0;
+        // Get tremolo-modulated amplitude for ADSR Attack and Sustain nodes
+        // Only apply tremolo during dynamic display (playback), not static display
+        let tremoloMultiplier = 1.0;
+        const isDynamicDisplay = window.staticWaveformVisualizer?.dynamicVisualizer?.isLiveMode() || false;
+        
+        if (isDynamicDisplay && window.animationEffectsManager) {
+            tremoloMultiplier = window.animationEffectsManager.getADSRTremoloAmplitudeMultiplier(this.currentColor);
+        }
+        
+        // Get original waveform amplitude as reference
+        const originalAmplitude = window.staticWaveformVisualizer?.calculatedAmplitude || 1.0;
+        
+        // Apply tremolo to the original amplitude
+        const normalizedAmplitude = originalAmplitude * tremoloMultiplier;
         
         const p1 = { x: 0, y: this.height };
         const p2 = { x: timeToX(attack), y: this.height * (1 - normalizedAmplitude) }; // Use normalized amplitude for attack peak
-        const p3 = { x: timeToX(attack + decay), y: this.height * (1 - Math.min(sustain, normalizedAmplitude)) }; // Constrain sustain to normalized amplitude
+        const p3 = { x: timeToX(attack + decay), y: this.height * (1 - Math.min(sustain * normalizedAmplitude, normalizedAmplitude)) }; // Apply tremolo to both sustain level and amplitude constraint
         const p4 = { x: timeToX(attack + decay + release), y: this.height };
         return [p1, p2, p3, p4];
     }
@@ -133,8 +163,20 @@ class AdsrComponent {
     updateControls() {
         if (!this.ui.sustainThumb) return; // Safety check
         
-        // Get normalized amplitude and constrain sustain if needed
-        const normalizedAmplitude = window.staticWaveformVisualizer?.getNormalizedAmplitude() || 1.0;
+        // Get tremolo-modulated amplitude for ADSR controls
+        // Only apply tremolo during dynamic display (playback), not static display
+        let tremoloMultiplier = 1.0;
+        const isDynamicDisplay = window.staticWaveformVisualizer?.dynamicVisualizer?.isLiveMode() || false;
+        
+        if (isDynamicDisplay && window.animationEffectsManager) {
+            tremoloMultiplier = window.animationEffectsManager.getADSRTremoloAmplitudeMultiplier(this.currentColor);
+        }
+        
+        // Get original waveform amplitude as reference
+        const originalAmplitude = window.staticWaveformVisualizer?.calculatedAmplitude || 1.0;
+        
+        // Apply tremolo to the original amplitude
+        const normalizedAmplitude = originalAmplitude * tremoloMultiplier;
         const maxSustainPercent = normalizedAmplitude * 100;
         
         // If current sustain exceeds normalized amplitude, update it in store and component

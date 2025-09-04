@@ -5,6 +5,17 @@ import { shouldDrawVerticalLineAtColumn, isTonicColumn } from '../../../utils/to
 import LayoutService from '../../../services/layoutService.js';
 import { getColumnX as getModulatedColumnX } from '../PitchGrid/renderers/rendererUtils.js';
 import { renderModulationMarkers } from '../PitchGrid/renderers/modulationRenderer.js';
+import DrumPlayheadRenderer from './drumPlayheadRenderer.js';
+
+// Pre-load the volume icon
+let volumeIconImage = null;
+const loadVolumeIcon = () => {
+    if (!volumeIconImage) {
+        volumeIconImage = new Image();
+        volumeIconImage.src = '/assets/icons/Volume.svg';
+    }
+    return volumeIconImage;
+};
 
 // --- Pure Helper Functions ---
 function getColumnX(index, options) {
@@ -18,10 +29,10 @@ function getColumnX(index, options) {
     }
 }
 
-export function drawDrumShape(ctx, drumRow, x, y, width, height) {
+export function drawDrumShape(ctx, drumRow, x, y, width, height, scale = 1.0) {
     const cx = x + width / 2;
     const cy = y + height / 2;
-    const size = Math.min(width, height) * 0.4;
+    const size = Math.min(width, height) * 0.4 * scale;
     ctx.beginPath();
 
     if (drumRow === 0) { // High: Triangle
@@ -47,6 +58,76 @@ export function drawDrumShape(ctx, drumRow, x, y, width, height) {
         ctx.closePath();
     }
     ctx.fill();
+}
+
+function drawVolumeIcon(ctx, x, y, size, state = 'normal') {
+    const volumeImg = loadVolumeIcon();
+    
+    // Add background highlight for hover/active states
+    if (state !== 'normal') {
+        const highlightSize = size * 1.3;
+        ctx.beginPath();
+        ctx.arc(x, y, highlightSize / 2, 0, Math.PI * 2);
+        
+        if (state === 'hover') {
+            ctx.fillStyle = 'rgba(74, 144, 226, 0.2)';
+        } else if (state === 'active') {
+            ctx.fillStyle = 'rgba(74, 144, 226, 0.4)';
+        }
+        ctx.fill();
+    }
+    
+    // Try to draw the SVG icon if loaded
+    if (volumeImg.complete && volumeImg.naturalWidth > 0) {
+        // Apply tint for different states
+        if (state === 'hover') {
+            ctx.filter = 'brightness(1.2)';
+        } else if (state === 'active') {
+            ctx.filter = 'brightness(0.8)';
+        }
+        
+        ctx.drawImage(volumeImg, x - size/2, y - size/2, size, size);
+        ctx.filter = 'none'; // Reset filter
+    } else {
+        // Fallback: draw a simple speaker icon with state-based colors
+        let fillColor = '#6c757d';
+        let strokeColor = '#6c757d';
+        
+        if (state === 'hover') {
+            fillColor = '#4a90e2';
+            strokeColor = '#4a90e2';
+        } else if (state === 'active') {
+            fillColor = '#357abd';
+            strokeColor = '#357abd';
+        }
+        
+        ctx.fillStyle = fillColor;
+        ctx.strokeStyle = strokeColor;
+        ctx.lineWidth = 1;
+        
+        const speakerWidth = size * 0.4;
+        const speakerHeight = size * 0.6;
+        const coneWidth = size * 0.3;
+        
+        // Speaker box
+        ctx.fillRect(x - speakerWidth/2, y - speakerHeight/2, speakerWidth, speakerHeight);
+        
+        // Speaker cone
+        ctx.beginPath();
+        ctx.moveTo(x + speakerWidth/2, y - speakerHeight/3);
+        ctx.lineTo(x + speakerWidth/2 + coneWidth, y - speakerHeight/2);
+        ctx.lineTo(x + speakerWidth/2 + coneWidth, y + speakerHeight/2);
+        ctx.lineTo(x + speakerWidth/2, y + speakerHeight/3);
+        ctx.closePath();
+        ctx.fill();
+        
+        // Sound waves
+        for (let i = 1; i <= 2; i++) {
+            ctx.beginPath();
+            ctx.arc(x + speakerWidth/2 + coneWidth + size*0.1, y, size * 0.2 * i, -Math.PI/4, Math.PI/4, false);
+            ctx.stroke();
+        }
+    }
 }
 
 function drawVerticalGridLines(ctx, options) {
@@ -129,21 +210,30 @@ export function drawDrumGrid(ctx, options) {
     const totalColumns = columnWidths.length;
     const drumLabels = ['H', 'M', 'L'];
     
-    // Draw drum labels (no changes here)
+    // Draw drum labels in right column of legend area
     ctx.font = `${Math.floor(drumRowHeight * 0.7)}px 'Atkinson Hyperlegible', sans-serif`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillStyle = '#6c757d';
-    const labelX = getColumnX(1, options);
+    
+    // Right column: H, M, L labels
+    const rightLabelX = getColumnX(1, options) + getColumnX(1, options) * 0.3; // Offset to right side
     drumLabels.forEach((label, i) => {
-        ctx.fillText(label, labelX, i * drumRowHeight + drumRowHeight / 2);
+        ctx.fillText(label, rightLabelX, i * drumRowHeight + drumRowHeight / 2);
     });
     
-    // Draw horizontal lines (no changes here)
+    // Left column: Volume icon (simple speaker symbol) - 50% bigger
+    const leftLabelX = getColumnX(1, options) - getColumnX(1, options) * 0.3; // Offset to left side
+    const centerY = (3 * drumRowHeight) / 2; // Center vertically in the 3-row area
+    const iconState = options.volumeIconState || 'normal'; // Allow state to be passed in
+    drawVolumeIcon(ctx, leftLabelX, centerY, drumRowHeight * 0.6, iconState);
+    
+    // Draw horizontal lines (exclude left legend column area)
+    const legendLeftBoundary = getColumnX(2, options); // Start lines after legend area
     for (let i = 0; i < 4; i++) {
         const y = i * drumRowHeight;
         ctx.beginPath();
-        ctx.moveTo(0, y);
+        ctx.moveTo(legendLeftBoundary, y);
         ctx.lineTo(ctx.canvas.width, y);
         ctx.strokeStyle = '#ced4da';
         ctx.lineWidth = 1;
@@ -181,7 +271,8 @@ export function drawDrumGrid(ctx, options) {
 
             if (drumHit) {
                 ctx.fillStyle = drumHit.color;
-                drawDrumShape(ctx, row, x, y, currentCellWidth, drumRowHeight);
+                const animationScale = DrumPlayheadRenderer.getAnimationScale(col, drumTrack);
+                drawDrumShape(ctx, row, x, y, currentCellWidth, drumRowHeight, animationScale);
             } else {
                 ctx.fillStyle = '#ced4da';
                 ctx.beginPath();

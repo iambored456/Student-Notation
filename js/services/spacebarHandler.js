@@ -138,8 +138,17 @@ export function setDefaultSpacebarNote(note) {
 
 export function setGhostNotePosition(col, row) {
     ghostNotePosition = { col, row };
+    
+    // Emit event for animation service if we have a ghost note and tool color
+    const toolColor = store.state.selectedNote.color;
+    if (toolColor) {
+        store.emit('ghostNoteUpdated', { color: toolColor });
+    }
 }
 
 export function clearGhostNotePosition() {
     ghostNotePosition = null;
+    
+    // Emit event for animation service
+    store.emit('ghostNoteCleared');
 }

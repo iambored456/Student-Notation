@@ -4,6 +4,7 @@
     flex-direction: column;
     justify-content: flex-start;
     overflow: visible;
+    max-height: 9.2rem; /* Limit ADSR height to prevent toolbar overflow */
 }
 .adsr-main-panel {
     display: flex;

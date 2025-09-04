@@ -11,8 +11,8 @@
 <link rel="manifest" href="/Student-Notation/site.webmanifest" />
 <meta name="theme-color" content="#ffffff" />
 <style id="print-style-rules"></style>
-  <script type="module" crossorigin src="/Student-Notation/assets/index-Ckf5Q2wm.js"></script>
-  <link rel="stylesheet" crossorigin href="/Student-Notation/assets/index-CvM4SmcF.css">
+  <script type="module" crossorigin src="/Student-Notation/assets/index-D0xVnGUV.js"></script>
+  <link rel="stylesheet" crossorigin href="/Student-Notation/assets/index-DYmhs1xJ.css">
 </head>
 <body>
 <!-- Sidebar for File/App Actions -->
@@ -86,18 +86,18 @@
     <div id="toolbar-container-1">
         <div class="tool-subcontainer">
             <button class="toolkit-icon-button" id="settings-button" title="Settings"><img src="/Student-Notation/assets/icons/Settings.svg" alt="Settings"></button>
+            <button class="toolkit-icon-button" id="grid-zoom-in" title="Zoom In"><img src="/Student-Notation/assets/icons/zoomIn.svg" alt="Zoom In"></button>
+            <button class="toolkit-icon-button" id="redo-button" title="Redo"><img src="/Student-Notation/assets/icons/Redo.svg" alt="Redo"></button>
+            <button class="toolkit-icon-button" id="clear-button" title="Clear"><img src="/Student-Notation/assets/icons/Clear.svg" alt="Clear"></button>
+        </div>
+        <div class="tool-subcontainer">
             <div id="volume-control-wrapper">
                 <button class="toolkit-icon-button" id="volume-icon-button" aria-label="Volume" title="Volume"><img src="/Student-Notation/assets/icons/Volume.svg" alt="Volume"></button>
                 <div id="volume-popup">
                     <input type="range" id="vertical-volume-slider" orient="vertical" min="0" max="100" value="75" step="1" />
                 </div>
             </div>
-            <button class="toolkit-icon-button" id="grid-zoom-in" title="Zoom In"><img src="/Student-Notation/assets/icons/zoomIn.svg" alt="Zoom In"></button>
             <button class="toolkit-icon-button" id="grid-zoom-out" title="Zoom Out"><img src="/Student-Notation/assets/icons/zoomOut.svg" alt="Zoom Out"></button>
-        </div>
-        <div class="tool-subcontainer">
-            <button class="toolkit-icon-button" id="clear-button" title="Clear"><img src="/Student-Notation/assets/icons/Clear.svg" alt="Clear"></button>
-            <button class="toolkit-icon-button" id="redo-button" title="Redo"><img src="/Student-Notation/assets/icons/Redo.svg" alt="Redo"></button>
             <button class="toolkit-icon-button" id="undo-button" title="Undo"><img src="/Student-Notation/assets/icons/Undo.svg" alt="Undo"></button>
             <button class="toolkit-icon-button eraser-button" id="eraser-tool-button" title="Eraser">
                 <img src="/Student-Notation/assets/icons/Eraser.svg" alt="Eraser" class="eraser-icon">
@@ -133,7 +133,8 @@
                 <div class="control-section preset-effects-container">
                     <div class="preset-effects-tabs">
                         <button class="preset-tab-button active" data-preset-tab="presets">Presets</button>
-                        <button class="preset-tab-button" data-preset-tab="effects">Effects</button>
+                        <button class="preset-tab-button" data-preset-tab="reverb-delay">Reverb<br>Delay</button>
+                        <button class="preset-tab-button" data-preset-tab="vibrato-tremolo">Vibrato<br>Tremolo</button>
                     </div>
                     <div class="preset-effects-content">
                         <div class="preset-tab-panel active" id="presets-panel">
@@ -151,27 +152,67 @@
                                         <button class="preset-button" id="preset-woodwind">Woodwind</button>
                                         <button class="preset-button" id="preset-strings">Strings</button>
                                     </div>
-                                    <div class="preset-column">
-                                        <button class="preset-button" id="preset-trapezium">Trapezium</button>
-                                        <button class="preset-button" id="preset-impulse">Impulse</button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Reverb/Delay Tab -->
+                        <div class="preset-tab-panel" id="reverb-delay-panel">
+                            <div class="effects-content-box">
+                                <div class="position-controls-container">
+                                    <div class="position-control-group">
+                                        <h5 class="position-label">Reverb</h5>
+                                        <div class="position-component" id="reverb-position"></div>
+                                        <div class="position-axis-labels">
+                                            <span class="x-label">Time</span>
+                                            <span class="y-label">Size</span>
+                                        </div>
+                                    </div>
+                                    <div class="position-control-group">
+                                        <h5 class="position-label">Delay</h5>
+                                        <div class="position-component" id="delay-position"></div>
+                                        <div class="position-axis-labels">
+                                            <span class="x-label">Time</span>
+                                            <span class="y-label">Echoes</span>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
-                        <div class="preset-tab-panel" id="effects-panel">
+                        
+                        <!-- Vibrato/Tremolo Tab -->
+                        <div class="preset-tab-panel" id="vibrato-tremolo-panel">
                             <div class="effects-content-box">
-                                <div class="effects-grid">
-                                    <button class="effect-button" data-effect="reverb">Reverb</button>
-                                    <button class="effect-button" data-effect="delay">Delay</button>
-                                    <button class="effect-button" data-effect="phaser">Phaser</button>
-                                    <button class="effect-button" data-effect="vibratio">Vibrato</button>
-                                    <button class="effect-button" data-effect="tremelo">Tremolo</button>
-                                    <button class="effect-button" data-effect="portamento">Portamento</button>
-                                </div>
-                                <div class="effect-controls-container" id="effect-controls">
-                                    <!-- Effect controls will be dynamically inserted here -->
+                                <div class="position-controls-container">
+                                    <div class="position-control-group">
+                                        <h5 class="position-label">Vibrato</h5>
+                                        <div class="position-component" id="vibrato-position"></div>
+                                        <div class="position-axis-labels">
+                                            <span class="x-label">Speed</span>
+                                            <span class="y-label">Span</span>
+                                        </div>
+                                    </div>
+                                    <div class="position-control-group">
+                                        <h5 class="position-label">Tremolo</h5>
+                                        <div class="position-component" id="tremolo-position"></div>
+                                        <div class="position-axis-labels">
+                                            <span class="x-label">Speed</span>
+                                            <span class="y-label">Span</span>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
+                        </div>
+                        
+                        <!-- Legacy slider controls (kept for data sharing) -->
+                        <div class="effects-grid" style="display: none;">
+                            <button class="effect-button" data-effect="reverb">Reverb</button>
+                            <button class="effect-button" data-effect="delay">Delay</button>
+                            <button class="effect-button" data-effect="vibrato">Vibrato</button>
+                            <button class="effect-button" data-effect="tremolo">Tremolo</button>
+                        </div>
+                        <div class="effect-controls-container" id="effect-controls" style="display: none;">
+                            <!-- Effect controls will be dynamically inserted here for data synchronization -->
                         </div>
                     </div>
                 </div>
@@ -219,7 +260,16 @@
                            </div>
                        </div>
                        <div class="degree-toggle-container">
-                           <button id="degree-visibility-toggle" class="toolkit-button degree-visibility-toggle">Show Degrees (OFF)</button>
+                           <div class="degree-visibility-toggle-container">
+                               <span class="toggle-text">Degrees</span>
+                               <div class="two-state-toggle" id="degree-visibility-toggle">
+                                   <div class="two-state-slider"></div>
+                                   <div class="toggle-labels">
+                                       <span class="toggle-label">Show</span>
+                                       <span class="toggle-label">Hide</span>
+                                   </div>
+                               </div>
+                           </div>
                            <div class="degree-mode-toggle-container">
                                <div class="two-state-toggle" id="degree-mode-toggle">
                                    <div class="two-state-slider"></div>
@@ -243,6 +293,7 @@
                         <button class="chord-tab-button active" data-chord-tab="intervals">Intervals</button>
                         <button class="chord-tab-button" data-chord-tab="basic-chords">Bas. Chords</button>
                         <button class="chord-tab-button" data-chord-tab="advanced-chords">Adv. Chords</button>
+                        <button class="chord-tab-button" data-chord-tab="mic-paint">Mic Paint</button>
                     </div>
                     <div class="chord-shape-content">
                         <div class="chord-tab-panel active" id="intervals-panel">
@@ -260,22 +311,22 @@
                                     </div>
                                     <div class="intervals-grid-column">
                                         <div class="harmony-preset-grid intervals-4x4-grid">
-                                            <button class="harmony-preset-button">6</button>
-                                            <button class="harmony-preset-button">#6</button>
-                                            <button class="harmony-preset-button">♭7</button>
-                                            <button class="harmony-preset-button">7</button>
-                                            <button class="harmony-preset-button">♭5</button>
-                                            <button class="harmony-preset-button">5</button>
-                                            <button class="harmony-preset-button">#5</button>
-                                            <button class="harmony-preset-button">♭6</button>
-                                            <button class="harmony-preset-button">♭3</button>
-                                            <button class="harmony-preset-button">3</button>
-                                            <button class="harmony-preset-button">4</button>
-                                            <button class="harmony-preset-button">#4</button>
-                                            <button class="harmony-preset-button">1</button>
-                                            <button class="harmony-preset-button">♭2</button>
-                                            <button class="harmony-preset-button">2</button>
-                                            <button class="harmony-preset-button">#2</button>
+                                            <button class="harmony-preset-button">M6</button>
+                                            <button class="harmony-preset-button">A6</button>
+                                            <button class="harmony-preset-button">m7</button>
+                                            <button class="harmony-preset-button">M7</button>
+                                            <button class="harmony-preset-button">d5</button>
+                                            <button class="harmony-preset-button">P5</button>
+                                            <button class="harmony-preset-button">A5</button>
+                                            <button class="harmony-preset-button">m6</button>
+                                            <button class="harmony-preset-button">m3</button>
+                                            <button class="harmony-preset-button">M3</button>
+                                            <button class="harmony-preset-button">P4</button>
+                                            <button class="harmony-preset-button">A4</button>
+                                            <button class="harmony-preset-button">U</button>
+                                            <button class="harmony-preset-button">m2</button>
+                                            <button class="harmony-preset-button">M2</button>
+                                            <button class="harmony-preset-button">A2</button>
                                         </div>
                                     </div>
                                 </div>
@@ -386,77 +437,75 @@
                                 </div>
                             </div>
                         </div>
-                    </div>
-                </div>
-                <div class="control-section" id="pitch-paint-container">
-                    <h4>Pitch Painting</h4>
-                    <div class="paint-layout-grid">
-                        <div class="paint-main-controls">
-                            <div class="paint-buttons-row">
-                                <button class="toolkit-button" id="mic-paint-toggle">Mic Paint (OFF)</button>
-                                <button class="toolkit-button" id="paint-clear-btn" disabled>Clear Paint</button>
-                            </div>
-                            <div class="paint-color-toggle-container">
-                                <h5>Colour</h5>
-                                <div class="two-state-toggle" id="paint-color-toggle">
-                                    <div class="two-state-slider"></div>
-                                    <div class="toggle-labels">
-                                        <span class="toggle-label">Chromatic</span>
-                                        <span class="toggle-label">Shape Note</span>
+                        <div class="chord-tab-panel" id="mic-paint-panel">
+                            <div class="paint-content-box">
+                                <div class="paint-layout-grid">
+                                    <div class="paint-main-controls">
+                                        <div class="paint-buttons-column">
+                                            <button class="toolkit-button" id="mic-paint-toggle">Mic Paint (OFF)</button>
+                                            <button class="toolkit-button" id="paint-clear-btn" disabled>Clear Paint</button>
+                                            <select id="mic-device-select" class="mic-device-selector">
+                                                <option value="default">Default Device</option>
+                                                <option value="detecting">Detecting devices...</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="paint-toggles-controls">
+                                        <div class="paint-color-toggle-container">
+                                            <h5>Colour</h5>
+                                            <div class="two-state-toggle" id="paint-color-toggle">
+                                                <div class="two-state-slider"></div>
+                                                <div class="toggle-labels">
+                                                    <span class="toggle-label">Chromatic</span>
+                                                    <span class="toggle-label">Shape Note</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="paint-playback-toggle-container">
+                                            <h5>Playback</h5>
+                                            <div class="two-state-toggle active" id="paint-playback-toggle">
+                                                <div class="two-state-slider"></div>
+                                                <div class="toggle-labels">
+                                                    <span class="toggle-label">Off</span>
+                                                    <span class="toggle-label">On</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="mic-meter-container-vertical">
+                                        <div class="mic-meter-wrapper-vertical" id="mic-meter-wrapper">
+                                            <div class="meter-placeholder" id="meter-placeholder">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="meter-settings-panel hidden" id="meter-settings-panel">
+                                    <div class="meter-setting-group">
+                                        <label for="meter-size-select">Size:</label>
+                                        <select id="meter-size-select" class="meter-control">
+                                            <option value="compact">Compact</option>
+                                            <option value="wide" selected>Wide</option>
+                                        </select>
+                                    </div>
+                                    <div class="meter-setting-group">
+                                        <label for="meter-fps-select">Frame Rate:</label>
+                                        <select id="meter-fps-select" class="meter-control">
+                                            <option value="12">12 FPS</option>
+                                            <option value="20">20 FPS</option>
+                                            <option value="30" selected>30 FPS</option>
+                                            <option value="60">60 FPS</option>
+                                        </select>
+                                    </div>
+                                    <div class="meter-setting-group">
+                                        <label for="meter-battery-saver">Battery Saver:</label>
+                                        <input type="checkbox" id="meter-battery-saver" class="meter-control">
+                                    </div>
+                                    <div class="meter-setting-group">
+                                        <button class="toolkit-button" id="meter-calibrate-btn">Auto-Calibrate</button>
+                                        <button class="toolkit-button" id="meter-reset-btn">Reset</button>
                                     </div>
                                 </div>
                             </div>
-                            <div class="paint-playback-toggle-container">
-                                <h5>Playback</h5>
-                                <div class="two-state-toggle active" id="paint-playback-toggle">
-                                    <div class="two-state-slider"></div>
-                                    <div class="toggle-labels">
-                                        <span class="toggle-label">Off</span>
-                                        <span class="toggle-label">On</span>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="paint-controls-row">
-                                <div class="paint-control-group">
-                                    <label for="mic-device-select">Microphone</label>
-                                    <select id="mic-device-select" class="mic-device-selector">
-                                        <option value="default">Default Device</option>
-                                        <option value="detecting">Detecting devices...</option>
-                                    </select>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="mic-meter-container-vertical">
-                            <div class="mic-meter-wrapper-vertical" id="mic-meter-wrapper">
-                                <div class="meter-placeholder" id="meter-placeholder">
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="meter-settings-panel hidden" id="meter-settings-panel">
-                        <div class="meter-setting-group">
-                            <label for="meter-size-select">Size:</label>
-                            <select id="meter-size-select" class="meter-control">
-                                <option value="compact">Compact</option>
-                                <option value="wide" selected>Wide</option>
-                            </select>
-                        </div>
-                        <div class="meter-setting-group">
-                            <label for="meter-fps-select">Frame Rate:</label>
-                            <select id="meter-fps-select" class="meter-control">
-                                <option value="12">12 FPS</option>
-                                <option value="20">20 FPS</option>
-                                <option value="30" selected>30 FPS</option>
-                                <option value="60">60 FPS</option>
-                            </select>
-                        </div>
-                        <div class="meter-setting-group">
-                            <label for="meter-battery-saver">Battery Saver:</label>
-                            <input type="checkbox" id="meter-battery-saver" class="meter-control">
-                        </div>
-                        <div class="meter-setting-group">
-                            <button class="toolkit-button" id="meter-calibrate-btn">Auto-Calibrate</button>
-                            <button class="toolkit-button" id="meter-reset-btn">Reset</button>
                         </div>
                     </div>
                 </div>
@@ -486,31 +535,11 @@
                         </div>
                     </div>
                 </div>
-                <div class="control-section rhythm-structure-container">
-                    <div class="control-subsection">
-                        <h4>Add/Del Beat</h4>
-                        <div class="macrobeat-adjust-group">
-                            <button class="toolkit-button" id="macrobeat-decrease">–</button>
-                            <button class="toolkit-button" id="macrobeat-increase">+</button>
-                        </div>
-                    </div>
-                    <div class="control-subsection">
-                        <h4>Pickup</h4>
-                        <div class="toggle-button-group"><button class="sidebar-toggle-button" id="anacrusis-on-btn">On</button><button class="sidebar-toggle-button" id="anacrusis-off-btn">Off</button></div>
-                    </div>
-                    <div class="control-subsection">
-                        <h4>Modulation</h4>
-                        <div class="modulation-controls">
-                            <button class="toolkit-button modulation-ratio-btn" id="modulation-2-3-btn" data-ratio="2:3" title="Place 2:3 modulation marker">2:3</button>
-                            <button class="toolkit-button modulation-ratio-btn" id="modulation-3-2-btn" data-ratio="3:2" title="Place 3:2 modulation marker">3:2</button>
-                            <button class="toolkit-button" id="modulation-clear-btn" title="Clear all modulation markers">Clear</button>
-                        </div>
-                    </div>
-                </div>
                 <div class="control-section rhythm-stamps-container">
                     <div class="rhythm-tab-sidebar">
                         <button class="rhythm-tab-button active" data-rhythm-tab="stamps">Sixteenths</button>
                         <button class="rhythm-tab-button" data-rhythm-tab="triplets">Triplets</button>
+                        <button class="rhythm-tab-button" data-rhythm-tab="controls">Controls</button>
                     </div>
                     <div class="rhythm-tab-content">
                         <div class="rhythm-tab-panel active" id="stamps-panel">
@@ -523,8 +552,32 @@
                                 <!-- Triplets toolbar will be rendered here by JavaScript -->
                             </div>
                         </div>
+                        <div class="rhythm-tab-panel" id="controls-panel">
+                            <div class="rhythm-structure-container">
+                                <div class="control-subsection">
+                                    <h4>Add/Del Beat</h4>
+                                    <div class="macrobeat-adjust-group">
+                                        <button class="toolkit-button" id="macrobeat-decrease">–</button>
+                                        <button class="toolkit-button" id="macrobeat-increase">+</button>
+                                    </div>
+                                </div>
+                                <div class="control-subsection">
+                                    <h4>Pickup</h4>
+                                    <div class="toggle-button-group"><button class="sidebar-toggle-button" id="anacrusis-on-btn">On</button><button class="sidebar-toggle-button" id="anacrusis-off-btn">Off</button></div>
+                                </div>
+                                <div class="control-subsection">
+                                    <h4>Modulation</h4>
+                                    <div class="modulation-controls">
+                                        <button class="toolkit-button modulation-ratio-btn" id="modulation-2-3-btn" data-ratio="2:3" title="Place 2:3 modulation marker">2:3</button>
+                                        <button class="toolkit-button modulation-ratio-btn" id="modulation-3-2-btn" data-ratio="3:2" title="Place 3:2 modulation marker">3:2</button>
+                                        <button class="toolkit-button" id="modulation-clear-btn" title="Clear all modulation markers">Clear</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
+
             </div>
         </div>
     </div>
@@ -555,6 +608,7 @@
     </div>
     <div id="drum-grid-wrapper">
         <canvas id="drum-grid"></canvas>
+        <canvas id="drum-playhead-canvas"></canvas>
         <canvas id="drum-hover-canvas"></canvas>
     </div>
 </div>

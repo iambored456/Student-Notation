@@ -57,7 +57,7 @@ function trigger(noteId, phase, color, adsr = null) {
         if (!ph) return;
 
 
-        // Stop any ongoing attack/decay animation
+        // Stop any ongoing attack/decay/sustain animation
         cancelAnimationFrame(ph.requestId);
 
         // Transition the existing playhead object to the release phase
@@ -110,7 +110,35 @@ function animateAttack(noteId) {
 
     if (t < totalAttackDecayTime) {
         ph.requestId = requestAnimationFrame(() => animateAttack(noteId));
+    } else {
+        // Attack/Decay complete - start sustain phase with tremolo tracking
+        ph.phase = 'sustain';
+        animateSustain(noteId);
     }
+}
+
+function animateSustain(noteId) {
+    if (!playheads[noteId] || isPaused) return;
+
+    const ph = playheads[noteId];
+    if (!ph.adsr) return;
+
+    // During sustain phase, playhead stays at sustain node but follows tremolo
+    const points = componentRef.calculateEnvelopePoints(ph.adsr);
+    if (points.length < 4) return;
+    const [, , p3] = points; // Sustain node (p3)
+
+    // Position playhead at sustain node (which includes tremolo animation)
+    const [line, circle] = ph.group.children;
+    line.setAttribute('x1', p3.x);
+    line.setAttribute('y1', 0);
+    line.setAttribute('x2', p3.x);
+    line.setAttribute('y2', componentRef.height);
+    circle.setAttribute('cx', p3.x);
+    circle.setAttribute('cy', p3.y); // This y-position includes tremolo animation
+
+    // Continue animating sustain to track tremolo
+    ph.requestId = requestAnimationFrame(() => animateSustain(noteId));
 }
 
 function animateRelease(noteId) {
@@ -167,6 +195,8 @@ function resume() {
         ph.startTimestamp = Tone.now() - ph.elapsed; // Adjust start time
         if (ph.phase === 'attack') {
             animateAttack(noteId);
+        } else if (ph.phase === 'sustain') {
+            animateSustain(noteId);
         } else if (ph.phase === 'release') {
             animateRelease(noteId);
         }

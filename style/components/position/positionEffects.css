@@ -1,0 +1,120 @@
+/* ==========================================================================
+   POSITION EFFECTS COMPONENT STYLES
+   ========================================================================= */
+
+/* --- Position Controls Container --- */
+.position-controls-container {
+    display: flex;
+    padding-top: 0.6rem;
+    justify-content: center;
+    align-items: flex-start;
+    background-color: var(--c-surface);
+    gap: 0.5rem;
+    padding-left: 0rem;
+    padding-right: 0rem;
+}
+
+.position-control-group {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0rem;
+    min-width: 100px;
+    position: relative;
+    margin-left: 0rem;
+    z-index: 10;
+}
+
+/* --- Position Component Labels --- */
+.position-label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--c-text);
+    margin: 0rem;
+    text-align: center;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    position: absolute;
+    top: 0.3rem;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 10;
+}
+
+/* --- Position Component Container --- */
+.position-component {
+    width: 5.5rem;
+    height: 5.5rem;
+    overflow: hidden;
+    position: relative;
+    z-index: 15;
+}
+
+/* --- Position Component Styling (will be applied via colorize()) --- */
+.position-component svg {
+    display: block;
+    position: relative;
+    z-index: 20;
+}
+
+/* --- Axis Labels --- */
+.position-axis-labels {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    position: relative;
+    font-size: 0.6rem;
+    color: var(--c-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 500;
+}
+
+.x-label {
+    position: absolute;
+    bottom: 0.1rem;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.y-label {
+    position: absolute;
+    left: 0.9rem;
+    top: -2.5rem;
+    transform: rotate(-90deg);
+    transform-origin: left center;
+}
+
+/* --- Responsive Design --- */
+@media (max-width: 768px) {
+    .position-controls-container {
+        flex-direction: column;
+        gap: var(--space-3);
+    }
+    
+    .position-control-group {
+        min-width: auto;
+        width: 100%;
+    }
+    
+    .position-component {
+        width: 100px;
+        height: 100px;
+    }
+}
+
+/* --- Color Theme Variables (will be dynamically updated) --- */
+:root {
+    --position-bg-blue: rgba(74, 144, 226, 0.1);
+    --position-handle-blue: #4a90e2;
+    
+    --position-bg-black: rgba(45, 45, 45, 0.1);
+    --position-handle-black: #2d2d2d;
+    
+    --position-bg-red: rgba(214, 101, 115, 0.1);
+    --position-handle-red: #d66573;
+    
+    --position-bg-green: rgba(104, 160, 63, 0.1);
+    --position-handle-green: #68a03f;
+}

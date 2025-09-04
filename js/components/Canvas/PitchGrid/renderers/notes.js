@@ -2,6 +2,7 @@
 import { getColumnX, getRowY, getCurrentCoordinateMapping } from './rendererUtils.js';
 import TonalService from '../../../../services/tonalService.js';
 import store from '../../../../state/index.js';
+// NOTE: Animation effects are now managed by animationEffectsManager in timbreEffects architecture
 import {
     OVAL_NOTE_FONT_RATIO, FILLED_NOTE_FONT_RATIO, MIN_FONT_SIZE, MIN_TONIC_FONT_SIZE,
     MIN_STROKE_WIDTH_THICK, MIN_STROKE_WIDTH_THIN, STROKE_WIDTH_RATIO,
@@ -49,6 +50,29 @@ function calculateColorOffset(note, allNotes, options) {
     
     
     return currentNoteIndex * offsetAmount;
+}
+
+// Helper function to calculate vibrato Y offset
+function calculateVibratoYOffset(note, options) {
+    const { cellHeight } = options;
+    
+    // Check if this note should be animated
+    const shouldAnimate = window.animationEffectsManager ? window.animationEffectsManager.shouldAnimateNote(note) : false;
+    if (!shouldAnimate) {
+        return 0;
+    }
+    
+    // Get vibrato offset in semitones from animation service
+    const vibratoOffsetSemitones = window.animationEffectsManager ? window.animationEffectsManager.getVibratoYOffset(note.color) : 0;
+    
+    
+    // Convert semitones to pixels
+    // In the pitch grid, one row = one semitone = cellHeight
+    // So vibrato offset in pixels = offset in semitones * cellHeight
+    const vibratoOffsetPixels = vibratoOffsetSemitones * cellHeight;
+    
+    
+    return vibratoOffsetPixels;
 }
 
 // Helper function to calculate vertical offset for note tails
@@ -122,7 +146,9 @@ function drawScaleDegreeText(ctx, note, options, centerX, centerY, noteHeight) {
 export function drawTwoColumnOvalNote(ctx, options, note, rowIndex) {
     
     const { cellWidth, cellHeight, zoomLevel } = options;
-    const y = getRowY(rowIndex, options);
+    const baseY = getRowY(rowIndex, options);
+    const vibratoYOffset = calculateVibratoYOffset(note, options);
+    const y = baseY + vibratoYOffset; // Apply vibrato animation
     const xStart = getColumnX(note.startColumnIndex, options);
     
     // MODULATION FIX: Calculate actual cell width from modulated positions for sizing
@@ -193,7 +219,9 @@ export function drawTwoColumnOvalNote(ctx, options, note, rowIndex) {
 export function drawSingleColumnOvalNote(ctx, options, note, rowIndex) {
     
     const { columnWidths, cellWidth, cellHeight, zoomLevel } = options;
-    const y = getRowY(rowIndex, options);
+    const baseY = getRowY(rowIndex, options);
+    const vibratoYOffset = calculateVibratoYOffset(note, options);
+    const y = baseY + vibratoYOffset; // Apply vibrato animation
     const x = getColumnX(note.startColumnIndex, options);
     
     // MODULATION FIX: Calculate actual cell width from modulated positions
@@ -242,7 +270,7 @@ export function drawSingleColumnOvalNote(ctx, options, note, rowIndex) {
 
 export function drawTonicShape(ctx, options, tonicSign) {
     
-    const { cellWidth, cellHeight, zoomLevel } = options;
+    const { cellWidth, cellHeight } = options;
     const y = getRowY(tonicSign.row, options);
     const x = getColumnX(tonicSign.columnIndex, options);
     
@@ -255,11 +283,11 @@ export function drawTonicShape(ctx, options, tonicSign) {
         actualCellWidth = cellWidth;
     }
 
-    // Scale all dimensions by the zoom level
+    // Don't double-scale - cellWidth/cellHeight already include zoom like notes
     // Use modulated cell width for proper scaling
     const width = actualCellWidth * 2;
     const centerX = x + width / 2;
-    const radius = (Math.min(width, cellHeight) / 2 * 0.9) * zoomLevel;
+    const radius = (Math.min(width, cellHeight) / 2 * 0.9);
     
     if (radius < 2) {
         return; // Don't draw if too small
@@ -268,7 +296,7 @@ export function drawTonicShape(ctx, options, tonicSign) {
     ctx.beginPath();
     ctx.arc(centerX, y, radius, 0, 2 * Math.PI);
     ctx.strokeStyle = '#212529';
-    ctx.lineWidth = 2 * zoomLevel;
+    ctx.lineWidth = Math.max(0.5, actualCellWidth * 0.05); // Use proportional line width like notes
     ctx.stroke();
     
     // Safety check for tonicNumber

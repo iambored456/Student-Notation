@@ -25,12 +25,12 @@
     pointer-events: none; /* So the img doesn't interfere with button events */
     transition: background-color 0.2s, transform 0.1s ease;
 }
-.toolkit-icon-button:hover img { 
+.toolkit-icon-button:hover { 
     background-color: var(--c-gridline); 
 }
 
 /* Override global button:focus for toolkit buttons */
-.toolkit-icon-button:focus img {
+.toolkit-icon-button:focus {
     background-color: var(--c-gridline); /* Same as hover */
     outline: none;
 }
@@ -39,8 +39,6 @@
 .toolkit-icon-button:active {
     transform: scale(0.92);
     transition-duration: 0.05s;
-}
-.toolkit-icon-button:active img {
     background-color: rgba(0, 0, 0, 0.15); /* A slightly darker momentary press */
 }
 

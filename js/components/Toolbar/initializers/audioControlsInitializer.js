@@ -2,9 +2,9 @@
 import store from '../../../state/index.js';
 import { PRESETS } from '../../../services/presetData.js';
 import DraggableNumber from '../../UI/DraggableNumber.js';
+import tempoVisualizer from '../TempoVisualizer.js';
 
 export function initAudioControls() {
-    console.log('🎵 [AudioControls] Starting audio controls initialization...');
     const tempoSlider = document.getElementById('tempo-slider');
     
     if (!tempoSlider) {
@@ -56,9 +56,19 @@ export function initAudioControls() {
         if (quarterNoteInput.value !== quarterBPM) quarterNoteInput.passiveUpdate(quarterBPM);
         if (dottedQuarterInput.value !== dottedQuarterBPM) dottedQuarterInput.passiveUpdate(dottedQuarterBPM);
         
-        if (store.state.tempo !== quarterBPM) store.setTempo(quarterBPM);
+        if (store.state.tempo !== quarterBPM) {
+            store.setTempo(quarterBPM);
+            // Update tempo visualizer pulse rates when tempo changes
+            tempoVisualizer.updateTempo();
+        }
     }
 
+    // State tracking for tempo slider interaction
+    let isSliderPressed = false;
+    let mouseDownTime = 0;
+    let isDragging = false;
+    let dragThreshold = 150; // ms - minimum time to consider it a "hold" rather than click
+    
     // Function to initialize tempo slider when it becomes available
     function initializeTempoSlider() {
         const slider = document.getElementById('tempo-slider');
@@ -67,7 +77,57 @@ export function initAudioControls() {
             return false;
         }
         
-        console.log('✅ [AudioControls] Tempo slider found, setting up event listeners');
+        // Mouse events for desktop
+        slider.addEventListener('mousedown', (e) => {
+            console.log('🎵 Tempo slider mousedown - starting pulse visualization', {
+                button: e.button,
+                target: e.target.id,
+                isSliderPressed: isSliderPressed
+            });
+            isSliderPressed = true;
+            mouseDownTime = Date.now();
+            isDragging = false;
+            
+            // Start pulse with a slight delay to avoid immediate stop on quick clicks
+            setTimeout(() => {
+                if (isSliderPressed) {
+                    console.log('🎵 Starting pulse after delay - slider still pressed');
+                    tempoVisualizer.start();
+                }
+            }, 100);
+            
+            // Don't prevent default - slider needs to function normally
+        });
+        
+        // Add mousemove to detect dragging
+        slider.addEventListener('mousemove', (e) => {
+            if (isSliderPressed && !isDragging) {
+                isDragging = true;
+                console.log('🎵 Detected dragging - ensuring pulse is active');
+                if (!tempoVisualizer.isActive) {
+                    tempoVisualizer.start();
+                }
+            }
+        });
+        
+        // Handle touch events for mobile devices
+        slider.addEventListener('touchstart', (e) => {
+            console.log('🎵 Tempo slider touchstart - starting pulse visualization');
+            isSliderPressed = true;
+            tempoVisualizer.start();
+            
+            // Don't prevent default - slider needs to function normally
+        });
+        
+        // Handle focus/blur for keyboard accessibility
+        slider.addEventListener('focus', () => {
+            console.log('🎵 Tempo slider focused');
+            // Don't start pulse on focus, only on actual press/click
+        });
+        
+        // Don't use blur to stop pulse - it fires too early during interaction
+        // The global mouseup/touchend handlers will reliably stop the pulse
+        
         slider.addEventListener('input', (e) => updateTempoDisplays(parseInt(e.target.value, 10)));
         slider.addEventListener('mouseup', function() { this.blur(); });
         
@@ -81,7 +141,51 @@ export function initAudioControls() {
     }
     
     if (tempoSlider) {
-        console.log('✅ [AudioControls] Tempo slider found immediately, setting up event listeners');
+        // Use the same reliable click detection for immediate tempo slider
+        tempoSlider.addEventListener('mousedown', (e) => {
+            console.log('🎵 Tempo slider mousedown - starting pulse visualization', {
+                button: e.button,
+                target: e.target.id,
+                isSliderPressed: isSliderPressed
+            });
+            isSliderPressed = true;
+            mouseDownTime = Date.now();
+            isDragging = false;
+            
+            // Start pulse with a slight delay to avoid immediate stop on quick clicks
+            setTimeout(() => {
+                if (isSliderPressed) {
+                    console.log('🎵 Starting pulse after delay - slider still pressed');
+                    tempoVisualizer.start();
+                }
+            }, 100);
+            
+            // Don't prevent default - slider needs to function normally
+        });
+        
+        // Add mousemove to detect dragging
+        tempoSlider.addEventListener('mousemove', (e) => {
+            if (isSliderPressed && !isDragging) {
+                isDragging = true;
+                console.log('🎵 Detected dragging - ensuring pulse is active');
+                if (!tempoVisualizer.isActive) {
+                    tempoVisualizer.start();
+                }
+            }
+        });
+        
+        // The global event listeners added in initializeTempoSlider will handle mouseup/touchend
+        
+        tempoSlider.addEventListener('touchstart', (e) => {
+            console.log('🎵 Tempo slider touchstart - starting pulse visualization');
+            isSliderPressed = true;
+            tempoVisualizer.start();
+            // Don't prevent default - slider needs to function normally
+        });
+        
+        // Don't use blur to stop pulse - it fires too early during interaction
+        // The global mouseup/touchend handlers will reliably stop the pulse
+        
         tempoSlider.addEventListener('input', (e) => updateTempoDisplays(parseInt(e.target.value, 10)));
         tempoSlider.addEventListener('mouseup', function() { this.blur(); });
         updateTempoDisplays(store.state.tempo);
@@ -128,6 +232,67 @@ export function initAudioControls() {
 
     // Expose tempo slider initialization globally so it can be called when tabs are switched
     window.initTempoSliderIfNeeded = initializeTempoSlider;
+    
+    // Add global event listeners for reliable tempo pulse control
+    // These handle mouse/touch release anywhere on the page
+    document.addEventListener('mouseup', (e) => {
+        if (isSliderPressed) {
+            const holdTime = Date.now() - mouseDownTime;
+            console.log('🎵 Global mouseup - stopping pulse visualization', {
+                target: e.target.tagName,
+                id: e.target.id,
+                isSliderPressed: isSliderPressed,
+                holdTime: holdTime,
+                isDragging: isDragging,
+                wasLongEnough: holdTime > dragThreshold
+            });
+            
+            // Only stop if it was a meaningful interaction (drag or long hold)
+            if (isDragging || holdTime > dragThreshold) {
+                isSliderPressed = false;
+                tempoVisualizer.stop();
+            } else {
+                console.log('🎵 Click too short, not stopping pulse yet');
+                // Reset state but keep pulse if it was a quick click
+                setTimeout(() => {
+                    if (isSliderPressed) {
+                        isSliderPressed = false;
+                        tempoVisualizer.stop();
+                        console.log('🎵 Delayed stop after quick click');
+                    }
+                }, 50);
+            }
+            
+            // Reset drag state
+            isDragging = false;
+        } else {
+            // console.log('🎵 Global mouseup - but slider not pressed');
+        }
+    });
+    
+    document.addEventListener('touchend', (e) => {
+        if (isSliderPressed) {
+            console.log('🎵 Global touchend - stopping pulse visualization', {
+                target: e.target.tagName,
+                id: e.target.id,
+                isSliderPressed: isSliderPressed
+            });
+            isSliderPressed = false;
+            tempoVisualizer.stop();
+        }
+    });
+    
+    document.addEventListener('touchcancel', (e) => {
+        if (isSliderPressed) {
+            console.log('🎵 Touch cancelled - stopping pulse visualization', {
+                target: e.target.tagName,
+                id: e.target.id,
+                isSliderPressed: isSliderPressed
+            });
+            isSliderPressed = false;
+            tempoVisualizer.stop();
+        }
+    });
 
     const presetContainer = document.querySelector('.preset-effects-container');
     document.querySelectorAll('.preset-button').forEach(button => {

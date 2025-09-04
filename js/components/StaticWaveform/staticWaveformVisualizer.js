@@ -4,6 +4,10 @@ import { HARMONIC_BINS } from '../../core/constants.js';
 import * as Tone from 'tone';
 import { hexToRgba } from '../../utils/colorUtils.js';
 import { getFilteredCoefficients } from '../audio/HarmonicsFilter/harmonicBins.js';
+import DynamicWaveformVisualizer from '../DynamicWaveform/dynamicWaveformVisualizer.js';
+import logger from '../../utils/logger.js';
+
+logger.moduleLoaded('StaticWaveformVisualizer');
 
 
 class StaticWaveformVisualizer {
@@ -15,12 +19,6 @@ class StaticWaveformVisualizer {
         this.waveformData = new Float32Array(512); // Sample points for smooth curve
         this.isInitialized = false;
         
-        // Live playback visualization
-        this.isPlaybackActive = false;
-        this.liveAnalysers = new Map(); // Map of color -> analyser
-        this.liveWaveforms = new Map(); // Map of color -> waveform data
-        this.playbackAnimationId = null;
-        
         // Phase transition animation
         this.isTransitioning = false;
         this.transitionStartTime = 0;
@@ -29,9 +27,14 @@ class StaticWaveformVisualizer {
         this.toWaveform = null;
         this.transitionAnimationId = null;
         
+        // Dynamic waveform visualizer for live playback
+        this.dynamicVisualizer = new DynamicWaveformVisualizer();
+        
         // Speed control for waveform oscillation
         this.animationSpeed = 100; // Default 100%
         this.frameSkipCounter = 0;
+        
+        logger.info('StaticWaveformVisualizer', 'Initialized with dynamic visualizer integration', null, 'waveform');
     }
 
     initialize() {
@@ -52,6 +55,11 @@ class StaticWaveformVisualizer {
         
         this.resize();
         this.setupEventListeners();
+        
+        // Initialize dynamic visualizer with canvas context
+        this.dynamicVisualizer.initialize(this.canvas, this.ctx);
+        this.dynamicVisualizer.onWaveformUpdate = () => this.draw();
+        
         this.generateWaveform();
         this.isInitialized = true;
         
@@ -108,29 +116,9 @@ class StaticWaveformVisualizer {
                 this.generateWaveform();
             }
         });
-        // Listen for playback state changes to toggle live visualization
-        store.on('playbackStateChanged', ({ isPlaying, isPaused }) => {
-            console.log(`[StaticWaveform] Playback state changed: isPlaying=${isPlaying}, isPaused=${isPaused}`);
-            if (isPlaying && !isPaused) {
-                console.log(`[StaticWaveform] Starting live visualization`);
-                this.startLiveVisualization();
-            } else {
-                console.log(`[StaticWaveform] Stopping live visualization`);
-                this.stopLiveVisualization();
-            }
-        });
-
-        // Listen for spacebar-triggered audition of a single note
-        store.on('spacebarPlayback', ({ color, isPlaying }) => {
-            console.log(`[StaticWaveform] Spacebar playback: color=${color}, isPlaying=${isPlaying}`);
-            if (isPlaying) {
-                console.log(`[StaticWaveform] Starting single note visualization for ${color}`);
-                this.startSingleNoteVisualization(color);
-            } else {
-                console.log(`[StaticWaveform] Stopping single note visualization`);
-                this.stopLiveVisualization();
-            }
-        });
+        // Dynamic visualizer handles its own playback event listeners
+        
+        // Tremolo no longer affects static waveform - only dynamic waveforms get tremolo animation
 
         // Listen for tab changes to handle resize when Timbre tab becomes visible
         document.querySelectorAll('.tab-button').forEach(button => {
@@ -159,13 +147,11 @@ class StaticWaveformVisualizer {
                 if (button.classList.contains('active')) {
                     button.classList.remove('active');
                     this.setAnimationSpeed(100); // Default to 100% when no buttons active
-                    console.log(`[StaticWaveform] Animation speed reset to 100% (default)`);
                 } else {
                     // Deactivate all other buttons and activate this one
                     speedButtons.forEach(btn => btn.classList.remove('active'));
                     button.classList.add('active');
                     this.setAnimationSpeed(speed);
-                    console.log(`[StaticWaveform] Animation speed set to ${speed}%`);
                 }
             });
         });
@@ -174,6 +160,9 @@ class StaticWaveformVisualizer {
     setAnimationSpeed(percentage) {
         this.animationSpeed = percentage;
         this.frameSkipCounter = 0; // Reset counter when speed changes
+        
+        // Also update dynamic visualizer speed
+        this.dynamicVisualizer.setAnimationSpeed(percentage);
     }
 
     generateWaveform() {
@@ -363,30 +352,20 @@ class StaticWaveformVisualizer {
 
         const { width, height } = this.canvas;
         const centerY = height / 2;
-        const amplitude = height / 2; // Use full height range from -1.0 to +1.0
+        const amplitude = height / 2; // Base amplitude for full height range from -1.0 to +1.0 (no tremolo for static)
 
         // Clear canvas
         this.ctx.fillStyle = '#FFFFFF';
         this.ctx.fillRect(0, 0, width, height);
 
-        // Draw grid lines
+        // Draw grid lines (use base amplitude so grid stays stable)
         this.drawGrid(width, height, centerY, amplitude);
 
-        if (this.isPlaybackActive && this.liveWaveforms.size > 0) {
-            // Log drawing mode occasionally 
-            if (!this.drawCounter) this.drawCounter = 0;
-            this.drawCounter++;
-            if (this.drawCounter % 120 === 0) { // Every 2 seconds
-                console.log(`[StaticWaveform] Drawing LIVE waveforms, count: ${this.liveWaveforms.size}`);
-            }
-            // Draw live waveforms with colors
-            this.drawLiveWaveforms(width, centerY, amplitude);
+        if (this.dynamicVisualizer.isLiveMode()) {
+            // Draw live waveforms with tremolo animation via dynamic visualizer
+            this.dynamicVisualizer.drawLiveWaveforms(width, centerY, amplitude);
         } else {
-            if (!this.staticDrawLogged) {
-                console.log(`[StaticWaveform] Drawing STATIC waveform`);
-                this.staticDrawLogged = true;
-            }
-            // Draw static waveform
+            // Draw static waveform (no tremolo animation)
             this.drawWaveform(width, centerY, amplitude);
         }
 
@@ -499,280 +478,7 @@ class StaticWaveformVisualizer {
         this.ctx.fill();
     }
 
-    drawLiveWaveforms(width, centerY, amplitude) {
-        const colors = Array.from(this.liveWaveforms.keys());
-        
-        // Log once every 2 seconds what we're drawing
-        if (!this.liveDrawCounter) this.liveDrawCounter = 0;
-        this.liveDrawCounter++;
-        if (this.liveDrawCounter % 120 === 0) {
-            console.log(`[StaticWaveform] Drawing live waveforms for colors:`, colors);
-        }
-        
-        if (colors.length === 1) {
-            // Single color - draw normal waveform
-            const color = colors[0];
-            const waveform = this.liveWaveforms.get(color);
-            if (this.liveDrawCounter % 120 === 0) {
-                console.log(`[StaticWaveform] Single live waveform data length:`, waveform?.length, 'first sample:', waveform?.[0]);
-            }
-            // Use the same amplitude as static waveform for consistent scaling
-            this.drawSingleLiveWaveform(waveform, color, width, centerY, amplitude);
-        } else if (colors.length > 1) {
-            // Multiple colors - draw layered waveforms with transparency
-            colors.forEach((color, index) => {
-                const waveform = this.liveWaveforms.get(color);
-                this.drawLayeredLiveWaveform(waveform, color, width, centerY, amplitude, colors.length);
-            });
-        }
-    }
 
-    drawSingleLiveWaveform(waveform, color, width, centerY, amplitude) {
-        // Use live audio data for dynamic waveform visualization
-        if (!waveform || waveform.length === 0) {
-            console.log(`[StaticWaveform] No waveform data for ${color}, falling back to static`);
-            // Fallback to static waveform data
-            if (this.waveformData && this.waveformData.length > 0) {
-                this.ctx.strokeStyle = color;
-                this.ctx.lineWidth = 2;
-                this.ctx.beginPath();
-
-                const samplesPerPixel = this.waveformData.length / width;
-
-                for (let x = 0; x < width; x++) {
-                    const sampleIndex = Math.floor(x * samplesPerPixel);
-                    const sample = this.waveformData[sampleIndex] || 0;
-                    const y = centerY - (sample * amplitude);
-
-                    if (x === 0) {
-                        this.ctx.moveTo(x, y);
-                    } else {
-                        this.ctx.lineTo(x, y);
-                    }
-                }
-
-                this.ctx.stroke();
-            }
-            return;
-        }
-
-        // Draw the live waveform data
-        console.log(`[StaticWaveform] Drawing LIVE data for ${color}, waveform length: ${waveform.length}`);
-        
-        // Apply the same normalization as static waveform to keep peak at 1.0
-        let maxAmp = 0;
-        for (let i = 0; i < waveform.length; i++) {
-            maxAmp = Math.max(maxAmp, Math.abs(waveform[i]));
-        }
-        
-        const normalizationFactor = maxAmp > 1.0 ? 1.0 / maxAmp : 1.0;
-        console.log(`[StaticWaveform] Live waveform max amplitude: ${maxAmp.toFixed(3)}, normalization factor: ${normalizationFactor.toFixed(3)}`);
-        
-        this.ctx.strokeStyle = color;
-        this.ctx.lineWidth = 2;
-        this.ctx.beginPath();
-
-        const samplesPerPixel = waveform.length / width;
-
-        for (let x = 0; x < width; x++) {
-            const sampleIndex = Math.floor(x * samplesPerPixel);
-            const sample = (waveform[sampleIndex] || 0) * normalizationFactor;
-            
-            const y = centerY - (sample * amplitude);
-
-            if (x === 0) {
-                this.ctx.moveTo(x, y);
-            } else {
-                this.ctx.lineTo(x, y);
-            }
-        }
-
-        this.ctx.stroke();
-    }
-
-    drawLayeredLiveWaveform(waveform, color, width, centerY, amplitude, totalLayers) {
-        if (!waveform || waveform.length === 0) return;
-
-        // Apply the same normalization as static waveform
-        let maxAmp = 0;
-        for (let i = 0; i < waveform.length; i++) {
-            maxAmp = Math.max(maxAmp, Math.abs(waveform[i]));
-        }
-        const normalizationFactor = maxAmp > 1.0 ? 1.0 / maxAmp : 1.0;
-
-        const alpha = Math.max(0.4, 1.0 / totalLayers);
-        const strokeColor = hexToRgba(color, alpha * 2); 
-        const fillColor = hexToRgba(color, alpha * 0.5);
-
-        this.ctx.strokeStyle = strokeColor;
-        this.ctx.lineWidth = 1.5;
-        this.ctx.beginPath();
-
-        const samplesPerPixel = waveform.length / width;
-
-        for (let x = 0; x < width; x++) {
-            const sampleIndex = Math.floor(x * samplesPerPixel);
-            const sample = (waveform[sampleIndex] || 0) * normalizationFactor;
-
-            const y = centerY - (sample * amplitude * 0.7); // Still reduce amplitude for layering
-
-            if (x === 0) {
-                this.ctx.moveTo(x, y);
-            } else {
-                this.ctx.lineTo(x, y);
-            }
-        }
-
-        this.ctx.stroke();
-    }
-
-    startLiveVisualization() {
-        console.log(`[StaticWaveform] startLiveVisualization called, isPlaybackActive=${this.isPlaybackActive}`);
-        if (this.isPlaybackActive) return;
-        
-        this.isPlaybackActive = true;
-        console.log(`[StaticWaveform] Setting up live analysers...`);
-        this.setupLiveAnalysers();
-        this.updateContainerState(true);
-        console.log(`[StaticWaveform] Starting animation loop...`);
-        this.animateLiveWaveforms();
-    }
-
-    startSingleNoteVisualization(color) {
-        if (this.isPlaybackActive) return;
-        
-        this.isPlaybackActive = true;
-        this.setupSingleAnalyser(color);
-        this.updateContainerState(true);
-        this.animateLiveWaveforms();
-    }
-
-    stopLiveVisualization() {
-        this.isPlaybackActive = false;
-        this.liveAnalysers.clear();
-        this.liveWaveforms.clear();
-        
-        if (this.playbackAnimationId) {
-            cancelAnimationFrame(this.playbackAnimationId);
-            this.playbackAnimationId = null;
-        }
-        
-        this.updateContainerState(false);
-        
-        // Return to static waveform display
-        this.draw();
-    }
-
-    updateContainerState(isLive) {
-        const wrapper = this.canvas?.parentElement;
-        if (!wrapper) return;
-
-        if (isLive) {
-            wrapper.classList.add('live-mode');
-            // Add pulsing effect for full playback (not single notes)
-            if (store.state.isPlaying && !store.state.isPaused) {
-                wrapper.classList.add('pulsing');
-            }
-        } else {
-            wrapper.classList.remove('live-mode', 'pulsing');
-        }
-    }
-
-    setupLiveAnalysers() {
-        // Access the synth engine's audio nodes for each color
-        const synthEngine = window.synthEngine;
-        if (!synthEngine) {
-            console.error(`[StaticWaveform] No synthEngine found on window object`);
-            return;
-        }
-
-        // Get all active timbre colors that have notes playing
-        const activeColors = this.getActivePlayingColors();
-        
-        activeColors.forEach(color => {
-            // Get or create analyser for each color's synth output
-            const analyser = synthEngine.createWaveformAnalyzer(color);
-            if (analyser) {
-                this.liveAnalysers.set(color, analyser);
-                this.liveWaveforms.set(color, new Float32Array(1024));
-            }
-        });
-        console.log(`[StaticWaveform] Live analyzers setup complete: ${this.liveAnalysers.size} analyzers`);
-    }
-
-    setupSingleAnalyser(color) {
-        const synthEngine = window.synthEngine;
-        if (!synthEngine) return;
-
-        const analyser = synthEngine.createWaveformAnalyzer(color);
-        if (analyser) {
-            this.liveAnalysers.set(color, analyser);
-            this.liveWaveforms.set(color, new Float32Array(1024));
-        }
-    }
-
-    getActivePlayingColors() {
-        // Get colors from currently playing notes
-        const playingColors = new Set();
-        
-        // Add colors from placed notes (during full playback)
-        if (store.state.isPlaying) {
-            store.state.placedNotes.forEach(note => {
-                if (!note.isDrum && note.color) {
-                    playingColors.add(note.color);
-                }
-            });
-        }
-
-        // If no notes are actively playing, fall back to current selected color
-        if (playingColors.size === 0 && this.currentColor) {
-            playingColors.add(this.currentColor);
-        }
-
-        const result = Array.from(playingColors);
-        console.log(`[StaticWaveform] Active colors for live visualization:`, result);
-        return result;
-    }
-
-    animateLiveWaveforms() {
-        if (!this.isPlaybackActive) return;
-
-        // Speed control: Skip frames based on animation speed
-        this.frameSkipCounter++;
-        const skipFrames = Math.floor(100 / this.animationSpeed);
-        
-        if (this.frameSkipCounter % skipFrames !== 0) {
-            // Skip this frame, but continue the animation loop
-            this.playbackAnimationId = requestAnimationFrame(() => this.animateLiveWaveforms());
-            return;
-        }
-
-        // Update waveform data from each analyser (no smoothing for accurate peaks)
-        this.liveAnalysers.forEach((analyser, color) => {
-            const newWaveformArray = analyser.getValue();
-            
-            // Use raw waveform data directly - no smoothing
-            this.liveWaveforms.set(color, newWaveformArray);
-            
-            // Log waveform data every 60 processed frames
-            if (!this.frameCounter) this.frameCounter = 0;
-            this.frameCounter++;
-            
-            if (this.frameCounter % 60 === 0) {
-                const firstFew = newWaveformArray.slice(0, 5);
-                const max = Math.max(...newWaveformArray);
-                const min = Math.min(...newWaveformArray);
-                const rms = Math.sqrt(newWaveformArray.reduce((sum, val) => sum + val*val, 0) / newWaveformArray.length);
-                console.log(`[StaticWaveform] ${color} raw waveform at ${this.animationSpeed}% speed - Range: ${min.toFixed(3)} to ${max.toFixed(3)}, RMS: ${rms.toFixed(3)}`);
-            }
-        });
-
-        // Redraw with live data
-        this.draw();
-
-        // Continue animation
-        this.playbackAnimationId = requestAnimationFrame(() => this.animateLiveWaveforms());
-    }
 
     drawLabels(width, height) {
         this.ctx.fillStyle = '#666666';
@@ -796,9 +502,36 @@ class StaticWaveformVisualizer {
     getNormalizedAmplitude() {
         return this.calculatedAmplitude || 0;
     }
+    
+    
+    getADSRTremoloAmplitude() {
+        const baseAmplitude = this.calculatedAmplitude || 0;
+        
+        // Apply tremolo modulation that resets per note (for ADSR envelope)
+        if (window.animationEffectsManager && this.currentColor) {
+            const tremoloMultiplier = window.animationEffectsManager.getADSRTremoloAmplitudeMultiplier(this.currentColor);
+            return baseAmplitude * tremoloMultiplier;
+        }
+        
+        return baseAmplitude;
+    }
+
+    // Delegation methods for backward compatibility with pitchGridInteractor
+    startSingleNoteVisualization(color) {
+        return this.dynamicVisualizer.startSingleNoteVisualization(color);
+    }
+
+    stopLiveVisualization() {
+        return this.dynamicVisualizer.stopLiveVisualization();
+    }
+
+    startLiveVisualization() {
+        return this.dynamicVisualizer.startLiveVisualization();
+    }
 
     dispose() {
-        this.stopLiveVisualization();
+        // Dispose dynamic visualizer
+        this.dynamicVisualizer.dispose();
         
         if (this.animationFrameId) {
             cancelAnimationFrame(this.animationFrameId);
