@@ -11,6 +11,7 @@ class EffectsController {
         this.effectButtons = [];
         this.dials = [];
         this.currentColor = null;
+        this.isDialInteractionActive = false;
         
         this.effectConfigs = {
             reverb: {
@@ -48,19 +49,30 @@ class EffectsController {
 
     init() {
         logger.initStart('Effects Controller');
-        
+
         this.effectControlsContainer = document.getElementById('effect-controls');
         this.effectButtons = document.querySelectorAll('.effect-button[data-effect]');
-        
+
         if (!this.effectControlsContainer || this.effectButtons.length === 0) {
             logger.initFailed('Effects Controller', 'Required DOM elements not found');
             return false;
         }
-        
+
         this.setupEventListeners();
         this.initializeSelectedColorTracking();
+        this.setupGlobalMouseUpHandler();
         logger.initSuccess('Effects Controller');
         return true;
+    }
+
+    setupGlobalMouseUpHandler() {
+        // Handle mouseup anywhere on the document to end dial interactions
+        // This catches cases where user drags outside the slider and releases
+        document.addEventListener('mouseup', () => {
+            if (this.isDialInteractionActive) {
+                this.onDialInteractionEnd(this.currentEffect);
+            }
+        });
     }
 
     setupEventListeners() {
@@ -101,6 +113,7 @@ class EffectsController {
     }
 
     showEffectControls(effectType) {
+        console.log(`📋 showEffectControls called for: ${effectType}`);
         const config = this.effectConfigs[effectType];
         if (!config) {
             logger.warn('Effects', `No configuration found for effect: ${effectType}`, null, 'ui');
@@ -109,17 +122,19 @@ class EffectsController {
 
         // Clear existing controls
         this.clearControls();
-        
+
         // Create controls container
         this.effectControlsContainer.innerHTML = '<div class="effect-controls"></div>';
         const controlsContainer = this.effectControlsContainer.querySelector('.effect-controls');
+        console.log(`📋 Controls container created:`, controlsContainer);
         
         // Create simple sliders for each control
         Object.entries(config.controls).forEach(([key, control]) => {
+            console.log(`📋 Creating slider for ${effectType}.${key}`);
             // Get current value from effectsCoordinator for this color and effect
             const effectParams = this.currentColor ? effectsCoordinator.getEffectParameters(this.currentColor, effectType) : null;
             const currentValue = effectParams?.[key] || 0;
-            
+
             const sliderContainer = document.createElement('div');
             sliderContainer.className = 'effect-slider-group';
             sliderContainer.style.cssText = 'margin-bottom: 15px; padding: 10px; border: 1px solid #ccc; border-radius: 5px;';
@@ -141,6 +156,7 @@ class EffectsController {
             slider.className = 'effect-slider';
             slider.style.cssText = 'width: 100%; margin: 5px 0;';
             sliderContainer.appendChild(slider);
+            console.log(`📋 Slider created for ${effectType}.${key}:`, slider);
             
             // Add value display
             const valueDisplay = document.createElement('div');
@@ -171,7 +187,40 @@ class EffectsController {
                 logger.debug('Effects', `${effectType} ${key}: ${value}`, null, 'audio');
                 this.onEffectParameterChange(effectType, key, value);
             };
-            
+
+            // Track when user starts dragging the slider - triggers visual effects
+            slider.addEventListener('mousedown', (e) => {
+                console.log(`🖱️ MOUSEDOWN on ${effectType} slider`);
+                this.onDialInteractionStart(effectType);
+            });
+
+            // Track when user stops dragging the slider - stops visual effects
+            slider.addEventListener('mouseup', (e) => {
+                console.log(`🖱️ MOUSEUP on ${effectType} slider`);
+                this.onDialInteractionEnd(effectType);
+            });
+
+            // Also handle when mouse leaves the slider while dragging
+            slider.addEventListener('mouseleave', (e) => {
+                // Only end interaction if mouse is actually down (dragging)
+                if (e.buttons === 1) {
+                    // Mouse is still pressed but left the slider
+                    // Will end on document mouseup (handled below)
+                    console.log(`🖱️ MOUSELEAVE while dragging ${effectType} slider`);
+                }
+            });
+
+            // Also handle touch events for mobile
+            slider.addEventListener('touchstart', (e) => {
+                console.log(`👆 TOUCHSTART on ${effectType} slider`);
+                this.onDialInteractionStart(effectType);
+            });
+
+            slider.addEventListener('touchend', (e) => {
+                console.log(`👆 TOUCHEND on ${effectType} slider`);
+                this.onDialInteractionEnd(effectType);
+            });
+
             slider.addEventListener('input', handleSliderChange); // During dragging
             slider.addEventListener('change', handleSliderChange); // Click-to-position
         });
@@ -200,30 +249,78 @@ class EffectsController {
 
 
     onEffectParameterChange(effectType, parameter, value) {
-        console.log(`🎚️ [EFFECTS UI DEBUG] onEffectParameterChange called:`, { effectType, parameter, value });
-        
         // This method would be called when an effect parameter changes
         logger.debug('Effects', `Effect parameter changed: ${effectType}.${parameter} = ${value}`, null, 'audio');
-        
+
         // Get the current color
-        const currentColor = store.state.selectedNote.color;
-        console.log(`🎚️ [EFFECTS UI DEBUG] Current selected color:`, currentColor);
-        
+        const currentColor = store.state.selectedNote?.color;
+
         if (!currentColor) {
-            console.log(`🎚️ [EFFECTS UI DEBUG] No color selected, cannot update effect parameter`);
             logger.warn('Effects', 'Cannot update effect parameter: no color selected', { effectType, parameter, value }, 'audio');
             return;
         }
-        
-        console.log(`🎚️ [EFFECTS UI DEBUG] Calling effectsCoordinator.updateParameter with:`, { effectType, parameter, value, currentColor });
-        
+
         // Use the effects coordinator to handle all effect changes
         effectsCoordinator.updateParameter(effectType, parameter, value, currentColor);
-        
+
         // Emit general event that other parts of the system can listen to (for backward compatibility)
         store.emit('effectParameterChanged', { effectType, parameter, value, color: currentColor });
-        
-        console.log(`🎚️ [EFFECTS UI DEBUG] effectParameterChanged event emitted`);
+    }
+
+    /**
+     * Called when user starts dragging a dial for vibrato/tremolo
+     * Triggers visual effects on canvas notes and waveforms
+     */
+    onDialInteractionStart(effectType) {
+        if (this.isDialInteractionActive) return; // Already active
+
+        // Only trigger visual effects for vibrato and tremolo
+        if (effectType !== 'vibrato' && effectType !== 'tremolo') {
+            return;
+        }
+
+        this.isDialInteractionActive = true;
+        const currentColor = store.state.selectedNote?.color;
+
+        if (!currentColor) {
+            console.warn('⚠️ Dial interaction started but no color selected');
+            logger.debug('Effects', 'Dial interaction started but no color selected', null, 'ui');
+            return;
+        }
+
+        console.log(`🎛️ Dial interaction START: ${effectType} on ${currentColor}`);
+
+        // Emit event to trigger visual effects during dial interaction
+        // This simulates a "preview" note interaction for the animation system
+        store.emit('effectDialInteractionStart', {
+            effectType,
+            color: currentColor
+        });
+
+        logger.debug('Effects', `Dial interaction started for ${effectType} on ${currentColor}`, null, 'ui');
+    }
+
+    /**
+     * Called when user stops dragging a dial
+     * Stops visual effects preview
+     */
+    onDialInteractionEnd(effectType) {
+        if (!this.isDialInteractionActive) return; // Not active
+
+        this.isDialInteractionActive = false;
+        const currentColor = store.state.selectedNote?.color;
+
+        if (!currentColor) {
+            return;
+        }
+
+        // Emit event to stop visual effects preview
+        store.emit('effectDialInteractionEnd', {
+            effectType,
+            color: currentColor
+        });
+
+        logger.debug('Effects', `Dial interaction ended for ${effectType} on ${currentColor}`, null, 'ui');
     }
 
     getCurrentEffect() {

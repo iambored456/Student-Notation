@@ -159,8 +159,50 @@ export const stampActions = {
                 row: placement.row,
                 pitch: rowData?.toneNote,
                 color: placement.color,
-                placement
+                placement  // Include full placement object with shapeOffsets
             };
         }).filter(data => data.pitch); // Only include stamps with valid pitches
+    },
+
+    /**
+     * Updates the pitch offset for an individual shape within a stamp
+     * @param {string} placementId - The stamp placement ID
+     * @param {string} shapeKey - e.g., "diamond_0", "oval_0"
+     * @param {number} rowOffset - Offset from stamp's base row
+     */
+    updateStampShapeOffset(placementId, shapeKey, rowOffset) {
+        const placement = this.state.stampPlacements.find(p => p.id === placementId);
+        if (!placement) {
+            console.warn('[STAMP SHAPE OFFSET] Placement not found:', placementId);
+            return;
+        }
+
+        // Initialize shapeOffsets if it doesn't exist
+        if (!placement.shapeOffsets) {
+            placement.shapeOffsets = {};
+        }
+
+        console.log('[STAMP SHAPE OFFSET] Updating shape offset:', {
+            placementId,
+            shapeKey,
+            oldOffset: placement.shapeOffsets[shapeKey] || 0,
+            newOffset: rowOffset,
+            baseRow: placement.row,
+            targetRow: placement.row + rowOffset
+        });
+
+        placement.shapeOffsets[shapeKey] = rowOffset;
+        this.emit('stampPlacementsChanged');
+    },
+
+    /**
+     * Gets the effective row for a specific shape within a stamp
+     * @param {Object} placement - The stamp placement
+     * @param {string} shapeKey - e.g., "diamond_0", "oval_0"
+     * @returns {number} The effective row index for this shape
+     */
+    getShapeRow(placement, shapeKey) {
+        const offset = (placement.shapeOffsets?.[shapeKey]) || 0;
+        return placement.row + offset;
     }
 };

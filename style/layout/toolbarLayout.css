@@ -3,20 +3,37 @@
    ========================================================================= */
 
 /* --- Toolbar Container Layout --- */
-#toolbar-container-1, #toolbar-container-2 {
+#toolbar-container-1,
+#toolbar-container-2 {
     display: flex;
     border: 1px solid var(--c-border);
     border-radius: var(--border-radius-md);
-    background-color: var(--c-bg);
+    background-color: var(--c-surface);
 }
 
 #toolbar-container-1 {
-    padding: 0.1em;
+    padding: var(--space-2);
     flex: 0 0 auto;
-    gap: 0.2rem;
+    gap: var(--space-2);
     align-items: stretch;
     height: 100%;
     overflow: visible;
+    display: flex;
+    flex-direction: column;
+}
+
+.toolbar-main-row {
+    display: flex;
+    gap: var(--space-2);
+    align-items: stretch;
+}
+
+.toolbar-playback-row {
+    display: flex;
+    gap: var(--space-3);
+    align-items: center;
+    justify-content: center;
+    padding: var(--space-1) 0;
 }
 
 #toolbar-container-2 {
@@ -27,9 +44,9 @@
 .tool-subcontainer {
     display: flex;
     flex-direction: column;
-    gap: 0.5rem;
+    gap: var(--space-2);
     align-items: center;
-    padding: 0.rem;
+    padding: 0;
     background-color: transparent;
     border-radius: 0;
     border-right: none; /* Remove vertical gray separating lines */
@@ -47,14 +64,14 @@
     flex: 0 0 fit-content;
     display: flex;
     flex-direction: column;
-    background-color: var(--c-gridline);
-    border-right: 1px solid var(--c-border);
+    background-color: var(--c-surface-muted);
+    border-right: 1px solid var(--c-border-strong);
 }
 
 .tab-content {
     flex: 1;
-    padding: 0.05em; /* Reduced from 0.1em to save vertical space */
-    background-color: var(--c-bg);
+    padding: var(--space-2);
+    background-color: var(--c-surface);
     overflow-x: auto; /* Only allow horizontal scrolling if needed */
     overflow-y: hidden; /* Disable vertical scrollbar */
     min-width: 0;
@@ -86,9 +103,10 @@
     align-items: stretch; 
 }
 
-.tab-panel.active { 
+.tab-panel.active {
     display: flex;
     gap: var(--space-1); /* Reduced from --space-2 to prevent toolbar overflow */
+    min-height: 0; /* Allow flex children to shrink */
 }
 
 .control-section {
@@ -101,6 +119,8 @@
     min-width: fit-content;
     width: fit-content;
     border-radius: 0;
+    min-height: 0; /* Allow flex children to shrink */
+    max-height: 100%; /* Bound by parent height */
 }
 
 .preset-effects-container {
@@ -108,10 +128,12 @@
     justify-content: flex-start;
     flex: 0 0 auto;
     width: fit-content;
+    max-height: 100%; /* Bound by control-section height */
+    overflow: hidden;
 }
 
 .control-section h4 {
-    margin: 0 0 0.1em 0;
+    margin: 0 0 var(--space-2) 0;
     color: var(--c-text-muted);
     font-size: 0.9em;
     text-transform: uppercase;
@@ -128,7 +150,7 @@
 /* --- Main Structure Container (Add/Del Beat, Pickup, Modulation Column) --- */
 .rhythm-structure-container {
     flex-direction: column;
-    gap: 0.4rem;
+    gap: var(--space-3);
 }
 
 .control-subsection {
@@ -167,25 +189,29 @@
     align-items: center;
 }
 
-/* --- Rhythm Stamps Tabs (Vertical Layout like Main Tabs) --- */
+/* --- Rhythm Stamps Tabs --- */
 .rhythm-stamps-container {
     display: flex;
-    flex-direction: row !important; /* Override .control-section's column layout */
+    flex-direction: column;
     height: auto;
+    gap: var(--space-1);
 }
 
 .rhythm-tab-sidebar {
-    flex: 0 0 80px;
+    flex: 0 0 auto;
     display: flex;
-    flex-direction: column;
-    background-color: var(--c-gridline);
-    border-right: 1px solid var(--c-border);
+    flex-direction: row;
+    gap: 0;
+    background-color: transparent;
+    border-right: none;
+    border-bottom: 1px solid var(--c-border);
+    padding: 0;
 }
 
 .rhythm-tab-content {
     flex: 1;
-    padding: 0.1em;
-    background-color: var(--c-bg);
+    padding: var(--space-2);
+    background-color: var(--c-surface);
     overflow: auto;
     min-width: 0;
 }
@@ -213,7 +239,7 @@
 
 .stamps-row {
     display: grid;
-    gap: 0.5rem;
+    gap: var(--space-3);
     justify-items: center;
 }
 
@@ -223,12 +249,12 @@
 
 .stamps-row-2 {
     grid-template-columns: repeat(6, 1fr);
-    padding-top: 0.42rem;
+    padding-top: var(--space-3);
 }
 
 .stamps-row-3 {
     grid-template-columns: repeat(5, 1fr);
-    padding-top: 0.42rem;
+    padding-top: var(--space-3);
 }
 
 /* --- Triplets Toolbar Layout --- */
@@ -246,13 +272,13 @@
 .triplets-sections {
     display: flex;
     flex-direction: column;
-    gap: 0.3rem;
+    gap: var(--space-2);
 }
 
 .triplets-section {
     display: flex;
     flex-direction: column;
-    gap: 0.3rem;
+    gap: var(--space-2);
     align-items: center;
 }
 
@@ -260,12 +286,12 @@
     display: grid;
     grid-template-columns: repeat(7, 1fr);
     justify-items: center;
-    gap: 0.5rem
+    gap: var(--space-3);
 }
 
 .triplets-quarter-row {
     grid-template-columns: repeat(3, 1fr);
-    margin-bottom: 0.2rem;
+    margin-bottom: var(--space-2);
 }
 
 .triplets-quarter-row:nth-child(2) {

@@ -83,11 +83,11 @@ class AnimationEffectsManager {
      */
     start() {
         if (this.isRunning) return;
-        
+
         this.isRunning = true;
         this.lastTime = performance.now();
         this.animationFrameId = requestAnimationFrame((time) => this.animate(time));
-        
+
         logger.debug('AnimationEffectsManager', 'Single animation loop started', null, 'animation');
     }
 
@@ -118,29 +118,30 @@ class AnimationEffectsManager {
         if (!hasAnimations) {
             return false;
         }
-        
-        // Tremolo only during active sound production (affects waveform/ADSR only)
-        const hasRelevantActivity = (
-            this.tremoloEffect.isPlaybackActive ||      // Spacebar + transport playback
-            this.tremoloEffect.hasActiveInteraction     // Note click/drag interactions
-            // No ghostNoteAnimation - tremolo doesn't affect canvas positions
-        );
-        
-        
-        return hasRelevantActivity;
+
+        // Tremolo should run when:
+        // 1. There are active sounding notes (playback/spacebar), OR
+        // 2. User is interacting with tremolo dial controls
+        // The activeSoundingNotes Map properly tracks note attack/release events
+        const hasSoundingNotes = this.tremoloEffect.activeSoundingNotes.size > 0;
+        const hasDialInteraction = this.tremoloEffect.hasDialInteraction;
+
+        const shouldRun = hasSoundingNotes || hasDialInteraction;
+        return shouldRun;
     }
-    
+
     shouldVibratoBeRunning() {
         const hasAnimations = this.vibratoEffect.animations.size > 0;
         if (!hasAnimations) return false;
-        
+
         // Vibrato should only run during active interactions and playback
         const hasRelevantDisplays = (
             this.vibratoEffect.isPlaybackActive ||
             this.vibratoEffect.hasActiveInteraction ||
+            this.vibratoEffect.hasDialInteraction ||       // Dial dragging (NEW!)
             this.vibratoEffect.ghostNoteAnimation !== null
         );
-        
+
         return hasRelevantDisplays;
     }
 
@@ -151,7 +152,7 @@ class AnimationEffectsManager {
         const vibratoShouldRun = this.shouldVibratoBeRunning();
         const tremoloShouldRun = this.shouldTremoloBeRunning();
         const shouldAnimate = vibratoShouldRun || tremoloShouldRun;
-        
+
         if (shouldAnimate && !this.isRunning) {
             this.start();
         } else if (!shouldAnimate && this.isRunning) {
@@ -166,11 +167,11 @@ class AnimationEffectsManager {
         // Throttle updates to avoid performance issues
         if (!this.lastRenderTrigger || currentTime - this.lastRenderTrigger >= 16.67) {
             this.lastRenderTrigger = currentTime;
-            
+
             // Get active colors from both effects
             const activeVibratoColors = this.vibratoEffect.getActiveColors();
             const activeTremoloColors = this.tremoloEffect.getActiveColors();
-            
+
             // Emit canvas updates for vibrato (note positions)
             if (activeVibratoColors.length > 0) {
                 store.emit('animationUpdate', {
@@ -178,7 +179,7 @@ class AnimationEffectsManager {
                     activeColors: activeVibratoColors
                 });
             }
-            
+
             // Emit waveform/ADSR updates for tremolo (amplitude)
             if (activeTremoloColors.length > 0) {
                 store.emit('tremoloAmplitudeUpdate', {
@@ -192,12 +193,20 @@ class AnimationEffectsManager {
      * Trigger final updates when stopping animation
      */
     triggerFinalUpdates() {
-        // Reset vibrato note positions
-        const activeVibratoColors = this.vibratoEffect.getActiveColors();
-        if (activeVibratoColors.length > 0) {
+        // Reset vibrato note positions - get ALL colors with animations, not just active ones
+        const vibratoColors = Array.from(this.vibratoEffect.animations.keys());
+        if (vibratoColors.length > 0) {
             store.emit('animationUpdate', {
                 type: 'vibrato',
-                activeColors: activeVibratoColors
+                activeColors: vibratoColors
+            });
+        }
+
+        // Reset tremolo amplitude (return ADSR/waveform to original values)
+        const tremoloColors = Array.from(this.tremoloEffect.animations.keys());
+        if (tremoloColors.length > 0) {
+            store.emit('tremoloAmplitudeUpdate', {
+                activeColors: tremoloColors
             });
         }
     }

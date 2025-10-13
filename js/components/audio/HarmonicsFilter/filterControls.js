@@ -166,7 +166,7 @@ export function initFilterControls() {
         }
     });
 
-    currentColor = store.state.selectedNote.color;
+    currentColor = store.state.selectedNote?.color || '#4a90e2';
     updateFromStore();
 
     // Log final dimensions after initialization

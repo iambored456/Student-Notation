@@ -1,0 +1,285 @@
+/* ==========================================================================
+   DRAW TOOLS PANEL STYLES
+   ========================================================================= */
+
+/* Draw content box container */
+.draw-content-box {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    padding: var(--space-2);
+    width: 100%;
+}
+
+/* Draw tools row - horizontal layout for tool buttons */
+.draw-tools-row {
+    display: flex;
+    flex-direction: row;
+    gap: var(--space-2);
+    justify-content: center;
+    align-items: center;
+}
+
+/* Individual draw tool button */
+.draw-tool-button {
+    width: 2.5rem;
+    height: 2.5rem;
+    padding: var(--space-1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--c-surface);
+    border: 2px solid var(--c-border);
+    border-radius: var(--border-radius-md);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    color: var(--c-text-muted);
+}
+
+.draw-tool-button:hover {
+    background-color: var(--c-gridline);
+    border-color: var(--c-text-muted);
+    transform: scale(1.05);
+}
+
+.draw-tool-button.active {
+    background-color: var(--c-accent, #4a90e2);
+    border-color: var(--c-accent, #4a90e2);
+    color: var(--c-surface);
+}
+
+.draw-tool-button svg {
+    width: 100%;
+    height: 100%;
+}
+
+/* Draw tool options container - appears below tool buttons when a tool is selected */
+.draw-tool-options {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    padding: var(--space-1);
+    background-color: var(--c-bg);
+    border: 1px solid var(--c-border);
+    border-radius: var(--border-radius-md);
+    min-height: auto;
+}
+
+.draw-tool-options:empty {
+    display: none;
+}
+
+/* Toolbar row for compact button layout */
+.draw-toolbar-row {
+    display: flex;
+    gap: var(--space-1);
+    align-items: center;
+    justify-content: center;
+}
+
+/* Toolbar buttons (for arrow tool options) */
+.draw-toolbar-button {
+    width: 2rem;
+    height: 2rem;
+    padding: var(--space-1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--c-surface);
+    border: 1px solid var(--c-border);
+    border-radius: var(--border-radius-sm);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    color: var(--c-text);
+}
+
+.draw-toolbar-button:hover {
+    background-color: var(--c-gridline);
+    border-color: var(--c-text-muted);
+}
+
+.draw-toolbar-button svg {
+    width: 100%;
+    height: 100%;
+}
+
+/* Popup menu for tool options */
+.draw-popup-menu {
+    position: absolute;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+    padding: var(--space-1);
+    background-color: var(--c-surface);
+    border: 1px solid var(--c-border);
+    border-radius: var(--border-radius-md);
+    box-shadow: var(--box-shadow-md);
+    z-index: 1000;
+}
+
+.draw-popup-option {
+    padding: var(--space-1);
+    background-color: var(--c-surface);
+    border: 1px solid var(--c-border);
+    border-radius: var(--border-radius-sm);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 40px;
+}
+
+.draw-popup-option:hover {
+    background-color: var(--c-gridline);
+    border-color: var(--c-text-muted);
+}
+
+.draw-popup-option.active {
+    background-color: var(--c-gridline);
+    border-color: var(--c-accent, #4a90e2);
+    border-width: 2px;
+    color: var(--c-text);
+}
+
+.draw-popup-option.active svg,
+.draw-popup-option.active svg * {
+    stroke: var(--c-accent, #4a90e2);
+}
+
+.draw-popup-option svg {
+    display: block;
+    stroke: var(--c-text);
+}
+
+.draw-popup-option svg * {
+    stroke: var(--c-text);
+}
+
+/* Option group styling */
+.draw-option-group {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+}
+
+.draw-option-label {
+    font-size: var(--font-size-sm);
+    font-weight: 600;
+    color: var(--c-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Button group for line styles, arrowheads, etc. */
+.draw-button-group {
+    display: flex;
+    gap: var(--space-1);
+    flex-wrap: wrap;
+}
+
+.draw-option-button {
+    padding: var(--space-1) var(--space-2);
+    background-color: var(--c-surface);
+    border: 1px solid var(--c-border);
+    border-radius: var(--border-radius-sm);
+    cursor: pointer;
+    font-size: var(--font-size-sm);
+    color: var(--c-text);
+    transition: all 0.2s ease;
+}
+
+.draw-option-button:hover {
+    background-color: var(--c-gridline);
+    border-color: var(--c-text-muted);
+}
+
+.draw-option-button.active {
+    background-color: var(--c-accent, #4a90e2);
+    border-color: var(--c-accent, #4a90e2);
+    color: var(--c-surface);
+}
+
+/* Swap button for arrow endpoints */
+.draw-swap-button {
+    padding: var(--space-1);
+    background-color: var(--c-surface);
+    border: 1px solid var(--c-border);
+    border-radius: var(--border-radius-sm);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.draw-swap-button:hover {
+    background-color: var(--c-gridline);
+}
+
+/* Color picker buttons */
+.draw-color-picker {
+    display: flex;
+    gap: var(--space-1);
+}
+
+.draw-color-button {
+    width: 2rem;
+    height: 2rem;
+    border-radius: 50%;
+    border: 2px solid transparent;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.draw-color-button:hover {
+    transform: scale(1.1);
+    border-color: var(--c-text-muted);
+}
+
+.draw-color-button.active {
+    border-color: var(--c-text);
+    border-width: 3px;
+    transform: scale(1.1);
+}
+
+/* Stroke size buttons */
+.draw-stroke-size-group {
+    display: flex;
+    gap: var(--space-1);
+}
+
+.draw-stroke-size-button {
+    width: 3rem;
+    padding: var(--space-1);
+    background-color: var(--c-surface);
+    border: 1px solid var(--c-border);
+    border-radius: var(--border-radius-sm);
+    cursor: pointer;
+    font-size: var(--font-size-sm);
+    transition: all 0.2s ease;
+}
+
+.draw-stroke-size-button:hover {
+    background-color: var(--c-gridline);
+    border-color: var(--c-text-muted);
+}
+
+.draw-stroke-size-button.active {
+    background-color: var(--c-accent, #4a90e2);
+    border-color: var(--c-accent, #4a90e2);
+    color: var(--c-surface);
+}
+
+/* Text input overlay */
+.annotation-text-input {
+    caret-color: #4a90e2;
+    user-select: text;
+    -webkit-user-select: text;
+    -moz-user-select: text;
+    -ms-user-select: text;
+}
+
+.annotation-text-input::selection {
+    background-color: #4a90e2;
+    color: white;
+}

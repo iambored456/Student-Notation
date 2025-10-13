@@ -20,7 +20,7 @@ function loadStateFromLocalStorage() {
         const serializedState = localStorage.getItem(STORAGE_KEY);
         if (serializedState === null) return undefined;
         const parsedState = JSON.parse(serializedState);
-        
+
         // This logic correctly converts plain objects/arrays from storage back to Float32Arrays
         if (parsedState.timbres) {
             for (const color in parsedState.timbres) {
@@ -77,6 +77,7 @@ function saveStateToLocalStorage(state) {
             tempo: state.tempo,
             activeChordIntervals: state.activeChordIntervals,
             selectedNote: state.selectedNote,
+            annotations: state.annotations,
             paint: {
                 paintHistory: state.paint.paintHistory,
                 paintSettings: state.paint.paintSettings

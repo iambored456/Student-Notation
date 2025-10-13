@@ -62,12 +62,9 @@ export const noteActions = {
     },
 
     updateMultipleNoteTails(notes, newEndColumn) {
-        console.log('[CHORD DEBUG] updateMultipleNoteTails called with:', notes.length, 'notes, newEndColumn:', newEndColumn);
-        notes.forEach((note, index) => {
-            console.log(`[CHORD DEBUG] Updating note ${index}: ${note.endColumnIndex} -> ${newEndColumn}`);
+        notes.forEach((note) => {
             note.endColumnIndex = newEndColumn;
         });
-        console.log('[CHORD DEBUG] Emitting notesChanged event');
         this.emit('notesChanged');
     },
 

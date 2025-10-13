@@ -16,6 +16,7 @@ class PositionEffectsController {
     constructor() {
         this.positions = {};
         this.currentColor = null;
+        this.resizeObservers = [];
         
         // Effect configurations mapped to Position components
         this.effectConfigs = {
@@ -116,9 +117,11 @@ class PositionEffectsController {
         }
 
         try {
+            const [width, height] = this.getPositionComponentSize(container);
+
             // Create Position component
             const position = new Position(container, {
-                size: [120, 120],
+                size: [width, height],
                 mode: 'absolute',
                 x: config.xRange.min,  // Start at 0 (bottom-left)
                 minX: config.xRange.min,
@@ -132,10 +135,20 @@ class PositionEffectsController {
 
             // Store reference
             this.positions[effectType] = position;
+            this.observePositionResize(container, position, width, height);
 
             // Set up event listeners
             position.on('change', ({ x, y }) => {
                 this.onPositionChange(effectType, config.xParam, x, config.yParam, y);
+            });
+
+            // Listen for interaction start/end (drag events) for visual effects
+            position.on('down', () => {
+                this.onDialInteractionStart(effectType);
+            });
+
+            position.on('up', () => {
+                this.onDialInteractionEnd(effectType);
             });
 
             // Load initial values from effectsController
@@ -146,6 +159,46 @@ class PositionEffectsController {
         } catch (error) {
             logger.error('PositionEffectsController', `Failed to create Position component for ${effectType}`, error, 'ui');
         }
+    }
+
+    getPositionComponentSize(container) {
+        const fallback = 120;
+        const rect = container.getBoundingClientRect();
+        let width = rect?.width || container.clientWidth || container.offsetWidth || fallback;
+        let height = rect?.height || container.clientHeight || container.offsetHeight || width;
+
+        if (!width || width < 10) width = fallback;
+        if (!height || height < 10) height = width;
+
+        return [Math.round(width), Math.round(height)];
+    }
+
+    observePositionResize(container, position, initialWidth, initialHeight) {
+        if (typeof ResizeObserver === 'undefined') {
+            return;
+        }
+
+        const observerState = {
+            currentWidth: Math.round(initialWidth) || 0,
+            currentHeight: Math.round(initialHeight) || 0
+        };
+        const observer = new ResizeObserver(entries => {
+            for (const entry of entries) {
+                const { width, height } = entry.contentRect;
+                const nextWidth = Math.round(width);
+                const nextHeight = Math.round(height || width);
+
+                if (!nextWidth || !nextHeight) continue;
+                if (nextWidth === observerState.currentWidth && nextHeight === observerState.currentHeight) continue;
+
+                observerState.currentWidth = nextWidth;
+                observerState.currentHeight = nextHeight;
+                position.resize(nextWidth, nextHeight);
+            }
+        });
+
+        observer.observe(container);
+        this.resizeObservers.push(observer);
     }
 
     /**
@@ -416,6 +469,54 @@ class PositionEffectsController {
     }
 
     /**
+     * Called when user starts dragging a position dial for vibrato/tremolo
+     * Triggers visual effects on canvas notes and waveforms
+     */
+    onDialInteractionStart(effectType) {
+        // Only trigger visual effects for vibrato and tremolo
+        if (effectType !== 'vibrato' && effectType !== 'tremolo') {
+            return;
+        }
+
+        const currentColor = store.state.selectedNote?.color;
+        if (!currentColor) {
+            console.warn('⚠️ Position dial interaction started but no color selected');
+            return;
+        }
+
+        console.log(`🎛️ Position dial interaction START: ${effectType} on ${currentColor}`);
+
+        // Emit event to trigger visual effects during dial interaction
+        store.emit('effectDialInteractionStart', {
+            effectType,
+            color: currentColor
+        });
+
+        logger.debug('PositionEffectsController', `Dial interaction started for ${effectType} on ${currentColor}`, null, 'ui');
+    }
+
+    /**
+     * Called when user stops dragging a position dial
+     * Stops visual effects preview
+     */
+    onDialInteractionEnd(effectType) {
+        const currentColor = store.state.selectedNote?.color;
+        if (!currentColor) {
+            return;
+        }
+
+        console.log(`🎛️ Position dial interaction END: ${effectType} on ${currentColor}`);
+
+        // Emit event to stop visual effects preview
+        store.emit('effectDialInteractionEnd', {
+            effectType,
+            color: currentColor
+        });
+
+        logger.debug('PositionEffectsController', `Dial interaction ended for ${effectType} on ${currentColor}`, null, 'ui');
+    }
+
+    /**
      * Cleanup
      */
     destroy() {
@@ -425,6 +526,8 @@ class PositionEffectsController {
             }
         });
         this.positions = {};
+        this.resizeObservers.forEach(observer => observer.disconnect());
+        this.resizeObservers = [];
         logger.info('PositionEffectsController', 'Destroyed', null, 'ui');
     }
 }

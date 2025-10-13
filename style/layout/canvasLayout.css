@@ -25,7 +25,7 @@
   overflow-x: visible; 
   overflow-y: hidden;
   min-height: 0;
-  background-color: white;
+  background-color: var(--c-surface);
 }
 
 #grid-container {
@@ -48,6 +48,7 @@
 
 #playhead-canvas, #hover-canvas, #drum-hover-canvas, #pitch-paint-canvas {
   pointer-events: none;
+  cursor: crosshair;
 }
 
 

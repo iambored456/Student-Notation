@@ -6,16 +6,18 @@
 .toolkit-button { line-height: 1.2; padding: var(--space-2); }
 
 .toolkit-icon-button {
-    font-size: 14px; 
-    width: 2rem; 
-    height: 2rem; 
-    padding: 0.2rem; 
-    display: flex; align-items: center; justify-content: center;
-    background-color: transparent; 
-    border: none; 
-    color: var(--c-text-muted); 
-    border-radius: var(--border-radius-md);
-    transition: background-color 0.2s, transform 0.1s ease; /* Added transition */
+    font-size: 14px;
+    width: 1.35rem;
+    height: 1.35rem;
+    padding: var(--space-1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: transparent;
+    border: 1px solid transparent;
+    color: var(--c-text-muted);
+    border-radius: var(--border-radius-sm);
+    transition: background-color 0.2s ease, transform 0.1s ease, border-color 0.2s ease;
     position: relative;
 }
 .toolkit-icon-button img {
@@ -25,13 +27,15 @@
     pointer-events: none; /* So the img doesn't interfere with button events */
     transition: background-color 0.2s, transform 0.1s ease;
 }
-.toolkit-icon-button:hover { 
-    background-color: var(--c-gridline); 
+.toolkit-icon-button:hover {
+    background-color: var(--c-surface-muted);
+    border-color: var(--c-border);
 }
 
 /* Override global button:focus for toolkit buttons */
 .toolkit-icon-button:focus {
-    background-color: var(--c-gridline); /* Same as hover */
+    background-color: var(--c-surface-muted); /* Same as hover */
+    border-color: var(--c-border);
     outline: none;
 }
 
@@ -42,18 +46,32 @@
     background-color: rgba(0, 0, 0, 0.15); /* A slightly darker momentary press */
 }
 
+/* --- Undo/Redo Button Specific Styling --- */
+#undo-button,
+#redo-button {
+    padding: 0.1rem;
+    border-radius: calc(var(--border-radius-sm) - 1px);
+}
+
+#undo-button:hover,
+#redo-button:hover,
+#undo-button:focus,
+#redo-button:focus {
+    background-color: rgba(0, 0, 0, 0.08);
+}
+
 /* --- Playback Control Buttons --- */
 .playback-row {
     display: flex;
-    flex-direction: column;
-    align-items: stretch;
+    flex-direction: row;
+    align-items: center;
     justify-content: center;
-    gap: var(--space-2);
-    padding: var(--space-1);
+    gap: 0.5rem;
 }
 
 .playback-row .toolkit-icon-button {
-    flex: 1;
+    width: 1.5rem;
+    height: 1.5rem;
     text-align: center;
     justify-content: center;
 }

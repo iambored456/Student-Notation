@@ -31,26 +31,32 @@ class VibratoCanvasEffect extends BaseAnimationEffect {
      */
     updateAnimationParameters(color, effectParams) {
         const { speed, span } = effectParams;
-        
+
         if (speed === 0 || span === 0) {
             // Disable vibrato for this color
             this.animations.delete(color);
             logger.debug('VibratoCanvasEffect', `Disabled vibrato animation for ${color}`, null, 'animation');
         } else {
+            // Get existing animation to preserve phase (prevent restart jitter)
+            const existingAnimation = this.animations.get(color);
+
             // Create/update vibrato animation
             const frequencyHz = (speed / 100) * 16; // Convert 0-100% to 0-16 Hz
             const amplitudeSemitones = (span / 100) * 0.5; // Convert 0-100% to 0-0.5 semitone
-            
-            this.animations.set(color, {
+
+            const animationData = {
                 frequency: frequencyHz,
                 amplitude: amplitudeSemitones,
-                phase: Math.PI / 2, // Start at 90 degrees for immediate visible offset
+                phase: existingAnimation?.phase || Math.PI / 2, // Preserve existing phase to avoid restart jitter
                 lastUpdate: performance.now()
-            });
-            
+            };
+
+            this.animations.set(color, animationData);
+
             logger.debug('VibratoCanvasEffect', `Updated vibrato animation for ${color}`, {
                 frequency: frequencyHz,
-                amplitude: amplitudeSemitones
+                amplitude: amplitudeSemitones,
+                preservedPhase: !!existingAnimation
             }, 'animation');
         }
     }
@@ -79,7 +85,12 @@ class VibratoCanvasEffect extends BaseAnimationEffect {
         if (!animation) {
             return 0;
         }
-        
+
+        // Check if animation should be running - if not, return static value
+        if (window.animationEffectsManager && !window.animationEffectsManager.shouldVibratoBeRunning()) {
+            return 0; // Animation stopped - return to static position
+        }
+
         // Calculate sine wave offset
         const offset = Math.sin(animation.phase) * animation.amplitude;
         return offset; // Returns offset in abstract units (semitones)
@@ -91,16 +102,17 @@ class VibratoCanvasEffect extends BaseAnimationEffect {
     shouldBeRunning() {
         const hasAnimations = this.animations.size > 0;
         if (!hasAnimations) return false;
-        
+
         // Vibrato should ONLY run during active sound production (not continuously)
         const hasRelevantDisplays = (
             this.isPlaybackActive ||                    // During transport playback AND spacebar
             this.hasActiveInteraction ||                // During note interactions (placing/holding)
+            this.hasDialInteraction ||                  // During dial dragging (NEW!)
             (this.ghostNoteAnimation !== null && this.isPlaybackActive) // Ghost note + spacebar only
             // NOTE: No continuous animation - vibrato only during active sound production
         );
-        
-        
+
+
         return hasRelevantDisplays;
     }
 

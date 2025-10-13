@@ -2,8 +2,10 @@
 import store from '../../../../state/index.js';
 import { getPlacedTonicSigns, getMacrobeatInfo } from '../../../../state/selectors.js';
 import SynthEngine from '../../../../services/synthEngine.js';
+import rhythmPlaybackService from '../../../../services/rhythmPlaybackService.js';
 import GridCoordsService from '../../../../services/gridCoordsService.js';
 import LayoutService from '../../../../services/layoutService.js';
+import annotationService from '../../../../services/annotationService.js';
 import { drawSingleColumnOvalNote, drawTwoColumnOvalNote, drawTonicShape } from '../renderers/notes.js';
 import { getRowY, getColumnX } from '../renderers/rendererUtils.js';
 import GlobalService from '../../../../services/globalService.js';
@@ -17,6 +19,8 @@ import StampsToolbar from '../../../Rhythm/StampsToolbar/StampsToolbar.js';
 import TripletsToolbar from '../../../Rhythm/StampsToolbar/TripletsToolbar.js';
 import { renderStampPreview } from '../renderers/stampRenderer.js';
 import { renderTripletPreview } from '../renderers/tripletRenderer.js';
+import { hitTestAnyStampShape } from '../../../../utils/stampHitTest.js';
+import { hitTestAnyTripletShape } from '../../../../utils/tripletHitTest.js';
 // import { hitTestModulationMarker, getModulationMarkerCursor } from '../renderers/modulationRenderer.js'; // Temporarily commented out
 import { getModulationDisplayText, getModulationColor, MODULATION_RATIOS } from '../../../../rhythm/modulationMapping.js';
 
@@ -36,7 +40,15 @@ let rightClickActionTaken = false;
 // --- Modulation Marker State ---
 let isDraggingModulationMarker = false;
 let draggedModulationMarker = null;
-let lastModulationHoverResult = null; 
+let lastModulationHoverResult = null;
+
+// --- Stamp Shape Dragging State ---
+let draggedStampShape = null; // { type, slot, shapeKey, placement, startRow }
+let isDraggingStampShape = false;
+
+// --- Triplet Shape Dragging State ---
+let draggedTripletShape = null; // { type, slot, shapeKey, placement, startRow }
+let isDraggingTripletShape = false; 
 
 // --- Interaction Helpers ---
 function getPitchForRow(rowIndex) {
@@ -144,15 +156,15 @@ function getChordNotesFromIntervals(rootNote, clickedRowIndex) {
         // Position the root note at the cursor
         const rootNoteInChord = inverted[rootNoteIndex];
         const targetNote = rootNote; // This is where the user clicked
-        
+
         // Calculate the interval needed to move the root note to the cursor position
         const rootNoteMidi = Note.midi(rootNoteInChord);
         const targetNoteMidi = Note.midi(targetNote);
-        
+
         // Find the octave adjustment needed to get the root note close to the target
         let octaveAdjustment = 0;
         let adjustedRootMidi = rootNoteMidi;
-        
+
         // Move root note to the same octave as target or just below
         while (adjustedRootMidi > targetNoteMidi) {
             adjustedRootMidi -= 12;
@@ -162,9 +174,7 @@ function getChordNotesFromIntervals(rootNote, clickedRowIndex) {
             adjustedRootMidi += 12;
             octaveAdjustment += 12;
         }
-        
-        console.log(`🎸 [CHORD INVERSION] ${chordPositionState} inversion: Root note ${rootNoteInChord} at index ${rootNoteIndex} → cursor ${targetNote} (adjustment: ${octaveAdjustment})`);
-        
+
         // Apply the octave adjustment to all chord tones
         return inverted.map(note => {
             const adjustedMidi = Note.midi(note) + octaveAdjustment;
@@ -209,7 +219,7 @@ function drawHoverHighlight(colIndex, rowIndex, color) {
         } else {
             highlightWidth = store.state.cellWidth * 2;
         }
-    } else if (toolType === 'note' && store.state.selectedNote.shape === 'circle') {
+    } else if (toolType === 'note' && store.state.selectedNote && store.state.selectedNote.shape === 'circle') {
         if (store.state.modulationMarkers && store.state.modulationMarkers.length > 0) {
             // For modulated grids, calculate 2-column span using actual positions
             const twoColumnsEndX = getColumnX(colIndex + 2, fullOptions);
@@ -291,13 +301,13 @@ function handleMouseDown(e) {
     const rect = e.target.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
-    
+
     const scrollLeft = document.getElementById('canvas-container').scrollLeft;
     const colIndex = GridCoordsService.getColumnIndex(x + scrollLeft);
     const rowIndex = GridCoordsService.getPitchRowIndex(y);
-    
+
     // Check boundaries - circle notes need more space than other tools
-    const isCircleNote = (store.state.selectedTool === 'note' || store.state.selectedTool === 'chord') && store.state.selectedNote.shape === 'circle';
+    const isCircleNote = (store.state.selectedTool === 'note' || store.state.selectedTool === 'chord') && store.state.selectedNote && store.state.selectedNote.shape === 'circle';
     const maxColumn = isCircleNote ? store.state.columnWidths.length - 3 : store.state.columnWidths.length - 2;
     if (colIndex < 2 || colIndex >= maxColumn || !getPitchForRow(rowIndex)) return;
 
@@ -313,15 +323,21 @@ function handleMouseDown(e) {
         
         if (store.eraseInPitchArea(colIndex, rowIndex, 2, false)) rightClickActionTaken = true;
         if (store.eraseTonicSignAt(colIndex, false)) rightClickActionTaken = true;
-        
+
         // Also erase stamps with right-click (2×3 area like circle notes)
         const eraseEndCol = colIndex + 2 - 1;
         const eraseStartRow = rowIndex - 1;
         const eraseEndRow = rowIndex + 1;
         if (store.eraseStampsInArea(colIndex, eraseEndCol, eraseStartRow, eraseEndRow)) rightClickActionTaken = true;
-        
+
         // Also erase triplets with right-click
         if (store.eraseTripletsInArea(colIndex, eraseEndCol, eraseStartRow, eraseEndRow)) rightClickActionTaken = true;
+
+        // Also erase annotations at the click point
+        const rect = e.target.getBoundingClientRect();
+        const canvasX = e.clientX - rect.left;
+        const canvasY = e.clientY - rect.top;
+        if (annotationService.eraseAtPoint(canvasX, canvasY)) rightClickActionTaken = true;
         
         pitchHoverCtx.clearRect(0, 0, pitchHoverCtx.canvas.width, pitchHoverCtx.canvas.height);
         drawHoverHighlight(colIndex, rowIndex, 'rgba(220, 53, 69, 0.3)');
@@ -363,25 +379,45 @@ function handleMouseDown(e) {
         );
         
         if (existingNote && store.state.selectedTool === 'note') {
-            // Found an existing note - start dynamic waveform visualization
+            // Found an existing note - check for rhythm stamp first
+            const stamp = rhythmPlaybackService.getStampAtPosition(colIndex, rowIndex);
             const pitch = getPitchForRow(rowIndex);
-            if (pitch) {
-                console.log(`[PitchGrid] Triggering dynamic waveform for existing note: ${pitch} (${existingNote.color})`);
-                
+
+            if (stamp && pitch) {
+                // Rhythm stamp exists - play the rhythm pattern
+
                 // Start single note visualization in the waveform
                 const staticWaveform = window.staticWaveformVisualizer;
                 if (staticWaveform) {
-                    // Set the current color to the note's color for visualization
                     staticWaveform.currentColor = existingNote.color;
-                    staticWaveform.generateWaveform(); // Update static waveform to match note color
+                    staticWaveform.generateWaveform();
                     staticWaveform.startSingleNoteVisualization(existingNote.color);
                 }
-                
+
+                // Play the rhythm pattern with duration based on note shape
+                // Circle notes (quarter) = 2x duration, Oval notes (eighth) = 1x duration
+                // Pass the stamp placement for per-shape pitch playback
+                rhythmPlaybackService.playRhythmPattern(stamp.stampId, pitch, existingNote.color, existingNote.shape, stamp);
+
+                activePreviewPitches = [pitch];
+                activeNote = existingNote;
+
+            } else if (pitch) {
+                // No stamp - play single note as before
+
+                // Start single note visualization in the waveform
+                const staticWaveform = window.staticWaveformVisualizer;
+                if (staticWaveform) {
+                    staticWaveform.currentColor = existingNote.color;
+                    staticWaveform.generateWaveform();
+                    staticWaveform.startSingleNoteVisualization(existingNote.color);
+                }
+
                 // Trigger audio for the existing note
                 SynthEngine.triggerAttack(pitch, existingNote.color);
                 const pitchColor = store.state.fullRowData[rowIndex]?.hex || '#888888';
                 GlobalService.adsrComponent?.playheadManager.trigger(existingNote.uuid, 'attack', pitchColor, store.state.timbres[existingNote.color].adsr);
-                
+
                 activePreviewPitches = [pitch];
                 activeNote = existingNote;
             }
@@ -419,12 +455,11 @@ function handleMouseDown(e) {
                     const addedNote = store.addNote(newNote);
                     if (addedNote) {
                         activeChordNotes.push(addedNote);
-                        
+
                         // Emit interaction start event for animation service
                         if (addedNote.uuid) {
                             store.emit('noteInteractionStart', { noteId: addedNote.uuid, color: addedNote.color });
                         }
-                    } else {
                     }
                 }
             });
@@ -471,40 +506,126 @@ function handleMouseDown(e) {
         }
         
         if (toolType === 'stamp') {
-            const selectedStamp = StampsToolbar.getSelectedStamp();
-            if (selectedStamp) {
-                
-                const { color } = store.state.selectedNote;
-                placeStamp(selectedStamp.id, colIndex, rowIndex, color);
-                
-                // Optional: Play preview sound for the stamp
+            // First, check if clicking on an individual shape within an existing stamp
+            const allStamps = store.getAllStampPlacements();
+            const actualX = x + scrollLeft;
+            const fullOptions = { ...store.state };
+
+            console.log('[STAMP INTERACTION] Checking for shape hit at:', { actualX, y, numStamps: allStamps.length });
+
+            const hitResult = hitTestAnyStampShape(actualX, y, allStamps, fullOptions);
+
+            if (hitResult) {
+                // Clicked on an individual shape - start dragging
+                console.log('[STAMP INTERACTION] ✓ Hit detected, starting shape drag:', hitResult);
+
+                draggedStampShape = {
+                    ...hitResult,
+                    startRow: store.getShapeRow(hitResult.placement, hitResult.shapeKey),
+                    startMouseY: y
+                };
+                isDraggingStampShape = true;
+
+                console.log('[STAMP INTERACTION] Drag state initialized:', {
+                    shapeKey: draggedStampShape.shapeKey,
+                    startRow: draggedStampShape.startRow,
+                    placementId: draggedStampShape.placement.id
+                });
+
+                return; // Skip normal stamp placement
+            }
+
+            // No shape hit - check if clicking on an existing stamp (to replay the rhythm pattern)
+            const existingStamp = rhythmPlaybackService.getStampAtPosition(colIndex, rowIndex);
+            if (existingStamp) {
+                console.log('[STAMP INTERACTION] Clicked existing stamp, replaying pattern:', existingStamp.stampId);
+
                 const pitch = getPitchForRow(rowIndex);
                 if (pitch) {
-                    // Play a short preview of the stamp pattern
-                    SynthEngine.playNote(pitch, '16n'); // Just a quick 16th note preview
+                    const { shape } = store.state.selectedNote;
+                    // Pass the placement object for per-shape pitch playback
+                    rhythmPlaybackService.playRhythmPattern(existingStamp.stampId, pitch, existingStamp.color, shape, existingStamp);
+
+                    // Track the active pitch for release on mouseup
+                    activePreviewPitches = [pitch];
                 }
-                
+                return; // Don't place a new stamp on top
+            }
+
+            // No existing stamp - place new stamp
+            const selectedStamp = StampsToolbar.getSelectedStamp();
+            if (selectedStamp) {
+                console.log('[STAMP INTERACTION] Placing new stamp:', { stampId: selectedStamp.id, colIndex, rowIndex });
+
+                const { color, shape } = store.state.selectedNote;
+                placeStamp(selectedStamp.id, colIndex, rowIndex, color);
+
+                // Play the rhythm pattern for the stamp
+                const pitch = getPitchForRow(rowIndex);
+                if (pitch) {
+                    rhythmPlaybackService.playRhythmPattern(selectedStamp.id, pitch, color, shape);
+
+                    // Track the active pitch for release on mouseup
+                    activePreviewPitches = [pitch];
+                }
+
                 store.recordState(); // Save state for undo/redo
             }
             return;
         }
         
         if (toolType === 'triplet') {
-            const selectedTriplet = TripletsToolbar.getSelectedTripletStamp();
-            if (selectedTriplet) {
-                
-                // Convert column index to cell index for triplets (cell = 2 microbeats)
-                const cellIndex = Math.floor(colIndex / 2);
-                const { color } = store.state.selectedNote;
-                placeTripletGroup(selectedTriplet.id, cellIndex, rowIndex, color);
-                
-                // Optional: Play preview sound for the triplet
+            // Check if clicking on individual shape within existing triplet
+            const allTriplets = store.getAllTripletPlacements();
+            const actualX = x + scrollLeft;
+            const fullOptions = { ...store.state };
+            console.log('[TRIPLET INTERACTION] Checking for shape hit at:', { actualX, y, numTriplets: allTriplets.length });
+
+            const hitResult = hitTestAnyTripletShape(actualX, y, allTriplets, fullOptions);
+            if (hitResult) {
+                console.log('[TRIPLET INTERACTION] ✓ Hit detected, starting shape drag:', hitResult);
+                draggedTripletShape = {
+                    ...hitResult,
+                    startRow: store.getTripletShapeRow(hitResult.placement, hitResult.shapeKey),
+                    startMouseY: y
+                };
+                isDraggingTripletShape = true;
+                return;
+            }
+
+            // No shape hit - check if clicking on existing triplet (to replay the rhythm pattern)
+            const cellIndex = Math.floor(colIndex / 2);
+            const existingTriplet = rhythmPlaybackService.getTripletAtPosition(cellIndex, rowIndex);
+            if (existingTriplet) {
+                console.log('[TRIPLET INTERACTION] Clicked existing triplet, replaying pattern:', existingTriplet.stampId);
+
                 const pitch = getPitchForRow(rowIndex);
                 if (pitch) {
-                    // Play a short preview of the triplet pattern
-                    SynthEngine.playNote(pitch, '8t'); // Quick triplet preview
+                    rhythmPlaybackService.playTripletPattern(existingTriplet.stampId, pitch, existingTriplet.color, existingTriplet);
+
+                    // Track the active pitch for release on mouseup
+                    activePreviewPitches = [pitch];
                 }
-                
+                return; // Don't place a new triplet on top
+            }
+
+            // No existing triplet - place new triplet
+            const selectedTriplet = TripletsToolbar.getSelectedTripletStamp();
+            if (selectedTriplet && store.state.selectedNote) {
+                console.log('[TRIPLET INTERACTION] Placing new triplet:', { stampId: selectedTriplet.id, colIndex, rowIndex });
+
+                // Convert column index to cell index for triplets (cell = 2 microbeats)
+                const placement = placeTripletGroup(selectedTriplet.id, cellIndex, rowIndex, store.state.selectedNote.color);
+
+                // Play the triplet rhythm pattern
+                const pitch = getPitchForRow(rowIndex);
+                if (pitch && placement) {
+                    rhythmPlaybackService.playTripletPattern(selectedTriplet.id, pitch, store.state.selectedNote.color, placement);
+
+                    // Track the active pitch for release on mouseup
+                    activePreviewPitches = [pitch];
+                }
+
                 store.recordState(); // Save state for undo/redo
             }
             return;
@@ -548,7 +669,11 @@ function handleMouseDown(e) {
             if (!isNotePlayableAtColumn(colIndex, store.state)) {
                 return;
             }
-            
+
+            if (!store.state.selectedNote) {
+                return;
+            }
+
             const { shape, color } = store.state.selectedNote;
             const newNote = { row: rowIndex, startColumnIndex: colIndex, endColumnIndex: colIndex, color, shape, isDrum: false };
             const addedNote = store.addNote(newNote); 
@@ -582,7 +707,6 @@ function handleMouseDown(e) {
                 // Start dynamic waveform visualization for new notes
                 const staticWaveform = window.staticWaveformVisualizer;
                 if (staticWaveform) {
-                    console.log(`[PitchGrid] Triggering dynamic waveform for new note: ${pitch} (${activeNote.color})`);
                     staticWaveform.currentColor = activeNote.color;
                     staticWaveform.generateWaveform(); // Update static waveform to match note color
                     staticWaveform.startSingleNoteVisualization(activeNote.color);
@@ -609,10 +733,124 @@ function handleMouseMove(e) {
         const actualX = x + scrollLeft;
         const baseMicrobeatPx = store.state.baseMicrobeatPx || store.state.cellWidth || 40;
         const snappedX = Math.round(actualX / baseMicrobeatPx) * baseMicrobeatPx;
-        
+
         // Update marker position
         store.moveModulationMarker(draggedModulationMarker.id, snappedX);
         return;
+    }
+
+    // Handle stamp shape dragging
+    if (isDraggingStampShape && draggedStampShape) {
+        const newRow = GridCoordsService.getPitchRowIndex(y);
+        const rowOffset = newRow - draggedStampShape.placement.row;
+
+        console.log('[STAMP DRAG] Mouse moved, updating shape position:', {
+            mouseY: y,
+            newRow,
+            baseRow: draggedStampShape.placement.row,
+            rowOffset,
+            shapeKey: draggedStampShape.shapeKey
+        });
+
+        // Update the shape's offset in state
+        store.updateStampShapeOffset(
+            draggedStampShape.placement.id,
+            draggedStampShape.shapeKey,
+            rowOffset
+        );
+
+        // Play audio feedback when row changes
+        if (newRow !== draggedStampShape.startRow) {
+            const pitch = getPitchForRow(newRow);
+            if (pitch) {
+                const color = draggedStampShape.placement.color || store.state.selectedNote?.color;
+                // Quick note for feedback
+                SynthEngine.triggerAttack(pitch, color);
+                setTimeout(() => SynthEngine.triggerRelease(pitch, color), 100);
+            }
+            draggedStampShape.startRow = newRow; // Update to prevent retriggering
+        }
+
+        // Show cursor feedback
+        e.target.style.cursor = 'ns-resize';
+        return;
+    }
+
+    // Handle triplet shape dragging
+    if (isDraggingTripletShape && draggedTripletShape) {
+        const newRow = GridCoordsService.getPitchRowIndex(y);
+        const rowOffset = newRow - draggedTripletShape.placement.row;
+
+        console.log('[TRIPLET DRAG] Mouse moved, updating shape position:', {
+            mouseY: y,
+            newRow,
+            baseRow: draggedTripletShape.placement.row,
+            rowOffset,
+            shapeKey: draggedTripletShape.shapeKey
+        });
+
+        // Update the shape's offset in state
+        store.updateTripletShapeOffset(
+            draggedTripletShape.placement.id,
+            draggedTripletShape.shapeKey,
+            rowOffset
+        );
+
+        // Play audio feedback when row changes
+        if (newRow !== draggedTripletShape.startRow) {
+            const pitch = getPitchForRow(newRow);
+            console.log('[TRIPLET DRAG] Row changed, playing audio:', {
+                oldRow: draggedTripletShape.startRow,
+                newRow,
+                pitch,
+                hasPitch: !!pitch
+            });
+            if (pitch) {
+                const color = draggedTripletShape.placement.color || store.state.selectedNote?.color;
+                // Quick note for feedback
+                console.log('[TRIPLET DRAG] Triggering audio for pitch:', pitch, 'color:', color);
+                SynthEngine.triggerAttack(pitch, color);
+                setTimeout(() => SynthEngine.triggerRelease(pitch, color), 100);
+            }
+            draggedTripletShape.startRow = newRow; // Update to prevent retriggering
+        }
+
+        // Show cursor feedback
+        e.target.style.cursor = 'ns-resize';
+        return;
+    }
+
+    // Check for stamp shape hover when stamp tool is active (for cursor feedback)
+    const toolType = store.state.selectedTool;
+    if (toolType === 'stamp' && !isDraggingStampShape) {
+        const actualX = x + scrollLeft;
+        const allStamps = store.getAllStampPlacements();
+        const fullOptions = { ...store.state };
+
+        const hitResult = hitTestAnyStampShape(actualX, y, allStamps, fullOptions);
+        if (hitResult) {
+            // Show ns-resize cursor when hovering over a draggable shape
+            e.target.style.cursor = 'ns-resize';
+        } else {
+            // Reset cursor when not hovering
+            e.target.style.cursor = 'default';
+        }
+    }
+
+    // Check for triplet shape hover when triplet tool is active (for cursor feedback)
+    if (toolType === 'triplet' && !isDraggingTripletShape) {
+        const actualX = x + scrollLeft;
+        const allTriplets = store.getAllTripletPlacements();
+        const fullOptions = { ...store.state };
+
+        const hitResult = hitTestAnyTripletShape(actualX, y, allTriplets, fullOptions);
+        if (hitResult) {
+            // Show ns-resize cursor when hovering over a draggable shape
+            e.target.style.cursor = 'ns-resize';
+        } else {
+            // Reset cursor when not hovering
+            e.target.style.cursor = 'default';
+        }
     }
     
     // Handle modulation tool preview and hover
@@ -654,7 +892,7 @@ function handleMouseMove(e) {
     }
 
     // Check boundaries for mouse move - circle notes need more space
-    const isCircleNote = (store.state.selectedTool === 'note' || store.state.selectedTool === 'chord') && store.state.selectedNote.shape === 'circle';
+    const isCircleNote = (store.state.selectedTool === 'note' || store.state.selectedTool === 'chord') && store.state.selectedNote && store.state.selectedNote.shape === 'circle';
     const maxColumn = isCircleNote ? store.state.columnWidths.length - 3 : store.state.columnWidths.length - 2;
     if (colIndex < 2 || colIndex >= maxColumn || getPitchForRow(rowIndex) === null) {
         if (isDragging) {
@@ -714,16 +952,22 @@ function handleMouseMove(e) {
     if (isRightClickActive) {
         if (store.eraseInPitchArea(colIndex, rowIndex, 2, false)) rightClickActionTaken = true;
         if (store.eraseTonicSignAt(colIndex, false)) rightClickActionTaken = true;
-        
+
         // Also erase stamps during right-click drag (2×3 area like circle notes)
         const eraseEndCol = colIndex + 2 - 1;
         const eraseStartRow = rowIndex - 1;
         const eraseEndRow = rowIndex + 1;
         if (store.eraseStampsInArea(colIndex, eraseEndCol, eraseStartRow, eraseEndRow)) rightClickActionTaken = true;
-        
+
         // Also erase triplets during right-click drag
         if (store.eraseTripletsInArea(colIndex, eraseEndCol, eraseStartRow, eraseEndRow)) rightClickActionTaken = true;
-        
+
+        // Also erase annotations during right-click drag
+        const rect = e.target.getBoundingClientRect();
+        const canvasX = e.clientX - rect.left;
+        const canvasY = e.clientY - rect.top;
+        if (annotationService.eraseAtPoint(canvasX, canvasY)) rightClickActionTaken = true;
+
         drawHoverHighlight(colIndex, rowIndex, 'rgba(220, 53, 69, 0.3)');
         return;
     }
@@ -828,6 +1072,40 @@ function handleMouseLeave() {
 }
 
 function handleGlobalMouseUp() {
+    // Handle stamp shape drag end
+    if (isDraggingStampShape && draggedStampShape) {
+        console.log('[STAMP DRAG] Drag ended, saving state for undo/redo');
+
+        isDraggingStampShape = false;
+        draggedStampShape = null;
+
+        // Save state for undo/redo
+        store.recordState();
+
+        // Reset cursor
+        const canvas = document.getElementById('notation-grid');
+        if (canvas) canvas.style.cursor = 'default';
+
+        return;
+    }
+
+    // Handle triplet shape drag end
+    if (isDraggingTripletShape && draggedTripletShape) {
+        console.log('[TRIPLET DRAG] Drag ended, saving state for undo/redo');
+
+        isDraggingTripletShape = false;
+        draggedTripletShape = null;
+
+        // Save state for undo/redo
+        store.recordState();
+
+        // Reset cursor
+        const canvas = document.getElementById('notation-grid');
+        if (canvas) canvas.style.cursor = 'default';
+
+        return;
+    }
+
     // Handle modulation marker drag end
     if (isDraggingModulationMarker) {
         isDraggingModulationMarker = false;
@@ -837,10 +1115,15 @@ function handleGlobalMouseUp() {
     
     // MODIFIED: Release any pitches that were triggered for preview
     if (activePreviewPitches.length > 0) {
-        const color = store.state.selectedNote.color;
-        activePreviewPitches.forEach(pitch => {
-            SynthEngine.triggerRelease(pitch, color);
-        });
+        // Stop any active rhythm pattern playback
+        rhythmPlaybackService.stopCurrentPattern();
+
+        const color = store.state.selectedNote?.color;
+        if (color) {
+            activePreviewPitches.forEach(pitch => {
+                SynthEngine.triggerRelease(pitch, color);
+            });
+        }
 
         // Determine which ADSR visual to release
         const wasSingleNote = !!activeNote;
@@ -856,12 +1139,11 @@ function handleGlobalMouseUp() {
             }
         }
         activePreviewPitches = [];
-        
+
         // Stop dynamic waveform visualization when releasing note
         const staticWaveform = window.staticWaveformVisualizer;
         if (staticWaveform) {
             staticWaveform.stopLiveVisualization();
-            console.log(`[PitchGrid] Stopped dynamic waveform visualization`);
         }
     }
 

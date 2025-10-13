@@ -308,6 +308,20 @@ class EffectsCoordinator {
             });
             
             logger.info('EffectsCoordinator', 'Applied saved effect values', null, 'effects');
+
+            // After loading saved values, trigger synth re-initialization for reverb/delay
+            // This ensures effect instances are connected to existing synths
+            if (window.synthEngine) {
+                Object.keys(dialData).forEach(color => {
+                    const savedData = dialData[color];
+                    // Only trigger if reverb or delay effects are enabled
+                    if ((savedData.reverb && (savedData.reverb.decay > 0 || savedData.reverb.roomSize > 0)) ||
+                        (savedData.delay && (savedData.delay.time > 0 || savedData.delay.feedback > 0))) {
+                        window.synthEngine.updateSynthForColor(color);
+                        logger.debug('EffectsCoordinator', `Re-applied effects to synth for ${color}`, null, 'effects');
+                    }
+                });
+            }
         } catch (e) {
             logger.warn('EffectsCoordinator', 'Failed to load saved effect values', e, 'effects');
         }

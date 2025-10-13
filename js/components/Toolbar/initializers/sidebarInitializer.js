@@ -69,7 +69,9 @@ export function initSidebarAndVolume() {
 
         verticalVolumeSlider.addEventListener('input', function() {
             const value = parseInt(this.value, 10);
-            const dB = (value === 0) ? -Infinity : (value / 100) * 50 - 50;
+            // Redesigned range: 0 → -∞ dB (mute), 100 → -12.5 dB (safe maximum)
+            // This prevents clipping while preserving headroom for dynamic gain staging
+            const dB = (value === 0) ? -Infinity : (value / 100) * 37.5 - 50;
             store.emit('volumeChanged', dB);
         });
         

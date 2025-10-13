@@ -41,18 +41,20 @@ export function initSpacebarHandler() {
     
     document.addEventListener('keydown', (e) => {
         if (e.code !== 'Space' || spacebarPressed) return;
-        
-        const activeElement = document.activeElement.tagName.toLowerCase();
-        if (['input', 'textarea'].includes(activeElement)) return;
+
+        const activeElement = document.activeElement;
+        const tagName = activeElement.tagName.toLowerCase();
+        const isEditable = activeElement.contentEditable === 'true';
+        if (['input', 'textarea'].includes(tagName) || isEditable) return;
         
         e.preventDefault();
         spacebarPressed = true;
 
-        const toolColor = store.state.selectedNote.color;
-        
+        const toolColor = store.state.selectedNote?.color;
+
         // Determine which note(s) to play based on cursor position
         let noteToPlay, pitchesToPlay = [];
-        
+
         if (ghostNotePosition && toolColor) {
             // Case 1: Cursor is on pitchGrid - use ghost note position
             const rowData = store.state.fullRowData[ghostNotePosition.row];
@@ -94,11 +96,18 @@ export function initSpacebarHandler() {
             const adsr = store.state.timbres[toolColor].adsr;
 
             GlobalService.adsrComponent?.playheadManager.trigger('spacebar', 'attack', pitchColor, adsr);
-            store.emit('spacebarPlayback', { 
-                note: noteToPlay, 
-                color: toolColor, 
-                isPlaying: true 
+            store.emit('spacebarPlayback', {
+                note: noteToPlay,
+                color: toolColor,
+                isPlaying: true
             });
+
+            // Emit noteAttack for animation service to track
+            const noteId = `spacebar-${Date.now()}`;
+            store.emit('noteAttack', { noteId, color: toolColor });
+
+            // Store noteId for release
+            triggeredNotes.noteId = noteId;
         }
     });
 
@@ -113,18 +122,23 @@ export function initSpacebarHandler() {
             triggeredNotes.pitches.forEach(pitch => {
                 SynthEngine.triggerRelease(pitch, triggeredNotes.color);
             });
-            
+
             const rowData = store.state.fullRowData.find(row => row.toneNote === triggeredNotes.rootNote);
             const pitchColor = rowData ? rowData.hex : '#888888';
             const adsr = store.state.timbres[triggeredNotes.color].adsr;
 
             GlobalService.adsrComponent?.playheadManager.trigger('spacebar', 'release', pitchColor, adsr);
-            store.emit('spacebarPlayback', { 
-                note: triggeredNotes.rootNote, 
-                color: triggeredNotes.color, 
-                isPlaying: false 
+            store.emit('spacebarPlayback', {
+                note: triggeredNotes.rootNote,
+                color: triggeredNotes.color,
+                isPlaying: false
             });
-            
+
+            // Emit noteRelease for animation service
+            if (triggeredNotes.noteId) {
+                store.emit('noteRelease', { noteId: triggeredNotes.noteId, color: triggeredNotes.color });
+            }
+
             // Clear triggered notes
             triggeredNotes = [];
         }
@@ -138,9 +152,9 @@ export function setDefaultSpacebarNote(note) {
 
 export function setGhostNotePosition(col, row) {
     ghostNotePosition = { col, row };
-    
+
     // Emit event for animation service if we have a ghost note and tool color
-    const toolColor = store.state.selectedNote.color;
+    const toolColor = store.state.selectedNote?.color;
     if (toolColor) {
         store.emit('ghostNoteUpdated', { color: toolColor });
     }

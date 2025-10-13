@@ -50,8 +50,9 @@ function renderTripletGroup(ctx, placement, options) {
   // Skip if outside viewport
   if (groupX + groupWidth < 0 || groupX > ctx.canvas.width) return;
   
-  // Draw triplet noteheads
-  renderTripletNoteheads(ctx, stamp, groupX, rowCenterY, groupWidth, groupHeight, color);
+  // Draw triplet noteheads with per-shape offsets
+  const getRowYWithOptions = (rowIndex) => getRowY(rowIndex, options);
+  renderTripletNoteheads(ctx, stamp, groupX, rowCenterY, groupWidth, groupHeight, color, placement, getRowYWithOptions);
   
   // Draw a subtle background to make triplets stand out (like sixteenth stamps)
   ctx.save();
@@ -69,24 +70,41 @@ function renderTripletGroup(ctx, placement, options) {
  * @param {CanvasRenderingContext2D} ctx - The canvas context
  * @param {Object} stamp - The triplet stamp data
  * @param {number} groupX - Group left edge
- * @param {number} centerY - Row center Y
+ * @param {number} centerY - Row center Y (base row position)
  * @param {number} groupWidth - Group width
  * @param {number} groupHeight - Group height
  * @param {string} color - Triplet color
+ * @param {Object} placement - Optional placement object with shapeOffsets
+ * @param {Function} getRowY - Optional function to get Y position for a row index
  */
-function renderTripletNoteheads(ctx, stamp, groupX, centerY, groupWidth, groupHeight, color) {
+function renderTripletNoteheads(ctx, stamp, groupX, centerY, groupWidth, groupHeight, color, placement = null, getRowY = null) {
   const kind = stamp.span === "eighth" ? "ovalWide" : "circleWide";
-  
+
   // Scale dynamically based on cell dimensions (like stamp renderer)
   const scale = Math.min(groupWidth / 100, groupHeight / 100) * 0.8;
   const strokeWidth = Math.max(1, 3 * scale);
-  
+
   // Draw noteheads for each active slot
   stamp.hits.forEach(slot => {
     const centerPercent = tripletCenterPercents[slot];
     const noteheadX = groupX + (groupWidth * centerPercent / 100);
-    
-    drawTripletNotehead(ctx, kind, noteheadX, centerY, color, strokeWidth, scale);
+
+    // Calculate Y position with per-shape offset
+    let noteheadY = centerY;
+    if (placement && getRowY) {
+      const shapeKey = `triplet_${slot}`;
+      const rowOffset = (placement.shapeOffsets?.[shapeKey]) || 0;
+      const shapeRow = placement.row + rowOffset;
+      noteheadY = getRowY(shapeRow);
+
+      if (rowOffset !== 0) {
+        console.log('[TRIPLET RENDER] Drawing notehead with offset:', {
+          slot, shapeKey, rowOffset, baseRow: placement.row, shapeRow, y: noteheadY
+        });
+      }
+    }
+
+    drawTripletNotehead(ctx, kind, noteheadX, noteheadY, color, strokeWidth, scale);
   });
 }
 

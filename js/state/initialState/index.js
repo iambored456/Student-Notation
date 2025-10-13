@@ -10,7 +10,13 @@ export const initialState = {
     tonicSignGroups: {},
     stampPlacements: [],
     tripletPlacements: [],
-    history: [ { notes: [], tonicSignGroups: {}, timbres: getInitialTimbresState().timbres, placedChords: [], stampPlacements: [], tripletPlacements: [] } ],
+    annotations: [],
+    lassoSelection: {
+        selectedItems: [], // Array of {type: 'note'|'stamp'|'triplet', id: uniqueId, data: originalObject}
+        convexHull: null,  // Convex hull points for bounding border
+        isActive: false    // Whether a lasso selection is currently active
+    },
+    history: [ { notes: [], tonicSignGroups: {}, timbres: getInitialTimbresState().timbres, placedChords: [], stampPlacements: [], tripletPlacements: [], annotations: [], lassoSelection: { selectedItems: [], convexHull: null, isActive: false } } ],
     historyIndex: 0,
     fullRowData: [],
 
@@ -53,6 +59,13 @@ export const initialState = {
     isPaused: false,
     isLooping: false,
     tempo: 90,
+
+    // --- Waveform ---
+    waveformExtendedView: false, // Show 480° instead of 360°
+
+    // --- ADSR ---
+    adsrTimeAxisScale: 1.0, // Multiplier for time axis (1.0 = 2.5s, 0.5 = 1.25s, 2.0 = 5s)
+    adsrComponentWidth: 100, // Percentage of default width (100% = default)
 
     // --- Print ---
     isPrintPreviewActive: false,

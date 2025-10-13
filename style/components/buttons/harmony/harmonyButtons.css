@@ -31,7 +31,7 @@
 
 .chord-tab-button {
     padding: var(--space-1) var(--space-3);
-    background-color: transparent; 
+    background-color: var(--c-surface-muted); 
     border: 1px solid var(--c-border);
     border-bottom: none;
     color: var(--c-text-muted);
@@ -53,7 +53,7 @@
 }
 
 .chord-tab-button:hover {
-    background-color: rgba(0, 0, 0, 0.05); 
+    background-color: var(--c-surface);
     color: var(--c-text);
 }
 
@@ -80,11 +80,12 @@
     display: block;
 }
 
-.intervals-content-box, .chords-content-box {
+.intervals-content-box,
+.chords-content-box {
     background-color: var(--c-surface);
     border: 1px solid var(--c-border);
-    border-radius: 16px;
-    padding: 0.45rem;
+    border-radius: var(--border-radius-md);
+    padding: var(--space-3);
     box-shadow: var(--box-shadow-sm);
     position: relative;
     z-index: 1;

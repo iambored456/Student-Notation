@@ -7,6 +7,7 @@ import { getVisibleRowRange } from './rendererUtils.js';
 import { renderStamps } from './stampRenderer.js';
 import { renderTriplets } from './tripletRenderer.js';
 import { renderModulationMarkers } from './modulationRenderer.js';
+import { renderAnnotations } from './annotationRenderer.js';
 
 export function drawPitchGrid(ctx, options) {
     const fullOptions = { ...options, ...store.state };
@@ -64,5 +65,8 @@ export function drawPitchGrid(ctx, options) {
     
     // Draw modulation markers (render on top of everything else for UI overlay)
     renderModulationMarkers(ctx, fullOptions);
-    
+
+    // Draw annotations (render on top of modulation markers)
+    renderAnnotations(ctx, fullOptions);
+
 }

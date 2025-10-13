@@ -14,7 +14,7 @@ class PaintPlaybackService {
 
   async initialize() {
     if (this.isInitialized) return;
-    
+
     try {
       // Create a simple sine wave synth for paint playback
       this.paintSynth = new Tone.Synth({
@@ -23,7 +23,7 @@ class PaintPlaybackService {
         },
         envelope: {
           attack: 0.01,
-          decay: 0.1, 
+          decay: 0.1,
           sustain: 0,
           release: 0.1
         }
@@ -31,14 +31,28 @@ class PaintPlaybackService {
 
       // Create a dedicated gain node for paint volume control
       this.paintGain = new Tone.Gain(0.3); // Lower volume than main instruments
-      
-      // Connect: paintSynth -> paintGain -> master output
+
+      // Connect: paintSynth -> paintGain -> synthEngine master chain (with limiter)
       this.paintSynth.connect(this.paintGain);
-      this.paintGain.toDestination();
-      
+
+      // Route through SynthEngine master chain if available (includes limiter + dynamic gain)
+      if (window.synthEngine && window.synthEngine.getMainVolumeNode) {
+        const mainVolumeNode = window.synthEngine.getMainVolumeNode();
+        if (mainVolumeNode) {
+          this.paintGain.connect(mainVolumeNode);
+          logger.info('PaintPlaybackService', 'Connected to SynthEngine master chain (with limiter)');
+        } else {
+          this.paintGain.toDestination();
+          logger.warn('PaintPlaybackService', 'SynthEngine main volume node not found, connecting directly to destination');
+        }
+      } else {
+        this.paintGain.toDestination();
+        logger.warn('PaintPlaybackService', 'SynthEngine not available, connecting directly to destination');
+      }
+
       this.isInitialized = true;
       logger.info('PaintPlaybackService', 'Initialized with sine wave synthesis');
-      
+
     } catch (error) {
       logger.error('PaintPlaybackService', 'Failed to initialize', error);
       throw error;

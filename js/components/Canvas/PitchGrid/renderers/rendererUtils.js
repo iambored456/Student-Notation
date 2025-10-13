@@ -69,28 +69,38 @@ function getCachedViewportInfo() {
 }
 
 export function getColumnX(index, options) {
-    // Calculate original position first
+    // Calculate original position first, handling fractional indices
     let originalX = 0;
-    for (let i = 0; i < index; i++) {
+    const integerPart = Math.floor(index);
+    const fractionalPart = index - integerPart;
+
+    // Sum up all complete columns
+    for (let i = 0; i < integerPart; i++) {
         const widthMultiplier = options.columnWidths[i] || 0;
         originalX += widthMultiplier * options.cellWidth;
     }
-    
+
+    // Add fractional part of the current column
+    if (fractionalPart > 0 && integerPart < options.columnWidths.length) {
+        const widthMultiplier = options.columnWidths[integerPart] || 0;
+        originalX += fractionalPart * widthMultiplier * options.cellWidth;
+    }
+
     // If no modulation markers, return original position
     if (!options.modulationMarkers || options.modulationMarkers.length === 0) {
         return originalX;
     }
-    
+
     // Use coordinate mapping to get modulated position
     const mapping = getCoordinateMapping(options);
-    
+
     // For modulation, we need to convert the original X position to microbeat, then back to modulated X
     // This preserves the relationship between column positions and their modulated equivalents
     const baseMicrobeatPx = options.baseMicrobeatPx || options.cellWidth || 40;
     const microbeatIndex = originalX / baseMicrobeatPx;
     const modulatedX = mapping.microbeatToCanvasX(microbeatIndex);
-    
-    
+
+
     return modulatedX;
 }
 
@@ -157,22 +167,44 @@ export function invalidateCoordinateMapping() {
  * Converts a canvas X position back to a column index using modulation mapping
  * @param {number} canvasX - Canvas x position
  * @param {Object} options - Render options
- * @returns {number} Column index
+ * @returns {number} Column index (fractional for precision)
  */
 export function getColumnFromX(canvasX, options) {
     if (options.modulationMarkers && options.modulationMarkers.length > 0) {
         const mapping = getCoordinateMapping(options);
-        return Math.round(mapping.canvasXToMicrobeat(canvasX));
+        const baseMicrobeatPx = options.baseMicrobeatPx || options.cellWidth || 40;
+        const microbeatIndex = mapping.canvasXToMicrobeat(canvasX);
+        return microbeatIndex * baseMicrobeatPx / options.cellWidth;
     }
-    
+
     // Fallback to original calculation
     let cumulative = 0;
     const { columnWidths, cellWidth } = options;
     if (cellWidth === 0) return 0;
-    
+
     for (let i = 0; i < columnWidths.length; i++) {
-        cumulative += columnWidths[i] * cellWidth;
-        if (canvasX < cumulative) return i;
+        const colWidth = columnWidths[i] * cellWidth;
+        if (canvasX < cumulative + colWidth) {
+            // Return fractional column for precision
+            const fractionIntoColumn = (canvasX - cumulative) / colWidth;
+            return i + fractionIntoColumn;
+        }
+        cumulative += colWidth;
     }
     return columnWidths.length - 1;
+}
+
+/**
+ * Converts a canvas Y position back to a row index
+ * @param {number} canvasY - Canvas y position
+ * @param {Object} options - Render options
+ * @returns {number} Row index (fractional for precision)
+ */
+export function getRowFromY(canvasY, options) {
+    const viewportInfo = getCachedViewportInfo();
+    const halfUnit = options.cellHeight / 2;
+    const relativeRowIndex = canvasY / halfUnit;
+    const rowIndex = relativeRowIndex + viewportInfo.startRank;
+
+    return rowIndex;
 }

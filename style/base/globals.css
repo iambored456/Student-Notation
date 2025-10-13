@@ -20,7 +20,7 @@ html, body {
   overflow-x: hidden;
   overflow-y: hidden;
   font-family: var(--main-font);
-  background-color: var(--c-gridline);
+  background-color: var(--c-bg);
   color: var(--c-text);
   display: flex;
 }
@@ -30,15 +30,15 @@ button {
   color: var(--c-surface);
   border: none;
   border-radius: var(--border-radius-md);
-  padding: 8px 12px;
+  padding: var(--space-2) var(--space-4);
   font-family: var(--main-font);
   font-size: 14px;
   cursor: pointer;
-  transition: background-color 0.2s, opacity 0.2s;
+  transition: background-color 0.2s ease, opacity 0.2s ease;
 }
 
 button:hover, button:focus {
-  background-color: var(--c-accent);
+  background-color: var(--c-accent-hover);
   outline: none;
 }
 

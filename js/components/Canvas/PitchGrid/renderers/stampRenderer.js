@@ -36,34 +36,48 @@ function renderStamp(ctx, placement, options) {
   if (!stamp) return;
 
   const { startColumn, endColumn, row, color } = placement;
-  
+
   // Get the stamp bounds (spans 2 microbeats)
   const stampX = getColumnX(startColumn, options);
   const rowCenterY = getRowY(row, options);
   const stampY = rowCenterY - (options.cellHeight / 2); // Center the stamp on the row like the highlight
   const stampWidth = options.cellWidth * 2; // Full 2-microbeat width like circle notes
   const stampHeight = options.cellHeight;
-  
+
   // Skip if outside viewport
   if (stampX + stampWidth < 0 || stampX > ctx.canvas.width) return;
-  
-  // Use shared stamp renderer
-  defaultStampRenderer.renderToCanvas(ctx, stamp, stampX, stampY, stampWidth, stampHeight, color);
-  
+
+  // Create a getRowY wrapper that uses the current options
+  const getRowYWithOptions = (rowIndex) => getRowY(rowIndex, options);
+
+  // Use shared stamp renderer with placement data for per-shape offsets
+  defaultStampRenderer.renderToCanvas(
+    ctx,
+    stamp,
+    stampX,
+    stampY,
+    stampWidth,
+    stampHeight,
+    color,
+    placement,  // Pass placement for shapeOffsets
+    getRowYWithOptions  // Pass getRowY function for offset calculations
+  );
+
   // Optional: Draw a subtle background to make stamps stand out (spans 2 microbeats)
   ctx.save();
   ctx.globalAlpha = 0.1;
   ctx.fillStyle = color;
   ctx.fillRect(stampX + 1, stampY + 1, stampWidth - 2, stampHeight - 2);
   ctx.restore();
-  
+
   logger.debug('StampRenderer', `Rendered stamp ${stamp.id} at ${startColumn}-${endColumn},${row}`, {
     stampId: stamp.id,
     startColumn,
     endColumn,
     row,
     stampX,
-    stampY
+    stampY,
+    hasOffsets: !!placement.shapeOffsets
   }, 'stamps');
 }
 

@@ -45,7 +45,7 @@ class StaticWaveformVisualizer {
         }
 
         this.ctx = this.canvas.getContext('2d');
-        this.currentColor = store.state.selectedNote.color;
+        this.currentColor = store.state.selectedNote?.color || '#4a90e2';
         
         // Set up resize observer
         const container = this.canvas.parentElement;
@@ -68,34 +68,34 @@ class StaticWaveformVisualizer {
 
     resize() {
         if (!this.canvas || !this.ctx) return;
-        
+
         const container = this.canvas.parentElement;
         if (!container) return;
-        
+
         const { clientWidth, clientHeight } = container;
         const currentCanvasWidth = this.canvas.width;
         const currentCanvasHeight = this.canvas.height;
-        
+
         // If container is collapsed (hidden tab), don't resize to 0
         // This prevents the canvas from collapsing when tabs are switched
         // However, allow initial sizing by checking if we already have dimensions
-        const shouldSkipResize = (clientWidth === 0 || clientHeight === 0) && 
+        const shouldSkipResize = (clientWidth === 0 || clientHeight === 0) &&
             (this.canvas.width > 0 && this.canvas.height > 0);
-            
+
         if (shouldSkipResize) {
             return;
         }
-        
+
         // Only resize if there's a significant change (prevent 1px cascade loops)
         const widthDiff = Math.abs(clientWidth - currentCanvasWidth);
         const heightDiff = Math.abs(clientHeight - currentCanvasHeight);
         const significantChange = widthDiff > 2 || heightDiff > 2;
-        
+
         if (significantChange) {
             // Set canvas size
             this.canvas.width = clientWidth;
             this.canvas.height = clientHeight;
-            
+
             // Redraw after resize
             this.draw();
         }
@@ -116,8 +116,15 @@ class StaticWaveformVisualizer {
                 this.generateWaveform();
             }
         });
+
+        // Listen for waveform extended view changes
+        store.on('waveformExtendedViewChanged', (isExtended) => {
+            this.generateWaveform();
+            this.updateToggleButton();
+        });
+
         // Dynamic visualizer handles its own playback event listeners
-        
+
         // Tremolo no longer affects static waveform - only dynamic waveforms get tremolo animation
 
         // Listen for tab changes to handle resize when Timbre tab becomes visible
@@ -135,6 +142,9 @@ class StaticWaveformVisualizer {
         
         // Setup speed control buttons
         this.setupSpeedControls();
+
+        // Setup waveform extend toggle button
+        this.setupExtendToggle();
     }
     
     setupSpeedControls() {
@@ -160,9 +170,31 @@ class StaticWaveformVisualizer {
     setAnimationSpeed(percentage) {
         this.animationSpeed = percentage;
         this.frameSkipCounter = 0; // Reset counter when speed changes
-        
+
         // Also update dynamic visualizer speed
         this.dynamicVisualizer.setAnimationSpeed(percentage);
+    }
+
+    setupExtendToggle() {
+        const toggleButton = document.getElementById('waveform-extend-toggle');
+        if (toggleButton) {
+            toggleButton.addEventListener('click', () => {
+                store.toggleWaveformExtendedView();
+            });
+
+            // Set initial state
+            this.updateToggleButton();
+        }
+    }
+
+    updateToggleButton() {
+        const toggleButton = document.getElementById('waveform-extend-toggle');
+        if (toggleButton) {
+            const isExtended = store.state.waveformExtendedView;
+            toggleButton.classList.toggle('extended', isExtended);
+            toggleButton.textContent = isExtended ? '480° View' : '360° View';
+            toggleButton.title = isExtended ? 'Switch to 360° waveform view' : 'Switch to 480° waveform view (shows extra 120°)';
+        }
     }
 
     generateWaveform() {
@@ -196,8 +228,10 @@ class StaticWaveformVisualizer {
         // Generate waveform using additive synthesis
         let maxGeneratedAmp = 0;
         for (let sample = 0; sample < numSamples; sample++) {
-            // Extend phase to cover 480 degrees (4/3 * 2π)
-            const phase = (sample / numSamples) * (4/3) * 2 * Math.PI;
+            // Phase range depends on extended view setting: 360° (2π) or 480° (4/3 * 2π)
+            const maxDegrees = store.state.waveformExtendedView ? 480 : 360;
+            const phaseMultiplier = maxDegrees / 360; // 1.0 for 360°, 4/3 for 480°
+            const phase = (sample / numSamples) * phaseMultiplier * 2 * Math.PI;
             let amplitude = 0;
 
             // Add each harmonic (H1, H2, H3, etc. - no fundamental F0 in harmonic bins)
@@ -273,8 +307,10 @@ class StaticWaveformVisualizer {
         let maxGeneratedAmp = 0;
 
         for (let sample = 0; sample < numSamples; sample++) {
-            // Extend phase to cover 480 degrees (4/3 * 2π)
-            const phase = (sample / numSamples) * (4/3) * 2 * Math.PI;
+            // Phase range depends on extended view setting: 360° (2π) or 480° (4/3 * 2π)
+            const maxDegrees = store.state.waveformExtendedView ? 480 : 360;
+            const phaseMultiplier = maxDegrees / 360; // 1.0 for 360°, 4/3 for 480°
+            const phase = (sample / numSamples) * phaseMultiplier * 2 * Math.PI;
             let amplitude = 0;
 
             for (let i = 0; i < HARMONIC_BINS; i++) {
@@ -386,27 +422,33 @@ class StaticWaveformVisualizer {
         this.ctx.lineTo(width, centerY);
         this.ctx.stroke();
 
-        // Vertical grid lines at quartile positions (excluding 0° at left edge)
-        const gridDegrees = [90, 180, 270, 360, 450];
+        // Dynamic grid lines based on extended view setting
+        const maxDegrees = store.state.waveformExtendedView ? 480 : 360;
+        const gridDegrees = store.state.waveformExtendedView ?
+            [90, 180, 270, 360, 450] :
+            [90, 180, 270];
+
         gridDegrees.forEach(degree => {
-            const x = (width / 480) * degree;
+            const x = (width / maxDegrees) * degree;
             this.ctx.beginPath();
             this.ctx.moveTo(x, 0);
             this.ctx.lineTo(x, height);
             this.ctx.stroke();
         });
 
-        // Add the 360-480° shaded region
-        const deg360Position = (width / 480) * 360; // Position where 360° occurs
-        this.ctx.fillStyle = 'rgba(128, 128, 128, 0.15)'; // Light gray overlay
-        this.ctx.fillRect(deg360Position, 0, width - deg360Position, height);
+        // Add the 360-480° shaded region only in extended view
+        if (store.state.waveformExtendedView) {
+            const deg360Position = (width / 480) * 360; // Position where 360° occurs
+            this.ctx.fillStyle = 'rgba(128, 128, 128, 0.15)'; // Light gray overlay
+            this.ctx.fillRect(deg360Position, 0, width - deg360Position, height);
+        }
 
-        // Amplitude reference lines (dashed)
-        const ampLines = [0.25, 0.5, 0.75];
+        // Amplitude reference lines (dashed) - only at ±0.5
+        const ampLines = [0.5];
         ampLines.forEach(amp => {
             const y1 = centerY - (amplitude * amp);
             const y2 = centerY + (amplitude * amp);
-            
+
             this.ctx.beginPath();
             this.ctx.moveTo(0, y1);
             this.ctx.lineTo(width, y1);
@@ -485,11 +527,17 @@ class StaticWaveformVisualizer {
         this.ctx.font = '12px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
         this.ctx.textAlign = 'center';
 
-        // Quartile labels for sine wave - positioned in middle of waveform
-        const labels = ['0°', '90°', '180°', '270°', '360°', '450°'];
-        const degrees = [0, 90, 180, 270, 360, 450];
+        // Dynamic labels based on extended view setting
+        const maxDegrees = store.state.waveformExtendedView ? 480 : 360;
+        const labels = store.state.waveformExtendedView ?
+            ['0°', '90°', '180°', '270°', '360°', '450°'] :
+            ['0°', '90°', '180°', '270°', '360°'];
+        const degrees = store.state.waveformExtendedView ?
+            [0, 90, 180, 270, 360, 450] :
+            [0, 90, 180, 270, 360];
+
         labels.forEach((label, i) => {
-            const x = (width / 480) * degrees[i] + 10; // Position based on actual degree value
+            const x = (width / maxDegrees) * degrees[i] + 10; // Position based on actual degree value
             this.ctx.fillText(label, x, height / 2 + 4);
         });
 

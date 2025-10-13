@@ -15,9 +15,11 @@
 
 .waveform-display-wrapper {
     position: relative;
-    width: 100%;
-    max-width: 280px;
-    height: 100%; /* Compact height for tab placement */
+    width: auto;
+    height: 100%;
+    max-height: 100%;
+    aspect-ratio: 1 / 1; /* Make it square: width = height */
+    flex-shrink: 1;
     border: 1px solid var(--c-border, #dee2e6);
     border-radius: 6px;
     background: var(--c-surface, #ffffff);
@@ -219,21 +221,24 @@
     border-color: var(--c-accent, #4A90E2) !important;
 }
 
+
 /* Speed controls are always visible */
 .waveform-speed-controls {
     opacity: 1;
     pointer-events: auto;
 }
 
-/* Dark mode support for speed controls */
+/* Dark mode support for speed controls and toggle */
 @media (prefers-color-scheme: dark) {
-    .waveform-speed-btn {
+    .waveform-speed-btn,
+    .waveform-toggle-btn {
         background-color: var(--c-surface-dark, #2d3748);
         border-color: var(--c-border-dark, #4a5568);
         color: var(--c-text-dark, #e2e8f0);
     }
-    
-    .waveform-speed-btn:hover {
+
+    .waveform-speed-btn:hover,
+    .waveform-toggle-btn:hover {
         background-color: var(--c-border-dark, #4a5568);
     }
 }

@@ -20,13 +20,9 @@ export const viewActions = {
         const oldMode = this.state.degreeDisplayMode;
         this.state.degreeDisplayMode = this.state.degreeDisplayMode === mode ? 'off' : mode;
         const newMode = this.state.degreeDisplayMode;
-        
-        console.log(`🏪 [STORE] setDegreeDisplayMode called: ${oldMode} → ${newMode} (requested: ${mode})`);
-        
+
         this.emit('layoutConfigChanged');
         this.emit('degreeDisplayModeChanged', newMode);
-        
-        console.log(`📡 [STORE] Emitted events: layoutConfigChanged, degreeDisplayModeChanged(${newMode})`);
     },
 
     // REVISED: This now sets the tool type and optional tonic number
@@ -65,6 +61,25 @@ export const viewActions = {
     setTempo(newTempo) { this.state.tempo = newTempo; this.emit('tempoChanged', newTempo); },
     setLooping(isLooping) { this.state.isLooping = isLooping; this.emit('loopingChanged', isLooping); },
     setPlaybackState(isPlaying, isPaused = false) { this.state.isPlaying = isPlaying; this.state.isPaused = isPaused; this.emit('playbackStateChanged', { isPlaying, isPaused }); },
+
+    // Waveform
+    toggleWaveformExtendedView() {
+        this.state.waveformExtendedView = !this.state.waveformExtendedView;
+        this.emit('waveformExtendedViewChanged', this.state.waveformExtendedView);
+    },
+
+    // ADSR
+    setAdsrTimeAxisScale(scale) {
+        const clampedScale = Math.max(0.1, Math.min(5.0, scale)); // Clamp between 0.1x and 5.0x
+        this.state.adsrTimeAxisScale = clampedScale;
+        this.emit('adsrTimeAxisScaleChanged', clampedScale);
+    },
+
+    setAdsrComponentWidth(widthPercent) {
+        const clampedWidth = Math.max(50, Math.min(200, widthPercent)); // Clamp between 50% and 200%
+        this.state.adsrComponentWidth = clampedWidth;
+        this.emit('adsrComponentWidthChanged', clampedWidth);
+    },
     
     // Layout & Viewport
     setLayoutConfig(config) {
@@ -112,13 +127,6 @@ export const viewActions = {
         const maxPosition = this.state.fullRowData.length - (this.state.viewportRows * 2);
         const clampedPosition = Math.max(0, Math.min(newPosition, maxPosition));
         if (this.state.gridPosition !== clampedPosition) {
-            console.log('🎯 [STORE] Grid position changed:', {
-                oldPosition: this.state.gridPosition,
-                newPosition: clampedPosition,
-                maxPosition,
-                viewportRows: this.state.viewportRows,
-                source: 'setGridPosition'
-            });
             this.state.gridPosition = clampedPosition;
             this.emit('layoutConfigChanged');
         }

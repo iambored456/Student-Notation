@@ -30,21 +30,30 @@ class DelayAudioEffect {
      */
     updateParameters(effectParams, color) {
         const { time, feedback, wet = 15 } = effectParams;
-        
-        console.log(`🔊 [DELAY DEBUG] updateParameters called:`, { color, time, feedback, wet });
-        
+
         // Store current settings for this color
         this.currentSettings.set(color, { time, feedback, wet });
 
         logger.debug('DelayAudioEffect', `Updated parameters for ${color}`, { time, feedback, wet }, 'audio');
-        
-        // Update existing delay instance if it exists
-        const delayInstance = this.delayInstances.get(color);
+
+        // Update existing delay instance if it exists, or create new one if needed
+        let delayInstance = this.delayInstances.get(color);
+
         if (delayInstance) {
-            console.log(`🔊 [DELAY DEBUG] Updating existing delay instance for ${color}`);
+            // Update existing instance
             this.updateDelayInstance(delayInstance, time, feedback, wet);
-        } else {
-            console.log(`🔊 [DELAY DEBUG] No existing delay instance for ${color}, will create on next voice`);
+        } else if (time > 0 || feedback > 0) {
+            // Create new instance if effect is enabled
+            delayInstance = this.createDelayInstance(time, feedback, wet);
+            if (delayInstance) {
+                this.delayInstances.set(color, delayInstance);
+                logger.debug('DelayAudioEffect', `Created new delay instance for ${color}`, { time, feedback, wet }, 'audio');
+
+                // Trigger synth effects re-application
+                if (window.synthEngine) {
+                    window.synthEngine.updateSynthForColor(color);
+                }
+            }
         }
     }
 
@@ -52,20 +61,15 @@ class DelayAudioEffect {
      * Apply delay to a specific voice
      */
     applyToVoice(voice, color) {
-        console.log(`🔊 [DELAY DEBUG] applyToVoice called:`, { voice: !!voice, color });
-        
         if (!voice) {
-            console.log(`🔊 [DELAY DEBUG] No voice provided, skipping delay`);
             return;
         }
 
         const settings = this.currentSettings.get(color);
-        console.log(`🔊 [DELAY DEBUG] Current settings for ${color}:`, settings);
-        
+
         // Don't apply effects to existing voices if settings are undefined (not yet configured)
         // or if effect is disabled (both parameters are 0)
         if (!settings || (settings.time === 0 && settings.feedback === 0)) {
-            console.log(`🔊 [DELAY DEBUG] No delay needed or delay disabled for ${color} - leaving voice in original audio chain`);
             return;
         }
 
@@ -73,12 +77,8 @@ class DelayAudioEffect {
             // Create delay instance for this color if not exists
             let delayInstance = this.delayInstances.get(color);
             if (!delayInstance) {
-                console.log(`🔊 [DELAY DEBUG] Creating new delay instance for ${color}`);
                 delayInstance = this.createDelayInstance(settings.time, settings.feedback, settings.wet);
                 this.delayInstances.set(color, delayInstance);
-                console.log(`🔊 [DELAY DEBUG] Delay instance created and stored for ${color}`);
-            } else {
-                console.log(`🔊 [DELAY DEBUG] Using existing delay instance for ${color}`);
             }
 
             // Connect voice directly to delay (Tone.FeedbackDelay handles wet/dry mixing internally)
@@ -86,25 +86,16 @@ class DelayAudioEffect {
             if (voice && voice.output && (typeof voice.isDisposed !== 'function' || !voice.isDisposed())) {
                 try {
                     voice.connect(delayInstance); // Direct connection - delay handles wet/dry internally
-                    console.log(`🔊 [DELAY DEBUG] Voice connected directly to delay (built-in wet/dry mixing)`);
-                    
-                    // AMPLITUDE DEBUG: Track delay effect application
-                    console.log(`🎵 [AMPLITUDE] Delay Applied [${color}] - Time: ${settings.time}%, Feedback: ${settings.feedback}%, Wet: ${settings.wet}%`);
                 } catch (connectError) {
-                    console.warn(`🔊 [DELAY DEBUG] Connection error for ${color}:`, connectError.message);
                     // Try alternative connection method
                     if (voice.output) {
                         voice.output.connect(delayInstance);
-                        console.log(`🔊 [DELAY DEBUG] Connected using voice.output instead`);
                     }
                 }
-            } else {
-                console.error(`🔊 [DELAY DEBUG] Invalid voice state - voice:${!!voice}, voice.output:${!!(voice?.output)}, hasIsDisposed:${typeof voice?.isDisposed === 'function'}, disposed:${voice?.isDisposed?.()}`);
             }
-            
+
             logger.debug('DelayAudioEffect', `Applied delay to voice for ${color}`, settings, 'audio');
         } catch (error) {
-            console.error(`🔊 [DELAY DEBUG] Error applying delay to voice for ${color}:`, error);
             logger.warn('DelayAudioEffect', `Failed to apply delay to voice for ${color}`, error, 'audio');
         }
     }
@@ -142,14 +133,13 @@ class DelayAudioEffect {
         const wetAmount = wet / 100; // 0-100% → 0-1
         
         // Use Tone.FeedbackDelay's built-in wet/dry mixing (same as Tone.Reverb)
+        // DO NOT connect here - audioEffectsManager will connect it in the effects chain
         const delay = new Tone.FeedbackDelay({
             delayTime: delayTime,
             feedback: feedbackAmount,
             wet: wetAmount  // Use built-in wet control for equal loudness
-        }).connect(window.synthEngine?.getMainVolumeNode() || Tone.Destination);
-        
-        console.log(`🔊 [DELAY DEBUG] Delay created with built-in ${(wetAmount * 100).toFixed(1)}% wet mix`);
-        console.log(`🎵 [AMPLITUDE] Using Tone.FeedbackDelay built-in wet control - Equal loudness maintained!`);
+        });
+
         delay._wetAmount = wetAmount;
         
         logger.debug('DelayAudioEffect', 'Created delay instance', { delayTime, feedbackAmount, wetAmount }, 'audio');
@@ -174,9 +164,8 @@ class DelayAudioEffect {
             // Update crossfade mix amount (this is the key for Mix slider)
             if (delayInstance._crossFade) {
                 delayInstance._crossFade.fade.value = wetAmount;
-                console.log(`🔊 [DELAY DEBUG] Updated crossfade mix to ${(wetAmount * 100).toFixed(1)}% wet`);
             }
-            
+
             // Store updated wet amount
             delayInstance._wetAmount = wetAmount;
             

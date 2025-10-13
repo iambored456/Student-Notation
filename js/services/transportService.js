@@ -178,8 +178,23 @@ function scheduleNotes() {
     const anacrusisOffset = timeMap[2] || 0;
 
     const hasModulation = store.state.modulationMarkers && store.state.modulationMarkers.length > 0;
-    
+
+    // Check if lasso selection is active for playback isolation
+    const lassoActive = store.state.lassoSelection?.isActive;
+    const selectedNoteIds = lassoActive ? new Set(
+        store.state.lassoSelection.selectedItems
+            .filter(item => item.type === 'note')
+            .map(item => item.id)
+    ) : null;
+
     store.state.placedNotes.forEach(note => {
+        // If lasso selection is active, only schedule selected notes
+        if (lassoActive) {
+            const noteId = `note-${note.row}-${note.columnIndex}-${note.color}-${note.shape}`;
+            if (!selectedNoteIds.has(noteId)) {
+                return; // Skip this note
+            }
+        }
         // Calculate note trigger times
         const regularStartTime = timeMap[note.startColumnIndex]; // Regular transport time
         const modulatedStartTime = hasModulation ? calculateNoteTriggerTime(note.startColumnIndex) : regularStartTime;
@@ -240,7 +255,6 @@ function scheduleNotes() {
         if (note.isDrum) {
             Tone.Transport.schedule(time => {
                 if (store.state.isPaused) return;
-                console.log(`[TRANSPORT PLAYBACK] Playing drum ${note.drumTrack} at time ${time}, current drumVolumeNode volume: ${window.drumVolumeNode?.volume.value} dB`);
                 drumPlayers?.player(note.drumTrack)?.start(time);
                 
                 // Trigger drum note pop animation
@@ -282,98 +296,155 @@ function scheduleNotes() {
         }
     });
     
-    // Schedule stamps
+    // Schedule stamps with per-shape pitch offsets
     const stampPlaybackData = getStampPlaybackData();
+
+    // Build selected stamps set if lasso is active
+    const selectedStampIds = lassoActive ? new Set(
+        store.state.lassoSelection.selectedItems
+            .filter(item => item.type === 'stamp')
+            .map(item => item.id)
+    ) : null;
+
     stampPlaybackData.forEach(stampData => {
+        // If lasso selection is active, only schedule selected stamps
+        if (lassoActive) {
+            const stampId = `stamp-${stampData.row}-${stampData.column}-${stampData.stampId}`;
+            if (!selectedStampIds.has(stampId)) {
+                return; // Skip this stamp
+            }
+        }
+
         const cellStartTime = timeMap[stampData.column];
         if (cellStartTime === undefined) return;
-        
+
         // Skip stamps that would be scheduled before the anacrusis offset
         if (cellStartTime < anacrusisOffset) {
             logger.debug('TransportService', `Skipping stamp at column ${stampData.column} - before anacrusis offset`);
             return;
         }
-        
-        // Get the schedule events for this stamp
-        const scheduleEvents = getStampScheduleEvents(stampData.stampId);
-        
+
+        // Get the schedule events for this stamp, passing placement for per-shape offsets
+        const scheduleEvents = getStampScheduleEvents(stampData.stampId, stampData.placement);
+
         scheduleEvents.forEach(event => {
             const offsetTime = Tone.Time(event.offset).toSeconds();
             const duration = Tone.Time(event.duration).toSeconds();
             const triggerTime = cellStartTime + offsetTime;
             const releaseTime = triggerTime + duration;
-            
-            
-            // Schedule attack
+
+            // Calculate pitch for this individual shape
+            // event.rowOffset contains the pitch offset from the base row
+            const shapeRow = stampData.row + event.rowOffset;
+            const shapePitch = getPitchFromRow(shapeRow);
+
+            // Schedule attack with per-shape pitch
             Tone.Transport.schedule(time => {
                 if (store.state.isPaused) return;
-                SynthEngine.triggerAttack(stampData.pitch, stampData.color, time);
+                SynthEngine.triggerAttack(shapePitch, stampData.color, time);
             }, triggerTime);
-            
-            // Schedule release
+
+            // Schedule release with per-shape pitch
             Tone.Transport.schedule(time => {
                 if (store.state.isPaused) return;
-                SynthEngine.triggerRelease(stampData.pitch, stampData.color, time);
+                SynthEngine.triggerRelease(shapePitch, stampData.color, time);
             }, releaseTime);
         });
-        
+
         logger.debug('TransportService', `Scheduled stamp ${stampData.stampId} with ${scheduleEvents.length} events at column ${stampData.column}`, {
             stampId: stampData.stampId,
             column: stampData.column,
-            pitch: stampData.pitch,
+            basePitch: stampData.pitch,
+            baseRow: stampData.row,
             startTime: cellStartTime,
-            events: scheduleEvents.length
+            events: scheduleEvents.length,
+            hasShapeOffsets: !!stampData.placement?.shapeOffsets
         }, 'audio');
     });
     
-    // Schedule triplet groups
+    // Schedule triplet groups with per-shape pitch offsets
     const tripletPlaybackData = getTripletPlaybackData();
+
+    // Build selected triplets set if lasso is active
+    const selectedTripletIds = lassoActive ? new Set(
+        store.state.lassoSelection.selectedItems
+            .filter(item => item.type === 'triplet')
+            .map(item => item.id)
+    ) : null;
+
     tripletPlaybackData.forEach(tripletData => {
+        // If lasso selection is active, only schedule selected triplets
+        if (lassoActive) {
+            const tripletId = `triplet-${tripletData.row}-${tripletData.column}-${tripletData.tripletId}`;
+            if (!selectedTripletIds.has(tripletId)) {
+                return; // Skip this triplet
+            }
+        }
+
         // Convert cell index to microbeat column index (same as stamps)
         const columnIndex = tripletData.startCellIndex * 2; // cell index * 2 microbeats per cell
         const cellStartTime = timeMap[columnIndex];
-        
-        
+
         if (cellStartTime === undefined) return;
-        
+
         // Skip triplets that would be scheduled before the anacrusis offset
         if (cellStartTime < anacrusisOffset) {
             logger.debug('TransportService', `Skipping triplet at cell ${tripletData.startCellIndex} - before anacrusis offset`);
             return;
         }
-        
-        // Get pitch from row index (like notes do)
-        const pitch = getPitchFromRow(tripletData.row);
-        
-        // Get the schedule events for this triplet
-        const scheduleEvents = getTripletScheduleEvents(tripletData.stampId);
-        
+
+        // Get the schedule events for this triplet, passing placement for per-shape offsets
+        console.log('[TRANSPORT DEBUG] Scheduling triplet:', {
+            stampId: tripletData.stampId,
+            baseRow: tripletData.row,
+            hasPlacement: !!tripletData.placement,
+            hasShapeOffsets: !!tripletData.placement?.shapeOffsets,
+            shapeOffsets: tripletData.placement?.shapeOffsets
+        });
+
+        const scheduleEvents = getTripletScheduleEvents(tripletData.stampId, tripletData.placement);
+
         scheduleEvents.forEach(event => {
             const offsetTime = Tone.Time(event.offset).toSeconds();
             const eventDuration = Tone.Time(event.duration).toSeconds();
-            
+
             const triggerTime = cellStartTime + offsetTime;
             const releaseTime = triggerTime + eventDuration;
-            
-            // Schedule attack
+
+            // Calculate pitch for this individual shape
+            // event.rowOffset contains the pitch offset from the base row
+            const shapeRow = tripletData.row + event.rowOffset;
+            const shapePitch = getPitchFromRow(shapeRow);
+
+            console.log('[TRANSPORT DEBUG] Scheduling shape:', {
+                slot: event.slot,
+                rowOffset: event.rowOffset,
+                baseRow: tripletData.row,
+                shapeRow,
+                shapePitch
+            });
+
+            // Schedule attack with per-shape pitch
             Tone.Transport.schedule(time => {
                 if (store.state.isPaused) return;
-                SynthEngine.triggerAttack(pitch, tripletData.color, time);
+                SynthEngine.triggerAttack(shapePitch, tripletData.color, time);
             }, triggerTime);
-            
-            // Schedule release
+
+            // Schedule release with per-shape pitch
             Tone.Transport.schedule(time => {
                 if (store.state.isPaused) return;
-                SynthEngine.triggerRelease(pitch, tripletData.color, time);
+                SynthEngine.triggerRelease(shapePitch, tripletData.color, time);
             }, releaseTime);
         });
-        
+
         logger.debug('TransportService', `Scheduled triplet ${tripletData.stampId} with ${scheduleEvents.length} events at cell ${tripletData.startCellIndex}`, {
             stampId: tripletData.stampId,
             cellIndex: tripletData.startCellIndex,
-            pitch: pitch,
+            basePitch: getPitchFromRow(tripletData.row),
+            baseRow: tripletData.row,
             startTime: cellStartTime,
-            events: scheduleEvents.length
+            events: scheduleEvents.length,
+            hasShapeOffsets: !!tripletData.placement?.shapeOffsets
         }, 'audio');
     });
     
@@ -397,23 +468,23 @@ function animatePlayhead() {
 
     function draw() {
         if (Tone.Transport.state !== 'started' || !playheadCanvas) {
-            return; 
+            return;
         }
 
         const isLooping = store.state.isLooping;
         const currentTime = Tone.Transport.seconds;
-        
+
         // Check if we should stop - either when not looping OR when we reach the end even with looping
         if (currentTime >= musicalDuration) {
             logger.info('TransportService', 'Playback reached end. Stopping playhead.', { currentTime, musicalDuration, isLooping }, 'transport');
             TransportService.stop();
-            return; 
+            return;
         }
-        
+
         if (store.state.isPaused) {
             playheadAnimationFrame = requestAnimationFrame(draw);
             return;
-        }; 
+        };
         ctx.clearRect(0, 0, playheadCanvas.width, playheadCanvas.height);
         
         let loopAwareTime = currentTime;
@@ -502,44 +573,29 @@ const TransportService = {
     init() {
         // Create drum volume control node
         const drumVolumeNode = new Tone.Volume(0); // 0dB = 100% volume
-        console.log(`[TRANSPORT INIT] Created drumVolumeNode with initial volume: ${drumVolumeNode.volume.value} dB`);
-        
+
         drumPlayers = new Tone.Players({
             H: 'https://tonejs.github.io/audio/drum-samples/CR78/hihat.mp3',
             M: 'https://tonejs.github.io/audio/drum-samples/CR78/snare.mp3',
             L: 'https://tonejs.github.io/audio/drum-samples/CR78/kick.mp3'
         }).connect(drumVolumeNode);
-        console.log(`[TRANSPORT INIT] Connected drumPlayers to drumVolumeNode`);
-        
+
         // Connect drums to the same main audio chain as synths to avoid volume conflicts
         // Check if main volume control exists from SynthEngine
         if (window.synthEngine) {
-            console.log(`[TRANSPORT INIT] SynthEngine found, checking for main volume node...`);
             // Try to connect to the main volume control chain
             const synthEngineDestination = window.synthEngine.getMainVolumeNode && window.synthEngine.getMainVolumeNode();
             if (synthEngineDestination) {
-                console.log(`[TRANSPORT INIT] Connecting drumVolumeNode to SynthEngine main volume chain`);
                 drumVolumeNode.connect(synthEngineDestination);
-                console.log(`[TRANSPORT INIT] Audio chain: drumPlayers -> drumVolumeNode -> synthEngine main volume -> destination`);
             } else {
-                console.log(`[TRANSPORT INIT] No main volume node found, connecting directly to destination`);
                 drumVolumeNode.toDestination();
-                console.log(`[TRANSPORT INIT] Audio chain: drumPlayers -> drumVolumeNode -> destination`);
             }
         } else {
-            console.log(`[TRANSPORT INIT] SynthEngine not found, connecting directly to destination`);
             drumVolumeNode.toDestination();
-            console.log(`[TRANSPORT INIT] Audio chain: drumPlayers -> drumVolumeNode -> destination`);
         }
-        
+
         // Store reference to drum volume node for external access
         window.drumVolumeNode = drumVolumeNode;
-        console.log(`[TRANSPORT INIT] Stored drumVolumeNode reference globally`);
-        console.log(`[TRANSPORT INIT] Final drumVolumeNode state:`, {
-            volume: drumVolumeNode.volume.value,
-            connected: drumVolumeNode.output.numberOfOutputs > 0,
-            inputConnections: drumVolumeNode.input.numberOfInputs
-        });
         
         window.transportService = { drumPlayers };
         

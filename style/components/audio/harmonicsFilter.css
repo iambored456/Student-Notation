@@ -19,11 +19,9 @@
     display: flex;
     align-items: center;
     width: 100%;
-    margin-top: 0.1rem;
-    margin-bottom: 0.2rem;
+    margin: 0;
+    padding: 0;
     flex-shrink: 0;
-    padding-left: 1px; /* Match grid border */
-    padding-right: calc(30px + var(--space-2)); 
 }
 
 #filter-enable-toggle {
@@ -50,7 +48,9 @@
     flex-direction: row;
     width: 100%;
     flex-grow: 1;
-    gap: 0rem;
+    gap: 0;
+    margin: 0;
+    padding: 0;
     min-height: 0;
 }
 
@@ -59,8 +59,9 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding-inline: var(--space-1);
-    width: 40px;
+    padding: 0;
+    margin: 0;
+    width: 0;
     transition: opacity 0.2s;
 }
 
@@ -80,16 +81,13 @@
 }
 
 #cutoff-slider-container {
-    width: calc(100% - 1px - 30px - var(--space-2)); /* Explicit width calculation */
+    width: 100%;
     align-self: flex-start;
     transition: opacity 0.2s;
     flex-shrink: 0;
     max-height: 10px; /* Prevent container from expanding beyond blend slider height */
-    /* Apply same alignment constraints as blend slider */
-    margin-top: 0.1rem;
-    margin-bottom: 0.1rem;
-    margin-left: 1px; /* Match grid border */
-    margin-right: calc(var(--space-2)); /* Account for vertical slider */
+    margin: 0;
+    padding: 0;
 }
 
 .filter-cutoff-thumb,
@@ -127,7 +125,9 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    width: 30px; 
+    width: 30px;
+    margin: 0;
+    padding: 0;
 }
 
 #vertical-blend-track {
@@ -175,11 +175,12 @@
 .harmonic-bins-grid {
   display: flex;
   flex-direction: row;
-  flex: 0 0 11rem; /* Fixed height of 5rem */
-  height: 7.8rem; /* Explicit height of 5rem */
+  flex: 0 0 11rem;
+  height: 7.8rem;
   position: relative;
   gap: 0;
   padding: 0;
+  margin: 0;
   border: 1px solid var(--c-border);
   border-radius: 2px;
   overflow: hidden;
@@ -192,6 +193,9 @@
   flex: 1;
   align-items: center;
   min-width: 0;
+  margin: 0;
+  padding: 0;
+  gap: 0;
 }
 
 /* Harmonic labels (original - kept for backward compatibility) */
@@ -230,6 +234,7 @@
   position: relative;
   cursor: pointer;
   margin: 0;
+  padding: 0;
   min-height: 60px;
   display: flex;
   flex-direction: column;
@@ -264,8 +269,8 @@
   color: var(--c-text-muted);
   border: 1px solid var(--c-border);
   border-radius: 3px;
-  margin-top: 0rem;
-  padding: 0.01rem;
+  margin: 0;
+  padding: 0;
   cursor: pointer;
   display: flex;
   align-items: center;

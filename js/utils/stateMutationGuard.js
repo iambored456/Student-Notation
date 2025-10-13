@@ -150,24 +150,25 @@ export function checkForMutations(currentState, actionName = 'unknown') {
     const mutations = detectMutations(stateSnapshot, currentSnapshot);
     
     if (mutations.length > 0) {
-        const criticalMutations = mutations.filter(m => 
+        const criticalMutations = mutations.filter(m =>
             !m.path.includes('paint.paintHistory') && // Allow paint history changes
             !m.path.includes('tempo') && // Allow tempo changes
             !m.path.includes('isPlaying') && // Allow playback state changes
-            !m.path.includes('fullRowData') // Allow fullRowData initialization
+            !m.path.includes('fullRowData') && // Allow fullRowData initialization
+            !m.path.includes('columnWidths') // Allow columnWidths initialization
         );
         
         if (criticalMutations.length > 0) {
-            console.error('🚨 [STATE GUARD] Unauthorized state mutations detected!', {
+            console.error('[STATE GUARD] Unauthorized state mutations detected!', {
                 action: actionName,
                 mutations: criticalMutations,
                 totalMutations: mutations.length,
                 criticalMutations: criticalMutations.length
             });
-            
+
             // Log detailed mutation info
             criticalMutations.forEach(mutation => {
-                console.error('🚨 [STATE MUTATION]', {
+                console.error('[STATE MUTATION]', {
                     path: mutation.path,
                     type: mutation.type,
                     oldValue: mutation.oldValue,
@@ -227,13 +228,13 @@ export function createProtectedStore(store) {
         
         set(target, prop, value) {
             if (prop === 'state') {
-                console.error('🚨 [STATE GUARD] Direct state assignment detected!', {
+                console.error('[STATE GUARD] Direct state assignment detected!', {
                     property: prop,
                     value: value,
                     stack: new Error().stack
                 });
             }
-            
+
             target[prop] = value;
             return true;
         }
@@ -261,13 +262,13 @@ function createProtectedState(state, path) {
         },
         
         set(target, prop, value) {
-            console.error('🚨 [STATE GUARD] Direct state mutation detected!', {
+            console.error('[STATE GUARD] Direct state mutation detected!', {
                 path: `${path}.${prop}`,
                 oldValue: target[prop],
                 newValue: value,
                 stack: new Error().stack
             });
-            
+
             // Allow the mutation in dev mode, but log it
             target[prop] = value;
             return true;

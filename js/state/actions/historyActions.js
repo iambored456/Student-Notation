@@ -26,7 +26,8 @@ export const historyActions = {
             tonicSignGroups: JSON.parse(JSON.stringify(this.state.tonicSignGroups)),
             stampPlacements: JSON.parse(JSON.stringify(this.state.stampPlacements)),
             tripletPlacements: JSON.parse(JSON.stringify(this.state.tripletPlacements || [])),
-            timbres: timbresForHistory // Already cloned safely
+            timbres: timbresForHistory, // Already cloned safely
+            annotations: this.state.annotations ? JSON.parse(JSON.stringify(this.state.annotations)) : []
         };
         this.state.history.push(newSnapshot);
         this.state.historyIndex++;
@@ -42,11 +43,15 @@ export const historyActions = {
             this.state.stampPlacements = JSON.parse(JSON.stringify(snapshot.stampPlacements || []));
             this.state.tripletPlacements = JSON.parse(JSON.stringify(snapshot.tripletPlacements || []));
             this.state.timbres = restoreTimbres(snapshot.timbres); // Use safe restore function
+            this.state.annotations = snapshot.annotations ? JSON.parse(JSON.stringify(snapshot.annotations)) : [];
             this.emit('notesChanged');
             this.emit('stampPlacementsChanged');
             this.emit('tripletPlacementsChanged');
             this.emit('rhythmStructureChanged');
-            this.emit('timbreChanged', this.state.selectedNote.color); 
+            if (this.state.selectedNote?.color) {
+                this.emit('timbreChanged', this.state.selectedNote.color);
+            }
+            this.emit('annotationsChanged');
             this.emit('historyChanged');
         }
     },
@@ -60,11 +65,15 @@ export const historyActions = {
             this.state.stampPlacements = JSON.parse(JSON.stringify(snapshot.stampPlacements || []));
             this.state.tripletPlacements = JSON.parse(JSON.stringify(snapshot.tripletPlacements || []));
             this.state.timbres = restoreTimbres(snapshot.timbres); // Use safe restore function
+            this.state.annotations = snapshot.annotations ? JSON.parse(JSON.stringify(snapshot.annotations)) : [];
             this.emit('notesChanged');
             this.emit('stampPlacementsChanged');
             this.emit('tripletPlacementsChanged');
             this.emit('rhythmStructureChanged');
-            this.emit('timbreChanged', this.state.selectedNote.color);
+            if (this.state.selectedNote?.color) {
+                this.emit('timbreChanged', this.state.selectedNote.color);
+            }
+            this.emit('annotationsChanged');
             this.emit('historyChanged');
         }
     },

@@ -39,7 +39,7 @@
     white-space: nowrap;
 }
 .tonic-sign-button:hover {
-    background-color: var(--c-border);
+    background-color: var(--c-surface-muted);
 }
 .mode-label {
     font-size: var(--font-size-sm);
@@ -63,28 +63,28 @@
 /* --- Dropdown Hover State Fixes --- */
 /* Fix dropdown hover states to use gray instead of blue */
 .dropdown-menu .tonic-sign-button:hover {
-    background-color: var(--c-border) !important;
+    background-color: var(--c-surface-muted) !important;
     color: var(--c-text) !important;
 }
 .dropdown-menu .tonic-sign-button.selected:hover {
-    background-color: var(--c-border) !important;
+    background-color: var(--c-surface-muted) !important;
     color: var(--c-text) !important;
 }
 #degree-dropdown-menu .toolkit-button:hover {
-    background-color: var(--c-border) !important;
+    background-color: var(--c-surface-muted) !important;
     color: var(--c-text) !important;
 }
 #degree-dropdown-menu .toolkit-button:not(.active):hover {
-    background-color: var(--c-border) !important;
+    background-color: var(--c-surface-muted) !important;
     color: var(--c-text) !important;
 }
 
 .tonic-dropdown-toggle:hover {
-    background-color: var(--c-border) !important;
+    background-color: var(--c-surface-muted) !important;
     color: var(--c-text) !important;
 }
 .degree-dropdown-toggle:hover {
-    background-color: var(--c-border) !important;
+    background-color: var(--c-surface-muted) !important;
     color: var(--c-text) !important;
 }
 

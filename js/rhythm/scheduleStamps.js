@@ -12,9 +12,10 @@ const SLOT_OFFSETS = ["0", "16n", "8n", {"8n": 1, "16n": 1}];
 /**
  * Gets the stamp scheduling data for a cell
  * @param {number} stampId - The ID of the stamp to schedule
- * @returns {Array} Array of scheduling events {offset, duration}
+ * @param {Object} placement - Optional placement object with shapeOffsets for per-shape pitches
+ * @returns {Array} Array of scheduling events {offset, duration, type, slot, shapeKey, rowOffset}
  */
-export function getStampScheduleEvents(stampId) {
+export function getStampScheduleEvents(stampId, placement = null) {
   const stamp = getStampById(stampId);
   if (!stamp) {
     logger.warn('StampScheduler', `Unknown stamp ID: ${stampId}`, { stampId }, 'stamps');
@@ -23,26 +24,36 @@ export function getStampScheduleEvents(stampId) {
 
   const events = [];
 
-  // Add ovals (8th notes)
+  // Add ovals (8th notes) with per-shape pitch offsets
   stamp.ovals.forEach(start => {
+    const shapeKey = `oval_${start}`;
+    const rowOffset = placement?.shapeOffsets?.[shapeKey] || 0;
+
     events.push({
       offset: SLOT_OFFSETS[start],
       duration: "8n",
       type: 'oval',
-      slot: start
+      slot: start,
+      shapeKey,
+      rowOffset  // Pitch offset from base row
     });
-    console.log(`[STAMP DEBUG] Stamp ${stampId} oval at slot ${start} with offset "${SLOT_OFFSETS[start]}"`);
+    console.log(`[STAMP DEBUG] Stamp ${stampId} oval at slot ${start} with offset "${SLOT_OFFSETS[start]}", rowOffset: ${rowOffset}`);
   });
 
-  // Add diamonds (16th notes)
+  // Add diamonds (16th notes) with per-shape pitch offsets
   stamp.diamonds.forEach(slot => {
+    const shapeKey = `diamond_${slot}`;
+    const rowOffset = placement?.shapeOffsets?.[shapeKey] || 0;
+
     events.push({
-      offset: SLOT_OFFSETS[slot], 
+      offset: SLOT_OFFSETS[slot],
       duration: "16n",
       type: 'diamond',
-      slot: slot
+      slot: slot,
+      shapeKey,
+      rowOffset  // Pitch offset from base row
     });
-    console.log(`[STAMP DEBUG] Stamp ${stampId} diamond at slot ${slot} with offset "${SLOT_OFFSETS[slot]}"`);
+    console.log(`[STAMP DEBUG] Stamp ${stampId} diamond at slot ${slot} with offset "${SLOT_OFFSETS[slot]}", rowOffset: ${rowOffset}`);
   });
 
   console.log(`[STAMP DEBUG] Total events for stamp ${stampId}:`, events.length, events);

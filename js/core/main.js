@@ -52,6 +52,11 @@ import PaintCanvas from '../components/PitchPaint/paintCanvas.js';
 import PaintPlayheadRenderer from '../components/PitchPaint/paintPlayheadRenderer.js';
 import PaintControls from '../components/PitchPaint/paintControls.js';
 import PaintPlaybackService from '../services/paintPlaybackService.js';
+import rhythmPlaybackService from '../services/rhythmPlaybackService.js';
+
+// Draw Components
+import drawToolsController from '../components/Draw/drawToolsController.js';
+import annotationService from '../services/annotationService.js';
 
 // Drum Components
 import DrumPlayheadRenderer from '../components/Canvas/DrumGrid/drumPlayheadRenderer.js';
@@ -252,34 +257,41 @@ document.addEventListener("DOMContentLoaded", async () => {
     // Phase 2a: Initializing LayoutService
     const contexts = LayoutService.init();
     markComponentReady('layoutService');
-    
+
     // Phase 2b: Initializing CanvasContextService
     CanvasContextService.setContexts(contexts);
     markComponentReady('canvasContextService');
-    
+
     // Phase 2c: Initializing SynthEngine
     SynthEngine.init();
     markComponentReady('synthEngine');
-    
+
+    // Phase 2c-1: Initializing RhythmPlaybackService
+    // Don't await - this may need user interaction for audio context
+    rhythmPlaybackService.initialize().catch(err => {
+        console.warn('[INIT] RhythmPlaybackService initialization deferred (needs user interaction):', err);
+    });
+    markComponentReady('rhythmPlaybackService');
+
     // Phase 2d: Initializing TransportService
     TransportService.init();
     markComponentReady('transportService');
-    
+
     // Phase 2e: Initializing input handlers
     initSpacebarHandler();
     initKeyboardHandler();
-    
+
     // Wait for core services before initializing scroll sync
     await waitForComponent('layoutService');
     await waitForComponent('canvasContextService');
     // Phase 2f: Initializing scroll synchronization
     scrollSyncService.init();
     markComponentReady('scrollSync');
-    
+
     // ✅ Check for unauthorized state mutations after core services
     checkForMutations(store.state, 'core-services-initialization');
-    
-    // Wait for scroll sync before UI components  
+
+    // Wait for scroll sync before UI components
     await waitForComponent('scrollSync');
     // Phase 3: Initializing UI components
     Toolbar.init();
@@ -293,7 +305,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     TripletsToolbar.init();
     
     markComponentReady('uiComponents');
-    
+
     // Wait for UI components before audio components
     await waitForComponent('uiComponents');
     // Phase 4: Initializing audio components
@@ -302,7 +314,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     initFilterControls();
     
     markComponentReady('audioComponents');
-    
+
     // ✅ Check for unauthorized state mutations after audio components
     checkForMutations(store.state, 'audio-components-initialization');
     
@@ -354,6 +366,14 @@ document.addEventListener("DOMContentLoaded", async () => {
     MeterController.initialize();
     logger.initSuccess('Paint components');
 
+    // Initialize Draw Tools
+    logger.initStart('Draw Tools');
+    annotationService.initialize();
+    drawToolsController.initialize();
+    window.drawToolsController = drawToolsController;
+    window.annotationService = annotationService;
+    logger.initSuccess('Draw Tools');
+
     // Initialize Drum components
     logger.initStart('Drum components');
     DrumPlayheadRenderer.initialize();
@@ -369,13 +389,12 @@ document.addEventListener("DOMContentLoaded", async () => {
     logger.section('SETTING UP STATE SUBSCRIPTIONS');
     
     const renderAll = () => {
-        // renderAll() called - checking component readiness
         if (!componentReadiness.uiComponents) {
-            // UI components not ready, skipping render
             return;
         }
         GridManager.renderPitchGrid();
         GridManager.renderDrumGrid();
+        annotationService.resize();
     };
 
     store.on('notesChanged', () => {
@@ -390,7 +409,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     store.on('modulationMarkersChanged', () => {
         logger.event('Main', 'modulationMarkersChanged event received, recalculating layout', null, 'state');
         if (!componentReadiness.layoutService) {
-            console.warn('⚠️ [EVENTS] LayoutService not ready, skipping layout recalculation');
+            logger.warn('Main', 'LayoutService not ready, skipping layout recalculation');
             return;
         }
         LayoutService.recalculateLayout();
@@ -428,13 +447,20 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
 
     logger.section('PERFORMING INITIAL RENDER');
-    
+
     store.setSelectedTool('note');
     store.setSelectedNote('circle', '#4a90e2');
-    
+
+    // Perform initial render explicitly to ensure canvas is drawn even on page refresh
+    // This is necessary because LayoutService.init() uses requestAnimationFrame which may
+    // fire before event listeners are set up, causing the initial layoutConfigChanged
+    // event to be missed.
+    renderAll();
+    PitchGridController.renderMacrobeatTools();
+
     markComponentReady('initialized');
     // Initialization sequence completed successfully
-    
+
     logger.section('INITIALIZATION COMPLETE');
     
     // Initialize modulation testing (keep for advanced debugging)
@@ -447,8 +473,9 @@ document.addEventListener("DOMContentLoaded", async () => {
     }, 1000);
     
     } catch (error) {
-        console.error('❌ [INIT] Initialization failed:', error);
-        console.error('❌ [INIT] Component readiness at failure:', componentReadiness);
+        console.error('[INIT] ❌ INITIALIZATION FAILED:', error);
+        console.error('[INIT] Error stack:', error.stack);
+        console.error('[INIT] Component readiness at failure:', componentReadiness);
         logger.error('Main.js', 'Initialization failed', error);
         
         // Show user-friendly error message
@@ -459,7 +486,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             z-index: 10000; font-family: monospace; max-width: 80vw;
         `;
         errorDiv.innerHTML = `
-            <h3>🚫 Initialization Error</h3>
+            <h3>Initialization Error</h3>
             <p>The application failed to initialize properly.</p>
             <details>
                 <summary>Technical Details</summary>

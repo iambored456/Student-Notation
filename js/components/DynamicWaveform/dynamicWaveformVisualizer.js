@@ -32,7 +32,7 @@ class DynamicWaveformVisualizer {
     initialize(canvas, ctx) {
         this.canvas = canvas;
         this.ctx = ctx;
-        this.currentColor = store.state.selectedNote.color;
+        this.currentColor = store.state.selectedNote?.color || '#4a90e2';
         
         this.setupEventListeners();
         
@@ -97,17 +97,25 @@ class DynamicWaveformVisualizer {
 
     startSingleNoteVisualization(color) {
         if (this.isPlaybackActive) return;
-        
+
         this.isPlaybackActive = true;
         this.setupSingleAnalyser(color);
         this.updateContainerState(true);
         this.animateLiveWaveforms();
-        
+
         logger.debug('DynamicWaveformVisualizer', `Started single note visualization for ${color}`, null, 'waveform');
     }
 
     stopLiveVisualization() {
         this.isPlaybackActive = false;
+
+        // Clean up analyzers
+        this.liveAnalysers.forEach((analyser, color) => {
+            if (window.synthEngine) {
+                window.synthEngine.removeWaveformAnalyzer(color);
+            }
+        });
+
         this.liveAnalysers.clear();
         this.liveWaveforms.clear();
         
@@ -225,7 +233,7 @@ class DynamicWaveformVisualizer {
 
     drawLiveWaveforms(width, centerY, baseAmplitude) {
         const colors = Array.from(this.liveWaveforms.keys());
-        
+
         if (colors.length === 1) {
             // Single color - draw normal waveform
             const color = colors[0];
@@ -241,24 +249,18 @@ class DynamicWaveformVisualizer {
     }
 
     drawSingleLiveWaveform(waveform, color, width, centerY, baseAmplitude) {
+        // Use live audio data for dynamic waveform visualization
+        if (!waveform || waveform.length === 0) {
+            return;
+        }
+
         // Apply tremolo modulation to amplitude for dynamic waveforms
         let amplitude = baseAmplitude;
         let tremoloMultiplier = 1.0;
-        
+
         if (window.animationEffectsManager && color) {
             tremoloMultiplier = window.animationEffectsManager.getTremoloAmplitudeMultiplier(color);
             amplitude = amplitude * tremoloMultiplier;
-            
-            // Debug logging for tremolo (reduced frequency)
-            if (tremoloMultiplier !== 1.0 && Math.random() < 0.02) {
-                console.log(`[DYNAMIC WAVEFORM] Tremolo ${color}: mult=${tremoloMultiplier.toFixed(3)}`);
-            }
-        }
-
-        // Use live audio data for dynamic waveform visualization
-        if (!waveform || waveform.length === 0) {
-            // Fallback - no waveform data available
-            return;
         }
 
         // Apply normalization to keep peak at 1.0

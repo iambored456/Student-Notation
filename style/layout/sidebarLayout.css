@@ -8,13 +8,13 @@
   left: 0;
   width: 250px;
   height: 100%;
-  background-color: rgba(248, 249, 250, 0.95);
-  border-right: 1px solid var(--c-border);
+  background-color: var(--c-surface-overlay);
+  border-right: 1px solid var(--c-border-strong);
   box-shadow: var(--box-shadow-md);
-  padding: var(--space-4);
+  padding: var(--space-3);
   display: flex;
   flex-direction: column;
-  gap: var(--space-4);
+  gap: var(--space-3);
   z-index: 2000;
   transform: translateX(-100%);
   transition: transform 0.3s ease-in-out;
@@ -28,7 +28,7 @@ body.sidebar-open #sidebar {
 .sidebar-container {
   border: 1px solid var(--c-border);
   border-radius: var(--border-radius-md);
-  padding: var(--space-3);
+  padding: var(--space-2);
   background-color: var(--c-surface);
 }
 
@@ -44,7 +44,7 @@ body.sidebar-open #sidebar {
   align-items: center;
   gap: var(--space-2);
   width: 100%;
-  padding: var(--space-2) var(--space-3);
+  padding: var(--space-2);
   text-align: left;
   margin-bottom: var(--space-2);
 }
@@ -170,6 +170,112 @@ input[type="range"][orient="vertical"] {
 
 .paint-control-select:hover {
   border-color: var(--c-text-muted);
+}
+
+/* --- Sidebar Visualization Controls --- */
+.sidebar-viz-controls {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.sidebar-control-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.sidebar-control-group label {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--c-text-muted);
+  margin-bottom: var(--space-1);
+}
+
+.sidebar-range-input {
+  width: 100%;
+  height: 6px;
+  background: var(--c-gridline);
+  border-radius: 3px;
+  appearance: none;
+  outline: none;
+  transition: background 0.2s ease;
+}
+
+.sidebar-range-input::-webkit-slider-thumb {
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  background: var(--c-accent);
+  border-radius: 50%;
+  cursor: pointer;
+  border: 2px solid var(--c-surface);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  transition: all 0.2s ease;
+}
+
+.sidebar-range-input::-webkit-slider-thumb:hover {
+  transform: scale(1.1);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+}
+
+.sidebar-range-input::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  background: var(--c-accent);
+  border-radius: 50%;
+  cursor: pointer;
+  border: 2px solid var(--c-surface);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  transition: all 0.2s ease;
+}
+
+.sidebar-range-input::-moz-range-thumb:hover {
+  transform: scale(1.1);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+}
+
+.sidebar-value-display {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--c-accent);
+  text-align: center;
+  min-height: 1.2em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sidebar-toggle-button {
+  width: 100%;
+  padding: var(--space-2) var(--space-3);
+  background-color: var(--c-surface);
+  color: var(--c-text);
+  border: 1px solid var(--c-border);
+  border-radius: var(--border-radius-sm);
+  font-family: var(--main-font);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: center;
+}
+
+.sidebar-toggle-button:hover {
+  background-color: var(--c-border);
+  border-color: var(--c-text-muted);
+}
+
+.sidebar-toggle-button:focus {
+  outline: none;
+  border-color: var(--c-accent);
+  box-shadow: 0 0 0 2px rgba(var(--c-accent-rgb), 0.2);
+}
+
+.sidebar-toggle-button.extended {
+  background-color: var(--c-accent) !important;
+  color: var(--c-surface) !important;
+  border-color: var(--c-accent) !important;
 }
 
 /* Microphone device selector styling */

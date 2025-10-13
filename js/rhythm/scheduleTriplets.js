@@ -17,9 +17,10 @@ function getCellStartSeconds(cellIndex) {
 /**
  * Gets the triplet scheduling data for a triplet group
  * @param {number} tripletStampId - The ID of the triplet stamp to schedule
- * @returns {Array} Array of scheduling events {offset, duration, slot}
+ * @param {Object} placement - Optional placement object with shapeOffsets for per-shape pitches
+ * @returns {Array} Array of scheduling events {offset, duration, slot, shapeKey, rowOffset}
  */
-export function getTripletScheduleEvents(tripletStampId) {
+export function getTripletScheduleEvents(tripletStampId, placement = null) {
   const stamp = getTripletStampById(tripletStampId);
   if (!stamp) {
     logger.warn('TripletScheduler', `Unknown triplet stamp ID: ${tripletStampId}`, { tripletStampId }, 'triplets');
@@ -32,6 +33,9 @@ export function getTripletScheduleEvents(tripletStampId) {
 
   // Create events for each active slot in the triplet
   stamp.hits.forEach(slot => {
+    const shapeKey = `triplet_${slot}`;
+    const rowOffset = placement?.shapeOffsets?.[shapeKey] || 0;
+
     // Calculate proper offset for each slot using simple multiplication
     let offset;
     if (slot === 0) {
@@ -47,14 +51,16 @@ export function getTripletScheduleEvents(tripletStampId) {
       const stepSeconds = Tone.Time(stepStr).toSeconds();
       offset = Tone.Time(stepSeconds * slot).toNotation();
     }
-    
+
     events.push({
       offset: offset,
       duration: stepDuration,
       type: stamp.span === "eighth" ? 'triplet-eighth' : 'triplet-quarter',
-      slot: slot
+      slot: slot,
+      shapeKey,
+      rowOffset  // Pitch offset from base row
     });
-    logger.debug('TripletScheduler', `Triplet stamp ${tripletStampId} ${stamp.span} at slot ${slot} with offset "${offset}"`, 'triplets');
+    logger.debug('TripletScheduler', `Triplet stamp ${tripletStampId} ${stamp.span} at slot ${slot} with offset "${offset}", rowOffset: ${rowOffset}`, 'triplets');
   });
 
   logger.debug('TripletScheduler', `Total events for triplet stamp ${tripletStampId}:`, events.length, 'triplets');

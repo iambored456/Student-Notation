@@ -25,7 +25,7 @@
   position: relative;
 }
 .rhythm-ui-button {
-  background-color: rgba(255, 255, 255, 0.5);
+  background-color: var(--c-surface-overlay);
   color: var(--c-text);
   border: 1px solid var(--c-border);
   border-radius: 50%;
@@ -44,7 +44,7 @@
   border-color: var(--c-text); 
 }
 .time-signature-label {
-  background: rgba(255, 255, 255, 0.5);
+  background: var(--c-surface-overlay);
   border-radius: 12px;
   font-weight: bold;
   font-size: 1.1em;

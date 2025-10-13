@@ -179,7 +179,7 @@ export const tripletActions = {
      */
     getTripletPlaybackData() {
         if (!this.state.tripletPlacements) return [];
-        
+
         return this.state.tripletPlacements.map(placement => {
             const rowData = this.state.fullRowData[placement.row];
             return {
@@ -189,8 +189,49 @@ export const tripletActions = {
                 pitch: rowData?.toneNote,
                 color: placement.color,
                 span: placement.span,
-                placement
+                placement  // Include full placement object with shapeOffsets
             };
         }).filter(data => data.pitch); // Only include triplets with valid pitches
+    },
+
+    /**
+     * Updates the pitch offset for an individual shape within a triplet group
+     * @param {string} placementId - The triplet placement ID
+     * @param {string} shapeKey - The shape identifier (e.g., "triplet_0", "triplet_1", "triplet_2")
+     * @param {number} rowOffset - The pitch offset in rows (can be negative)
+     */
+    updateTripletShapeOffset(placementId, shapeKey, rowOffset) {
+        const placement = this.state.tripletPlacements.find(p => p.id === placementId);
+        if (!placement) {
+            console.warn('[TRIPLET SHAPE OFFSET] Placement not found:', placementId);
+            return;
+        }
+
+        if (!placement.shapeOffsets) {
+            placement.shapeOffsets = {};
+        }
+
+        console.log('[TRIPLET SHAPE OFFSET] Updating shape offset:', {
+            placementId,
+            shapeKey,
+            oldOffset: placement.shapeOffsets[shapeKey] || 0,
+            newOffset: rowOffset,
+            baseRow: placement.row,
+            targetRow: placement.row + rowOffset
+        });
+
+        placement.shapeOffsets[shapeKey] = rowOffset;
+        this.emit('tripletPlacementsChanged');
+    },
+
+    /**
+     * Gets the effective row for a specific shape within a triplet group
+     * @param {Object} placement - The triplet placement object
+     * @param {string} shapeKey - The shape identifier
+     * @returns {number} The effective row index
+     */
+    getTripletShapeRow(placement, shapeKey) {
+        const rowOffset = (placement.shapeOffsets?.[shapeKey]) || 0;
+        return placement.row + rowOffset;
     }
 };

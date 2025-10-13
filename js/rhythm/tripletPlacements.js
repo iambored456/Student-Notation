@@ -158,7 +158,8 @@ export function getTripletPlaybackData() {
     stampId: placement.stampId,
     row: placement.row,
     color: placement.color,
-    span: placement.span
+    span: placement.span,
+    placement  // Include full placement object with shapeOffsets
   }));
 }
 

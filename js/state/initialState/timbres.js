@@ -51,6 +51,7 @@ export function getInitialTimbresState() {
             coeffs,
             phases,
             activePresetName: 'sine',
+            gain: 1.0, // Default preset gain
             filter: createDefaultFilterState(),
             vibrato: createDefaultVibratoState(),
             tremelo: createDefaultTremoloState(), // Note: keeping 'tremelo' spelling for consistency with UI

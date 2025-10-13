@@ -40,28 +40,32 @@ class TremoloWaveformEffect extends BaseAnimationEffect {
      */
     updateAnimationParameters(color, effectParams) {
         const { speed, span } = effectParams;
-        
+
         if (speed === 0 || span === 0) {
             // Disable tremolo for this color
             this.animations.delete(color);
             logger.debug('TremoloWaveformEffect', `Disabled tremolo animation for ${color}`, null, 'animation');
         } else {
+            // Get existing animation to preserve phase (prevent restart jitter)
+            const existingAnimation = this.animations.get(color);
+
             // Create/update tremolo animation
             const frequencyHz = (speed / 100) * 16; // Convert 0-100% to 0-16 Hz
             const amplitudeSpan = span / 100; // Convert 0-100% to 0-1 span
-            
+
             const animationData = {
                 frequency: frequencyHz,
                 span: amplitudeSpan,
-                phase: 0, // Start at 0 degrees
+                phase: existingAnimation?.phase || 0, // Preserve existing phase to avoid restart jitter
                 lastUpdate: (window.Tone?.now ? window.Tone.now() * 1000 : performance.now()) // Use Tone.js audio clock for sync
             };
-            
+
             this.animations.set(color, animationData);
-            
+
             logger.debug('TremoloWaveformEffect', `Updated tremolo animation for ${color}`, {
                 frequency: frequencyHz,
-                span: amplitudeSpan
+                span: amplitudeSpan,
+                preservedPhase: !!existingAnimation
             }, 'animation');
         }
     }
@@ -82,7 +86,10 @@ class TremoloWaveformEffect extends BaseAnimationEffect {
             
             // Debug phase advancement
             if (Math.abs(animation.phase - oldPhase) < 0.001) {
-                console.log(`⚠️ TREMOLO PHASE NOT ADVANCING ${color}: delta=${deltaTime.toFixed(4)}s, freq=${animation.frequency}Hz`);
+                logger.warn('TremoloWaveformEffect', `Phase not advancing for ${color}`, {
+                    deltaSeconds: Number(deltaTime.toFixed(4)),
+                    frequency: animation.frequency
+                }, 'animation');
             }
             
             // Keep phase in reasonable range to prevent floating point overflow
@@ -94,51 +101,59 @@ class TremoloWaveformEffect extends BaseAnimationEffect {
         // Debug animation loop activity
         if (updatedCount > 0 && Math.random() < 0.05) { // Log occasionally
             const timingSource = window.Tone?.now ? 'Tone.js' : 'performance';
-            console.log(`🔍 TREMOLO timing debug: window.Tone=${!!window.Tone}, window.Tone.now=${!!window.Tone?.now}, toneTime=${toneTime}, currentTime=${currentTime}`);
+            logger.debug('TremoloWaveformEffect', 'Timing sample', {
+                hasTone: !!window.Tone,
+                hasToneNow: !!window.Tone?.now,
+                toneTime,
+                currentTime,
+                timingSource
+            }, 'animation');
         }
     }
 
     /**
      * Get the current amplitude multiplier for a note based on tremolo animation
-     * 
-     * Tremolo oscillates around the center point between original amplitude and zero:
-     * - Original amplitude = 100% reference point
-     * - Zero = 0% reference point  
-     * - Center = (original + 0) / 2
-     * - Span defines the oscillation range around that center
-     * 
-     * Example: Original amplitude = 0.7, Span = 20%
-     * - Center = 0.35
-     * - Range = 0.7 * 0.2 = 0.14
-     * - Oscillation = 0.35 ± 0.07 = 0.28 to 0.42
-     * - Multiplier = oscillation / original = 0.4 to 0.6
+     *
+     * Tremolo oscillates amplitude reduction:
+     * - Span = 0% → No reduction (multiplier stays at 1.0)
+     * - Span = 100% → Full reduction (multiplier oscillates 1.0 to 0.0)
+     * - The oscillation range is proportional to span
+     *
+     * Example: Span = 50%
+     * - Center = 0.75 (midpoint between 1.0 and 0.5)
+     * - Range = 0.25 (half of the reduction)
+     * - Oscillation = 0.75 ± 0.25 = 0.5 to 1.0
      */
     getTremoloAmplitudeMultiplier(color) {
         const animation = this.animations.get(color);
         if (!animation) {
             return 1.0; // No tremolo - use original amplitude
         }
-        
-        
+
+        // Check if animation should be running - if not, return static value
+        if (window.animationEffectsManager && !window.animationEffectsManager.shouldTremoloBeRunning()) {
+            return 1.0; // Animation stopped - return to static value
+        }
+
         // Get original waveform amplitude (the pre-tremolo reference)
         const originalAmplitude = window.staticWaveformVisualizer?.calculatedAmplitude || 1.0;
-        
-        // Calculate tremolo effect using correct amplitude formula
+
+        // Calculate tremolo effect with corrected span direction
         const oscillation = Math.sin(animation.phase); // -1 to +1
         const depthPercentage = animation.span; // 0 to 1 (from 0-100% parameter)
-        
-        // Tremolo amplitude calculation:
-        // maxima = originalAmplitude
-        // minima = originalAmplitude × depthPercentage
-        // centroid = minima + ((maxima - minima) / 2)
+
+        // Tremolo amplitude calculation (fixed direction):
+        // maxima = originalAmplitude (full amplitude)
+        // minima = originalAmplitude × (1 - depthPercentage) (reduced by span)
+        // centroid = (maxima + minima) / 2
         const maxima = originalAmplitude;
-        const minima = originalAmplitude * depthPercentage;
-        const centroid = minima + ((maxima - minima) / 2);
+        const minima = originalAmplitude * (1.0 - depthPercentage); // Fixed: span reduces amplitude
+        const centroid = (maxima + minima) / 2;
         const oscillationRange = (maxima - minima) / 2;
-        
+
         // Current oscillated amplitude: centroid ± oscillationRange
         const currentAmplitude = centroid + (oscillation * oscillationRange);
-        
+
         // Return multiplier relative to original amplitude
         const multiplier = currentAmplitude / originalAmplitude;
         
@@ -150,7 +165,11 @@ class TremoloWaveformEffect extends BaseAnimationEffect {
             // Check if phase advancement is too small relative to expected frequency
             const expectedAdvancement = animation.frequency * (timeSinceUpdate / 1000) * 2 * Math.PI;
             if (expectedAdvancement > 0.1) { // Should have advanced significantly
-                console.log(`⚠️ TREMOLO PHASE STUCK ${color}: phase=${animation.phase.toFixed(3)}, lastUpdate=${timeSinceUpdate.toFixed(1)}ms ago, expected advancement=${expectedAdvancement.toFixed(3)}`);
+                logger.warn('TremoloWaveformEffect', `Phase stagnation detected for ${color}`, {
+                    phase: Number(animation.phase.toFixed(3)),
+                    millisecondsSinceUpdate: Number(timeSinceUpdate.toFixed(1)),
+                    expectedAdvancement: Number(expectedAdvancement.toFixed(3))
+                }, 'animation');
             }
         }
         

@@ -36,10 +36,9 @@ function generateSine() {
 function generateSquare() {
   const spec = createEmptySpectrum();
   for (let n = 1; n <= BINS; n += 2) {
-    const i        = n - 1;     // zero-based bin
-    spec.coeffs[i] = 1 / n;     // 1, 1/3, 1/5, …
-    // Alternate polarity: + for n = 1,5,9…  – for n = 3,7,11…
-    spec.phases[i] = (n % 4 === 1) ? 0 : Math.PI;
+    const i = n - 1;     // zero-based bin
+    spec.coeffs[i] = 1 / n;  // 1, 1/3, 1/5, 1/7, 1/9, 1/11
+    spec.phases[i] = 0; // All phases at 0
   }
   return spec;
 }
@@ -49,9 +48,8 @@ function generateTriangle() {
   for (let n = 1; n <= BINS; n += 2) {
     const i        = n - 1;
     spec.coeffs[i] = 1 / (n * n);  // 1, 1/9, 1/25, …
-    // cos +/– :     +π/2 for bins 0,4,8…   –π/2 (3π/2) for 2,6,10…
-    const evenPair = ((n - 1) >> 1) & 1;    // 0,0,1,1,0,0…
-    spec.phases[i] = evenPair ? (3 * Math.PI) / 2 : Math.PI / 2;
+    // All phases at π/2 (matching original HTML specification)
+    spec.phases[i] = Math.PI / 2;
   }
   return spec;
 }
@@ -118,28 +116,28 @@ export const PRESETS = {
   /* Classic analytic waves (procedurally generated) */
   sine: {
     name: 'sine',
-    gain: 1.0,
+    gain: 1.0,  // Original amplitude: 1.0
     adsr: basicWaveADSR,
     ...generateSine(),
     filter: { ...defaultFilter }
   },
   triangle: {
     name: 'triangle',
-    gain: 0.8,
+    gain: 0.81,  // Original amplitude: 0.81 (from HTML)
     adsr: basicWaveADSR,
     ...generateTriangle(),
     filter: { ...defaultFilter }
   },
   square: {
     name: 'square',
-    gain: 0.4,
+    gain: 4 / Math.PI,  // Original amplitude: 4/π ≈ 1.273
     adsr: basicWaveADSR,
     ...generateSquare(),
     filter: { ...defaultFilter }
   },
   sawtooth: {
     name: 'sawtooth',
-    gain: 0.5,
+    gain: 2 / Math.PI,  // Original amplitude: 2/π ≈ 0.637
     adsr: basicWaveADSR,
     ...generateSawtooth(),
     filter: { ...defaultFilter }
@@ -148,7 +146,7 @@ export const PRESETS = {
   /* NEW Presets from resourceOscillator.js */
   trapezium: {
     name: 'trapezium',
-    gain: 0.5,
+    gain: 4 / Math.PI,  // Original amplitude: 4/π ≈ 1.273 (same as square)
     adsr: basicWaveADSR,
     coeffs: new Float32Array([0.993, 0, 0.314, 0, 0.168, 0, 0.101, 0, 0.06, 0, 0.033, 0]),
     phases: new Float32Array(BINS).fill(0),
@@ -156,7 +154,7 @@ export const PRESETS = {
   },
   impulse: {
     name: 'impulse',
-    gain: 0.18,
+    gain: 0.18,  // Original amplitude: 0.18 (from HTML)
     adsr: { attack: 0.01, decay: 0.3, sustain: 0.0, release: 0.2 },
     coeffs: new Float32Array([1, 0.9, 0.8, 0.7, 0.6, 0.5, 0.4, 0.3, 0.2, 0.1, 0, 0]),
     phases: new Float32Array([0, Math.PI * 1.5, Math.PI, Math.PI / 2, 0, Math.PI * 1.5, Math.PI, Math.PI / 2, 0, Math.PI * 1.5, Math.PI, 0]),
@@ -166,7 +164,7 @@ export const PRESETS = {
   /* Instrument-style presets (fixed spectra) */
   strings: { // Renamed from 'violin'
     name: 'strings',
-    gain: 0.6,
+    gain: 0.49,  // Original amplitude: 0.49 (from HTML violin preset)
     adsr: { attack: 0.03, decay: 0.40, sustain: 0.70, release: 0.50 },
     ...makeSpectrum('strings'), // Use the renamed key
     filter: { ...defaultFilter, cutoff: 28 }

@@ -7,10 +7,59 @@ import { getFilteredCoefficients } from '../components/audio/HarmonicsFilter/har
 
 logger.moduleLoaded('SynthEngine');
 
+// === Gain Staging Constants ===
+const POLYPHONY_CEILING = 8; // Maximum expected simultaneous voices
+const PER_VOICE_BASELINE_GAIN = 1.0 / Math.sqrt(POLYPHONY_CEILING); // ≈0.354 linear amplitude
+const SMOOTHING_TAU_MS = 200; // Smoothing window duration
+const MASTER_GAIN_RAMP_MS = 50; // Ramp time for gain changes to avoid zipper noise
+const GAIN_UPDATE_INTERVAL = "32n"; // Update master gain every 32nd note (~realistic for musical changes)
+
 let synths = {};
-let volumeControl;
-let limiter; // Add a limiter to the master output
+let masterGain; // Master gain with polyphony-aware scaling
+let volumeControl; // User-controllable volume (independent of auto-gain)
+let compressor; // Bus compressor for gentle leveling
+let limiter; // Final safety limiter
+let clippingMeter; // Meter for detecting near-clipping levels
 let waveformAnalyzers = {}; // Store analyzers for waveform visualization
+let activeVoiceCount = 0; // Track total active voices across all synths (instantaneous)
+let smoothedVoiceCount = POLYPHONY_CEILING; // Initialize to ceiling to avoid initial boost
+let gainUpdateLoopId = null; // ID for scheduled gain updates
+
+/**
+ * Update smoothed voice count using exponential moving average
+ * and adjust master gain to maintain stable output level
+ */
+function updateMasterGain() {
+    if (!masterGain) return;
+
+    const now = Tone.now();
+
+    // If no voices are active, don't update (keep current gain to avoid pumping on silence)
+    if (activeVoiceCount === 0) {
+        // Slowly decay smoothed count back toward ceiling for next note
+        const alpha = 0.01; // Very slow decay
+        smoothedVoiceCount = alpha * POLYPHONY_CEILING + (1 - alpha) * smoothedVoiceCount;
+        return;
+    }
+
+    // Calculate exponential moving average (EMA) smoothing factor
+    // α = 1 - e^(-ΔT/τ), where ΔT is update interval (16ms), τ is time constant (200ms)
+    const deltaT = 0.016; // 16ms update interval
+    const alpha = 1 - Math.exp(-deltaT / (SMOOTHING_TAU_MS / 1000));
+
+    // Smooth the voice count (clamp between 1 and ceiling)
+    const currentVoices = Math.max(1, Math.min(POLYPHONY_CEILING, activeVoiceCount));
+    smoothedVoiceCount = alpha * currentVoices + (1 - alpha) * smoothedVoiceCount;
+
+    // Calculate master gain: reduce gain as voice count increases
+    // At 1 voice: gain = baseline × (ceiling/1) = baseline × 8 (boost solo notes)
+    // At ceiling voices: gain = baseline × (ceiling/ceiling) = baseline × 1 (no extra boost)
+    const scaleFactor = Math.sqrt(POLYPHONY_CEILING / smoothedVoiceCount);
+    const targetGain = PER_VOICE_BASELINE_GAIN * scaleFactor;
+
+    // Ramp to new gain to avoid zipper noise and abrupt level changes
+    masterGain.gain.rampTo(targetGain, MASTER_GAIN_RAMP_MS / 1000, now);
+}
 
 // A custom synth voice with a more sophisticated series/parallel filter blend
 class FilteredVoice extends Tone.Synth {
@@ -176,9 +225,6 @@ class FilteredVoice extends Tone.Synth {
                 // Reset gain to 1.0 (no attenuation)
                 this.tremoloGain.gain.cancelScheduledValues(time);
                 this.tremoloGain.gain.value = 1.0;
-                
-                // AMPLITUDE DEBUG: Track tremolo disable
-                console.log(`🎵 [AMPLITUDE] Tremolo DISABLED - Gain reset to 1.0`);
                 return;
             }
             
@@ -202,10 +248,6 @@ class FilteredVoice extends Tone.Synth {
             // Configure the Scale node to map LFO output (-1 to +1) to (minGain to maxGain)
             this.tremoloDepth.min = minGain;
             this.tremoloDepth.max = maxGain;
-            
-            // AMPLITUDE DEBUG: Track tremolo enable with amplitude ranges
-            console.log(`🎵 [AMPLITUDE] Tremolo ENABLED - Speed: ${speedHz.toFixed(2)}Hz, Span: ${(spanAmount*100).toFixed(1)}%, Amplitude range: ${minGain.toFixed(3)} to ${maxGain.toFixed(3)}`);
-            
         }
     }
     
@@ -237,29 +279,62 @@ class FilteredVoice extends Tone.Synth {
 
 const SynthEngine = {
     init() {
-        // Add a limiter to the master output chain
-        limiter = new Tone.Limiter(-1).toDestination(); // Don't let signal pass -1dB
-        // AMPLITUDE FIX: Increase headroom to prevent effects distortion
-        volumeControl = new Tone.Volume(-18).connect(limiter);
-        console.log(`🎵 [AMPLITUDE] Main Volume Init - Set to -18dB for effects headroom (was -15dB)`);
-        
+        // === Build Master Audio Chain ===
+        // Signal flow: synths → masterGain → volumeControl → compressor → limiter → destination
+
+        // 1. Master gain node (polyphony-aware scaling with smoothing)
+        masterGain = new Tone.Gain(PER_VOICE_BASELINE_GAIN);
+
+        // 2. User volume control (independent of automatic gain scaling)
+        volumeControl = new Tone.Volume(0); // Start at 0dB, user can adjust
+
+        // 3. Bus compressor (gentle glue, transparent action)
+        compressor = new Tone.Compressor({
+            threshold: -12,  // Catches peaks above moderate level
+            ratio: 3,        // Musical compression, preserves dynamics
+            attack: 0.01,    // 10ms - fast enough for transients, slow enough for punch
+            release: 0.1,    // 100ms - tracks phrase-level changes
+            knee: 6          // Soft knee for transparent action
+        });
+
+        // 4. True-peak limiter (safety net, should rarely engage)
+        limiter = new Tone.Limiter(-3.0); // -3.0dB ceiling for safe headroom
+
+        // 5. Clipping detection meter
+        clippingMeter = new Tone.Meter();
+
+        // Connect chain: masterGain → volumeControl → compressor → limiter → destination → meter
+        masterGain.connect(volumeControl);
+        volumeControl.connect(compressor);
+        compressor.connect(limiter);
+        limiter.toDestination();
+        limiter.connect(clippingMeter);
+
+        // Start monitoring for clipping every 500ms
+        setInterval(() => {
+            const level = clippingMeter.getValue();
+            if (level > -3.0) {
+                // Approaching limiter threshold - clipping detected
+            }
+        }, 500);
+
+
         for (const color in store.state.timbres) {
             const timbre = store.state.timbres[color];
             // Use filtered coefficients instead of raw store coefficients
             const filteredCoeffs = getFilteredCoefficients(color);
-            
+
             // Dynamic amplitude scaling: use direct sum if ≤ 1.0, normalize if > 1.0
             const totalAmplitude = filteredCoeffs.reduce((sum, coeff) => sum + Math.abs(coeff), 0);
-            const initialGain = totalAmplitude <= 1.0 ? totalAmplitude : 1.0;
-            
-            // AMPLITUDE DEBUG: Track harmonic coefficient normalization
-            console.log(`🎵 [AMPLITUDE] Synth Creation [${color}] - Total amplitude: ${totalAmplitude.toFixed(3)}, Initial gain: ${initialGain.toFixed(3)}, Normalized: ${totalAmplitude > 1.0}`);
-            
+
             // Apply normalization to coefficients if total > 1.0
-            const normalizedCoeffs = totalAmplitude > 1.0 
+            const normalizedCoeffs = totalAmplitude > 1.0
                 ? filteredCoeffs.map(coeff => coeff / totalAmplitude)
                 : filteredCoeffs;
-            
+
+            // Use preset gain from timbre state, fallback to 1.0 if not set
+            const presetGain = timbre.gain || 1.0;
+
             const synth = new Tone.PolySynth({
                 polyphony: 8,
                 voice: FilteredVoice,
@@ -269,10 +344,15 @@ const SynthEngine = {
                     filter: timbre.filter,
                     vibrato: timbre.vibrato,
                     tremelo: timbre.tremelo, // Note: using 'tremelo' spelling for consistency
-                    gain: initialGain
+                    gain: presetGain
                 }
-            }).connect(volumeControl);
-            
+            }).connect(masterGain);
+
+            // Apply synth-level effects (reverb/delay) if audioEffectsManager is available
+            if (window.audioEffectsManager) {
+                window.audioEffectsManager.applySynthEffects(synth, color, masterGain);
+            }
+
             // Hook into voice creation to apply vibrato to new voices
             const originalTriggerAttack = synth.triggerAttack;
             synth.triggerAttack = function(...args) {
@@ -283,8 +363,12 @@ const SynthEngine = {
                     // Try different approaches to access voices in PolySynth
                     const activeVoices = this._activeVoices;
                     
-                    // Use new clean architecture for effects
+                    // NOTE: Re-enabled audioEffectsManager with proper routing
+                    // Effects (reverb/delay) connect to masterGain to preserve gain chain
+                    // Vibrato and tremolo are applied directly via _setVibrato/_setTremolo
+
                     if (window.audioEffectsManager) {
+                        // DISABLED: This reconnects voices and bypasses masterGain
                         if (activeVoices && activeVoices.size > 0) {
                             // Iterate through active voices in the Map
                             activeVoices.forEach((voice, note) => {
@@ -336,9 +420,6 @@ const SynthEngine = {
                 
                 return result;
             };
-            
-            console.log(`[SynthEngine] Voice creation hook installed for ${color}`);;
-            
             // Store current settings on synth for future reference
             synth._currentVibrato = timbre.vibrato;
             synth._currentTremolo = timbre.tremelo; // Note: using 'tremelo' spelling for consistency
@@ -364,7 +445,15 @@ const SynthEngine = {
         });
         
         store.on('volumeChanged', (dB) => this.setVolume(dB));
-        
+
+        // Start scheduled master gain updates for smooth polyphony-aware scaling
+        // Using setInterval for reliability (runs independent of Tone.Transport)
+        const UPDATE_INTERVAL_MS = 16; // ~60 Hz, fast enough for smooth gain changes
+        gainUpdateLoopId = setInterval(() => {
+            updateMasterGain();
+        }, UPDATE_INTERVAL_MS);
+
+
         logger.info('SynthEngine', 'Initialized with multi-timbral support', null, 'audio');
         window.synthEngine = this;
     },
@@ -400,10 +489,7 @@ const SynthEngine = {
         // Dynamic amplitude scaling: use direct sum if ≤ 1.0, normalize if > 1.0
         const totalAmplitude = filteredCoeffs.reduce((sum, coeff) => sum + Math.abs(coeff), 0);
         const dynamicGain = totalAmplitude <= 1.0 ? totalAmplitude : 1.0;
-        
-        // AMPLITUDE DEBUG: Track timbre update amplitude changes
-        console.log(`🎵 [AMPLITUDE] Timbre Update [${color}] - Total amplitude: ${totalAmplitude.toFixed(3)}, Dynamic gain: ${dynamicGain.toFixed(3)}`);
-        
+
         // Apply normalization to coefficients if total > 1.0
         const normalizedCoeffs = totalAmplitude > 1.0 
             ? filteredCoeffs.map(coeff => coeff / totalAmplitude)
@@ -414,12 +500,11 @@ const SynthEngine = {
             envelope: timbre.adsr
         });
 
-        // Integrate with audioEffectsManager for clean architecture
+        // Re-apply synth-level effects (reverb/delay) when timbre changes
         if (window.audioEffectsManager) {
-            // Apply current effects to this synth/color via our clean architecture
-            window.audioEffectsManager.applyEffectsToVoice(synth, color);
+            window.audioEffectsManager.applySynthEffects(synth, color, masterGain);
         }
-        
+
         // Update stored settings on synth for future voices (legacy support)
         synth._currentVibrato = timbre.vibrato;
         synth._currentTremolo = timbre.tremelo; // Note: using 'tremelo' spelling for consistency
@@ -443,11 +528,9 @@ const SynthEngine = {
                 } else {
                 }
                 if (voice._setPresetGain) {
-                    voice._setPresetGain(dynamicGain);
-                    
-                    // Check if the gain was actually set
-                    if (voice.presetGain && voice.presetGain.gain) {
-                    }
+                    // Use preset gain from timbre state, fallback to 1.0 if not set
+                    const presetGain = timbre.gain || 1.0;
+                    voice._setPresetGain(presetGain);
                 } else {
                 }
             });
@@ -467,33 +550,18 @@ const SynthEngine = {
                         voice._setFilter(timbre.filter);
                     }
                     if (voice && voice._setPresetGain) {
-                        voice._setPresetGain(dynamicGain);
+                        // Use preset gain from timbre state, fallback to 1.0 if not set
+                        const presetGain = timbre.gain || 1.0;
+                        voice._setPresetGain(presetGain);
                     }
                 });
-            } else {
-                console.log(`[SynthEngine] No active voices found. Settings will be applied when voices are created during note triggering`);
             }
         }
-        
-        // Also try setting the synth volume directly as a backup
-        const volumeDB = 20 * Math.log10(dynamicGain); // Convert linear to dB
-        synth.volume.value = volumeDB;
-        
-        // AMPLITUDE DEBUG: Track individual synth volume changes
-        console.log(`🎵 [AMPLITUDE] Synth Volume [${color}] - Dynamic gain: ${dynamicGain.toFixed(3)}, Volume dB: ${volumeDB.toFixed(2)}`);
     },
     
     setVolume(dB) {
         if (volumeControl) {
-            console.log(`[SYNTH ENGINE] Setting main volume to ${dB} dB`);
             volumeControl.volume.value = dB;
-            console.log(`[SYNTH ENGINE] Main volume actually set to: ${volumeControl.volume.value} dB`);
-            
-            // AMPLITUDE DEBUG: Track main volume changes with detailed info
-            console.log(`🎵 [AMPLITUDE] Main Volume Control - Set to: ${dB} dB, Actual: ${volumeControl.volume.value} dB, Connected inputs: ${volumeControl.input.numberOfInputs}`);
-            
-            // Log the number of connections to see what's affected
-            console.log(`[SYNTH ENGINE] Main volume node has ${volumeControl.input.numberOfInputs} inputs connected`);
         }
     },
 
@@ -501,8 +569,8 @@ const SynthEngine = {
         // Use global audio initialization to ensure user gesture compliance
         const audioInit = window.initAudio || (() => Tone.start());
         await audioInit();
-        const color = store.state.selectedNote.color;
-        const synth = synths[color];
+        const color = store.state.selectedNote?.color;
+        const synth = color ? synths[color] : null;
         if (synth) {
             synth.triggerAttackRelease(pitch, duration, time);
         }
@@ -511,28 +579,24 @@ const SynthEngine = {
     triggerAttack(pitch, color, time = Tone.now(), isDrum = false) {
         const synth = synths[color];
         if (synth) {
+            // Increment active voice count (scheduled loop will update master gain smoothly)
+            activeVoiceCount++;
+
             if (isDrum && window.getDrumVolume) {
                 // Apply drum volume by temporarily adjusting synth volume
                 const drumVolume = window.getDrumVolume();
                 const originalVolume = synth.volume.value;
                 const drumVolumeDB = originalVolume + 20 * Math.log10(drumVolume);
                 synth.volume.value = drumVolumeDB;
-                
-                // AMPLITUDE DEBUG: Track drum note triggering
-                console.log(`🎵 [AMPLITUDE] Trigger Attack DRUM [${color}] ${pitch} - Original: ${originalVolume.toFixed(2)}dB, Drum vol: ${drumVolume.toFixed(3)}, Final: ${drumVolumeDB.toFixed(2)}dB`);
-                
+
                 synth.triggerAttack(pitch, time);
                 // Reset volume after a short delay to avoid affecting other sounds
                 setTimeout(() => {
                     if (synth && synth.volume) synth.volume.value = originalVolume;
                 }, 100);
             } else {
-                // AMPLITUDE DEBUG: Track normal note triggering
-                console.log(`🎵 [AMPLITUDE] Trigger Attack NOTE [${color}] ${pitch} - Synth volume: ${synth.volume.value.toFixed(2)}dB`);
                 synth.triggerAttack(pitch, time);
             }
-        } else {
-            console.warn(`🎵 [AMPLITUDE] No synth found for color ${color} when triggering ${pitch}`);
         }
     },
     
@@ -540,6 +604,9 @@ const SynthEngine = {
         const synth = synths[color];
         if (synth) {
             synth.triggerRelease(pitch, time);
+
+            // Decrement active voice count (scheduled loop will update master gain smoothly)
+            activeVoiceCount = Math.max(0, activeVoiceCount - 1);
         }
     },
 
@@ -547,6 +614,8 @@ const SynthEngine = {
         for (const color in synths) {
             synths[color].releaseAll();
         }
+        // Reset voice count when all voices are released (scheduled loop will update master gain)
+        activeVoiceCount = 0;
     },
 
     // ===============================================
@@ -649,15 +718,16 @@ const SynthEngine = {
      * @returns {Tone.Volume|null} The main volume control node
      */
     getMainVolumeNode() {
-        console.log(`[SYNTH ENGINE] getMainVolumeNode called, returning:`, volumeControl);
-        if (volumeControl) {
-            console.log(`[SYNTH ENGINE] Main volume node details:`, {
-                volume: volumeControl.volume.value,
-                numberOfInputs: volumeControl.input.numberOfInputs,
-                numberOfOutputs: volumeControl.output.numberOfOutputs
-            });
-        }
         return volumeControl || null;
+    },
+
+    /**
+     * Gets the master gain node for connecting audio effects
+     * Effects should connect to masterGain to preserve the gain staging chain
+     * @returns {Tone.Gain|null} The master gain node
+     */
+    getMasterGainNode() {
+        return masterGain || null;
     }
 };
 

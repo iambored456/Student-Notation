@@ -1,6 +1,10 @@
 // js/components/ADSR/adsrInteractions.js
 import store from '../../../state/index.js';
-import { MAX_ADSR_TIME_SECONDS } from './adsrComponent.js';
+import { BASE_ADSR_TIME_SECONDS } from './adsrComponent.js';
+
+function getCurrentMaxTime() {
+    return BASE_ADSR_TIME_SECONDS * store.state.adsrTimeAxisScale;
+}
 
 /**
  * Derives new attack, decay, and release values from absolute time points
@@ -77,7 +81,7 @@ function initMultiThumbSlider(elements, component) {
         let percent = (x / rect.width) * 100;
         percent = Math.max(0, Math.min(100, percent));
         
-        const timeVal = (percent / 100) * MAX_ADSR_TIME_SECONDS;
+        const timeVal = (percent / 100) * getCurrentMaxTime();
 
         const { attack, decay, release } = store.state.timbres[component.currentColor].adsr;
         const currentTimes = {
@@ -123,7 +127,7 @@ function initNodeDragging(elements, component) {
         xPercent = Math.max(0, Math.min(100, xPercent));
         yPercent = Math.max(0, Math.min(1, yPercent));
 
-        const timeVal = (xPercent / 100) * MAX_ADSR_TIME_SECONDS;
+        const timeVal = (xPercent / 100) * getCurrentMaxTime();
         const currentTimbre = store.state.timbres[component.currentColor];
         let { attack, decay, release, sustain } = currentTimbre.adsr;
         

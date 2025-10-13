@@ -28,23 +28,32 @@ class ReverbAudioEffect {
     /**
      * Update reverb parameters for a specific color
      */
-    updateParameters(effectParams, color) {
+    async updateParameters(effectParams, color) {
         const { decay, roomSize, wet = 10 } = effectParams;
-        
-        console.log(`🔊 [REVERB DEBUG] updateParameters called:`, { color, decay, roomSize, wet });
-        
+
         // Store current settings for this color
         this.currentSettings.set(color, { decay, roomSize, wet });
 
         logger.debug('ReverbAudioEffect', `Updated parameters for ${color}`, { decay, roomSize, wet }, 'audio');
-        
-        // Update existing reverb instance if it exists
-        const reverbInstance = this.reverbInstances.get(color);
+
+        // Update existing reverb instance if it exists, or create new one if needed
+        let reverbInstance = this.reverbInstances.get(color);
+
         if (reverbInstance) {
-            console.log(`🔊 [REVERB DEBUG] Updating existing reverb instance for ${color}`);
+            // Update existing instance
             this.updateReverbInstance(reverbInstance, decay, roomSize, wet);
-        } else {
-            console.log(`🔊 [REVERB DEBUG] No existing reverb instance for ${color}, will create on next voice`);
+        } else if (decay > 0 || roomSize > 0) {
+            // Create new instance if effect is enabled
+            reverbInstance = await this.createReverbInstance(decay, roomSize, wet);
+            if (reverbInstance) {
+                this.reverbInstances.set(color, reverbInstance);
+                logger.debug('ReverbAudioEffect', `Created new reverb instance for ${color}`, { decay, roomSize, wet }, 'audio');
+
+                // Trigger synth effects re-application
+                if (window.synthEngine) {
+                    window.synthEngine.updateSynthForColor(color);
+                }
+            }
         }
     }
 
@@ -52,20 +61,15 @@ class ReverbAudioEffect {
      * Apply reverb to a specific voice
      */
     async applyToVoice(voice, color) {
-        console.log(`🔊 [REVERB DEBUG] applyToVoice called:`, { voice: !!voice, color });
-        
         if (!voice) {
-            console.log(`🔊 [REVERB DEBUG] No voice provided, skipping reverb`);
             return;
         }
 
         const settings = this.currentSettings.get(color);
-        console.log(`🔊 [REVERB DEBUG] Current settings for ${color}:`, settings);
-        
+
         // Don't apply effects to existing voices if settings are undefined (not yet configured)
         // or if effect is disabled (both parameters are 0)
         if (!settings || (settings.decay === 0 && settings.roomSize === 0)) {
-            console.log(`🔊 [REVERB DEBUG] No reverb needed or reverb disabled for ${color} - leaving voice in original audio chain`);
             return;
         }
 
@@ -73,12 +77,8 @@ class ReverbAudioEffect {
             // Create reverb instance for this color if not exists
             let reverbInstance = this.reverbInstances.get(color);
             if (!reverbInstance) {
-                console.log(`🔊 [REVERB DEBUG] Creating new reverb instance for ${color}`);
                 reverbInstance = await this.createReverbInstance(settings.decay, settings.roomSize, settings.wet);
                 this.reverbInstances.set(color, reverbInstance);
-                console.log(`🔊 [REVERB DEBUG] Reverb instance created and stored for ${color}`);
-            } else {
-                console.log(`🔊 [REVERB DEBUG] Using existing reverb instance for ${color}`);
             }
 
             // Connect voice directly to reverb (Tone.Reverb handles wet/dry mixing internally)
@@ -86,25 +86,16 @@ class ReverbAudioEffect {
             if (voice && voice.output && (typeof voice.isDisposed !== 'function' || !voice.isDisposed())) {
                 try {
                     voice.connect(reverbInstance); // Direct connection - reverb handles wet/dry internally
-                    console.log(`🔊 [REVERB DEBUG] Voice connected directly to reverb (built-in wet/dry mixing)`);
-                    
-                    // AMPLITUDE DEBUG: Track reverb effect application
-                    console.log(`🎵 [AMPLITUDE] Reverb Applied [${color}] - Decay: ${settings.decay}%, Room: ${settings.roomSize}%, Wet: ${settings.wet}%`);
                 } catch (connectError) {
-                    console.warn(`🔊 [REVERB DEBUG] Connection error for ${color}:`, connectError.message);
                     // Try alternative connection method
                     if (voice.output) {
                         voice.output.connect(reverbInstance);
-                        console.log(`🔊 [REVERB DEBUG] Connected using voice.output instead`);
                     }
                 }
-            } else {
-                console.error(`🔊 [REVERB DEBUG] Invalid voice state - voice:${!!voice}, voice.output:${!!(voice?.output)}, hasIsDisposed:${typeof voice?.isDisposed === 'function'}, disposed:${voice?.isDisposed?.()}`);
             }
-            
+
             logger.debug('ReverbAudioEffect', `Applied reverb to voice for ${color}`, settings, 'audio');
         } catch (error) {
-            console.error(`🔊 [REVERB DEBUG] Error applying reverb to voice for ${color}:`, error);
             logger.warn('ReverbAudioEffect', `Failed to apply reverb to voice for ${color}`, error, 'audio');
         }
     }
@@ -132,10 +123,7 @@ class ReverbAudioEffect {
      * Create a new Tone.Reverb instance with specified parameters
      */
     async createReverbInstance(decay, roomSize, wet = 10) {
-        console.log(`🔊 [REVERB DEBUG] createReverbInstance called:`, { decay, roomSize, wet });
-        
         if (decay === 0 && roomSize === 0) {
-            console.log(`🔊 [REVERB DEBUG] Both decay and roomSize are 0, returning null`);
             return null;
         }
 
@@ -145,28 +133,20 @@ class ReverbAudioEffect {
         const roomSizeMultiplier = 1 + (roomSize / 100) * 1.5; // roomSize adds 0-150% to decay time
         const decayTime = baseDecay * roomSizeMultiplier;
         const wetAmount = wet / 100; // 0-100% → 0-1
-        
-        console.log(`🔊 [REVERB DEBUG] Converted parameters:`, { baseDecay, roomSizeMultiplier, decayTime, wetAmount });
-        
+
         // Use Tone.Reverb's built-in wet/dry mixing for consistent loudness
-        console.log(`🔊 [REVERB DEBUG] Creating Tone.Reverb instance with built-in wet/dry mixing...`);
+        // DO NOT connect here - audioEffectsManager will connect it in the effects chain
         const reverb = new Tone.Reverb({
             decay: decayTime,
             wet: wetAmount  // Use Tone.Reverb's built-in wet control - maintains equal loudness!
-        }).connect(window.synthEngine?.getMainVolumeNode() || Tone.Destination);
-        
-        console.log(`🔊 [REVERB DEBUG] Reverb created with built-in ${(wetAmount * 100).toFixed(1)}% wet mix`);
-        console.log(`🎵 [AMPLITUDE] Using Tone.Reverb built-in wet control - Equal loudness maintained automatically!`);
-        
+        });
+
         // Store wet amount for parameter updates
         reverb._wetAmount = wetAmount;
-        
-        console.log(`🔊 [REVERB DEBUG] Tone.Reverb created, waiting for ready...`);
-        
+
         // Wait for reverb to generate its impulse response
         await reverb.ready;
-        
-        console.log(`🔊 [REVERB DEBUG] Reverb instance ready!`, { decayTime, wetAmount, roomSize });
+
         logger.debug('ReverbAudioEffect', 'Created reverb instance', { decayTime, wetAmount, roomSize }, 'audio');
         return reverb;
     }
@@ -190,9 +170,8 @@ class ReverbAudioEffect {
             // Update crossfade mix amount (this is the key for Mix slider)
             if (reverbInstance._crossFade) {
                 reverbInstance._crossFade.fade.value = wetAmount;
-                console.log(`🔊 [REVERB DEBUG] Updated crossfade mix to ${(wetAmount * 100).toFixed(1)}% wet`);
             }
-            
+
             // Store updated wet amount
             reverbInstance._wetAmount = wetAmount;
             

@@ -4,38 +4,39 @@
 
 /* --- Rhythm Tab Navigation Buttons --- */
 .rhythm-tab-button {
-    padding: var(--space-2) var(--space-1);
-    background-color: transparent; 
-    border: 1px solid transparent;
-    border-bottom-color: var(--c-border); 
+    padding: var(--space-1) var(--space-3);
+    background-color: var(--c-surface-muted);
+    border: 1px solid var(--c-border);
+    border-bottom: none;
     color: var(--c-text-muted);
-    font-family: var(--main-font); 
-    font-size: 0.75rem; 
+    font-family: var(--main-font);
+    font-size: 0.8rem;
     font-weight: 500;
-    cursor: pointer; 
+    cursor: pointer;
     text-align: center;
-    transition: all 0.2s ease; 
+    transition: all 0.2s ease;
     position: relative;
     border-top-left-radius: var(--border-radius-md);
-    border-bottom-left-radius: var(--border-radius-md);
+    border-top-right-radius: var(--border-radius-md);
+}
+
+.rhythm-tab-button + .rhythm-tab-button {
+    margin-left: -1px;
 }
 
 .rhythm-tab-button:hover {
-    background-color: rgba(0, 0, 0, 0.05); 
+    background-color: var(--c-surface);
     color: var(--c-text);
 }
 
 .rhythm-tab-button.active {
-    background-color: var(--c-bg); /* Match content area */
-    color: var(--c-accent);
-    font-weight: 600; 
-    margin-right: -1px; /* Pull over the sidebar's right border */
-    position: relative;
-    z-index: 1; /* Ensure this tab is on top */
+    background-color: var(--c-surface);
+    color: var(--c-text);
+    font-weight: 600;
     border-color: var(--c-border);
-    border-right-color: transparent;
-    border-top-right-radius: 0;
-    border-bottom-right-radius: 0;
+    border-bottom-color: var(--c-surface);
+    z-index: 1;
+    margin-bottom: -1px;
 }
 
 /* --- Stamp Buttons --- */
@@ -46,7 +47,7 @@
     min-width: 0rem;
     min-height: 0rem;
     background-color: var(--c-surface);
-    border: 2px solid var(--c-border);
+    border: 1px solid var(--c-border);
     border-radius: var(--border-radius-md);
     cursor: pointer;
     transition: all 0.2s ease;
@@ -96,7 +97,7 @@
     min-width: 0rem;
     min-height: 0rem;
     background-color: var(--c-surface);
-    border: 2px solid var(--c-border);
+    border: 1px solid var(--c-border);
     border-radius: var(--border-radius-md);
     cursor: pointer;
     transition: all 0.2s ease;
@@ -197,7 +198,7 @@
 .modulation-controls .toolkit-button {
     font-size: 12px;
     padding: var(--space-1) var(--space-2);
-    background-color: var(--c-bg-muted);
+    background-color: var(--c-surface-muted);
     border: 1px solid var(--c-border);
     border-radius: var(--border-radius-sm);
     color: var(--c-text);
@@ -207,7 +208,7 @@
 }
 
 .modulation-controls .toolkit-button:hover {
-    background-color: var(--c-bg-accent);
+    background-color: var(--c-accent-light);
     border-color: var(--c-accent);
     color: var(--c-accent);
 }

@@ -18,8 +18,10 @@ export class StampRenderer {
 
   /**
    * Renders a stamp to a canvas context
+   * @param {Object} placement - Optional placement object with shapeOffsets
+   * @param {Function} getRowY - Optional function to calculate Y position from row index
    */
-  renderToCanvas(ctx, stamp, x, y, width, height, color = '#000') {
+  renderToCanvas(ctx, stamp, x, y, width, height, color = '#000', placement = null, getRowY = null) {
     const scale = Math.min(width / 100, height / 100) * 0.8;
     const diamondW = this.options.diamondW * scale;
     const diamondH = this.options.diamondH * scale;
@@ -36,18 +38,59 @@ export class StampRenderer {
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
 
-    // Draw ovals (8th notes)
+    // Draw ovals (8th notes) with individual offsets if available
     stamp.ovals.forEach(ovalStart => {
       const cx = ovalStart === 0 ? x + 0.25 * width : x + 0.75 * width;
+
+      // Calculate Y position with offset if placement data available
+      let ovalY = centerY;
+      if (placement && getRowY) {
+        const shapeKey = `oval_${ovalStart}`;
+        const rowOffset = (placement.shapeOffsets?.[shapeKey]) || 0;
+        const shapeRow = placement.row + rowOffset;
+        ovalY = getRowY(shapeRow);
+
+        if (rowOffset !== 0) {
+          console.log('[STAMP RENDER] Drawing oval with offset:', {
+            shapeKey,
+            rowOffset,
+            baseRow: placement.row,
+            shapeRow,
+            y: ovalY
+          });
+        }
+      }
+
       ctx.beginPath();
-      ctx.ellipse(cx, centerY, ovalRx, ovalRy, 0, 0, Math.PI * 2);
+      ctx.ellipse(cx, ovalY, ovalRx, ovalRy, 0, 0, Math.PI * 2);
       ctx.stroke();
     });
 
-    // Draw diamonds (16th notes)
+    // Draw diamonds (16th notes) with individual offsets if available
     stamp.diamonds.forEach(slot => {
       const cx = slotCenters[slot];
-      const path = diamondPath(cx, centerY, diamondW, diamondH);
+
+      // Calculate Y position with offset if placement data available
+      let diamondY = centerY;
+      if (placement && getRowY) {
+        const shapeKey = `diamond_${slot}`;
+        const rowOffset = (placement.shapeOffsets?.[shapeKey]) || 0;
+        const shapeRow = placement.row + rowOffset;
+        diamondY = getRowY(shapeRow);
+
+        if (rowOffset !== 0) {
+          console.log('[STAMP RENDER] Drawing diamond with offset:', {
+            slot,
+            shapeKey,
+            rowOffset,
+            baseRow: placement.row,
+            shapeRow,
+            y: diamondY
+          });
+        }
+      }
+
+      const path = diamondPath(cx, diamondY, diamondW, diamondH);
       const pathObj = new Path2D(path);
       ctx.stroke(pathObj);
     });

@@ -3,30 +3,37 @@
    ========================================================================= */
 :root {
   /* Color Palette */
-  --c-bg: #f8f9fa;            /* A very light, soft gray for the main background */
-  --c-surface: #ffffff;       /* Pure white for canvases and primary panels */
-  --c-text: #212529;          /* A dark, soft black for text. Easier on the eyes than #000 */
-  --c-text-muted: #6c757d;    /* A muted gray for secondary text/labels */
-  --c-border: #dee2e6;        /* A light, soft border color with 3.1:1 contrast */
-  --c-gridline: #e9ecef;      /* An even lighter gray for grid lines with 2.4:1 contrast */
-  --c-danger: #dc3545;        /* Red for destructive actions like 'clear' or 'eraser' */
-  --c-warning: #ffc107;      /* A warm yellow for selection highlights */
+  --c-bg: #f5f6f8;              /* Subtle app background to separate from viewport */
+  --c-surface: #ffffff;         /* Primary card / panel surface */
+  --c-surface-muted: #f1f3f5;   /* Secondary cards, tab rails */
+  --c-surface-overlay: rgba(255, 255, 255, 0.88); /* Frosted overlays (macrobeat/time labels) */
+  --c-text: #212529;            /* Soft black for primary copy */
+  --c-text-muted: #6c757d;      /* Secondary copy */
+  --c-border: #dfe3e6;          /* Light neutral border */
+  --c-border-strong: #c3c9d0;   /* For delineating key separators */
+  --c-gridline: #e9ecef;        /* Gridlines / very light dividers */
+  --c-danger: #dc3545;          /* Destructive actions */
+  --c-warning: #ffc107;         /* Highlight accents (loop, macrobeat) */
+  --c-accent: #4a90e2;          /* Primary accent (toolbar actives) */
+  --c-accent-hover: #3b78bb;    /* Accent hover / pressed */
+  --c-accent-light: #63a9fd;    /* Subtle accent highlight */
+  --c-accent-rgb: 74, 144, 226; /* Accent in rgb for box-shadows */
 
   /* Spacing & Sizing */
-  --space-1: 0.25em;
-  --space-2: 0.5em;
-  --space-3: 0.75em;
-  --space-4: 1em;
-  --space-5: 1.25em;
+  --space-1: 0.125rem;
+  --space-2: 0.25rem;
+  --space-3: 0.375rem;
+  --space-4: 0.5rem;
+  --space-5: 0.75rem;
   --app-padding: var(--space-2);
-  --note-size: 1.6em;
+  --note-size: 1rem;
   --note-margin: var(--space-1);
 
   /* Borders & Shadows */
-  --border-radius-sm: 4px;
-  --border-radius-md: 8px;
-  --box-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
-  --box-shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
+  --border-radius-sm: 3px;
+  --border-radius-md: 6px;
+  --box-shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.06);
+  --box-shadow-md: 0 3px 6px rgba(15, 23, 42, 0.12);
 
   /* Font */
   --main-font: 'Atkinson Hyperlegible', Arial, sans-serif;

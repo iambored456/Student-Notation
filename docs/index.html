@@ -11,13 +11,13 @@
 <link rel="manifest" href="/Student-Notation/site.webmanifest" />
 <meta name="theme-color" content="#ffffff" />
 <style id="print-style-rules"></style>
-  <script type="module" crossorigin src="/Student-Notation/assets/index-D0xVnGUV.js"></script>
-  <link rel="stylesheet" crossorigin href="/Student-Notation/assets/index-DYmhs1xJ.css">
+  <script type="module" crossorigin src="/Student-Notation/assets/index-txHJvQqW.js"></script>
+  <link rel="stylesheet" crossorigin href="/Student-Notation/assets/index-Co2kIC4Y.css">
 </head>
 <body>
 <!-- Sidebar for File/App Actions -->
 <div id="sidebar-overlay"></div>
-<div id="sidebar">
+<aside id="sidebar" role="complementary" aria-label="Application settings and controls">
 <div class="sidebar-container">
 <div class="app-title">Student Notation</div>
 </div>
@@ -28,8 +28,8 @@
 <button class="sidebar-button" id="reset-canvas-button" title="New File"><img src="/Student-Notation/assets/sidebar/New Page.svg" alt="New Page"><span class="sidebar-button-text">New Page</span></button>
 </div>
 <div class="sidebar-container">
-<button class="sidebar-button" id="hide-harmony-toggle" title="Toggle Harmony Analysis Grid"><img src="/Student-Notation/assets/sidebar/Save As.svg" alt="Toggle Harmony"><span class="sidebar-button-text">Hide Analysis</span></button>
-<button class="sidebar-button" id="hide-drumgrid-toggle" title="Toggle Drum Grid"><img src="/Student-Notation/assets/sidebar/Save As.svg" alt="Toggle Drum Grid"><span class="sidebar-button-text">Hide Drum Grid</span></button>
+<button class="sidebar-button" id="hide-harmony-toggle" title="Toggle Harmony Analysis Grid"><img src="/Student-Notation/assets/sidebar/Hide Analysis.svg" alt="Toggle Harmony"><span class="sidebar-button-text">Hide Analysis</span></button>
+<button class="sidebar-button" id="hide-drumgrid-toggle" title="Toggle Drum Grid"><img src="/Student-Notation/assets/sidebar/Hide Drums.svg" alt="Toggle Drum Grid"><span class="sidebar-button-text">Hide Drum Grid</span></button>
 </div>
 <div class="sidebar-container">
 <h4 class="sidebar-section-title">Paint Controls</h4>
@@ -76,48 +76,66 @@
 </div>
 </div>
 </div>
+<div class="sidebar-container">
+<h4 class="sidebar-section-title">Visualization Controls</h4>
+<div class="sidebar-viz-controls">
+<div class="sidebar-control-group">
+<label for="adsr-time-scale">ADSR Time Scale</label>
+<input type="range" id="adsr-time-scale" min="0.1" max="5.0" step="0.1" value="1.0" class="sidebar-range-input">
+<span id="adsr-time-scale-value" class="sidebar-value-display">1.0x</span>
 </div>
-<div id="app-container">
+<div class="sidebar-control-group">
+<label for="adsr-width-scale">ADSR Base Width</label>
+<input type="range" id="adsr-width-scale" min="50" max="200" step="10" value="100" class="sidebar-range-input">
+<span id="adsr-width-scale-value" class="sidebar-value-display">100%</span>
+</div>
+<div class="sidebar-control-group">
+<label for="waveform-extend-toggle">Waveform View</label>
+<button id="waveform-extend-toggle" class="sidebar-toggle-button" title="Toggle between 360° and 480° waveform view">360°</button>
+</div>
+</div>
+</div>
+</aside>
+<main id="app-container" role="main">
   <!-- =======================================================
         Toolbar Container
        ======================================================= -->
-  <div id="toolbar">
+  <nav id="toolbar" role="navigation" aria-label="Music notation tools">
     <!-- Container 1: Tools & Actions -->
     <div id="toolbar-container-1">
-        <div class="tool-subcontainer">
-            <button class="toolkit-icon-button" id="settings-button" title="Settings"><img src="/Student-Notation/assets/icons/Settings.svg" alt="Settings"></button>
-            <button class="toolkit-icon-button" id="grid-zoom-in" title="Zoom In"><img src="/Student-Notation/assets/icons/zoomIn.svg" alt="Zoom In"></button>
-            <button class="toolkit-icon-button" id="redo-button" title="Redo"><img src="/Student-Notation/assets/icons/Redo.svg" alt="Redo"></button>
-            <button class="toolkit-icon-button" id="clear-button" title="Clear"><img src="/Student-Notation/assets/icons/Clear.svg" alt="Clear"></button>
-        </div>
-        <div class="tool-subcontainer">
-            <div id="volume-control-wrapper">
-                <button class="toolkit-icon-button" id="volume-icon-button" aria-label="Volume" title="Volume"><img src="/Student-Notation/assets/icons/Volume.svg" alt="Volume"></button>
-                <div id="volume-popup">
-                    <input type="range" id="vertical-volume-slider" orient="vertical" min="0" max="100" value="75" step="1" />
+        <div class="toolbar-main-row">
+            <div class="tool-subcontainer">
+                <button class="toolkit-icon-button" id="settings-button" title="Settings"><img src="/Student-Notation/assets/icons/Settings.svg" alt="Settings"></button>
+                <button class="toolkit-icon-button" id="grid-zoom-in" title="Zoom In"><img src="/Student-Notation/assets/icons/zoomIn.svg" alt="Zoom In"></button>
+                <button class="toolkit-icon-button" id="redo-button" title="Redo"><img src="/Student-Notation/assets/icons/Redo.svg" alt="Redo"></button>
+                <button class="toolkit-icon-button" id="clear-button" title="Clear"><img src="/Student-Notation/assets/icons/Clear.svg" alt="Clear"></button>
+            </div>
+            <div class="tool-subcontainer">
+                <div id="volume-control-wrapper">
+                    <button class="toolkit-icon-button" id="volume-icon-button" aria-label="Volume" title="Volume"><img src="/Student-Notation/assets/icons/Volume.svg" alt="Volume"></button>
+                    <div id="volume-popup">
+                        <input type="range" id="vertical-volume-slider" orient="vertical" min="0" max="100" value="100" step="1" />
+                    </div>
+                </div>
+                <button class="toolkit-icon-button" id="grid-zoom-out" title="Zoom Out"><img src="/Student-Notation/assets/icons/zoomOut.svg" alt="Zoom Out"></button>
+                <button class="toolkit-icon-button" id="undo-button" title="Undo"><img src="/Student-Notation/assets/icons/Undo.svg" alt="Undo"></button>
+                <button class="toolkit-icon-button eraser-button" id="eraser-tool-button" title="Eraser">
+                    <img src="/Student-Notation/assets/icons/Eraser.svg" alt="Eraser" class="eraser-icon">
+                </button>
+            </div>
+            <div class="tool-subcontainer" id="note-bank-container">
+                <div class="note-bank-column">
+                    <div class="note-pair" data-color="#4a90e2"><div class="note circle-note" data-type="circle"></div><div class="note oval-note" data-type="oval"></div></div>
+                    <div class="note-pair" data-color="#2d2d2d"><div class="note circle-note" data-type="circle"></div><div class="note oval-note" data-type="oval"></div></div>
+                    <div class="note-pair" data-color="#d66573"><div class="note circle-note" data-type="circle"></div><div class="note oval-note" data-type="oval"></div></div>
+                    <div class="note-pair" data-color="#68a03f"><div class="note circle-note" data-type="circle"></div><div class="note oval-note" data-type="oval"></div></div>
                 </div>
             </div>
-            <button class="toolkit-icon-button" id="grid-zoom-out" title="Zoom Out"><img src="/Student-Notation/assets/icons/zoomOut.svg" alt="Zoom Out"></button>
-            <button class="toolkit-icon-button" id="undo-button" title="Undo"><img src="/Student-Notation/assets/icons/Undo.svg" alt="Undo"></button>
-            <button class="toolkit-icon-button eraser-button" id="eraser-tool-button" title="Eraser">
-                <img src="/Student-Notation/assets/icons/Eraser.svg" alt="Eraser" class="eraser-icon">
-            </button>
         </div>
-        <div class="tool-subcontainer" id="note-bank-container">
-            <div class="note-bank-column">
-                <div class="note-pair" data-color="#4a90e2"><div class="note circle-note" data-type="circle"></div><div class="note oval-note" data-type="oval"></div></div>
-                <div class="note-pair" data-color="#2d2d2d"><div class="note circle-note" data-type="circle"></div><div class="note oval-note" data-type="oval"></div></div>
-                <div class="note-pair" data-color="#d66573"><div class="note circle-note" data-type="circle"></div><div class="note oval-note" data-type="oval"></div></div>
-                <div class="note-pair" data-color="#68a03f"><div class="note circle-note" data-type="circle"></div><div class="note oval-note" data-type="oval"></div></div>
-            </div>
-
-        </div>
-        <div class="tool-subcontainer">
-            <div class="playback-row">
-                <button class="toolkit-icon-button" id="loop-button" title="Loop"><img src="/Student-Notation/assets/icons/Loop.svg" alt="Loop"></button>
-                <button class="toolkit-icon-button" id="stop-button" title="Stop"><img src="/Student-Notation/assets/icons/Stop.svg" alt="Stop"></button>
-                <button class="toolkit-icon-button" id="play-button" title="Play"><img src="/Student-Notation/assets/icons/Play.svg" alt="Play"></button>
-            </div>
+        <div class="toolbar-playback-row">
+            <button class="toolkit-icon-button" id="play-button" title="Play"><img src="/Student-Notation/assets/icons/Play.svg" alt="Play"></button>
+            <button class="toolkit-icon-button" id="stop-button" title="Stop"><img src="/Student-Notation/assets/icons/Stop.svg" alt="Stop"></button>
+            <button class="toolkit-icon-button" id="loop-button" title="Loop"><img src="/Student-Notation/assets/icons/Loop.svg" alt="Loop"></button>
         </div>
     </div>
     <!-- Container 2: Tabbed Interface -->
@@ -131,13 +149,31 @@
             <!-- Timbre Tab -->
             <div class="tab-panel" id="timbre-panel">
                 <div class="control-section preset-effects-container">
-                    <div class="preset-effects-tabs">
-                        <button class="preset-tab-button active" data-preset-tab="presets">Presets</button>
-                        <button class="preset-tab-button" data-preset-tab="reverb-delay">Reverb<br>Delay</button>
-                        <button class="preset-tab-button" data-preset-tab="vibrato-tremolo">Vibrato<br>Tremolo</button>
-                    </div>
-                    <div class="preset-effects-content">
-                        <div class="preset-tab-panel active" id="presets-panel">
+                    <div class="preset-effects-split">
+                        <!-- Always-visible Waveform Section (Left) -->
+                        <div class="waveform-section">
+                            <button class="preset-tab-button waveform-tab-button active" disabled>Waveform</button>
+                            <div class="waveform-content-box">
+                                <div class="waveform-display-wrapper">
+                                    <canvas id="static-waveform-canvas"></canvas>
+                                    <div class="waveform-speed-controls">
+                                        <button class="waveform-speed-btn" data-speed="50">50%</button>
+                                        <button class="waveform-speed-btn" data-speed="10">10%</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Tabbed Controls Section (Right) -->
+                        <div class="preset-effects-controls">
+                            <div class="preset-effects-tabs">
+                                <button class="preset-tab-button active" data-preset-tab="presets">Presets</button>
+                                <button class="preset-tab-button" data-preset-tab="reverb-delay">Reverb<br>Delay</button>
+                                <button class="preset-tab-button" data-preset-tab="vibrato-tremolo">Vibrato<br>Tremolo</button>
+                            </div>
+                            <div class="preset-effects-content">
+                                <!-- Presets Tab -->
+                                <div class="preset-tab-panel active" id="presets-panel">
                             <div class="preset-content-box">
                                 <div class="preset-grid" id="preset-buttons">
                                     <div class="preset-column">
@@ -214,20 +250,11 @@
                         <div class="effect-controls-container" id="effect-controls" style="display: none;">
                             <!-- Effect controls will be dynamically inserted here for data synchronization -->
                         </div>
-                    </div>
-                </div>
-                
-                <div class="control-section static-waveform-container">
-                    <div class="waveform-display-wrapper">
-                        <canvas id="static-waveform-canvas"></canvas>
-                        <div class="waveform-speed-controls">
-                            <button class="waveform-speed-btn" data-speed="50">50%</button>
-                            <button class="waveform-speed-btn" data-speed="10">10%</button>
-                            <button class="waveform-speed-btn" data-speed="5">5%</button>
+                            </div>
                         </div>
                     </div>
                 </div>
-                
+
                 <div class="control-section harmonic-bins-container">
                     <div class="blend-slider-container"><div id="blend-slider-container"><div class="filter-blend-thumb" id="thumb-b" tabindex="0">B</div></div></div>
                     <div class="filter-main-panel">
@@ -244,59 +271,62 @@
 
             <!-- Pitch Tab -->
             <div class="tab-panel" id="pitch-panel">
-                <div class="control-section tonic-sign-container">
-                    <h4>Tonal Center</h4>
-                    <div class="tonic-tools-wrapper">
-                       <div id="tonic-dropdown-container" class="dropdown-container">
-                           <button id="tonic-dropdown-button" class="toolkit-button tonic-dropdown-toggle"><span id="tonic-dropdown-label"><img src="/Student-Notation/assets/tabicons/tonicShape_1.svg" alt="Tonic 1" class="tonic-shape-icon"> Major</span> <span class="dropdown-arrow">▼</span></button>
-                           <div id="tonic-dropdown-menu" class="dropdown-menu">
-                               <button class="tonic-sign-button" data-tonic="1"><img src="/Student-Notation/assets/tabicons/tonicShape_1.svg" alt="Tonic 1" class="tonic-shape-icon"><span class="mode-label">Major</span></button>
-                               <button class="tonic-sign-button" data-tonic="2"><img src="/Student-Notation/assets/tabicons/tonicShape_2.svg" alt="Tonic 2" class="tonic-shape-icon"><span class="mode-label">Dorian</span></button>
-                               <button class="tonic-sign-button" data-tonic="3"><img src="/Student-Notation/assets/tabicons/tonicShape_3.svg" alt="Tonic 3" class="tonic-shape-icon"><span class="mode-label">Phrygian</span></button>
-                               <button class="tonic-sign-button" data-tonic="4"><img src="/Student-Notation/assets/tabicons/tonicShape_4.svg" alt="Tonic 4" class="tonic-shape-icon"><span class="mode-label">Lydian</span></button>
-                               <button class="tonic-sign-button" data-tonic="5"><img src="/Student-Notation/assets/tabicons/tonicShape_5.svg" alt="Tonic 5" class="tonic-shape-icon"><span class="mode-label">Mixolydian</span></button>
-                               <button class="tonic-sign-button" data-tonic="6"><img src="/Student-Notation/assets/tabicons/tonicShape_6.svg" alt="Tonic 6" class="tonic-shape-icon"><span class="mode-label">Minor</span></button>
-                               <button class="tonic-sign-button" data-tonic="7"><img src="/Student-Notation/assets/tabicons/tonicShape_7.svg" alt="Tonic 7" class="tonic-shape-icon"><span class="mode-label">Locrian</span></button>
-                           </div>
-                       </div>
-                       <div class="degree-toggle-container">
-                           <div class="degree-visibility-toggle-container">
-                               <span class="toggle-text">Degrees</span>
-                               <div class="two-state-toggle" id="degree-visibility-toggle">
-                                   <div class="two-state-slider"></div>
-                                   <div class="toggle-labels">
-                                       <span class="toggle-label">Show</span>
-                                       <span class="toggle-label">Hide</span>
-                                   </div>
-                               </div>
-                           </div>
-                           <div class="degree-mode-toggle-container">
-                               <div class="two-state-toggle" id="degree-mode-toggle">
-                                   <div class="two-state-slider"></div>
-                                   <div class="toggle-labels">
-                                       <span class="toggle-label">Scale</span>
-                                       <span class="toggle-label">Mode</span>
-                                   </div>
-                               </div>
-                           </div>
-                       </div>
-                       <div class="focus-colours-container">
-                           <label class="checkbox-label">
-                               <input type="checkbox" id="focus-colours-toggle" class="toolkit-checkbox">
-                               <span class="checkbox-text">Focus Colours</span>
-                           </label>
-                       </div>
-                    </div>
-                </div>
                 <div class="control-section chord-shape-container">
                     <div class="chord-shape-tabs">
-                        <button class="chord-tab-button active" data-chord-tab="intervals">Intervals</button>
+                        <button class="chord-tab-button active" data-chord-tab="tonic">Tonic</button>
+                        <button class="chord-tab-button" data-chord-tab="intervals">Intervals</button>
                         <button class="chord-tab-button" data-chord-tab="basic-chords">Bas. Chords</button>
                         <button class="chord-tab-button" data-chord-tab="advanced-chords">Adv. Chords</button>
                         <button class="chord-tab-button" data-chord-tab="mic-paint">Mic Paint</button>
+                        <button class="chord-tab-button" data-chord-tab="draw">Draw</button>
                     </div>
                     <div class="chord-shape-content">
-                        <div class="chord-tab-panel active" id="intervals-panel">
+                        <div class="chord-tab-panel active" id="tonic-panel">
+                            <div class="tonic-content-box">
+                                <div class="tonic-tools-wrapper">
+                                   <div id="tonic-dropdown-container" class="dropdown-container">
+                                       <button id="tonic-dropdown-button" class="toolkit-button tonic-dropdown-toggle"><span id="tonic-dropdown-label"><img src="/Student-Notation/assets/tabicons/tonicShape_1.svg" alt="Tonic 1" class="tonic-shape-icon"> Major</span> <span class="dropdown-arrow">▼</span></button>
+                                       <div id="tonic-dropdown-menu" class="dropdown-menu">
+                                           <button class="tonic-sign-button" data-tonic="1"><img src="/Student-Notation/assets/tabicons/tonicShape_1.svg" alt="Tonic 1" class="tonic-shape-icon"><span class="mode-label">Major</span></button>
+                                           <button class="tonic-sign-button" data-tonic="2"><img src="/Student-Notation/assets/tabicons/tonicShape_2.svg" alt="Tonic 2" class="tonic-shape-icon"><span class="mode-label">Dorian</span></button>
+                                           <button class="tonic-sign-button" data-tonic="3"><img src="/Student-Notation/assets/tabicons/tonicShape_3.svg" alt="Tonic 3" class="tonic-shape-icon"><span class="mode-label">Phrygian</span></button>
+                                           <button class="tonic-sign-button" data-tonic="4"><img src="/Student-Notation/assets/tabicons/tonicShape_4.svg" alt="Tonic 4" class="tonic-shape-icon"><span class="mode-label">Lydian</span></button>
+                                           <button class="tonic-sign-button" data-tonic="5"><img src="/Student-Notation/assets/tabicons/tonicShape_5.svg" alt="Tonic 5" class="tonic-shape-icon"><span class="mode-label">Mixolydian</span></button>
+                                           <button class="tonic-sign-button" data-tonic="6"><img src="/Student-Notation/assets/tabicons/tonicShape_6.svg" alt="Tonic 6" class="tonic-shape-icon"><span class="mode-label">Minor</span></button>
+                                           <button class="tonic-sign-button" data-tonic="7"><img src="/Student-Notation/assets/tabicons/tonicShape_7.svg" alt="Tonic 7" class="tonic-shape-icon"><span class="mode-label">Locrian</span></button>
+                                       </div>
+                                   </div>
+                                   <div class="degree-toggle-container">
+                                       <div class="degree-visibility-toggle-container">
+                                           <span class="toggle-text">Degrees</span>
+                                           <div class="two-state-toggle" id="degree-visibility-toggle">
+                                               <div class="two-state-slider"></div>
+                                               <div class="toggle-labels">
+                                                   <span class="toggle-label">Show</span>
+                                                   <span class="toggle-label">Hide</span>
+                                               </div>
+                                           </div>
+                                       </div>
+                                       <div class="degree-mode-toggle-container">
+                                           <div class="two-state-toggle" id="degree-mode-toggle">
+                                               <div class="two-state-slider"></div>
+                                               <div class="toggle-labels">
+                                                   <span class="toggle-label">Scale</span>
+                                                   <span class="toggle-label">Mode</span>
+                                               </div>
+                                           </div>
+                                       </div>
+                                   </div>
+                                   <div class="focus-colours-container">
+                                       <label class="checkbox-label">
+                                           <input type="checkbox" id="focus-colours-toggle" class="toolkit-checkbox">
+                                           <span class="checkbox-text">Focus Colours</span>
+                                       </label>
+                                   </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="chord-tab-panel" id="intervals-panel">
                             <div class="intervals-content-box">
                                 <div class="intervals-layout">
                                     <div class="inversion-column">
@@ -507,42 +537,85 @@
                                 </div>
                             </div>
                         </div>
+                        <div class="chord-tab-panel" id="draw-panel">
+                            <div class="draw-content-box">
+                                <div class="draw-tools-row">
+                                    <button class="draw-tool-button" data-draw-tool="arrow" title="Arrow Tool">
+                                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <line x1="4" y1="20" x2="20" y2="4"/>
+                                            <polyline points="14,4 20,4 20,10"/>
+                                        </svg>
+                                    </button>
+                                    <button class="draw-tool-button" data-draw-tool="text" title="Text Tool">
+                                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <polyline points="4,7 4,4 20,4 20,7"/>
+                                            <line x1="12" y1="4" x2="12" y2="20"/>
+                                            <line x1="9" y1="20" x2="15" y2="20"/>
+                                        </svg>
+                                    </button>
+                                    <button class="draw-tool-button" data-draw-tool="marker" title="Marker Tool">
+                                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <!-- Pointed marker tip -->
+                                            <path d="M18 2L6 14l-2 6 6-2L22 6l-4-4z"/>
+                                            <line x1="10" y1="18" x2="6" y2="14"/>
+                                        </svg>
+                                    </button>
+                                    <button class="draw-tool-button" data-draw-tool="highlighter" title="Highlighter Tool">
+                                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" opacity="0.5">
+                                            <!-- Flat highlighter head -->
+                                            <rect x="3" y="3" width="4" height="18" rx="1"/>
+                                            <path d="M7 5h12l-2 14H7z"/>
+                                        </svg>
+                                    </button>
+                                    <button class="draw-tool-button" data-draw-tool="lasso" title="Lasso Select">
+                                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-dasharray="3 2">
+                                            <ellipse cx="12" cy="12" rx="8" ry="6" transform="rotate(-15 12 12)"/>
+                                        </svg>
+                                    </button>
+                                </div>
+                                <div class="draw-tool-options" id="draw-tool-options">
+                                    <!-- Tool options will be dynamically inserted here -->
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
 
             <!-- Rhythm Tab -->
             <div class="tab-panel" id="rhythm-panel">
-                <div class="control-section">
-                    <h4>Tempo</h4>
-                    <div class="tempo-container">
-                        <div class="tempo-column">
-                            <div class="tempo-input-group">
-                                <img src="/Student-Notation/assets/tabicons/eigthNote.svg" alt="Eighth Note Tempo" class="tempo-label-icon">
-                                <div id="eighth-note-tempo"></div>
-                            </div>
-                            <div class="tempo-input-group">
-                                <img src="/Student-Notation/assets/tabicons/quarterNote.svg" alt="Quarter Note Tempo" class="tempo-label-icon">
-                                <div id="quarter-note-tempo"></div>
-                            </div>
-                            <div class="tempo-input-group">
-                                <img src="/Student-Notation/assets/tabicons/dottedQuarterNote.svg" alt="Dotted Quarter Note Tempo" class="tempo-label-icon">
-                                <div id="dotted-quarter-tempo"></div>
-                            </div>
-                        </div>
-                        <div class="tempo-column-2">
-                            <input type="range" id="tempo-slider" min="30" max="240" value="90">
-                        </div>
-                    </div>
-                </div>
                 <div class="control-section rhythm-stamps-container">
                     <div class="rhythm-tab-sidebar">
-                        <button class="rhythm-tab-button active" data-rhythm-tab="stamps">Sixteenths</button>
+                        <button class="rhythm-tab-button active" data-rhythm-tab="tempo">Tempo</button>
+                        <button class="rhythm-tab-button" data-rhythm-tab="stamps">Sixteenths</button>
                         <button class="rhythm-tab-button" data-rhythm-tab="triplets">Triplets</button>
                         <button class="rhythm-tab-button" data-rhythm-tab="controls">Controls</button>
                     </div>
                     <div class="rhythm-tab-content">
-                        <div class="rhythm-tab-panel active" id="stamps-panel">
+                        <div class="rhythm-tab-panel active" id="tempo-panel">
+                            <div class="tempo-content-box">
+                                <div class="tempo-container">
+                                    <div class="tempo-column">
+                                        <div class="tempo-input-group">
+                                            <img src="/Student-Notation/assets/tabicons/eigthNote.svg" alt="Eighth Note Tempo" class="tempo-label-icon">
+                                            <div id="eighth-note-tempo"></div>
+                                        </div>
+                                        <div class="tempo-input-group">
+                                            <img src="/Student-Notation/assets/tabicons/quarterNote.svg" alt="Quarter Note Tempo" class="tempo-label-icon">
+                                            <div id="quarter-note-tempo"></div>
+                                        </div>
+                                        <div class="tempo-input-group">
+                                            <img src="/Student-Notation/assets/tabicons/dottedQuarterNote.svg" alt="Dotted Quarter Note Tempo" class="tempo-label-icon">
+                                            <div id="dotted-quarter-tempo"></div>
+                                        </div>
+                                    </div>
+                                    <div class="tempo-column-2">
+                                        <input type="range" id="tempo-slider" min="30" max="240" value="90">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="rhythm-tab-panel" id="stamps-panel">
                             <div id="stamps-toolbar-container" class="stamps-toolbar-container">
                                 <!-- Stamps toolbar will be rendered here by JavaScript -->
                             </div>
@@ -581,9 +654,9 @@
             </div>
         </div>
     </div>
-  </div>
+  </nav>
 
-  <div id="canvas-container">
+  <div id="canvas-container" role="region" aria-label="Musical notation canvas">
     <div id="canvas-content">
         <div id="pitch-grid-wrapper">
             <div id="canvas-macrobeat-tools">
@@ -619,7 +692,7 @@
   </div>
   <div id="chord-candidate-overlay" class="hidden"></div>
 
-</div>
+</main>
 
 <!-- Notification Overlay -->
 <div id="notification-overlay">
@@ -704,7 +777,6 @@
             
             // Initialize tempo slider if rhythm tab is restored on page load
             if (savedTab === 'rhythm') {
-                console.log('🎵 [TabRestore] Rhythm tab restored on load, scheduling tempo slider initialization...');
                 // Use a longer delay since page is still loading
                 setTimeout(() => {
                     if (window.initTempoSliderIfNeeded) {
@@ -747,6 +819,16 @@
             button.classList.add('active');
             document.querySelectorAll('.preset-tab-panel').forEach(panel => panel.classList.remove('active'));
             document.getElementById(`${tabId}-panel`).classList.add('active');
+
+            // Hide harmonic bins when effects tabs are selected
+            const harmonicBinsContainer = document.querySelector('.harmonic-bins-container');
+            if (harmonicBinsContainer) {
+                if (tabId === 'reverb-delay' || tabId === 'vibrato-tremolo') {
+                    harmonicBinsContainer.style.display = 'none';
+                } else {
+                    harmonicBinsContainer.style.display = 'flex';
+                }
+            }
         });
     });
     

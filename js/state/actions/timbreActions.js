@@ -64,12 +64,12 @@ export const timbreActions = {
 
     applyPreset(color, preset) {
         if (!preset || !this.state.timbres[color]) return;
-        
+
         logger.debug('TimbreActions', `applyPreset called for ${color}`, null, 'state');
         logger.debug('TimbreActions', 'Preset name', { name: preset.name }, 'state');
         logger.debug('TimbreActions', 'Preset coeffs', { coeffs: preset.coeffs }, 'state');
         logger.debug('TimbreActions', 'Old timbre coeffs', { coeffs: this.state.timbres[color].coeffs }, 'state');
-        
+
         this.state.timbres[color].adsr = preset.adsr;
         this.state.timbres[color].coeffs = new Float32Array(preset.coeffs);
         if (preset.phases) {
@@ -78,14 +78,16 @@ export const timbreActions = {
             this.state.timbres[color].phases = new Float32Array(this.state.timbres[color].coeffs.length).fill(0);
         }
         this.state.timbres[color].activePresetName = preset.name;
+        // Store preset gain for amplitude compensation
+        this.state.timbres[color].gain = preset.gain || 1.0;
         if (preset.filter) {
             this.state.timbres[color].filter = JSON.parse(JSON.stringify(preset.filter));
         } else {
             this.state.timbres[color].filter = createDefaultFilterState();
         }
-        
+
         logger.debug('TimbreActions', 'Applied preset - new coeffs', { coeffs: this.state.timbres[color].coeffs }, 'state');
-        
+
         this.emit('timbreChanged', color);
         this.recordState();
     },

@@ -26,9 +26,7 @@ let currentColor;
 let phases = new Float32Array(BINS).fill(0);
 const binColumns = [];
 const phaseControls = [];
-// Snap-to-zero feature removed
-// const SNAP_TO_ZERO_RATIO = 0.1;
-const COEFF_ZERO_THRESHOLD = 0.1;
+// Snap-to-zero feature removed - no threshold needed
 let isAuditioning = false;
 let harmonicBinsGrid = null;
 const zeroUpdateTimeouts = new Array(BINS).fill(null);
@@ -39,25 +37,37 @@ function getFilterAmplitudeAt(norm_pos, filterSettings) {
     const { blend, cutoff, resonance } = filterSettings;
     // Map cutoff (1-31) to normalized position across the 12 bins
     const norm_cutoff = (cutoff - 1) / (31 - 1);
-    const steepness = 4;
-    const lp_ratio = norm_cutoff > 0 ? norm_pos / norm_cutoff : norm_pos * 1e6;
-    const hp_ratio = norm_pos > 0 ? norm_cutoff / norm_pos : norm_cutoff * 1e6;
-    const lp = 1 / (1 + Math.pow(lp_ratio, 2 * steepness));
-    const hp = 1 / (1 + Math.pow(hp_ratio, 2 * steepness));
-    const bp = lp * hp * 4;
+
+    // Use linear distance instead of ratio for consistent curve width
+    const steepness = 8; // Increased to maintain filter sharpness with linear model
+    const lp_distance = norm_pos - norm_cutoff;  // Distance right of cutoff
+    const hp_distance = norm_cutoff - norm_pos;  // Distance left of cutoff
+
+    // Apply steepness to distances (now maintains consistent curve shape)
+    const lp = 1 / (1 + Math.pow(Math.max(0, lp_distance * steepness), 2));
+    const hp = 1 / (1 + Math.pow(Math.max(0, hp_distance * steepness), 2));
+    // Bandpass: product of LP and HP, normalized to 0-1 range
+    const bp = lp * hp; // Remove *4 multiplier - keep in 0-1 range
+
     let shape;
     if (blend <= 1.0) {
+        // Blend from highpass (0) to bandpass (1)
         shape = hp * (1 - blend) + bp * blend;
     } else {
+        // Blend from bandpass (1) to lowpass (2)
         shape = bp * (2 - blend) + lp * (blend - 1);
     }
+
+    // Shape is now guaranteed to be in 0-1 range (no clamping needed)
+
     const res_q = 1.0 - (resonance || 0) / 105;
     const peak_width = Math.max(0.01, 0.2 * res_q * res_q);
     const peak = Math.exp(-Math.pow((norm_pos - norm_cutoff) / peak_width, 2));
     const res_gain = ((resonance || 0) / 100) * 0.6;
-    
-    // Return the raw filter amplitude (0-1)
-    return Math.min(1.0, shape + peak * res_gain);
+
+    // Add resonance peak but ensure total stays within 0-1 bounds
+    const result = shape + peak * res_gain;
+    return Math.max(0, Math.min(1.0, result));
 }
 
 function applyFilterMix(filterAmp, mixAmount) {
@@ -74,44 +84,39 @@ let filteredCoeffs = new Float32Array(BINS).fill(0);
 
 function applyDiscreteFiltering(originalCoeffs, filterSettings) {
     const mixAmount = filterSettings.mix || 0;
-    
-    console.log(`[DEBUG] applyDiscreteFiltering - Original coeffs:`, Array.from(originalCoeffs));
-    console.log(`[DEBUG] Mix amount:`, mixAmount);
-    
+
     if (mixAmount === 0) {
         // No filtering - return original coefficients
-        console.log(`[DEBUG] No filtering applied - returning original coeffs`);
         return new Float32Array(originalCoeffs);
     }
-    
+
     const filtered = new Float32Array(originalCoeffs.length);
     const mixNormalized = mixAmount / 100; // 0-1 range
-    
+
     for (let i = 0; i < originalCoeffs.length; i++) {
         const harmonicAmplitude = originalCoeffs[i]; // Y position of harmonic (0-1)
-        
+
         // Get discrete filter curve value at this bin's center
         const binCenterFreq = (i + 0.5) / BINS; // Normalized frequency (0-1)
         const filterCurveLevel = getFilterAmplitudeAt(binCenterFreq, filterSettings); // 0-1
-        
+
         // Apply filtering logic
         if (filterCurveLevel < harmonicAmplitude) {
             // Filter curve is below harmonic - apply attenuation
             const distance = harmonicAmplitude - filterCurveLevel;
             const reduction = distance * mixNormalized;
-            
+
             // When Mix = 100%, harmonic is reduced to exactly the filter curve level
             filtered[i] = harmonicAmplitude - reduction;
         } else {
             // Filter curve is above or equal to harmonic - no attenuation needed
             filtered[i] = harmonicAmplitude;
         }
-        
+
         // Ensure we don't go below zero
         filtered[i] = Math.max(0, filtered[i]);
     }
-    
-    console.log(`[DEBUG] Filtered coeffs result:`, Array.from(filtered));
+
     return filtered;
 }
 
@@ -189,27 +194,11 @@ function drawFilterOverlay() {
     const { width, height } = overlayCanvas;
     
     overlayCtx.clearRect(0, 0, width, height);
-    
-    // Draw horizontal reference lines at 0.25, 0.50, and 0.75 amplitude
+
     const usableHeight = height;
     const maxBarHeight = usableHeight * 0.95;
     const barBaseY = height;
-    
-    overlayCtx.setLineDash([3, 3]); // Dashed line pattern
-    overlayCtx.strokeStyle = '#ced4da';
-    overlayCtx.lineWidth = 1;
-    
-    const ampLines = [0.25, 0.5, 0.75];
-    ampLines.forEach(amp => {
-        const y = barBaseY - (amp * maxBarHeight);
-        overlayCtx.beginPath();
-        overlayCtx.moveTo(0, y);
-        overlayCtx.lineTo(width, y);
-        overlayCtx.stroke();
-    });
-    
-    overlayCtx.setLineDash([]); // Reset to solid lines
-    
+
     const filterSettings = store.state.timbres[currentColor]?.filter;
     
     // Fix: Default enabled to true if undefined (handles legacy state or missing property)
@@ -256,23 +245,6 @@ function drawFilterOverlay() {
         overlayCtx.strokeStyle = hexToRgba(shadeHexColor(currentColor, -0.3), strokeAlpha);
         overlayCtx.lineWidth = 2.5;
         overlayCtx.stroke();
-        
-        // Draw discrete filter value circles for each bin
-        for (let i = 0; i < BINS; i++) {
-            const binCenterX = (i + 0.5) * (width / BINS); // Center X of each bin
-            const norm_pos = (i + 0.5) / BINS;
-            const rawFilterAmp = getFilterAmplitudeAt(norm_pos, filterSettings);
-            const circleY = barBaseY - rawFilterAmp * maxBarHeight;
-            
-            // Draw white circle with slight transparency
-            overlayCtx.beginPath();
-            overlayCtx.arc(binCenterX, circleY, 3, 0, 2 * Math.PI);
-            overlayCtx.fillStyle = 'rgba(255, 255, 255, 0.9)';
-            overlayCtx.fill();
-            overlayCtx.strokeStyle = 'rgba(0, 0, 0, 0.3)';
-            overlayCtx.lineWidth = 1;
-            overlayCtx.stroke();
-        }
         
         // Draw white transparency overlay above the filter curve
         const whiteOpacity = mixAmount / 100; // 0% mix = 0 opacity, 100% mix = 1.0 opacity
@@ -326,7 +298,7 @@ function updateSliderVisuals() {
     binColumns.forEach((column, i) => {
         const fill = column.sliderTrack.querySelector('.slider-fill');
         const label = column.sliderTrack.querySelector('.harmonic-label-internal');
-        const val = coeffs[i] < COEFF_ZERO_THRESHOLD ? 0 : coeffs[i];
+        const val = coeffs[i]; // No threshold snapping - use raw value
         
         fill.style.height = `${val * 100}%`;
         
@@ -389,13 +361,9 @@ function handleBinPointerEvent(e, binIndex = null) {
     const usableHeight = trackHeight;
     const previous = coeffs[binIndex];
     
-    // Direct mapping without snap-to-zero zone
+    // Direct mapping - no snap-to-zero
     const v = (usableHeight - y) / usableHeight;
     let clampedValue = Math.max(0, Math.min(1, v));
-
-    if (clampedValue < COEFF_ZERO_THRESHOLD) {
-        clampedValue = 0;
-    }
 
     const releaseDelay = (store.state.timbres[currentColor]?.adsr?.release || 0) * 1000;
 
@@ -514,17 +482,8 @@ function validateStateSync(localCoeffs, localPhases, storeTimbre, context) {
     }
     
     const isSync = coeffsMatch && phasesMatch;
-    
-    
-    if (!isSync) {
-        console.warn(`⚠️ [HARMONIC SYNC] State mismatch detected in ${context}!`, {
-            localCoeffs: Array.from(localCoeffs).slice(0, 5), // First 5 for debug
-            storeCoeffs: Array.from(storeCoeffs).slice(0, 5),
-            localPhases: Array.from(localPhases).slice(0, 5),
-            storePhases: Array.from(storePhases).slice(0, 5)
-        });
-    }
-    
+
+
     return isSync;
 }
 
@@ -730,8 +689,8 @@ export function initHarmonicBins() {
     };
 
     // Initialize with current color
-    currentColor = store.state.selectedNote.color;
-    
+    currentColor = store.state.selectedNote?.color || '#4a90e2';
+
     updateForNewColor(currentColor);
 
     // Set up event listeners

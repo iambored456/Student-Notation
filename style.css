@@ -35,6 +35,7 @@
 @import url('style/components/paint/paintControls.css');
 @import url('style/components/paint/pitchPainting.css');
 @import url('style/components/paint/meterEffects.css');
+@import url('style/components/draw/drawTools.css');
 @import url('style/components/audio/adsrEnvelope.css');
 @import url('style/components/audio/harmonicsFilter.css');
 @import url('style/components/waveform/waveformVisualizer.css');

@@ -342,6 +342,8 @@ export default class Position {
       this._hY.anchor = m;
     }
     window.addEventListener('pointermove', this._onMove, { passive: false });
+    // Emit 'down' event for interaction tracking
+    this._emit('down', { x: this._x.value, y: this._y.value });
     e.preventDefault();
   }
   _onMove(e) {
@@ -356,6 +358,8 @@ export default class Position {
     if (!this._clicked) return;
     this._clicked = false;
     window.removeEventListener('pointermove', this._onMove);
+    // Emit 'up' event for interaction tracking
+    this._emit('up', { x: this._x.value, y: this._y.value });
   }
 
   // Apply both axes at once (single emit + draw)

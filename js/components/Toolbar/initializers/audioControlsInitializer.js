@@ -301,7 +301,7 @@ export function initAudioControls() {
         if (preset) {
             button.addEventListener('click', () => {
                 // THE FIX: Get the current color from the selectedNOTE, not the selectedTOOL.
-                const currentColor = store.state.selectedNote.color;
+                const currentColor = store.state.selectedNote?.color;
                 if (currentColor) {
                     store.applyPreset(currentColor, preset);
                     // Immediately update the selection to show the highlight
@@ -395,13 +395,13 @@ export function initAudioControls() {
 
     // THE FIX: Listen for 'timbreChanged' and check against the correct state property.
     store.on('timbreChanged', (color) => {
-        if (color === store.state.selectedNote.color) {
+        if (color === store.state.selectedNote?.color) {
             updatePresetSelection(color);
         }
     });
     
     // THE FIX: Get the initial color from the correct state property on load.
-    const initialColor = store.state.selectedNote.color;
+    const initialColor = store.state.selectedNote?.color;
     if (initialColor) {
         updatePresetSelection(initialColor);
     }
