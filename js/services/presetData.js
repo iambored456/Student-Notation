@@ -165,21 +165,21 @@ export const PRESETS = {
   strings: { // Renamed from 'violin'
     name: 'strings',
     gain: 0.49,  // Original amplitude: 0.49 (from HTML violin preset)
-    adsr: { attack: 0.03, decay: 0.40, sustain: 0.70, release: 0.50 },
+    adsr: { attack: 0.08, decay: 0.40, sustain: 0.70, release: 0.50 },
     ...makeSpectrum('strings'), // Use the renamed key
     filter: { ...defaultFilter, cutoff: 28 }
   },
   piano: {
     name: 'piano',
     gain: 0.8,
-    adsr: { attack: 0.01, decay: 0.80, sustain: 0.10, release: 1.00 },
+    adsr: { attack: 0.01, decay: 1.50, sustain: 0.00, release: 0.40 },
     ...makeSpectrum('piano'),
     filter: { ...defaultFilter, cutoff: 28 }
   },
   marimba: {
     name: 'marimba',
     gain: 0.9,
-    adsr: { attack: 0.01, decay: 0.80, sustain: 0.00, release: 0.80 },
+    adsr: { attack: 0.01, decay: 0.80, sustain: 0.00, release: 0.40 },
     ...makeSpectrum('marimba'),
     filter: { ...defaultFilter, cutoff: 25 }
   },
