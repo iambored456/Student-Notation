@@ -46,6 +46,7 @@ import animationEffectsManager from '../services/timbreEffects/effectsAnimation/
 import audioEffectsManager from '../services/timbreEffects/effectsAudio/audioEffectsManager.js';
 import effectsController from '../components/audio/Effects/effectsController.js';
 import positionEffectsController from '../components/ui/positionEffectsController.js';
+import { initUIDiagnostics } from '../utils/uiDiagnostics.js';
 
 // Paint Components
 import PaintCanvas from '../components/PitchPaint/paintCanvas.js';
@@ -251,7 +252,16 @@ document.addEventListener("DOMContentLoaded", async () => {
     snapshotState(store.state);
     
     // TEMPORARY: This is the one allowed direct state mutation during initialization
-    store.state.fullRowData = fullRowData;
+    const initialPitchRange = store.state.pitchRange || {
+        topIndex: 0,
+        bottomIndex: fullRowData.length - 1
+    };
+    const clampedTop =
+        Math.max(0, Math.min(fullRowData.length - 1, initialPitchRange.topIndex ?? 0));
+    const clampedBottom =
+        Math.max(clampedTop, Math.min(fullRowData.length - 1, initialPitchRange.bottomIndex ?? (fullRowData.length - 1)));
+    store.state.pitchRange = { topIndex: clampedTop, bottomIndex: clampedBottom };
+    store.state.fullRowData = fullRowData.slice(clampedTop, clampedBottom + 1);
     // Allowed initialization mutation: fullRowData assignment
     
     // Phase 2a: Initializing LayoutService
@@ -457,6 +467,9 @@ document.addEventListener("DOMContentLoaded", async () => {
     // event to be missed.
     renderAll();
     PitchGridController.renderMacrobeatTools();
+
+    // Initialize UI diagnostics logging for layout tracking
+    initUIDiagnostics();
 
     markComponentReady('initialized');
     // Initialization sequence completed successfully

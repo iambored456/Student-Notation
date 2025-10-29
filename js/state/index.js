@@ -1,5 +1,6 @@
 // js/state/index.js
 import { initialState } from './initialState/index.js';
+import { fullRowData as masterRowData } from './pitchData.js';
 import { historyActions } from './actions/historyActions.js';
 import { noteActions } from './actions/noteActions.js';
 import { timbreActions } from './actions/timbreActions.js';
@@ -51,6 +52,14 @@ function loadStateFromLocalStorage() {
                 }
             };
         }
+
+        if (parsedState.pitchRange) {
+            const totalRows = masterRowData?.length || (parsedState.fullRowData?.length) || 0;
+            const maxIndex = Math.max(0, totalRows - 1);
+            const topIndex = Math.max(0, Math.min(maxIndex, parsedState.pitchRange.topIndex ?? 0));
+            const bottomIndex = Math.max(topIndex, Math.min(maxIndex, parsedState.pitchRange.bottomIndex ?? maxIndex));
+            parsedState.pitchRange = { topIndex, bottomIndex };
+        }
         
         return parsedState;
     } catch (err) {
@@ -78,6 +87,8 @@ function saveStateToLocalStorage(state) {
             activeChordIntervals: state.activeChordIntervals,
             selectedNote: state.selectedNote,
             annotations: state.annotations,
+            pitchRange: state.pitchRange,
+            snapZoomToRange: state.snapZoomToRange,
             paint: {
                 paintHistory: state.paint.paintHistory,
                 paintSettings: state.paint.paintSettings

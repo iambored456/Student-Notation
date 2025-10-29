@@ -6,7 +6,7 @@
 .degree-toggle-container {
     display: flex;
     flex-direction: column;
-    gap: var(--space-1);
+    gap: var(--space-015);
 }
 
 /* Visibility Toggle - Hide (grayed) by default, Show (white) when active */
@@ -15,7 +15,7 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    padding: var(--space-2);
+    padding: var(--space-025);
     background-color: var(--c-surface);
     color: var(--c-text);
     border: 1px solid var(--c-border);
@@ -40,7 +40,7 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    padding: var(--space-2);
+    padding: var(--space-025);
     background-color: var(--c-surface);
     color: var(--c-text);
     border: 1px solid var(--c-border);

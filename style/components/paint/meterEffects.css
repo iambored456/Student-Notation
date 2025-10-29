@@ -6,9 +6,9 @@
 .mic-meter-container-inline {
     display: flex;
     flex-direction: column;
-    gap: var(--space-1);
-    margin-top: var(--space-2);
-    padding: var(--space-2);
+    gap: var(--space-015);
+    margin-top: var(--space-025);
+    padding: var(--space-025);
     background-color: var(--c-gridline);
     border-radius: var(--border-radius-md);
     border: 1px solid var(--c-border);
@@ -27,7 +27,7 @@
 }
 
 .meter-settings-btn-small {
-    padding: var(--space-1);
+    padding: var(--space-015);
     font-size: var(--font-size-xs);
     min-width: auto;
     width: 24px;
@@ -48,16 +48,16 @@
 
 /* Legacy meter container (for settings panel) */
 .mic-meter-container {
-    margin-top: var(--space-4);
+    margin-top: var(--space-050);
     border-top: 1px solid var(--c-border);
-    padding-top: var(--space-3);
+    padding-top: var(--space-035);
 }
 
 .mic-meter-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: var(--space-2);
+    margin-bottom: var(--space-025);
 }
 
 .mic-meter-header h5 {
@@ -69,11 +69,11 @@
 
 .meter-controls {
     display: flex;
-    gap: var(--space-1);
+    gap: var(--space-015);
 }
 
 .meter-settings-btn {
-    padding: var(--space-1);
+    padding: var(--space-015);
     font-size: var(--font-size-sm);
     min-width: auto;
     width: 28px;
@@ -110,8 +110,8 @@
     grid-area: meter;
     display: flex;
     flex-direction: column;
-    gap: var(--space-2);
-    padding: 0 var(--space-2);
+    gap: var(--space-025);
+    padding: 0 var(--space-025);
     border-left: 1px solid var(--c-border-light);
     border-right: 1px solid var(--c-border-light);
     width: 3.5rem;
@@ -155,13 +155,13 @@
     font-size: var(--font-size-xs);
     color: var(--c-text-muted);
     text-align: center;
-    padding: var(--space-1);
+    padding: var(--space-015);
 }
 
 /* Smaller text for inline meter */
 .mic-meter-wrapper-inline .meter-status-text {
     font-size: 10px;
-    padding: var(--space-1);
+    padding: var(--space-015);
 }
 
 /* When meter is active, hide the placeholder */
@@ -181,8 +181,8 @@
 
 /* Settings panel */
 .meter-settings-panel {
-    margin-top: var(--space-2);
-    padding: var(--space-3);
+    margin-top: var(--space-025);
+    padding: var(--space-035);
     background-color: var(--c-gridline);
     border-radius: var(--border-radius-md);
     border: 1px solid var(--c-border);
@@ -196,12 +196,12 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: var(--space-2);
+    margin-bottom: var(--space-025);
 }
 
 .meter-setting-group:last-child {
     margin-bottom: 0;
-    gap: var(--space-2);
+    gap: var(--space-025);
 }
 
 .meter-setting-group label {
@@ -212,7 +212,7 @@
 }
 
 .meter-control {
-    padding: var(--space-1) var(--space-2);
+    padding: var(--space-015) var(--space-025);
     border: 1px solid var(--c-border);
     border-radius: var(--border-radius-sm);
     background-color: var(--c-surface);
@@ -237,16 +237,16 @@
 
 /* Permission prompt */
 .meter-permission-prompt {
-    padding: var(--space-3);
+    padding: var(--space-035);
     text-align: center;
     background-color: #fff3cd;
     border: 1px solid var(--c-warning);
     border-radius: var(--border-radius-md);
-    margin-top: var(--space-2);
+    margin-top: var(--space-025);
 }
 
 .meter-permission-prompt p {
-    margin: 0 0 var(--space-2) 0;
+    margin: 0 0 var(--space-025) 0;
     font-size: var(--font-size-sm);
     color: var(--c-text);
 }
@@ -255,7 +255,7 @@
     background-color: var(--c-warning);
     color: var(--c-text);
     border: none;
-    padding: var(--space-2) var(--space-3);
+    padding: var(--space-025) var(--space-035);
     border-radius: var(--border-radius-sm);
     font-size: var(--font-size-sm);
     cursor: pointer;

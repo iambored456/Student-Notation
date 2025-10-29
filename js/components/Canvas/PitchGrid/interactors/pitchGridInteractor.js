@@ -36,6 +36,7 @@ let previousTool = null;
 let lastHoveredTonicPoint = null;
 let lastHoveredOctaveRows = [];
 let rightClickActionTaken = false;
+let lastDragRow = null; // Track last row during drag for pitch change detection
 
 // --- Modulation Marker State ---
 let isDraggingModulationMarker = false;
@@ -110,7 +111,7 @@ function getChordNotesFromIntervals(rootNote, clickedRowIndex) {
         return simplifiedNote;
     });
     
-    // For chords (3+ notes): inversion means reordering chord tones
+    // For chords (3+ notes): position toggle means reordering chord tones
     if (activeChordIntervals.length >= 3 && chordPositionState > 0) {
         // Apply chord inversion by rotating the array
         const inverted = [...chordTones];
@@ -120,58 +121,25 @@ function getChordNotesFromIntervals(rootNote, clickedRowIndex) {
             const octaveUp = Note.transpose(first, '8P');
             inverted.push(Note.simplify(octaveUp));
         }
-        
-        // Find the root note in the inverted chord by comparing pitch classes
-        const rootPitchClass = Note.pitchClass(rootNote);
-        const rootNoteIndex = inverted.findIndex(note => {
-            return Note.pitchClass(note) === rootPitchClass;
-        });
-        
-        if (rootNoteIndex === -1) {
-            console.warn('Root note not found in inverted chord, using bass note positioning');
-            // Fallback to original bass note positioning
-            const bassNote = inverted[0];
-            const targetNote = rootNote;
-            const bassNoteMidi = Note.midi(bassNote);
-            const targetNoteMidi = Note.midi(targetNote);
-            
-            let octaveAdjustment = 0;
-            let adjustedBassMidi = bassNoteMidi;
-            
-            while (adjustedBassMidi > targetNoteMidi) {
-                adjustedBassMidi -= 12;
-                octaveAdjustment -= 12;
-            }
-            while (adjustedBassMidi + 12 <= targetNoteMidi) {
-                adjustedBassMidi += 12;
-                octaveAdjustment += 12;
-            }
-            
-            return inverted.map(note => {
-                const adjustedMidi = Note.midi(note) + octaveAdjustment;
-                return Note.fromMidi(adjustedMidi);
-            });
-        }
-        
-        // Position the root note at the cursor
-        const rootNoteInChord = inverted[rootNoteIndex];
-        const targetNote = rootNote; // This is where the user clicked
 
-        // Calculate the interval needed to move the root note to the cursor position
-        const rootNoteMidi = Note.midi(rootNoteInChord);
+        // Position the BASS note (first note in the inverted chord) at the cursor
+        // This is the expected behavior for chord positions/inversions
+        const bassNote = inverted[0];
+        const targetNote = rootNote; // This is where the user clicked
+        const bassNoteMidi = Note.midi(bassNote);
         const targetNoteMidi = Note.midi(targetNote);
 
-        // Find the octave adjustment needed to get the root note close to the target
+        // Find the octave adjustment needed to get the bass note close to the target
         let octaveAdjustment = 0;
-        let adjustedRootMidi = rootNoteMidi;
+        let adjustedBassMidi = bassNoteMidi;
 
-        // Move root note to the same octave as target or just below
-        while (adjustedRootMidi > targetNoteMidi) {
-            adjustedRootMidi -= 12;
+        // Move bass note to the same octave as target or just below
+        while (adjustedBassMidi > targetNoteMidi) {
+            adjustedBassMidi -= 12;
             octaveAdjustment -= 12;
         }
-        while (adjustedRootMidi + 12 <= targetNoteMidi) {
-            adjustedRootMidi += 12;
+        while (adjustedBassMidi + 12 <= targetNoteMidi) {
+            adjustedBassMidi += 12;
             octaveAdjustment += 12;
         }
 
@@ -309,7 +277,9 @@ function handleMouseDown(e) {
     // Check boundaries - circle notes need more space than other tools
     const isCircleNote = (store.state.selectedTool === 'note' || store.state.selectedTool === 'chord') && store.state.selectedNote && store.state.selectedNote.shape === 'circle';
     const maxColumn = isCircleNote ? store.state.columnWidths.length - 3 : store.state.columnWidths.length - 2;
-    if (colIndex < 2 || colIndex >= maxColumn || !getPitchForRow(rowIndex)) return;
+    if (colIndex < 2 || colIndex >= maxColumn || !getPitchForRow(rowIndex)) {
+        return;
+    }
 
     if (e.button === 2) {
         e.preventDefault();
@@ -466,7 +436,8 @@ function handleMouseDown(e) {
             
             // Enable dragging for chord shapes
             isDragging = true;
-            
+            lastDragRow = rowIndex; // Initialize drag row tracking for chords
+
             // Don't record state immediately - wait for drag to complete
             return;
         }
@@ -511,8 +482,6 @@ function handleMouseDown(e) {
             const actualX = x + scrollLeft;
             const fullOptions = { ...store.state };
 
-            console.log('[STAMP INTERACTION] Checking for shape hit at:', { actualX, y, numStamps: allStamps.length });
-
             const hitResult = hitTestAnyStampShape(actualX, y, allStamps, fullOptions);
 
             if (hitResult) {
@@ -542,7 +511,17 @@ function handleMouseDown(e) {
 
                 const pitch = getPitchForRow(rowIndex);
                 if (pitch) {
-                    const { shape } = store.state.selectedNote;
+                    // Find the note at this position to get its shape
+                    const noteAtStamp = store.state.placedNotes.find(note =>
+                        !note.isDrum &&
+                        note.row === rowIndex &&
+                        colIndex >= note.startColumnIndex &&
+                        colIndex <= note.endColumnIndex
+                    );
+
+                    // Use the note's shape if found, otherwise default to 'oval'
+                    const shape = noteAtStamp ? noteAtStamp.shape : 'oval';
+
                     // Pass the placement object for per-shape pitch playback
                     rhythmPlaybackService.playRhythmPattern(existingStamp.stampId, pitch, existingStamp.color, shape, existingStamp);
 
@@ -684,13 +663,14 @@ function handleMouseDown(e) {
             }
             
             activeNote = addedNote;
-            
+
             // Emit interaction start event for animation service
             if (addedNote.uuid) {
                 store.emit('noteInteractionStart', { noteId: addedNote.uuid, color: addedNote.color });
             }
-            
+
             isDragging = (shape === 'circle');
+            lastDragRow = rowIndex; // Initialize drag row tracking
 
             if (!isDragging) {
                 store.recordState();
@@ -909,17 +889,83 @@ function handleMouseMove(e) {
     // Handle dragging FIRST, before any tool-specific logic
     if (isDragging && (activeNote || activeChordNotes.length > 0)) {
         const newEndIndex = colIndex;
-        
+        const newRow = rowIndex;
+
         if (activeNote) {
             // Handle single note dragging
+            let needsUpdate = false;
+
+            // Check for horizontal tail extension
             if (newEndIndex !== activeNote.endColumnIndex) {
                 store.updateNoteTail(activeNote, newEndIndex);
+                needsUpdate = true;
+            }
+
+            // Check for vertical pitch change (discrete snap between rows)
+            if (newRow !== lastDragRow && newRow !== activeNote.row) {
+                const newPitch = getPitchForRow(newRow);
+                if (newPitch) {
+                    // Release old pitch
+                    const oldPitch = getPitchForRow(activeNote.row);
+                    if (oldPitch) {
+                        SynthEngine.triggerRelease(oldPitch, activeNote.color);
+                    }
+
+                    // Update note row
+                    store.updateNoteRow(activeNote, newRow);
+
+                    // Trigger new pitch
+                    SynthEngine.triggerAttack(newPitch, activeNote.color);
+                    activePreviewPitches = [newPitch];
+
+                    // Update ADSR visualization
+                    const pitchColor = store.state.fullRowData[newRow]?.hex || '#888888';
+                    GlobalService.adsrComponent?.playheadManager.trigger(activeNote.uuid, 'attack', pitchColor, store.state.timbres[activeNote.color].adsr);
+
+                    lastDragRow = newRow;
+                    needsUpdate = true;
+                }
             }
         } else if (activeChordNotes.length > 0) {
-            // Handle chord notes dragging - check if any notes need updating
+            // Handle chord notes dragging
+            let needsUpdate = false;
+
+            // Check for horizontal tail extension
             const notesToUpdate = activeChordNotes.filter(note => newEndIndex !== note.endColumnIndex);
             if (notesToUpdate.length > 0) {
                 store.updateMultipleNoteTails(notesToUpdate, newEndIndex);
+                needsUpdate = true;
+            }
+
+            // Check for vertical pitch change for entire chord
+            if (newRow !== lastDragRow) {
+                const rowOffset = newRow - lastDragRow;
+
+                // Release all old pitches
+                activePreviewPitches.forEach(pitch => {
+                    SynthEngine.triggerRelease(pitch, activeChordNotes[0].color);
+                });
+
+                // Calculate new rows for all chord notes
+                const newRows = activeChordNotes.map(note => note.row + rowOffset);
+
+                // Check if all new rows are valid
+                const allValid = newRows.every(row => getPitchForRow(row) !== null);
+
+                if (allValid) {
+                    // Update all note rows
+                    store.updateMultipleNoteRows(activeChordNotes, newRows);
+
+                    // Trigger new pitches
+                    const newPitches = newRows.map(row => getPitchForRow(row)).filter(p => p);
+                    newPitches.forEach(pitch => {
+                        SynthEngine.triggerAttack(pitch, activeChordNotes[0].color);
+                    });
+                    activePreviewPitches = newPitches;
+
+                    lastDragRow = newRow;
+                    needsUpdate = true;
+                }
             }
         }
         return;
@@ -1151,7 +1197,8 @@ function handleGlobalMouseUp() {
         store.recordState();
     }
     isDragging = false;
-    
+    lastDragRow = null; // Reset drag row tracking
+
     // Emit interaction end events for animation service before clearing
     if (activeNote && activeNote.uuid) {
         store.emit('noteInteractionEnd', { noteId: activeNote.uuid });
@@ -1161,7 +1208,7 @@ function handleGlobalMouseUp() {
             store.emit('noteInteractionEnd', { noteId: note.uuid });
         }
     });
-    
+
     activeNote = null;
     activeChordNotes = [];
 

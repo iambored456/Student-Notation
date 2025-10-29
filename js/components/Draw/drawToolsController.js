@@ -104,14 +104,14 @@ class DrawToolsController {
     }
 
     /**
-     * Set up listeners for chord tab switching (Pitch sub-tabs)
+     * Set up listeners for pitch sub-tab switching
      */
     setupChordTabListeners() {
-        const chordTabButtons = document.querySelectorAll('.chord-tab-button');
+        const pitchTabButtons = document.querySelectorAll('.pitch-tab-button');
 
-        chordTabButtons.forEach(button => {
+        pitchTabButtons.forEach(button => {
             button.addEventListener('click', () => {
-                const targetTab = button.dataset.chordTab;
+                const targetTab = button.dataset.pitchTab;
 
                 // If switching away from Draw tab, restore last selected shape note
                 if (targetTab !== 'draw' && this.currentTool) {

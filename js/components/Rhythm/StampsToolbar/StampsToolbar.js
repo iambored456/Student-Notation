@@ -70,12 +70,12 @@ const StampsToolbar = {
         return button;
     },
 
-    createStampPreview(stamp) {        
+    createStampPreview(stamp) {
         // Create the stamp SVG using shared renderer
         const svg = defaultStampRenderer.renderToSVG(stamp, 100, 100);
-        svg.setAttribute('width', '48');
-        svg.setAttribute('height', '48');
-        
+        svg.setAttribute('width', '40');
+        svg.setAttribute('height', '40');
+
         return svg;
     },
 

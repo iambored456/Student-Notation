@@ -154,7 +154,7 @@
 
 .waveform-content-box {
     background-color: var(--c-surface);
-    border: 1px solid var(--c-border);
+    border: 0px solid var(--c-border);
     border-radius: var(--border-radius-md);
     border-top-left-radius: 0; /* Connect to tab button */
     border-top-right-radius: 0; /* Connect to tab button */

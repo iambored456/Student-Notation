@@ -6,6 +6,7 @@
 @import url('style/base/variables.css');
 @import url('style/base/globals.css');
 @import url('style/base/typography.css');
+@import url('style/components/loadingScreen.css');
 @import url('style/layout/appLayout.css');
 @import url('style/layout/toolbarLayout.css');
 @import url('style/layout/canvasLayout.css');
@@ -17,7 +18,7 @@
 @import url('style/components/print/printStyles.css');
 
 /* --- Component-Specific Styles --- */
-@import url('style/components/canvas/gridUI.css');
+@import url('style/components/rhythm/rhythmControls.css');
 @import url('style/components/controls/sliders.css');
 @import url('style/components/display/tempoDisplay.css');
 @import url('style/components/tools/noteBank.css');
@@ -32,6 +33,7 @@
 @import url('style/components/harmony/chordTools.css');
 @import url('style/components/harmony/tonicControls.css');
 @import url('style/components/harmony/degreeToggles.css');
+@import url('style/components/harmony/clefControls.css');
 @import url('style/components/paint/paintControls.css');
 @import url('style/components/paint/pitchPainting.css');
 @import url('style/components/paint/meterEffects.css');

@@ -30,7 +30,7 @@ button {
   color: var(--c-surface);
   border: none;
   border-radius: var(--border-radius-md);
-  padding: var(--space-2) var(--space-4);
+  padding: var(--space-025) var(--space-050);
   font-family: var(--main-font);
   font-size: 14px;
   cursor: pointer;

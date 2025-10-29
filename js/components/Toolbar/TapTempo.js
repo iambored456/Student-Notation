@@ -113,7 +113,7 @@ class TapTempo {
         console.log(`[TapTempo] ${type}: ${intervals.length} intervals, avg ${avgIntervalMs.toFixed(1)}ms → ${clampedBPM} BPM`);
 
         // Apply tempo
-        store.dispatch({ type: 'SET_TEMPO', payload: clampedBPM });
+        store.setTempo(clampedBPM);
     }
 
     /**

@@ -14,8 +14,8 @@
 .paint-content-box {
     background-color: var(--c-surface);
     border: 1px solid var(--c-border);
-    border-radius: 16px;
-    padding: 0.6rem;
+    border-radius: var(--border-radius-md);
+    padding: var(--space-015);
     box-shadow: var(--box-shadow-sm);
     position: relative;
     z-index: 1;
@@ -115,7 +115,7 @@
     color: var(--c-text);
     border: 1px solid var(--c-border);
     border-radius: var(--border-radius-sm);
-    padding: var(--space-2);
+    padding: var(--space-025);
     font-size: var(--font-size-sm);
     cursor: pointer;
 }
@@ -182,9 +182,9 @@
 .paint-playback-toggle-container {
     display: flex;
     flex-direction: column;
-    align-items: center;
-    gap: var(--space-1);
-    margin-top: var(--space-2);
+    align-items: flex-start;
+    gap: var(--space-015);
+    margin-top: var(--space-025);
 }
 
 .paint-color-toggle-container h5,
@@ -230,7 +230,7 @@
     justify-content: space-between;
     align-items: center;
     height: 100%;
-    padding: 0 var(--space-2);
+    padding: 0 var(--space-025);
     pointer-events: none;
 }
 

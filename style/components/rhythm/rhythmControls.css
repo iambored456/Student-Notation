@@ -1,0 +1,147 @@
+/* ==========================================================================
+   Rhythm Controls Styles
+   ========================================================================= */
+
+:root {
+  --rhythm-ui-button-size: 1.25rem;
+  --rhythm-ui-button-font-size: var(--font-size-sm);
+}
+
+#canvas-macrobeat-tools {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  margin-block-end: var(--space-015);
+  gap: var(--space-015);
+}
+
+#canvas-macrobeat-tools #accidental-controls-container-v2 {
+  position: absolute;
+  right: 100%;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 10;
+  margin-right: var(--space-015);
+}
+
+#beat-line-ui {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-015);
+  min-height: 2.25rem;
+}
+
+#beat-line-button-layer {
+  position: relative;
+  min-height: 2.25rem;
+  width: 100%;
+}
+
+.rhythm-ui-button {
+  --rhythm-ui-button-width: var(--rhythm-ui-button-size);
+  --rhythm-ui-button-height: var(--rhythm-ui-button-size);
+  --rhythm-ui-button-radius: 999px;
+  background-color: var(--c-surface-overlay);
+  color: var(--c-text);
+  border: 1px solid var(--c-border);
+  width: var(--rhythm-ui-button-width);
+  height: var(--rhythm-ui-button-height);
+  border-radius: var(--rhythm-ui-button-radius);
+  font-size: var(--rhythm-ui-button-font-size);
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  line-height: 1;
+  position: absolute;
+  transform: translateX(-50%);
+  z-index: 10;
+  backdrop-filter: blur(2px);
+  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease,
+    transform 0.1s ease;
+}
+
+.rhythm-ui-button:hover,
+.rhythm-ui-button:focus-visible {
+  background-color: var(--c-surface);
+  border-color: var(--c-text);
+  color: var(--c-text);
+  outline: none;
+}
+
+.rhythm-ui-button:active {
+  transform: translateX(-50%) scale(0.95);
+}
+
+.rhythm-ui-button--group {
+  background-color: var(--c-accent-light);
+  border-color: rgba(var(--c-accent-rgb), 0.55);
+  color: var(--c-surface);
+  box-shadow: var(--box-shadow-sm);
+}
+
+.rhythm-ui-button--group:hover,
+.rhythm-ui-button--group:focus-visible {
+  background-color: var(--c-accent);
+  border-color: var(--c-accent-hover);
+  color: var(--c-surface);
+}
+
+.rhythm-ui-button--boundary {
+  --rhythm-ui-button-width: auto;
+  --rhythm-ui-button-height: calc(var(--rhythm-ui-button-size) * 0.85);
+  --rhythm-ui-button-radius: var(--border-radius-sm);
+  padding-inline: var(--space-025);
+  font-weight: 500;
+  background-color: var(--c-surface);
+  white-space: nowrap;
+}
+
+.rhythm-ui-button--boundary:hover,
+.rhythm-ui-button--boundary:focus-visible {
+  background-color: var(--c-border);
+  border-color: var(--c-border-strong);
+}
+
+.macrobeat-adjust-group {
+  display: flex;
+  gap: var(--space-025);
+  justify-content: center;
+}
+
+.time-signature-label {
+  background: var(--c-surface-overlay);
+  border-radius: 12px;
+  font-weight: bold;
+  font-size: var(--rhythm-ui-button-font-size);
+  color: var(--c-text-muted);
+  user-select: none;
+  position: absolute;
+  transform: translateX(-50%);
+  top: var(--time-sig-vertical-offset, 0.25rem);
+  backdrop-filter: blur(2px);
+  border: 2px solid var(--c-border);
+  padding: 0.125rem 0.375rem;
+  cursor: pointer;
+}
+
+.time-signature-label.anacrusis-label {
+  color: var(--c-border);
+}
+
+.time-signature-bracket {
+  pointer-events: none;
+  z-index: 5;
+}
+
+.bracket-label {
+  font-weight: bold;
+  font-size: 0.85em;
+  color: var(--c-text-muted);
+  user-select: none;
+  pointer-events: none;
+  white-space: nowrap;
+}

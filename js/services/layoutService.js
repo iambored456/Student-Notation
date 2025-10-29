@@ -20,6 +20,26 @@ let isRecalculating = false;
 let isZooming = false;
 // let lastCalculatedWidth = 0;  // Unused variable
 let lastCalculatedDrumHeight = 0;
+let pendingSnapToRange = false;
+let pendingStartRow = null;
+
+function getDynamicMinZoomLevel() {
+    const totalRanks = store.state.fullRowData?.length || 0;
+    if (totalRanks === 0) {
+        return MIN_ZOOM_LEVEL;
+    }
+
+    const pitchGridContainer = document.getElementById('pitch-grid-container');
+    const fallbackViewport = viewportHeight || window.innerHeight || 0;
+    const containerHeight = pitchGridContainer?.clientHeight || (fallbackViewport ? fallbackViewport * 0.7 : 0);
+
+    if (!containerHeight || containerHeight <= 0) {
+        return MIN_ZOOM_LEVEL;
+    }
+
+    const requiredZoom = (2 * containerHeight) / (totalRanks * BASE_ABSTRACT_UNIT);
+    return Math.max(MIN_ZOOM_LEVEL, requiredZoom);
+}
 
 function initDOMElements() {
     // gridContainer = document.getElementById('grid-container');  // Unused variable
@@ -64,6 +84,12 @@ function recalcAndApplyLayout() {
     
     if (referenceDiff > 3 || viewportHeight === 0) {
         viewportHeight = windowHeight;
+    }
+
+    const enforcedMinZoom = getDynamicMinZoomLevel();
+    if (currentZoomLevel < enforcedMinZoom) {
+        currentZoomLevel = enforcedMinZoom;
+        console.log(`[Zoom] Enforcing minimum zoom to maintain grid height: ${Math.round(currentZoomLevel * 100)}%`);
     }
     
     // const availableHeight = pitchGridContainer.clientHeight || (windowHeight * 0.7);  // Unused variable
@@ -180,8 +206,33 @@ function recalcAndApplyLayout() {
     }, );
 
     
+    if (pendingStartRow !== null) {
+        const totalRanks = store.state.fullRowData.length;
+        if (totalRanks <= 0) {
+            currentScrollPosition = 0;
+        } else {
+            const clampedRow = Math.max(0, Math.min(totalRanks - 1, pendingStartRow));
+            const pitchGridContainer = document.getElementById('pitch-grid-container');
+            const containerHeight = pitchGridContainer?.clientHeight || (viewportHeight * 0.7);
+            const cellHeight = store.state.cellHeight || BASE_ABSTRACT_UNIT;
+            const halfUnit = cellHeight / 2;
+            const scrollableDist = Math.max(0, (totalRanks * halfUnit) - containerHeight);
+            if (scrollableDist <= 0) {
+                currentScrollPosition = 0;
+            } else {
+                const targetOffset = clampedRow * halfUnit;
+                currentScrollPosition = Math.max(0, Math.min(1, targetOffset / scrollableDist));
+            }
+        }
+        pendingStartRow = null;
+    }
+
     store.emit('layoutConfigChanged');
     isRecalculating = false;
+    if (pendingSnapToRange) {
+        pendingSnapToRange = false;
+        LayoutService.snapZoomToCurrentRange();
+    }
 }
 
 
@@ -230,8 +281,12 @@ const LayoutService = {
     
     zoomIn() {
         if (isZooming) return;
+        if (store.state.snapZoomToRange) {
+            store.setSnapZoomToRange(false);
+        }
         isZooming = true;
         currentZoomLevel = Math.min(MAX_ZOOM_LEVEL, currentZoomLevel * ZOOM_IN_FACTOR);
+        console.log(`[Zoom] Zoom level: ${Math.round(currentZoomLevel * 100)}%`);
         
         // Double RAF to ensure DOM has settled after zoom
         requestAnimationFrame(() => {
@@ -245,8 +300,18 @@ const LayoutService = {
     zoomOut() {
         if (isZooming) return;
         
+        if (store.state.snapZoomToRange) {
+            store.setSnapZoomToRange(false);
+        }
         isZooming = true;
-        currentZoomLevel = Math.max(MIN_ZOOM_LEVEL, currentZoomLevel * ZOOM_OUT_FACTOR);
+        const minZoomLevel = getDynamicMinZoomLevel();
+        const targetZoom = Math.max(MIN_ZOOM_LEVEL, currentZoomLevel * ZOOM_OUT_FACTOR);
+        const clampedZoom = Math.max(minZoomLevel, targetZoom);
+        if (clampedZoom !== targetZoom) {
+            console.log(`[Zoom] Minimum zoom reached; clamping to ${Math.round(clampedZoom * 100)}%`);
+        }
+        currentZoomLevel = clampedZoom;
+        console.log(`[Zoom] Zoom level: ${Math.round(currentZoomLevel * 100)}%`);
         
         // Double RAF to ensure DOM has settled after zoom
         requestAnimationFrame(() => {
@@ -259,8 +324,12 @@ const LayoutService = {
     
     resetZoom() {
         if (isZooming) return;
+        if (store.state.snapZoomToRange) {
+            store.setSnapZoomToRange(false);
+        }
         isZooming = true;
         currentZoomLevel = 1.0;
+        console.log('[Zoom] Zoom level reset to 100%');
         
         // Double RAF to ensure DOM has settled after zoom
         requestAnimationFrame(() => {
@@ -270,7 +339,48 @@ const LayoutService = {
             });
         });
     },
+
+    snapZoomToCurrentRange() {
+        if (isZooming) {
+            pendingSnapToRange = true;
+            return;
+        }
+        const enforcedMinZoom = getDynamicMinZoomLevel();
+        const targetZoom = Math.min(MAX_ZOOM_LEVEL, enforcedMinZoom);
+        if (!isFinite(targetZoom) || targetZoom <= 0) {
+            return;
+        }
+
+        const zoomChanged = Math.abs(currentZoomLevel - targetZoom) > 0.0001;
+
+        isZooming = true;
+        currentZoomLevel = targetZoom;
+        if (enforcedMinZoom > MAX_ZOOM_LEVEL + 0.0001) {
+            console.log(`[Zoom] Snap zoom limited by MAX_ZOOM_LEVEL (${Math.round(MAX_ZOOM_LEVEL * 100)}%)`);
+        } else if (zoomChanged) {
+            console.log(`[Zoom] Snap zoom to range: ${Math.round(currentZoomLevel * 100)}%`);
+        }
+
+        requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+                recalcAndApplyLayout();
+                isZooming = false;
+                if (pendingSnapToRange) {
+                    pendingSnapToRange = false;
+                    this.snapZoomToCurrentRange();
+                }
+            });
+        });
+    },
     
+    setPendingStartRow(row) {
+        if (typeof row === 'number' && Number.isFinite(row)) {
+            pendingStartRow = Math.max(0, row);
+        } else {
+            pendingStartRow = null;
+        }
+    },
+
     scroll(deltaY) {
         const scrollAmount = (deltaY / viewportHeight) / 4;
         currentScrollPosition = Math.max(0, Math.min(1, currentScrollPosition + scrollAmount));

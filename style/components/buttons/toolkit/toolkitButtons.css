@@ -3,22 +3,47 @@
    ========================================================================= */
 
 /* --- General Toolkit Buttons --- */
-.toolkit-button { line-height: 1.2; padding: var(--space-2); }
+.toolkit-button { line-height: 1.2; padding: var(--space-025); }
+
+.toolkit-button--ghost {
+    background-color: var(--c-surface);
+    color: var(--c-text);
+    border: 1px solid var(--c-border);
+    transition: background-color 0.1s ease, border-color 0.1s ease, transform 0.1s ease;
+}
+
+.toolkit-button--ghost:hover,
+.toolkit-button--ghost:focus-visible {
+    background-color: var(--c-border);
+    border-color: var(--c-border-strong);
+    color: var(--c-text);
+    outline: none;
+}
+
+.toolkit-button--ghost:active {
+    background-color: var(--c-warning);
+    border-color: var(--c-warning);
+    transform: scale(0.95);
+}
 
 .toolkit-icon-button {
-    font-size: 14px;
-    width: 1.35rem;
-    height: 1.35rem;
-    padding: var(--space-1);
-    display: flex;
+    font-size: var(--font-size-sm);
+    inline-size: 100%;
+    block-size: 100%;
+    max-inline-size: 100%;
+    max-block-size: 100%;
+    aspect-ratio: 1 / 1;
+    display: inline-flex;
     align-items: center;
     justify-content: center;
+    padding: 0;
     background-color: transparent;
     border: 1px solid transparent;
     color: var(--c-text-muted);
-    border-radius: var(--border-radius-sm);
+    border-radius: 22%;
     transition: background-color 0.2s ease, transform 0.1s ease, border-color 0.2s ease;
     position: relative;
+    flex: 0 0 auto;
 }
 .toolkit-icon-button img {
     width: 100%;
@@ -29,13 +54,13 @@
 }
 .toolkit-icon-button:hover {
     background-color: var(--c-surface-muted);
-    border-color: var(--c-border);
+    border-color: transparent;
 }
 
 /* Override global button:focus for toolkit buttons */
 .toolkit-icon-button:focus {
     background-color: var(--c-surface-muted); /* Same as hover */
-    border-color: var(--c-border);
+    border-color: transparent;
     outline: none;
 }
 
@@ -43,13 +68,14 @@
 .toolkit-icon-button:active {
     transform: scale(0.92);
     transition-duration: 0.05s;
-    background-color: rgba(0, 0, 0, 0.15); /* A slightly darker momentary press */
+    background-color: var(--c-warning);
+    border-color: transparent;
 }
 
 /* --- Undo/Redo Button Specific Styling --- */
 #undo-button,
 #redo-button {
-    padding: 0.1rem;
+    padding: var(--space-010);
     border-radius: calc(var(--border-radius-sm) - 1px);
 }
 
@@ -62,16 +88,7 @@
 
 /* --- Playback Control Buttons --- */
 .playback-row {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    justify-content: center;
-    gap: 0.5rem;
-}
-
-.playback-row .toolkit-icon-button {
-    width: 1.5rem;
-    height: 1.5rem;
-    text-align: center;
-    justify-content: center;
+    display: grid;
+    grid-auto-flow: column;
+    gap: var(--space-050);
 }

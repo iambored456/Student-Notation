@@ -29,6 +29,10 @@ const GridManager = {
                 if (data.type === 'vibrato' && data.activeColors && data.activeColors.length > 0) {
                     this.renderPitchGrid();
                 }
+                // Handle envelope fill animations
+                else if (data.type === 'envelopeFill' || data.hasEnvelopeFills) {
+                    this.renderPitchGrid();
+                }
                 // Also handle combined animations (both vibrato and tremolo)
                 else if (data.type === 'combined' && data.vibratoColors && data.vibratoColors.length > 0) {
                     this.renderPitchGrid();

@@ -2,8 +2,8 @@
 import store from '../../../state/index.js';
 import { Chord, ChordType } from 'tonal';
 import domCache from '../../../services/domCache.js';
-import { getTabIconPath } from '../../../utils/assetPaths.js';
 import notificationSystem from '../../UI/NotificationSystem.js';
+import clefRangeController from '../../harmony/clefRangeController.js';
 
 // UPDATED: New chord shapes with intervals for basic and advanced chords
 const BASIC_CHORD_SHAPES = {
@@ -83,40 +83,24 @@ function updateScaleModeToggleState() {
  * This ensures only one button is illuminated at a time across all chord tabs.
  */
 function updateChordButtonSelection() {
-    // Get all chord panels (basic and advanced)
-    const basicChordsPanel = document.querySelector('#basic-chords-panel .harmony-preset-grid');
-    const advancedChordsPanel = document.querySelector('#advanced-chords-panel .harmony-preset-grid');
-    
-    // Clear selection from all chord buttons in both panels
-    [basicChordsPanel, advancedChordsPanel].forEach(panel => {
-        if (panel) {
-            panel.querySelectorAll('.harmony-preset-button').forEach(el => el.classList.remove('selected'));
-        }
-    });
+    // Get the merged chords panel
+    const chordsPanel = document.querySelector('#chords-panel .harmony-preset-grid');
+
+    // Clear selection from all chord buttons
+    if (chordsPanel) {
+        chordsPanel.querySelectorAll('.harmony-preset-button').forEach(el => el.classList.remove('selected'));
+    }
 
     // If the current tool is 'chord', find the matching button and apply the 'selected' class.
-    if (store.state.selectedTool === 'chord') {
+    if (store.state.selectedTool === 'chord' && chordsPanel) {
         const currentIntervals = store.state.activeChordIntervals.toString();
-        
-        // Search in basic chords panel first
-        if (basicChordsPanel) {
-            for (const button of basicChordsPanel.children) {
-                const buttonIntervals = BASIC_CHORD_SHAPES[button.textContent]?.toString();
-                if (buttonIntervals === currentIntervals) {
-                    button.classList.add('selected');
-                    return; // Exit once found
-                }
-            }
-        }
-        
-        // Search in advanced chords panel if not found in basic
-        if (advancedChordsPanel) {
-            for (const button of advancedChordsPanel.children) {
-                const buttonIntervals = ADVANCED_CHORD_SHAPES[button.textContent]?.toString();
-                if (buttonIntervals === currentIntervals) {
-                    button.classList.add('selected');
-                    return; // Exit once found
-                }
+
+        // Search through all chord buttons
+        for (const button of chordsPanel.querySelectorAll('.harmony-preset-button')) {
+            const buttonIntervals = CHORD_SHAPES[button.textContent.trim()]?.toString();
+            if (buttonIntervals === currentIntervals) {
+                button.classList.add('selected');
+                return; // Exit once found
             }
         }
     }
@@ -147,30 +131,40 @@ function updateIntervalButtonSelection() {
 }
 
 
+// Color helper functions for creating lighter/darker variants
+const lightenColor = (hex, percent = 50) => {
+    const r = parseInt(hex.slice(1, 3), 16);
+    const g = parseInt(hex.slice(3, 5), 16);
+    const b = parseInt(hex.slice(5, 7), 16);
+
+    const lightenedR = Math.min(255, Math.floor(r + (255 - r) * (percent / 100)));
+    const lightenedG = Math.min(255, Math.floor(g + (255 - g) * (percent / 100)));
+    const lightenedB = Math.min(255, Math.floor(b + (255 - b) * (percent / 100)));
+
+    return `#${lightenedR.toString(16).padStart(2, '0')}${lightenedG.toString(16).padStart(2, '0')}${lightenedB.toString(16).padStart(2, '0')}`;
+};
+
 export function initToolSelectors() {
     const {
-        noteBankContainer, eraserButton: eraserBtn, tonicDropdownContainer,
-        tonicDropdownButton, tonicDropdownLabel, tonicDropdownMenu,
-        degreeVisibilityToggle, degreeModeToggle, flatBtn, sharpBtn, focusColoursToggle,
-        harmonyContainerMain: harmonyContainer
+        noteBankContainer, eraserButton: eraserBtn, tonicModeGrid,
+        degreeVisibilityToggle, degreeModeToggle, flatBtn, sharpBtn, frequencyBtn, focusColoursToggle
     } = domCache.getMultiple(
-        'noteBankContainer', 'eraserButton', 'tonicDropdownContainer',
-        'tonicDropdownButton', 'tonicDropdownLabel', 'tonicDropdownMenu',
-        'degreeVisibilityToggle', 'degreeModeToggle', 'flatBtn', 'sharpBtn', 'focusColoursToggle',
-        'harmonyContainerMain'
+        'noteBankContainer', 'eraserButton', 'tonicModeGrid',
+        'degreeVisibilityToggle', 'degreeModeToggle', 'flatBtn', 'sharpBtn', 'frequencyBtn', 'focusColoursToggle'
     );
+
+    // Get harmony container directly since it uses a class, not an ID
+    const harmonyContainer = document.querySelector('.pitch-tabs-container');
     const harmonyPresetGrid = document.querySelector('.harmony-preset-grid');
     
     // Get inversion toggle element
     const inversionToggle = document.getElementById('inversion-toggle');
     
-    // Get chord position toggle elements
-    const chordPositionToggle = document.getElementById('chord-position-toggle');
-    const chordPositionToggle4 = document.getElementById('chord-position-toggle-4');
-    const chordPositionToggleAdv = document.getElementById('chord-position-toggle-adv');
-    const chordPositionToggle4Adv = document.getElementById('chord-position-toggle-4-adv');
-    const chordPositionToggle5Adv = document.getElementById('chord-position-toggle-5-adv');
-    const chordPositionToggle6Adv = document.getElementById('chord-position-toggle-6-adv');
+    // Get chord position toggle element (single 6-state toggle)
+    const chordPositionToggle6 = document.getElementById('chord-position-toggle-6');
+
+    // Initialize clef range controls when the elements are available
+    clefRangeController.init();
     
     // Define 4-note chord types
     const fourNoteChords = ['X7', 'x⁷', 'ø⁷', 'Xmaj7', 'x°7'];
@@ -188,23 +182,48 @@ export function initToolSelectors() {
     if (eraserBtn) {
         eraserBtn.addEventListener('click', () => store.setSelectedTool('eraser'));
     }
+
+    const tonicModeButtons = tonicModeGrid ? Array.from(tonicModeGrid.querySelectorAll('.tonic-sign-button')) : [];
+
+    const updateTonicModeButtons = (activeNumber = store.state.selectedToolTonicNumber) => {
+        if (!tonicModeButtons.length) return;
+        const fallbackNumber = tonicModeButtons[0] ? parseInt(tonicModeButtons[0].dataset.tonic, 10) : 1;
+        const parsedCandidate = parseInt(activeNumber, 10);
+        const parsedActive = Number.isNaN(parsedCandidate) ? fallbackNumber : parsedCandidate;
+        tonicModeButtons.forEach(button => {
+            const buttonNumber = parseInt(button.dataset.tonic, 10);
+            const isActive = buttonNumber === parsedActive;
+            button.classList.toggle('selected', isActive);
+            button.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+        });
+    };
+
+    if (tonicModeButtons.length) {
+        tonicModeButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const tonicNumber = button.getAttribute('data-tonic');
+                if (!tonicNumber) return;
+                store.setSelectedTool('tonicization', tonicNumber);
+                updateTonicModeButtons(parseInt(tonicNumber, 10));
+            });
+        });
+        updateTonicModeButtons();
+    }
     
-    // Attach chord shape handlers to buttons in both basic and advanced chord panels
-    const basicChordsPanel = document.querySelector('#basic-chords-panel .harmony-preset-grid');
-    const advancedChordsPanel = document.querySelector('#advanced-chords-panel .harmony-preset-grid');
-    
+    // Attach chord shape handlers to buttons in the merged chords panel
+    const chordsPanel = document.querySelector('#chords-panel .harmony-preset-grid');
+
     // Helper function to add chord button event listeners
     function addChordButtonListeners(panel, chordShapes, panelName) {
         if (!panel) return;
-        
+
         panel.querySelectorAll('.harmony-preset-button').forEach(button => {
             button.addEventListener('click', () => {
                 const intervals = chordShapes[button.textContent];
                 if (intervals && intervals.length > 0) {
                     store.setActiveChordIntervals(intervals);
                     store.setSelectedTool('chord');
-                    // Update toggle visibility after chord selection
-                    setTimeout(() => updateToggleVisibility(), 10);
+                    // No need for setTimeout - state event handler will update toggle
                 } else {
                     console.error(`Failed to retrieve valid intervals for ${panelName} chord: "${button.textContent}"`);
                 }
@@ -222,34 +241,33 @@ export function initToolSelectors() {
             });
         });
     }
-    
-    // Add event listeners to both panels
-    addChordButtonListeners(basicChordsPanel, BASIC_CHORD_SHAPES, 'basic');
-    addChordButtonListeners(advancedChordsPanel, ADVANCED_CHORD_SHAPES, 'advanced');
+
+    // Add event listeners to the merged chords panel
+    addChordButtonListeners(chordsPanel, CHORD_SHAPES, 'chords');
 
     // Add chord tab switching logic
-    const chordTabButtons = document.querySelectorAll('.chord-tab-button');
-    const chordTabPanels = document.querySelectorAll('.chord-tab-panel');
+    const pitchTabButtons = document.querySelectorAll('.pitch-tab-button');
+    const pitchTabPanels = document.querySelectorAll('.pitch-tab-panel');
     
-    if (chordTabButtons.length > 0) {
-        chordTabButtons.forEach(button => {
+    if (pitchTabButtons.length > 0) {
+        pitchTabButtons.forEach(button => {
             button.addEventListener('click', () => {
-                const targetTab = button.dataset.chordTab;
-                
+                const targetTab = button.dataset.pitchTab;
+
                 // Update active tab button
-                chordTabButtons.forEach(btn => btn.classList.remove('active'));
+                pitchTabButtons.forEach(btn => btn.classList.remove('active'));
                 button.classList.add('active');
-                
+
                 // Update active tab panel
-                chordTabPanels.forEach(panel => panel.classList.remove('active'));
+                pitchTabPanels.forEach(panel => panel.classList.remove('active'));
                 const targetPanel = document.getElementById(`${targetTab}-panel`);
                 if (targetPanel) {
                     targetPanel.classList.add('active');
                 }
-                
-                // Update toggle visibility when switching to chord tabs
-                if (targetTab === 'basic-chords' || targetTab === 'advanced-chords') {
-                    setTimeout(() => updateToggleVisibility(), 10);
+
+                // Update toggle state when switching to chords tab
+                if (targetTab === 'chords') {
+                    updateChordPositionToggleState();
                 }
             });
         });
@@ -275,288 +293,94 @@ export function initToolSelectors() {
         updateInversionToggle(store.state.isIntervalsInverted);
     }
 
-    // Add 3-state chord position toggle handler
-    if (chordPositionToggle) {
-        chordPositionToggle.addEventListener('click', () => {
-            // Cycle through states: 0 -> 1 -> 2 -> 0
+    // Add unified 6-state chord position toggle handler
+    if (chordPositionToggle6) {
+        chordPositionToggle6.addEventListener('click', () => {
             const currentState = store.state.chordPositionState;
-            const nextState = (currentState + 1) % 3;
+            const maxStates = getMaxPositionStates();
+            const nextState = (currentState + 1) % maxStates;
             store.setChordPosition(nextState);
-            chordPositionToggle.blur(); // Remove focus to prevent lingering highlight
+            chordPositionToggle6.blur();
         });
-        
-        // Initialize toggle state
-        const updateChordPositionToggle = (positionState) => {
-            // Remove all state classes
-            chordPositionToggle.classList.remove('state-1', 'state-2');
-            
-            // Add appropriate state class
-            if (positionState === 1) {
-                chordPositionToggle.classList.add('state-1');
-            } else if (positionState === 2) {
-                chordPositionToggle.classList.add('state-2');
-            }
-            // positionState === 0 has no additional class (default gray)
-        };
-        
-        // Listen for state changes
-        store.on('chordPositionChanged', updateChordPositionToggle);
-        
-        // Set initial state
-        updateChordPositionToggle(store.state.chordPositionState);
-    }
 
-    // Add 4-state chord position toggle handler
-    if (chordPositionToggle4) {
-        chordPositionToggle4.addEventListener('click', () => {
-            // Cycle through states: 0 -> 1 -> 2 -> 3 -> 0
-            const currentState = store.state.chordPositionState;
-            const nextState = (currentState + 1) % 4;
-            store.setChordPosition(nextState);
-            chordPositionToggle4.blur(); // Remove focus to prevent lingering highlight
-        });
-        
-        // Initialize 4-state toggle state
-        const updateChordPositionToggle4 = (positionState) => {
-            // Remove all state classes
-            chordPositionToggle4.classList.remove('state-1', 'state-2', 'state-3');
-            
-            // Add appropriate state class
-            if (positionState === 1) {
-                chordPositionToggle4.classList.add('state-1');
-            } else if (positionState === 2) {
-                chordPositionToggle4.classList.add('state-2');
-            } else if (positionState === 3) {
-                chordPositionToggle4.classList.add('state-3');
-            }
-            // positionState === 0 has no additional class (default gray)
-        };
-        
-        // Listen for state changes
-        store.on('chordPositionChanged', updateChordPositionToggle4);
-        
-        // Set initial state
-        updateChordPositionToggle4(store.state.chordPositionState);
-    }
-
-    // Add advanced chord position toggle handlers
-    if (chordPositionToggleAdv) {
-        chordPositionToggleAdv.addEventListener('click', () => {
-            const currentState = store.state.chordPositionState;
-            const nextState = (currentState + 1) % 3;
-            store.setChordPosition(nextState);
-            chordPositionToggleAdv.blur();
-        });
-        
-        // Initialize advanced 3-state toggle state updater
-        const updateChordPositionToggleAdv = (positionState) => {
-            // Remove all state classes
-            chordPositionToggleAdv.classList.remove('state-1', 'state-2');
-            
-            // Add appropriate state class
-            if (positionState === 1) {
-                chordPositionToggleAdv.classList.add('state-1');
-            } else if (positionState === 2) {
-                chordPositionToggleAdv.classList.add('state-2');
-            }
-            // positionState === 0 has no additional class (default gray)
-        };
-        
-        // Listen for state changes
-        store.on('chordPositionChanged', updateChordPositionToggleAdv);
-        
-        // Set initial state
-        updateChordPositionToggleAdv(store.state.chordPositionState);
-    }
-
-    if (chordPositionToggle4Adv) {
-        chordPositionToggle4Adv.addEventListener('click', () => {
-            const currentState = store.state.chordPositionState;
-            const nextState = (currentState + 1) % 4;
-            store.setChordPosition(nextState);
-            chordPositionToggle4Adv.blur();
-        });
-        
-        // Initialize advanced 4-state toggle state updater
-        const updateChordPositionToggle4Adv = (positionState) => {
-            // Remove all state classes
-            chordPositionToggle4Adv.classList.remove('state-1', 'state-2', 'state-3');
-            
-            // Add appropriate state class
-            if (positionState === 1) {
-                chordPositionToggle4Adv.classList.add('state-1');
-            } else if (positionState === 2) {
-                chordPositionToggle4Adv.classList.add('state-2');
-            } else if (positionState === 3) {
-                chordPositionToggle4Adv.classList.add('state-3');
-            }
-            // positionState === 0 has no additional class (default gray)
-        };
-        
-        // Listen for state changes
-        store.on('chordPositionChanged', updateChordPositionToggle4Adv);
-        
-        // Set initial state
-        updateChordPositionToggle4Adv(store.state.chordPositionState);
-    }
-
-    if (chordPositionToggle5Adv) {
-        chordPositionToggle5Adv.addEventListener('click', () => {
-            const currentState = store.state.chordPositionState;
-            const nextState = (currentState + 1) % 5;
-            store.setChordPosition(nextState);
-            chordPositionToggle5Adv.blur();
-        });
-        
-        // Initialize 5-state toggle state updater
-        const updateChordPositionToggle5 = (positionState) => {
-            // Remove all state classes
-            chordPositionToggle5Adv.classList.remove('state-1', 'state-2', 'state-3', 'state-4');
-            
-            // Add appropriate state class
-            if (positionState === 1) {
-                chordPositionToggle5Adv.classList.add('state-1');
-            } else if (positionState === 2) {
-                chordPositionToggle5Adv.classList.add('state-2');
-            } else if (positionState === 3) {
-                chordPositionToggle5Adv.classList.add('state-3');
-            } else if (positionState === 4) {
-                chordPositionToggle5Adv.classList.add('state-4');
-            }
-            // positionState === 0 has no additional class (default gray)
-        };
-        
-        // Listen for state changes
-        store.on('chordPositionChanged', updateChordPositionToggle5);
-        
-        // Set initial state
-        updateChordPositionToggle5(store.state.chordPositionState);
-    }
-
-    if (chordPositionToggle6Adv) {
-        chordPositionToggle6Adv.addEventListener('click', () => {
-            const currentState = store.state.chordPositionState;
-            const nextState = (currentState + 1) % 6;
-            store.setChordPosition(nextState);
-            chordPositionToggle6Adv.blur();
-        });
-        
         // Initialize 6-state toggle state updater
         const updateChordPositionToggle6 = (positionState) => {
             // Remove all state classes
-            chordPositionToggle6Adv.classList.remove('state-1', 'state-2', 'state-3', 'state-4', 'state-5');
-            
+            chordPositionToggle6.classList.remove('state-1', 'state-2', 'state-3', 'state-4', 'state-5');
+
             // Add appropriate state class
             if (positionState === 1) {
-                chordPositionToggle6Adv.classList.add('state-1');
+                chordPositionToggle6.classList.add('state-1');
             } else if (positionState === 2) {
-                chordPositionToggle6Adv.classList.add('state-2');
+                chordPositionToggle6.classList.add('state-2');
             } else if (positionState === 3) {
-                chordPositionToggle6Adv.classList.add('state-3');
+                chordPositionToggle6.classList.add('state-3');
             } else if (positionState === 4) {
-                chordPositionToggle6Adv.classList.add('state-4');
+                chordPositionToggle6.classList.add('state-4');
             } else if (positionState === 5) {
-                chordPositionToggle6Adv.classList.add('state-5');
+                chordPositionToggle6.classList.add('state-5');
             }
             // positionState === 0 has no additional class (default gray)
         };
-        
+
         // Listen for state changes to update visual state
         store.on('chordPositionChanged', (newState) => {
             updateChordPositionToggle6(newState);
         });
-        
+
         // Set initial state
         updateChordPositionToggle6(store.state.chordPositionState);
     }
 
-    // Function to determine chord note count and return appropriate toggle info
-    function getChordToggleInfo() {
-        // Check for selected chord button in both basic and advanced panels
-        const basicChordsPanel = document.querySelector('#basic-chords-panel .harmony-preset-grid');
-        const advancedChordsPanel = document.querySelector('#advanced-chords-panel .harmony-preset-grid');
-        
-        let selectedButton = null;
-        if (basicChordsPanel) {
-            selectedButton = basicChordsPanel.querySelector('.harmony-preset-button.selected');
-        }
-        if (!selectedButton && advancedChordsPanel) {
-            selectedButton = advancedChordsPanel.querySelector('.harmony-preset-button.selected');
-        }
-        
-        if (!selectedButton) return { noteCount: 3, isAdvanced: false };
-        
-        // Get the intervals array to determine note count
-        const chordSymbol = selectedButton.textContent;
-        const intervals = CHORD_SHAPES[chordSymbol];
-        const noteCount = intervals ? intervals.length : 3;
-        const isAdvanced = advancedChordsPanel?.contains(selectedButton) || false;
-        
-        return { noteCount, isAdvanced, chordSymbol };
+    // Helper function to get max position states based on chord note count
+    function getMaxPositionStates() {
+        // Use state instead of DOM to get accurate interval count immediately
+        const intervals = store.state.activeChordIntervals;
+        if (!intervals || intervals.length === 0) return 3;
+        return intervals.length;
     }
 
-    // Function to switch between 3-state, 4-state, 5-state, and 6-state toggles
-    function updateToggleVisibility() {
-        
-        const basicToggle = chordPositionToggle;
-        const fourStateToggle = chordPositionToggle4;
-        const advancedToggle = document.getElementById('chord-position-toggle-adv');
-        const advancedFourToggle = document.getElementById('chord-position-toggle-4-adv');  
-        const advancedFiveToggle = document.getElementById('chord-position-toggle-5-adv');
-        const advancedSixToggle = document.getElementById('chord-position-toggle-6-adv');
-        
-        
-        const { noteCount, isAdvanced, chordSymbol } = getChordToggleInfo();
-        
-        
-        // Always show inversion toggle (intervals panel inversion)
-        if (inversionToggle) {
-            inversionToggle.classList.remove('hidden');
+    // Function to determine chord note count from current state
+    function getChordNoteCount() {
+        // Use state instead of DOM to get accurate interval count immediately
+        const intervals = store.state.activeChordIntervals;
+        if (!intervals || intervals.length === 0) return 3;
+        return intervals.length;
+    }
+
+    // Function to update 6-state toggle grayed-out states based on chord note count
+    function updateChordPositionToggleState() {
+        if (!chordPositionToggle6) return;
+
+        const noteCount = getChordNoteCount();
+
+        // Remove all disabled state classes
+        for (let i = 0; i <= 5; i++) {
+            chordPositionToggle6.classList.remove(`disabled-state-${i}`);
         }
-        
-        // Hide all chord position toggles first
-        [basicToggle, fourStateToggle, advancedToggle, advancedFourToggle, advancedFiveToggle, advancedSixToggle].forEach(toggle => {
-            if (toggle) toggle.classList.add('hidden');
-        });
-        
-        // Show appropriate toggle based on note count and panel
-        let activeToggle = null;
-        let maxPosition = 0;
-        
-        if (isAdvanced) {
-            // Advanced chord panel toggles
-            if (noteCount >= 6) {
-                activeToggle = advancedSixToggle;
-                maxPosition = 5; // 6-note chord: positions 0-5
-            } else if (noteCount === 5) {
-                activeToggle = advancedFiveToggle;
-                maxPosition = 4; // 5-note chord: positions 0-4
-            } else if (noteCount >= 4) {
-                activeToggle = advancedFourToggle;
-                maxPosition = 3; // 4-note chord: positions 0-3
-            } else {
-                activeToggle = advancedToggle;
-                maxPosition = 2; // 3-note chord: positions 0-2
-            }
-        } else {
-            // Basic chord panel toggles  
-            if (noteCount >= 4) {
-                activeToggle = fourStateToggle;
-                maxPosition = 3; // 4-note chord: positions 0-3
-            } else {
-                activeToggle = basicToggle;
-                maxPosition = 2; // 3-note chord: positions 0-2
-            }
+
+        // Gray out states that aren't applicable
+        // States 0-2 (Root, 1st, 2nd) are always available for all chords
+        // State 3 (3rd) is disabled for triads (3-note chords)
+        // State 4 (4th) is disabled for chords with <= 4 notes
+        // State 5 (5th) is disabled for chords with <= 5 notes
+
+        if (noteCount < 4) {
+            // Triads: disable states 3, 4, 5
+            chordPositionToggle6.classList.add('disabled-state-3', 'disabled-state-4', 'disabled-state-5');
+        } else if (noteCount === 4) {
+            // 4-note chords: disable states 4, 5
+            chordPositionToggle6.classList.add('disabled-state-4', 'disabled-state-5');
+        } else if (noteCount === 5) {
+            // 5-note chords: disable state 5
+            chordPositionToggle6.classList.add('disabled-state-5');
         }
-        
-        if (activeToggle) {
-            activeToggle.classList.remove('hidden');
-            
-            // Reset chord position to valid range if current position exceeds max
-            if (store.state.chordPositionState > maxPosition) {
-                store.setChordPosition(0);
-            }
-        } else {
+        // 6+ note chords: all states enabled
+
+        // Reset chord position to valid range if current position exceeds max
+        const maxPosition = noteCount - 1;
+        if (store.state.chordPositionState > maxPosition) {
+            store.setChordPosition(0);
         }
     }
 
@@ -591,49 +415,6 @@ export function initToolSelectors() {
         });
     }
 
-    if (tonicDropdownButton && tonicDropdownMenu) {
-        tonicDropdownButton.addEventListener('click', (e) => {
-            e.stopPropagation();
-            tonicDropdownContainer.classList.toggle('open');
-            
-            // Toggle overflow on containers for dropdown escape
-            const tabContent = document.querySelector('.tab-content');
-            const container3 = document.getElementById('container-3');
-            const isOpen = tonicDropdownContainer.classList.contains('open');
-            
-            if (tabContent) {
-                tabContent.classList.toggle('dropdown-open', isOpen);
-            }
-            if (container3) {
-                container3.classList.toggle('dropdown-open', isOpen);
-            }
-            
-            tonicDropdownButton.blur(); // Remove focus to prevent lingering highlight
-        });
-        tonicDropdownMenu.querySelectorAll('.tonic-sign-button').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                e.stopPropagation(); 
-                const tonicNumber = btn.getAttribute('data-tonic');
-                const modeLabel = btn.querySelector('.mode-label').textContent;
-                store.setSelectedTool('tonicization', tonicNumber);
-                if (tonicDropdownLabel) {
-                    tonicDropdownLabel.innerHTML = `<img src="${getTabIconPath(`tonicShape_${tonicNumber}.svg`)}" alt="Tonic ${tonicNumber}" class="tonic-shape-icon"> ${modeLabel}`;
-                }
-                tonicDropdownContainer.classList.remove('open');
-                
-                // Remove overflow class when dropdown closes
-                const tabContent = document.querySelector('.tab-content');
-                const container3 = document.getElementById('container-3');
-                if (tabContent) {
-                    tabContent.classList.remove('dropdown-open');
-                }
-                if (container3) {
-                    container3.classList.remove('dropdown-open');
-                }
-            });
-        });
-    }
-    
     // Degree Visibility Toggle (Show/Hide)
     if (degreeVisibilityToggle) {
         degreeVisibilityToggle.addEventListener('click', () => {
@@ -683,12 +464,28 @@ export function initToolSelectors() {
         });
     }
     if (flatBtn) flatBtn.addEventListener('click', () => {
+        // If frequency mode is active, turn it off and restore previous accidental state
+        if (store.state.showFrequencyLabels) {
+            store.toggleFrequencyLabels();
+            flatBtn.blur();
+            return;
+        }
         store.toggleAccidentalMode('flat');
         flatBtn.blur(); // Remove focus to prevent lingering blue highlight
     });
     if (sharpBtn) sharpBtn.addEventListener('click', () => {
+        // If frequency mode is active, turn it off and restore previous accidental state
+        if (store.state.showFrequencyLabels) {
+            store.toggleFrequencyLabels();
+            sharpBtn.blur();
+            return;
+        }
         store.toggleAccidentalMode('sharp');
         sharpBtn.blur(); // Remove focus to prevent lingering blue highlight
+    });
+    if (frequencyBtn) frequencyBtn.addEventListener('click', () => {
+        store.toggleFrequencyLabels();
+        frequencyBtn.blur(); // Remove focus to prevent lingering blue highlight
     });
     if (focusColoursToggle) focusColoursToggle.addEventListener('change', () => {
         // If turning on Focus Colours, check for tonic shapes
@@ -704,50 +501,31 @@ export function initToolSelectors() {
         store.toggleFocusColours();
     });
 
-    document.addEventListener('click', (e) => {
-        if (tonicDropdownContainer && !tonicDropdownContainer.contains(e.target)) {
-            tonicDropdownContainer.classList.remove('open');
-            
-            // Remove overflow class when dropdown closes
-            const tabContent = document.querySelector('.tab-content');
-            const container3 = document.getElementById('container-3');
-            if (tabContent) {
-                tabContent.classList.remove('dropdown-open');
-            }
-            if (container3) {
-                container3.classList.remove('dropdown-open');
-            }
-        }
-    });
-
     // --- UI State Change Listeners (Visual Feedback) ---
     store.on('toolChanged', ({ newTool }) => {
         // Clear selected state from tool buttons, but preserve note selection unless switching to note tool
-        // Clear all chord buttons from both panels
-        const basicChordsPanel = document.querySelector('#basic-chords-panel .harmony-preset-grid');
-        const advancedChordsPanel = document.querySelector('#advanced-chords-panel .harmony-preset-grid');
-        [basicChordsPanel, advancedChordsPanel].forEach(panel => {
-            if (panel) {
-                panel.querySelectorAll('.harmony-preset-button').forEach(el => el.classList.remove('selected'));
-            }
-        });
+        // Clear all chord buttons from the chords panel
+        const chordsPanel = document.querySelector('#chords-panel .harmony-preset-grid');
+        if (chordsPanel) {
+            chordsPanel.querySelectorAll('.harmony-preset-button').forEach(el => el.classList.remove('selected'));
+        }
         const intervalsPanel = document.querySelector('#intervals-panel .harmony-preset-grid');
         if (intervalsPanel) {
             intervalsPanel.querySelectorAll('.harmony-preset-button').forEach(el => el.classList.remove('selected'));
         }
-        document.querySelectorAll('#tonic-dropdown-button, #eraser-tool-button').forEach(el => el.classList.remove('selected'));
-        if(harmonyContainer) harmonyContainer.classList.remove('active-tool');
+
+        eraserBtn?.classList.remove('selected');
+        if (harmonyContainer) harmonyContainer.classList.remove('active-tool');
 
         if (newTool === 'eraser') {
             eraserBtn?.classList.add('selected');
         } else if (newTool === 'tonicization') {
-            tonicDropdownButton?.classList.add('selected');
+            // Tonic buttons remain highlighted via updateTonicModeButtons
         } else if (newTool === 'chord') {
             harmonyContainer?.classList.add('active-tool');
             updateChordButtonSelection();
             updateIntervalButtonSelection();
-            // Update toggle visibility when switching to chord tool
-            setTimeout(() => updateToggleVisibility(), 10);
+            updateChordPositionToggleState(); // Update toggle state when switching to chord tool
         } else if (newTool === 'note') {
             // Re-select the current note when switching to note tool
             const currentNote = store.state.selectedNote;
@@ -757,12 +535,15 @@ export function initToolSelectors() {
                 targetPair?.querySelector(`.note[data-type='${currentNote.shape}']`)?.classList.add('selected');
             }
         }
+
+        updateTonicModeButtons();
     });
 
     store.on('activeChordIntervalsChanged', () => {
         if (store.state.selectedTool === 'chord') {
             updateChordButtonSelection();
             updateIntervalButtonSelection();
+            updateChordPositionToggleState(); // Update position toggle based on new chord
         }
     });
 
@@ -771,8 +552,13 @@ export function initToolSelectors() {
         const targetPair = document.querySelector(`.note-pair[data-color='${newNote.color}']`);
         targetPair?.classList.add('selected');
         targetPair?.querySelector(`.note[data-type='${newNote.shape}']`)?.classList.add('selected');
+
+        // Set accent color and lighter variant for chord button styling
         if (harmonyContainer) {
+            const lightColor = lightenColor(newNote.color, 50);
+            const extraLightColor = lightenColor(lightColor, 60);
             harmonyContainer.style.setProperty('--c-accent', newNote.color);
+            harmonyContainer.style.setProperty('--c-accent-light', extraLightColor);
         }
         const tabSidebar = document.querySelector('.tab-sidebar');
         if (tabSidebar) {
@@ -807,16 +593,30 @@ export function initToolSelectors() {
         flatBtn?.classList.toggle('active', flat);
     });
 
+    store.on('frequencyLabelsChanged', (showFrequencyLabels) => {
+        frequencyBtn?.classList.toggle('active', showFrequencyLabels);
+        // Visually disable flat/sharp buttons when frequency mode is active
+        if (flatBtn) flatBtn.style.opacity = showFrequencyLabels ? '0.3' : '';
+        if (sharpBtn) sharpBtn.style.opacity = showFrequencyLabels ? '0.3' : '';
+        if (flatBtn) flatBtn.style.pointerEvents = showFrequencyLabels ? 'none' : '';
+        if (sharpBtn) sharpBtn.style.pointerEvents = showFrequencyLabels ? 'none' : '';
+    });
+
+    // Initialize accent colors on startup
     if (harmonyContainer && store.state.selectedNote) {
-        harmonyContainer.style.setProperty('--c-accent', store.state.selectedNote.color);
+        const color = store.state.selectedNote.color;
+        const lightColor = lightenColor(color, 50);
+        const extraLightColor = lightenColor(lightColor, 60);
+        harmonyContainer.style.setProperty('--c-accent', color);
+        harmonyContainer.style.setProperty('--c-accent-light', extraLightColor);
     }
     const tabSidebar = document.querySelector('.tab-sidebar');
     if (tabSidebar && store.state.selectedNote) {
         tabSidebar.style.setProperty('--c-accent', store.state.selectedNote.color);
     }
 
-    // Initialize toggle visibility on startup
-    setTimeout(() => updateToggleVisibility(), 50);
+    // Initialize toggle state on startup
+    setTimeout(() => updateChordPositionToggleState(), 50);
     
     // Initialize Scale/Mode toggle state on startup
     updateScaleModeToggleState();

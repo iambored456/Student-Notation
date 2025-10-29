@@ -1,4 +1,5 @@
 // js/components/Harmonics-Filter/harmonicBins.js
+import * as Tone from 'tone';
 import store from '../../../state/index.js';
 import { HARMONIC_BINS } from '../../../core/constants.js';
 import SynthEngine from '../../../services/synthEngine.js';
@@ -26,10 +27,10 @@ let currentColor;
 let phases = new Float32Array(BINS).fill(0);
 const binColumns = [];
 const phaseControls = [];
-// Snap-to-zero feature removed - no threshold needed
 let isAuditioning = false;
 let harmonicBinsGrid = null;
 const zeroUpdateTimeouts = new Array(BINS).fill(null);
+let isDraggingBin = false; // Track if user is actively dragging a bin
 
 // REMOVED: Amplitude normalization function (was causing coefficient contamination)
 
@@ -39,15 +40,21 @@ function getFilterAmplitudeAt(norm_pos, filterSettings) {
     const norm_cutoff = (cutoff - 1) / (31 - 1);
 
     // Use linear distance instead of ratio for consistent curve width
-    const steepness = 8; // Increased to maintain filter sharpness with linear model
+    const steepness = 20; // Higher value creates sharper bandpass falloff
     const lp_distance = norm_pos - norm_cutoff;  // Distance right of cutoff
     const hp_distance = norm_cutoff - norm_pos;  // Distance left of cutoff
 
     // Apply steepness to distances (now maintains consistent curve shape)
-    const lp = 1 / (1 + Math.pow(Math.max(0, lp_distance * steepness), 2));
-    const hp = 1 / (1 + Math.pow(Math.max(0, hp_distance * steepness), 2));
+    let lp = 1 / (1 + Math.pow(Math.max(0, lp_distance * steepness), 2));
+    let hp = 1 / (1 + Math.pow(Math.max(0, hp_distance * steepness), 2));
+
+    // Clamp near-zero values to exactly zero for cleaner filter tails
+    const ZERO_THRESHOLD = 0.01;
+    if (lp < ZERO_THRESHOLD) lp = 0;
+    if (hp < ZERO_THRESHOLD) hp = 0;
+
     // Bandpass: product of LP and HP, normalized to 0-1 range
-    const bp = lp * hp; // Remove *4 multiplier - keep in 0-1 range
+    const bp = lp * hp;
 
     let shape;
     if (blend <= 1.0) {
@@ -58,8 +65,6 @@ function getFilterAmplitudeAt(norm_pos, filterSettings) {
         shape = bp * (2 - blend) + lp * (blend - 1);
     }
 
-    // Shape is now guaranteed to be in 0-1 range (no clamping needed)
-
     const res_q = 1.0 - (resonance || 0) / 105;
     const peak_width = Math.max(0.01, 0.2 * res_q * res_q);
     const peak = Math.exp(-Math.pow((norm_pos - norm_cutoff) / peak_width, 2));
@@ -67,7 +72,10 @@ function getFilterAmplitudeAt(norm_pos, filterSettings) {
 
     // Add resonance peak but ensure total stays within 0-1 bounds
     const result = shape + peak * res_gain;
-    return Math.max(0, Math.min(1.0, result));
+
+    // Final clamping with zero threshold
+    const finalResult = Math.max(0, Math.min(1.0, result));
+    return finalResult < ZERO_THRESHOLD ? 0 : finalResult;
 }
 
 function applyFilterMix(filterAmp, mixAmount) {
@@ -126,7 +134,7 @@ export function getFilteredCoefficients(color) {
     if (!timbre) {
         return new Float32Array(BINS);
     }
-    
+
     const filterSettings = timbre.filter;
     if (filterSettings && (filterSettings.enabled !== false) && (filterSettings.mix || 0) > 0) {
         // Return filtered coefficients
@@ -215,12 +223,18 @@ function drawFilterOverlay() {
         }
         
         // Calculate discrete filter values for each of the 12 bins
+        const binAmplitudes = [];
         for (let i = 0; i < BINS; i++) {
             const norm_pos = (i + 0.5) / BINS; // Center of each bin
             const rawFilterAmp = getFilterAmplitudeAt(norm_pos, filterSettings);
             binFilterValues[i] = applyFilterMix(rawFilterAmp, mixAmount);
+            binAmplitudes.push({
+                bin: i + 1,
+                rawFilterAmp: rawFilterAmp.toFixed(3),
+                afterMix: binFilterValues[i].toFixed(3)
+            });
         }
-        
+
         
         // Draw continuous curve showing the RAW filter shape (not mixed)
         overlayCtx.beginPath();
@@ -315,33 +329,35 @@ function updateSliderVisuals() {
         if (existingCanvas) {
             existingCanvas.remove();
         }
-        
+
         // Update label color based on bin level
         if (val > 0.1) {
             // High bin level - white text for contrast against colored fill
-            label.style.color = '#ffffff';
-            label.style.textShadow = '0 0 2px rgba(0,0,0,0.5)';
+            label.style.color = 'rgba(255, 255, 255, 0.35)';
+            label.style.textShadow = '0 0 2px rgba(0,0,0,0.3)';
         } else {
             // Low/zero bin level - dark text for visibility on light background
-            label.style.color = '#333333';
-            label.style.textShadow = '0 0 1px rgba(255,255,255,0.5)';
+            label.style.color = 'rgba(51, 51, 51, 0.5)';
+            label.style.textShadow = '0 0 1px rgba(255,255,255,0.3)';
         }
     });
     drawFilterOverlay();
 }
 
 function handleBinPointerEvent(e, binIndex = null) {
+    console.log('[BINS DRAG] handleBinPointerEvent called', { clientX: e.clientX, clientY: e.clientY });
     logger.debug('HarmonicBins', 'handleBinPointerEvent called', { target: e.target.className }, 'filter');
-    
+
     // CRITICAL: Block phase button events completely
-    if (e.target.classList.contains('phase-button') || 
-        e.target.closest('.phase-button') || 
+    if (e.target.classList.contains('phase-button') ||
+        e.target.closest('.phase-button') ||
         e.target.tagName === 'path' ||  // SVG elements in phase buttons
         e.target.tagName === 'svg') {   // SVG containers
+        console.log('[BINS DRAG] Blocked - phase button element');
         logger.debug('HarmonicBins', 'Blocking phase button interaction in handleBinPointerEvent', null, 'filter');
         return;
     }
-    
+
     // If no binIndex provided, determine from pointer position
     if (binIndex === null) {
         const gridRect = harmonicBinsGrid.getBoundingClientRect();
@@ -349,21 +365,22 @@ function handleBinPointerEvent(e, binIndex = null) {
         const binWidth = gridRect.width / BINS;
         binIndex = Math.floor(x / binWidth);
         binIndex = Math.max(0, Math.min(BINS - 1, binIndex));
+        console.log('[BINS DRAG] Calculated binIndex:', binIndex, 'from x:', x, 'binWidth:', binWidth);
     }
-    
+
     logger.debug('HarmonicBins', 'handleBinPointerEvent - binIndex', { binIndex }, 'filter');
-    
+
     const sliderTrack = binColumns[binIndex].sliderTrack;
     const rect = sliderTrack.getBoundingClientRect();
     const y = e.clientY - rect.top;
     const trackHeight = rect.height;
-    
-    const usableHeight = trackHeight;
+
     const previous = coeffs[binIndex];
-    
-    // Direct mapping - no snap-to-zero
-    const v = (usableHeight - y) / usableHeight;
-    let clampedValue = Math.max(0, Math.min(1, v));
+
+    // Direct mapping - no snap zone logic
+    const v = (trackHeight - y) / trackHeight;
+    const clampedValue = Math.max(0, Math.min(1, v));
+    console.log('[BINS DRAG] Setting bin', binIndex + 1, 'value:', clampedValue.toFixed(3));
 
     const releaseDelay = (store.state.timbres[currentColor]?.adsr?.release || 0) * 1000;
 
@@ -542,10 +559,14 @@ function updateForNewColor(color) {
 }
 
 export function initHarmonicBins() {
-    const harmonicBinsContainer = document.querySelector('.harmonic-bins-container');
-    const filterMainPanel = harmonicBinsContainer?.querySelector('.filter-main-panel');
-    
-    if (!harmonicBinsContainer || !filterMainPanel) return;
+    const filterContainer = document.querySelector('.filter-container');
+    const filterBinsWrapper = filterContainer?.querySelector('.filter-bins-wrapper');
+    const filterVerticalBlendWrapper = filterContainer?.querySelector('.filter-vertical-blend-wrapper');
+
+    if (!filterContainer || !filterBinsWrapper || !filterVerticalBlendWrapper) {
+        console.error('[FILTER] Missing required elements - aborting init');
+        return;
+    }
 
     // Create the main grid container
     harmonicBinsGrid = document.createElement('div');
@@ -577,14 +598,63 @@ export function initHarmonicBins() {
         const phaseBtn = document.createElement('button');
         phaseBtn.className = 'phase-button';
         phaseBtn.innerHTML = phaseIconPaths[0];
-        
+        phaseBtn.dataset.binIndex = i; // Store bin index for snap-to-zero
+
+        // Snap-to-zero when dragging onto phase button
+        phaseBtn.addEventListener('pointerenter', (e) => {
+            if (isDraggingBin) {
+                console.log('[SNAP-TO-ZERO] 🎯 Drag entered phase button for bin', i + 1);
+
+                // Apply smooth ramp to zero to avoid pops/clicks
+                const rampTime = 0.015; // 15ms ramp to avoid audio artifacts
+                const now = Tone.now();
+
+                // Get the oscillator for this harmonic
+                const timbre = store.state.timbres[currentColor];
+                if (SynthEngine.synths?.[currentColor]?.activeNotes?.['C4']) {
+                    const activeNote = SynthEngine.synths[currentColor].activeNotes['C4'];
+                    if (activeNote.oscillators?.[i]) {
+                        const osc = activeNote.oscillators[i];
+                        // Smoothly ramp volume to zero
+                        osc.volume.linearRampTo(-Infinity, rampTime, now);
+                        console.log('[SNAP-TO-ZERO] Applied smooth ramp for bin', i + 1);
+                    }
+                }
+
+                // Update coefficients after ramp completes
+                setTimeout(() => {
+                    const newCoeffs = new Float32Array(store.state.timbres[currentColor].coeffs);
+                    newCoeffs[i] = 0;
+                    coeffs[i] = 0;
+                    store.setHarmonicCoefficients(currentColor, newCoeffs);
+
+                    // Update filtered coefficients
+                    const filterSettings = store.state.timbres[currentColor]?.filter;
+                    if (filterSettings && (filterSettings.enabled !== false) && (filterSettings.mix || 0) > 0) {
+                        filteredCoeffs = applyDiscreteFiltering(newCoeffs, filterSettings);
+                    } else {
+                        filteredCoeffs = new Float32Array(newCoeffs);
+                    }
+
+                    updateSliderVisuals();
+                    console.log('[SNAP-TO-ZERO] ✓ Bin', i + 1, 'snapped to ZERO via phase button drag');
+                }, rampTime * 1000);
+            }
+        });
+
         phaseBtn.addEventListener('click', (e) => {
+            // Only handle click if not dragging (prevent phase change during drag-to-zero)
+            if (isDraggingBin) {
+                console.log('[SNAP-TO-ZERO] Click blocked during drag');
+                e.preventDefault();
+                return;
+            }
+
             logger.debug('HarmonicBins', 'Phase button click handler started', null, 'filter');
             logger.debug('HarmonicBins', 'Current coeffs before phase change', { coeffs }, 'filter');
-            
+
             // Prevent event bubbling to avoid triggering grid's pointer handler
             e.preventDefault();
-            e.stopPropagation();
             
             // Store old phases for transition animation
             const oldPhases = new Float32Array(phases);
@@ -637,30 +707,54 @@ export function initHarmonicBins() {
 
     // Add cross-bin drag functionality to the entire grid
     harmonicBinsGrid.addEventListener('pointerdown', (e) => {
+        console.log('[BINS DRAG] Pointerdown event fired', { target: e.target, className: e.target.className });
+
         // Check if the click came from a phase button
         if (e.target.classList.contains('phase-button') || e.target.closest('.phase-button')) {
+            console.log('[BINS DRAG] Blocked - phase button clicked');
             logger.debug('HarmonicBins', 'Pointerdown blocked - phase button clicked', null, 'filter');
             return; // Don't handle phase button clicks as bin interactions
         }
-        
+
+        console.log('[BINS DRAG] Starting drag interaction');
         logger.debug('HarmonicBins', 'Pointerdown - handling bin interaction', null, 'filter');
         e.preventDefault();
-        
+
+        isDraggingBin = true; // Enable snap-to-zero via phase button pointerenter
+        console.log('[SNAP-TO-ZERO] Drag started - isDraggingBin = true');
+
         SynthEngine.triggerAttack('C4', currentColor);
         store.emit('spacebarPlayback', { color: currentColor, isPlaying: true });
         isAuditioning = true;
-        
+
         handleBinPointerEvent(e);
-        
+
         const onMove = (ev) => handleBinPointerEvent(ev);
         const stopDrag = () => {
             window.removeEventListener('pointermove', onMove);
             window.removeEventListener('pointerup', stopDrag);
+            isDraggingBin = false; // Disable snap-to-zero
+            console.log('[SNAP-TO-ZERO] Drag ended - isDraggingBin = false');
+            const waveformAvailable = !!window.staticWaveformVisualizer?.generateWaveform;
+            console.log('[HarmonicBins] stopDrag invoked', {
+                waveformAvailable,
+                hasChanges: typeof handleBinPointerEvent === 'function'
+            });
+
             store.recordState();
-            
+
             SynthEngine.triggerRelease('C4', currentColor);
             store.emit('spacebarPlayback', { color: currentColor, isPlaying: false });
             isAuditioning = false;
+
+            if (waveformAvailable) {
+                setTimeout(() => {
+                    console.log('[HarmonicBins] Generating static waveform after drag');
+                    window.staticWaveformVisualizer.generateWaveform();
+                }, 0);
+            } else {
+                console.warn('[HarmonicBins] Static waveform visualizer not ready when drag ended');
+            }
         };
         
         window.addEventListener('pointermove', onMove);
@@ -675,8 +769,23 @@ export function initHarmonicBins() {
     overlayCtx = overlayCanvas.getContext('2d');
     harmonicBinsGrid.appendChild(overlayCanvas);
 
-    // Add grid to the filter panel
-    filterMainPanel.prepend(harmonicBinsGrid);
+    // Create vertical blend (M) slider
+    const verticalBlendWrapper = document.createElement('div');
+    verticalBlendWrapper.className = 'vertical-blend-wrapper';
+
+    const verticalBlendTrack = document.createElement('div');
+    verticalBlendTrack.id = 'vertical-blend-track';
+
+    const verticalBlendThumb = document.createElement('div');
+    verticalBlendThumb.id = 'vertical-blend-thumb';
+    verticalBlendThumb.textContent = 'M';
+
+    verticalBlendTrack.appendChild(verticalBlendThumb);
+    verticalBlendWrapper.appendChild(verticalBlendTrack);
+
+    // Add grid and vertical slider to their respective wrappers
+    filterBinsWrapper.appendChild(harmonicBinsGrid);
+    filterVerticalBlendWrapper.appendChild(verticalBlendWrapper);
 
     // Size the overlay canvas
     const sizeOverlayCanvas = () => {
@@ -798,3 +907,8 @@ export function initHarmonicBins() {
 
     logger.info('HarmonicBins', 'Initialized with columnar div structure and perfect alignment', null, 'filter');
 }
+
+
+
+
+

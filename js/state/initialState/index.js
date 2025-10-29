@@ -2,6 +2,7 @@
 import { getInitialRhythmState } from './rhythm.js';
 import { getInitialTimbresState } from './timbres.js';
 import { getInitialPaintState } from './paintState.js';
+import { fullRowData as masterRowData } from '../pitchData.js';
 
 export const initialState = {
     // --- Data & History ---
@@ -19,6 +20,10 @@ export const initialState = {
     history: [ { notes: [], tonicSignGroups: {}, timbres: getInitialTimbresState().timbres, placedChords: [], stampPlacements: [], tripletPlacements: [], annotations: [], lassoSelection: { selectedItems: [], convexHull: null, isActive: false } } ],
     historyIndex: 0,
     fullRowData: [],
+    pitchRange: {
+        topIndex: 0,
+        bottomIndex: Math.max(0, (masterRowData?.length || 1) - 1)
+    },
 
     // --- Rhythm ---
     ...getInitialRhythmState(),
@@ -52,7 +57,10 @@ export const initialState = {
     columnWidths: [],
     degreeDisplayMode: 'off',
     accidentalMode: { sharp: true, flat: true },
+    showFrequencyLabels: false,
+    savedAccidentalMode: { sharp: true, flat: true }, // Stores accidental state when frequency mode is active
     focusColours: false,
+    snapZoomToRange: false,
     
     // --- Playback ---
     isPlaying: false,

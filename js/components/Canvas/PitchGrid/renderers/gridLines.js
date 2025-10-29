@@ -6,6 +6,7 @@ import { fullRowData } from '../../../../state/pitchData.js';
 function drawHorizontalMusicLines(ctx, options, startRow, endRow) {
     // Access accidental button states
     const { sharp, flat } = options.accidentalMode;
+    const showFrequencyLabels = options.showFrequencyLabels || false;
     const anyAccidentalActive = sharp || flat;
     const allAccidentalsInactive = !sharp && !flat;
 
@@ -88,23 +89,28 @@ function drawHorizontalMusicLines(ctx, options, startRow, endRow) {
             drawLineWithGaps(ctx, fullStartX, fullEndX, y, options, columnsToSkip, 'stroke', style);
             
         } else if (pitchClass === 'G') {
-            // G-line: Always draw filled G line in pitch grid area (columns 2 to length-2)
+            // G-line: Draw filled G line in pitch grid area only (columns 2 to length-3 inclusive)
+            // Start at column 2, end at the start of right legend (column length-2)
             const pitchGridStartX = getColumnX(2, options);
             const pitchGridEndX = getColumnX(options.columnWidths.length - 2, options);
-            
+            const width = pitchGridEndX - pitchGridStartX;
+
             ctx.fillStyle = style.color;
-            ctx.fillRect(pitchGridStartX, y - options.cellHeight / 2, pitchGridEndX - pitchGridStartX, options.cellHeight);
+            ctx.fillRect(pitchGridStartX, y - options.cellHeight / 2, width, options.cellHeight);
             
             // G-line in legend columns: Conditional drawing in Column A based on accidental button states
-            const aColumns = getAColumnsOnly(); // [1, length-2]
-            
-            if (allAccidentalsInactive) {
-                // Draw filled G line in A columns when all accidental buttons are inactive
-                ctx.fillStyle = style.color;
-                drawLineInSpecificColumns(ctx, y, options, aColumns, 'fill', style);
-            } else if (anyAccidentalActive) {
-                // Draw simple line in A columns when any accidental button is active
-                drawLineInSpecificColumns(ctx, y, options, aColumns, 'stroke', style);
+            // Don't draw legend G-lines when showing frequencies
+            if (!showFrequencyLabels) {
+                const aColumns = getAColumnsOnly(); // [1, length-2]
+
+                if (allAccidentalsInactive) {
+                    // Draw filled G line in A columns when all accidental buttons are inactive
+                    ctx.fillStyle = style.color;
+                    drawLineInSpecificColumns(ctx, y, options, aColumns, 'fill', style);
+                } else if (anyAccidentalActive) {
+                    // Draw simple line in A columns when any accidental button is active
+                    drawLineInSpecificColumns(ctx, y, options, aColumns, 'stroke', style);
+                }
             }
             
         } else if (['B', 'A', 'F'].includes(pitchClass)) {

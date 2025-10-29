@@ -40,22 +40,47 @@ export function initAudioControls() {
         max: 160
     });
 
+    function updateTempoColumnPosition(slider) {
+        if (!slider) return;
+
+        const tempoColumn = document.querySelector('.tempo-column');
+        if (!tempoColumn) return;
+
+        // Calculate slider position (0 to 1, where 0 = min, 1 = max)
+        const min = parseFloat(slider.min);
+        const max = parseFloat(slider.max);
+        const value = parseFloat(slider.value);
+        const normalizedPosition = (value - min) / (max - min);
+
+        // Slider is vertical: higher tempo = slider moves up
+        // We want tempo column to move up as well
+        // Map slider range (150px height) to vertical translation
+        // Since slider goes from bottom (low tempo) to top (high tempo),
+        // we translate upward (negative Y) as tempo increases
+        const sliderHeight = 150; // Match slider height from CSS
+        const translateY = -(normalizedPosition * sliderHeight * 0.6); // Move up to 60% of slider height
+
+        tempoColumn.style.transform = `translateY(${translateY}px)`;
+        tempoColumn.style.transition = 'transform 0.1s ease-out';
+    }
+
     function updateTempoDisplays(baseBPM) {
         const quarterBPM = Math.round(baseBPM);
-        
+
         // Update slider if it exists (may not be available initially if rhythm tab isn't active)
         const currentSlider = tempoSlider || document.getElementById('tempo-slider');
         if (currentSlider && parseInt(currentSlider.value, 10) !== quarterBPM) {
             currentSlider.value = quarterBPM;
+            updateTempoColumnPosition(currentSlider);
         }
-        
+
         const eighthBPM = quarterBPM * 2;
         const dottedQuarterBPM = Math.round(quarterBPM / 1.5);
-        
+
         if (eighthNoteInput.value !== eighthBPM) eighthNoteInput.passiveUpdate(eighthBPM);
         if (quarterNoteInput.value !== quarterBPM) quarterNoteInput.passiveUpdate(quarterBPM);
         if (dottedQuarterInput.value !== dottedQuarterBPM) dottedQuarterInput.passiveUpdate(dottedQuarterBPM);
-        
+
         if (store.state.tempo !== quarterBPM) {
             store.setTempo(quarterBPM);
             // Update tempo visualizer pulse rates when tempo changes
@@ -128,15 +153,22 @@ export function initAudioControls() {
         // Don't use blur to stop pulse - it fires too early during interaction
         // The global mouseup/touchend handlers will reliably stop the pulse
         
-        slider.addEventListener('input', (e) => updateTempoDisplays(parseInt(e.target.value, 10)));
+        slider.addEventListener('input', (e) => {
+            const tempo = parseInt(e.target.value, 10);
+            updateTempoDisplays(tempo);
+            updateTempoColumnPosition(slider);
+        });
         slider.addEventListener('mouseup', function() { this.blur(); });
-        
+
         // Set initial value from state
         const currentTempo = store.state.tempo;
         if (slider.value !== currentTempo.toString()) {
             slider.value = currentTempo;
         }
-        
+
+        // Set initial position
+        updateTempoColumnPosition(slider);
+
         return true;
     }
     
@@ -399,7 +431,12 @@ export function initAudioControls() {
             updatePresetSelection(color);
         }
     });
-    
+
+    // Listen for tempo changes (e.g., from tap tempo)
+    store.on('tempoChanged', (newTempo) => {
+        updateTempoDisplays(newTempo);
+    });
+
     // THE FIX: Get the initial color from the correct state property on load.
     const initialColor = store.state.selectedNote?.color;
     if (initialColor) {

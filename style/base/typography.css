@@ -28,14 +28,6 @@ button {
   font-size: var(--font-size-base);
 }
 
-.time-signature-label {
-    font-size: var(--font-size-sm);
-}
-
-.rhythm-ui-button {
-    font-size: var(--font-size-sm);
-}
-
 .tonic-sign-button {
     font-size: var(--font-size-lg);
 }

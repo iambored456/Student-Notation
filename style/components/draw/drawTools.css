@@ -6,16 +6,22 @@
 .draw-content-box {
     display: flex;
     flex-direction: column;
-    gap: var(--space-3);
-    padding: var(--space-2);
+    gap: var(--space-035);
+    padding: var(--space-015);
     width: 100%;
+    background-color: var(--c-surface);
+    border: 1px solid var(--c-border);
+    border-radius: var(--border-radius-md);
+    box-shadow: var(--box-shadow-sm);
+    position: relative;
+    z-index: 1;
 }
 
 /* Draw tools row - horizontal layout for tool buttons */
 .draw-tools-row {
     display: flex;
     flex-direction: row;
-    gap: var(--space-2);
+    gap: var(--space-025);
     justify-content: center;
     align-items: center;
 }
@@ -24,7 +30,7 @@
 .draw-tool-button {
     width: 2.5rem;
     height: 2.5rem;
-    padding: var(--space-1);
+    padding: var(--space-015);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -57,8 +63,8 @@
 .draw-tool-options {
     display: flex;
     flex-direction: column;
-    gap: var(--space-2);
-    padding: var(--space-1);
+    gap: var(--space-025);
+    padding: var(--space-015);
     background-color: var(--c-bg);
     border: 1px solid var(--c-border);
     border-radius: var(--border-radius-md);
@@ -72,7 +78,7 @@
 /* Toolbar row for compact button layout */
 .draw-toolbar-row {
     display: flex;
-    gap: var(--space-1);
+    gap: var(--space-015);
     align-items: center;
     justify-content: center;
 }
@@ -81,7 +87,7 @@
 .draw-toolbar-button {
     width: 2rem;
     height: 2rem;
-    padding: var(--space-1);
+    padding: var(--space-015);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -108,8 +114,8 @@
     position: absolute;
     display: flex;
     flex-direction: column;
-    gap: var(--space-1);
-    padding: var(--space-1);
+    gap: var(--space-015);
+    padding: var(--space-015);
     background-color: var(--c-surface);
     border: 1px solid var(--c-border);
     border-radius: var(--border-radius-md);
@@ -118,7 +124,7 @@
 }
 
 .draw-popup-option {
-    padding: var(--space-1);
+    padding: var(--space-015);
     background-color: var(--c-surface);
     border: 1px solid var(--c-border);
     border-radius: var(--border-radius-sm);
@@ -160,7 +166,7 @@
 .draw-option-group {
     display: flex;
     flex-direction: column;
-    gap: var(--space-1);
+    gap: var(--space-015);
 }
 
 .draw-option-label {
@@ -174,12 +180,12 @@
 /* Button group for line styles, arrowheads, etc. */
 .draw-button-group {
     display: flex;
-    gap: var(--space-1);
+    gap: var(--space-015);
     flex-wrap: wrap;
 }
 
 .draw-option-button {
-    padding: var(--space-1) var(--space-2);
+    padding: var(--space-015) var(--space-025);
     background-color: var(--c-surface);
     border: 1px solid var(--c-border);
     border-radius: var(--border-radius-sm);
@@ -202,7 +208,7 @@
 
 /* Swap button for arrow endpoints */
 .draw-swap-button {
-    padding: var(--space-1);
+    padding: var(--space-015);
     background-color: var(--c-surface);
     border: 1px solid var(--c-border);
     border-radius: var(--border-radius-sm);
@@ -219,7 +225,7 @@
 /* Color picker buttons */
 .draw-color-picker {
     display: flex;
-    gap: var(--space-1);
+    gap: var(--space-015);
 }
 
 .draw-color-button {
@@ -245,12 +251,12 @@
 /* Stroke size buttons */
 .draw-stroke-size-group {
     display: flex;
-    gap: var(--space-1);
+    gap: var(--space-015);
 }
 
 .draw-stroke-size-button {
     width: 3rem;
-    padding: var(--space-1);
+    padding: var(--space-015);
     background-color: var(--c-surface);
     border: 1px solid var(--c-border);
     border-radius: var(--border-radius-sm);

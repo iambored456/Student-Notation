@@ -27,11 +27,11 @@ const RhythmService = {
 
             if (isSolidBoundary || isLastBeat) {
                 const measureEndColumn = getMacrobeatInfo(store.state, index).endColumn + 1;
-                
+
                 // Use modulated positions if modulation exists
                 const hasModulation = store.state.modulationMarkers && store.state.modulationMarkers.length > 0;
                 let measureStartX, measureEndX;
-                
+
                 if (hasModulation) {
                     const renderOptions = {
                         ...store.state,
@@ -46,12 +46,14 @@ const RhythmService = {
                     measureStartX = LayoutService.getColumnX(measureStartColumn);
                     measureEndX = LayoutService.getColumnX(measureEndColumn);
                 }
-                
+
                 const label = measureContainsThreeGrouping ? `${measureMicrobeatTotal}/8` : `${measureMicrobeatTotal / 2}/4`;
-                
+
                 segments.push({
                     label,
                     centerX: (measureStartX + measureEndX) / 2,
+                    startX: measureStartX,
+                    endX: measureEndX,
                     isAnacrusis: isAnacrusisSegment,
                 });
 

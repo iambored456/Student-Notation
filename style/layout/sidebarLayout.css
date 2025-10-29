@@ -11,10 +11,10 @@
   background-color: var(--c-surface-overlay);
   border-right: 1px solid var(--c-border-strong);
   box-shadow: var(--box-shadow-md);
-  padding: var(--space-3);
+  padding: var(--space-035);
   display: flex;
   flex-direction: column;
-  gap: var(--space-3);
+  gap: var(--space-035);
   z-index: 2000;
   transform: translateX(-100%);
   transition: transform 0.3s ease-in-out;
@@ -28,7 +28,7 @@ body.sidebar-open #sidebar {
 .sidebar-container {
   border: 1px solid var(--c-border);
   border-radius: var(--border-radius-md);
-  padding: var(--space-2);
+  padding: var(--space-025);
   background-color: var(--c-surface);
 }
 
@@ -42,11 +42,11 @@ body.sidebar-open #sidebar {
 .sidebar-button {
   display: flex;
   align-items: center;
-  gap: var(--space-2);
+  gap: var(--space-025);
   width: 100%;
-  padding: var(--space-2);
+  padding: var(--space-025);
   text-align: left;
-  margin-bottom: var(--space-2);
+  margin-bottom: var(--space-025);
 }
 .sidebar-button:last-child {
   margin-bottom: 0;
@@ -96,8 +96,8 @@ body.sidebar-open #sidebar-overlay {
   background-color: var(--c-surface);
   border: 1px solid var(--c-border);
   border-radius: var(--border-radius-md);
-  padding: var(--space-2) var(--space-3);
-  margin-left: var(--space-2); 
+  padding: var(--space-025) var(--space-035);
+  margin-left: var(--space-025); 
   box-shadow: var(--box-shadow-sm);
   z-index: 1001;
   visibility: hidden;
@@ -122,7 +122,7 @@ input[type="range"][orient="vertical"] {
 
 /* --- Sidebar Paint Controls --- */
 .sidebar-section-title {
-  margin: 0 0 var(--space-2) 0;
+  margin: 0 0 var(--space-025) 0;
   color: var(--c-text-muted);
   font-size: 0.9em;
   text-transform: uppercase;
@@ -134,25 +134,25 @@ input[type="range"][orient="vertical"] {
 .sidebar-paint-controls {
   display: flex;
   flex-direction: column;
-  gap: var(--space-3);
+  gap: var(--space-035);
 }
 
 .sidebar-paint-controls .paint-control-group {
   display: flex;
   flex-direction: column;
-  gap: var(--space-1);
+  gap: var(--space-015);
 }
 
 .sidebar-paint-controls .paint-control-group label {
   font-size: 0.9rem;
   font-weight: 500;
   color: var(--c-text-muted);
-  margin-bottom: var(--space-1);
+  margin-bottom: var(--space-015);
 }
 
 .paint-control-select {
   width: 100%;
-  padding: var(--space-1) var(--space-2);
+  padding: var(--space-015) var(--space-025);
   border: 1px solid var(--c-border);
   border-radius: var(--border-radius-sm);
   background-color: var(--c-surface);
@@ -176,20 +176,20 @@ input[type="range"][orient="vertical"] {
 .sidebar-viz-controls {
   display: flex;
   flex-direction: column;
-  gap: var(--space-3);
+  gap: var(--space-035);
 }
 
 .sidebar-control-group {
   display: flex;
   flex-direction: column;
-  gap: var(--space-1);
+  gap: var(--space-015);
 }
 
 .sidebar-control-group label {
   font-size: 0.85rem;
   font-weight: 500;
   color: var(--c-text-muted);
-  margin-bottom: var(--space-1);
+  margin-bottom: var(--space-015);
 }
 
 .sidebar-range-input {
@@ -248,7 +248,7 @@ input[type="range"][orient="vertical"] {
 
 .sidebar-toggle-button {
   width: 100%;
-  padding: var(--space-2) var(--space-3);
+  padding: var(--space-025) var(--space-035);
   background-color: var(--c-surface);
   color: var(--c-text);
   border: 1px solid var(--c-border);
@@ -281,7 +281,7 @@ input[type="range"][orient="vertical"] {
 /* Microphone device selector styling */
 .mic-device-selector {
   width: 100%;
-  padding: var(--space-1) var(--space-2);
+  padding: var(--space-015) var(--space-025);
   border: 1px solid var(--c-border);
   border-radius: var(--border-radius-sm);
   background-color: var(--c-surface);

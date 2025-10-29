@@ -3,35 +3,39 @@
    ========================================================================= */
 
 /* --- Accidental Toggle Buttons --- */
-#accidental-controls-container-v2 { display: flex; justify-content: center; gap: var(--space-2); }
+#accidental-controls-container-v2 { display: flex; justify-content: center; gap: var(--space-025); }
 .accidental-button {
     width: 30px; height: 30px; font-size: 18px; font-weight: bold; padding: 0;
     line-height: 1; border: 1px solid var(--c-border); border-radius: var(--border-radius-sm);
-    background-color: var(--c-surface); color: var(--c-text); opacity: 0.6;
+    background-color: transparent; color: var(--c-text); opacity: 0.6;
 }
 .accidental-button.active { background-color: var(--c-warning); color: var(--c-text); opacity: 1.0; }
 .accidental-button:not(.active):hover { background-color: var(--c-border); }
 
 /* --- Chord Shape Container Styles --- */
-.chord-shape-container {
+.pitch-tabs-container {
     display: flex;
     flex-direction: column;
-    align-items: center;
+    align-items: flex-start;
     justify-content: flex-start;
-    flex: 0 0 auto;
-    width: fit-content;
+    flex: 1 1 auto;
+    width: 100%;
+    min-width: 0;
     gap: 0;
+    height: 100%;
 }
 
-.chord-shape-tabs {
+.pitch-tabs {
     display: flex;
     gap: 0;
-    margin-bottom: 0;
+    margin-bottom: calc(-1 * var(--space-005));
+    position: relative;
+    z-index: 1;
 }
 
-.chord-tab-button {
-    padding: var(--space-1) var(--space-3);
-    background-color: var(--c-surface-muted); 
+.pitch-tab-button {
+    padding: var(--space-015) var(--space-035);
+    background-color: var(--c-surface-muted);
     border: 1px solid var(--c-border);
     border-bottom: none;
     color: var(--c-text-muted);
@@ -48,84 +52,96 @@
     border-bottom-right-radius: 0;
 }
 
-.chord-tab-button:first-child {
-    border-right: none;
+.pitch-tab-button + .pitch-tab-button {
+    margin-left: -1px;
 }
 
-.chord-tab-button:hover {
-    background-color: var(--c-surface);
+.pitch-tab-button:hover {
+    background-color: var(--c-border);
     color: var(--c-text);
 }
 
-.chord-tab-button.active {
+.pitch-tab-button.active {
     background-color: var(--c-surface);
     color: var(--c-text);
     font-weight: 600; 
     border-color: var(--c-border);
-    border-bottom-color: var(--c-surface);
+    border-bottom-color: transparent;
     z-index: 2;
     margin-bottom: -1px;
 }
 
-.chord-shape-content {
+.pitch-tab-content {
     position: relative;
     width: 100%;
 }
 
-.chord-tab-panel {
+.pitch-tab-panel {
     display: none;
 }
 
-.chord-tab-panel.active {
+.pitch-tab-panel.active {
     display: block;
 }
 
 .intervals-content-box,
-.chords-content-box {
+.chords-content-box,
+.tonic-content-box {
     background-color: var(--c-surface);
     border: 1px solid var(--c-border);
     border-radius: var(--border-radius-md);
-    padding: var(--space-3);
+    padding: var(--space-015);
     box-shadow: var(--box-shadow-sm);
     position: relative;
     z-index: 1;
-    width: fit-content;
+    width: 100%;
+    height: 100%;
 }
 
-.chord-tab-panel.active .intervals-content-box::before {
+.pitch-tab-panel.active .intervals-content-box::before {
     content: '';
     position: absolute;
     top: -1px;
     left: calc(50% - 50px);
     width: 60px;
     height: 1px;
-    background-color: var(--c-surface);
+    background-color: transparent;
     z-index: 3;
 }
 
-.chord-tab-panel.active .chords-content-box::before {
+.pitch-tab-panel.active .chords-content-box::before {
     content: '';
     position: absolute;
     top: -1px;
     left: calc(50% + 10px);
     width: 50px;
     height: 1px;
-    background-color: var(--c-surface);
+    background-color: transparent;
     z-index: 3;
 }
 
 /* --- Harmony Preset Button Styles --- */
-.harmony-preset-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--space-1); flex: 1; }
+.harmony-preset-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--space-015); flex: 1; }
+.harmony-preset-grid.chords-grid-6col {
+    grid-template-columns: repeat(6, 1fr);
+    grid-auto-rows: 1fr;
+    gap: var(--space-015);
+}
 .harmony-preset-button {
-    background-color: var(--c-surface); color: var(--c-text);
+    background-color: transparent; color: var(--c-text);
     border: 1px solid var(--c-border); border-radius: var(--border-radius-sm);
     font-size: 18px; font-weight: bold; min-height: 40px;
+}
+.chords-grid-6col .harmony-preset-button {
+    font-size: 14px;
+    min-height: 32px;
+    padding: 2px 4px;
 }
 
 /* --- Intervals Panel Layout --- */
 .intervals-layout {
     display: flex;
-    gap: var(--space-2);
+    gap: var(--space-025);
     align-items: flex-start;
 }
 
@@ -133,7 +149,7 @@
     display: flex;
     flex-direction: column;
     align-items: flex-start;
-    gap: var(--space-2);
+    gap: var(--space-025);
     flex: 0 0 auto;
 }
 
@@ -163,7 +179,7 @@
 .toggle-slider {
     width: 16px;
     height: 16px;
-    background-color: var(--c-surface);
+    background-color: transparent;
     border-radius: 50%;
     position: absolute;
     top: 2px;
@@ -179,7 +195,7 @@
 /* --- Chords Panel Layout --- */
 .chords-layout {
     display: flex;
-    gap: var(--space-2);
+    gap: var(--space-015);
     align-items: flex-start;
 }
 
@@ -187,17 +203,18 @@
     display: flex;
     flex-direction: column;
     align-items: flex-start;
-    gap: var(--space-2);
+    gap: var(--space-015);
     flex: 0 0 auto;
+    text-align: left;
 }
 
 .chord-inversion-column h4 {
     margin: 0;
     color: var(--c-text-muted);
-    font-size: 0.8em;
+    font-size: 0.7em;
     text-transform: uppercase;
     letter-spacing: 0.5px;
-    text-align: center;
+    text-align: left !important;
 }
 
 /* --- 3-State Toggle Switch - Vertical --- */
@@ -222,7 +239,7 @@
 .three-state-slider {
     width: 16px;
     height: 16px;
-    background-color: var(--c-surface);
+    background-color: transparent;
     border-radius: 50%;
     position: absolute;
     top: 2px;
@@ -244,7 +261,7 @@
     flex-direction: column;
     justify-content: space-between;
     height: 60px;
-    margin-left: var(--space-3);
+    margin-left: var(--space-035);
     position: absolute;
     left: 100%;
     top: 0;
@@ -258,6 +275,7 @@
     flex: 1;
     display: flex;
     align-items: center;
+    justify-content: flex-start;
     height: 20px;
 }
 
@@ -287,7 +305,7 @@
 .four-state-slider {
     width: 16px;
     height: 16px;
-    background-color: var(--c-surface);
+    background-color: transparent;
     border-radius: 50%;
     position: absolute;
     top: 2px;
@@ -313,7 +331,7 @@
     flex-direction: column;
     justify-content: space-between;
     height: 80px;
-    margin-left: var(--space-3);
+    margin-left: var(--space-035);
     position: absolute;
     left: 100%;
     top: 0;
@@ -327,6 +345,7 @@
     flex: 1;
     display: flex;
     align-items: center;
+    justify-content: flex-start;
     height: 20px;
 }
 
@@ -360,7 +379,7 @@
 .five-state-slider {
     width: 16px;
     height: 16px;
-    background-color: var(--c-surface);
+    background-color: transparent;
     border-radius: 50%;
     position: absolute;
     top: 2px;
@@ -390,7 +409,7 @@
     flex-direction: column;
     justify-content: space-between;
     height: 100px;
-    margin-left: var(--space-3);
+    margin-left: var(--space-035);
     position: absolute;
     left: 100%;
     top: 0;
@@ -404,6 +423,7 @@
     flex: 1;
     display: flex;
     align-items: center;
+    justify-content: flex-start;
     height: 20px;
 }
 
@@ -441,7 +461,7 @@
 .six-state-slider {
     width: 16px;
     height: 16px;
-    background-color: var(--c-surface);
+    background-color: transparent;
     border-radius: 50%;
     position: absolute;
     top: 2px;
@@ -475,7 +495,7 @@
     flex-direction: column;
     justify-content: space-between;
     height: 120px;
-    margin-left: var(--space-3);
+    margin-left: var(--space-035);
     position: absolute;
     left: 100%;
     top: 0;
@@ -489,7 +509,16 @@
     flex: 1;
     display: flex;
     align-items: center;
+    justify-content: flex-start;
     height: 20px;
+}
+
+/* --- Six-State Toggle Disabled States (Grayed Out) --- */
+.six-state-toggle.disabled-state-3 .state-labels-6 .state-label:nth-child(4),
+.six-state-toggle.disabled-state-4 .state-labels-6 .state-label:nth-child(5),
+.six-state-toggle.disabled-state-5 .state-labels-6 .state-label:nth-child(6) {
+    opacity: 0.3;
+    pointer-events: none;
 }
 
 /* --- Utility Classes --- */
@@ -519,7 +548,7 @@
 
 /* Override focus state for harmony preset buttons to prevent lingering blue highlight */
 .harmony-preset-button:focus {
-    background-color: var(--c-surface);
+    background-color: transparent;
     color: var(--c-text);
     outline: none;
 }
@@ -538,3 +567,11 @@
     border-color: var(--c-accent, #4A90E2);
     font-weight: 600;
 }
+
+
+
+
+
+
+
+

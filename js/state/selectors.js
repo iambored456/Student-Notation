@@ -4,7 +4,10 @@ import LayoutService from '../services/layoutService.js';
 
 const MODE_NAMES = ["major", "dorian", "phrygian", "lydian", "mixolydian", "minor", "locrian"];
 
-export const getPlacedTonicSigns = (state) => Object.values(state.tonicSignGroups).flat();
+export const getPlacedTonicSigns = (state) => {
+    if (!state.tonicSignGroups) return [];
+    return Object.values(state.tonicSignGroups).flat();
+};
 
 export const getMacrobeatInfo = (state, macrobeatIndex) => {
     let columnCursor = 2;

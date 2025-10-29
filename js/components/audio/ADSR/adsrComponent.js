@@ -236,10 +236,17 @@ class AdsrComponent {
         }
 
         // Get original waveform amplitude as reference
-        const originalAmplitude = window.staticWaveformVisualizer?.calculatedAmplitude || 1.0;
+        // Use ?? instead of || to allow zero amplitude when all harmonic bins are zero
+        const originalAmplitude = window.staticWaveformVisualizer?.calculatedAmplitude ?? 1.0;
 
         // Apply tremolo to the original amplitude
         const normalizedAmplitude = originalAmplitude * tremoloMultiplier;
+
+        console.log('[ADSR] Amplitude calculation:', {
+            originalAmplitude,
+            tremoloMultiplier,
+            normalizedAmplitude
+        });
 
         const p1 = { x: 0, y: this.height };
         const p2 = { x: timeToX(attack), y: this.height * (1 - normalizedAmplitude) }; // Use normalized amplitude for attack peak

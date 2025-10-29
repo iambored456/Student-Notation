@@ -16,6 +16,8 @@ let rightClickActionTaken = false;
 let drumVolume = 1.0; // Default 100%
 let volumeSlider = null;
 let volumeIconState = 'normal'; // Track volume icon state: normal, hover, active
+let lastDrumPlaybackTime = 0; // Track last playback time for throttling
+const DRUM_PLAYBACK_THROTTLE = 500; // 0.5 seconds throttle
 
 // --- Helper Functions ---
 function getColumnX(index) {
@@ -271,28 +273,20 @@ function createVolumeSlider() {
     // Add event listener
     volumeSlider.addEventListener('input', (e) => {
         drumVolume = e.target.value / 100;
-        
-        console.log(`[DRUM VOLUME] Slider changed to ${e.target.value}% (linear: ${drumVolume})`);
-        
+
         // Update actual drum volume in transport service
         if (window.drumVolumeNode) {
             // Convert linear scale to decibels: 0% = -60dB, 100% = 0dB
             const volumeDb = drumVolume === 0 ? -60 : 20 * Math.log10(drumVolume);
-            console.log(`[DRUM VOLUME] Setting drumVolumeNode to ${volumeDb} dB`);
             window.drumVolumeNode.volume.value = volumeDb;
-            console.log(`[DRUM VOLUME] Actual drumVolumeNode volume: ${window.drumVolumeNode.volume.value} dB`);
-            
-            // Also check the audio routing
-            console.log(`[DRUM VOLUME] drumVolumeNode connected to:`, window.drumVolumeNode.output);
-            console.log(`[DRUM VOLUME] drumVolumeNode input connected:`, window.drumVolumeNode.input.numberOfInputs);
-            
-            // Test drum sound immediately to hear the volume change
-            if (window.transportService && window.transportService.drumPlayers) {
-                console.log(`[DRUM VOLUME] Testing drum sound at new volume...`);
+
+            // Test drum sound with throttling (max once every 0.5 seconds)
+            const currentTime = Date.now();
+            if (window.transportService && window.transportService.drumPlayers &&
+                currentTime - lastDrumPlaybackTime >= DRUM_PLAYBACK_THROTTLE) {
                 window.transportService.drumPlayers.player('M').start('+0.1');
+                lastDrumPlaybackTime = currentTime;
             }
-        } else {
-            console.log(`[DRUM VOLUME] ERROR: drumVolumeNode not found!`);
         }
     });
     

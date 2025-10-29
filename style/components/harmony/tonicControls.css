@@ -2,104 +2,89 @@
    TONIC CONTROLS AND DROPDOWN
    ========================================================================= */
 
-/* --- Tonic Dropdown Styles --- */
-.dropdown-container {
-    position: relative;
-    display: inline-block;
-}
-
-.dropdown-container.open {
-    z-index: 1000;
-}
-
-.tonic-dropdown-toggle {
-    display: flex;
-    align-items: center;
-    gap: var(--space-2);
-    min-width: 60px;
-    width: fit-content;
-    justify-content: center;
-    background-color: var(--c-surface);
-    color: var(--c-text);
-    border: 1px solid var(--c-border);
-}
-
-#tonic-dropdown-label {
-    display: flex;
-    align-items: center;
-    gap: var(--space-1);
-}
-
-#tonic-dropdown-label .tonic-shape-icon {
-    display: inline-block;
-    flex-shrink: 0;
-}
-
-.dropdown-arrow {
-    font-size: 10px;
-    transition: transform 0.2s ease;
-}
-
-.dropdown-container.open .dropdown-arrow {
-    transform: rotate(180deg);
-}
-
-.dropdown-menu {
-    display: none;
-    position: absolute;
-    top: 100%;
-    left: 0;
-    background-color: var(--c-surface);
-    border: 1px solid var(--c-border);
-    border-radius: var(--border-radius-md);
-    box-shadow: var(--box-shadow-md);
-    z-index: 1001;
-    padding: var(--space-1);
-    flex-direction: column;
-    gap: var(--space-1);
-}
-
-.dropdown-container.open .dropdown-menu {
-    display: flex;
-}
-
-.dropdown-menu .tonic-sign-button {
+/* --- Inline Mode Selection Grid --- */
+#tonic-mode-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+    gap: var(--space-015);
     width: 100%;
-    border: 2px solid transparent; 
+    align-items: stretch;
+    justify-items: stretch;
+    flex: 1 1 320px;
 }
 
-.dropdown-menu .tonic-sign-button.selected {
-    border-color: var(--c-accent) !important;
-    background-color: var(--c-accent-hover);
+#tonic-mode-grid .tonic-sign-button {
+    border: 1px solid var(--c-border);
+    border-radius: var(--border-radius-sm);
+    background-color: var(--c-surface);
+    padding: var(--space-015) var(--space-025);
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-015);
+    transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
+    width: 100%;
+    color: var(--c-text);
+}
+
+#tonic-mode-grid .tonic-sign-button .mode-label {
+    font-size: 0.8rem;
+    color: var(--c-text);
+    font-weight: 600;
+}
+
+#tonic-mode-grid .tonic-sign-button .tonic-shape-icon {
+    width: 1.4rem;
+    height: 1.4rem;
+}
+
+#tonic-mode-grid .tonic-sign-button:hover {
+    background-color: var(--c-surface-muted);
+    border-color: var(--c-border-strong);
+}
+
+#tonic-mode-grid .tonic-sign-button.selected {
+    background: var(--c-accent);
+    border-color: var(--c-accent);
+    color: var(--c-surface);
+    box-shadow: 0 0 8px rgba(74, 144, 226, 0.45);
+}
+
+#tonic-mode-grid .tonic-sign-button.selected .mode-label {
     color: var(--c-surface);
 }
 
-.tonic-dropdown-toggle.selected {
-    border: 2px solid var(--c-accent);
-    box-shadow: 0 0 5px var(--c-accent);
+#tonic-mode-grid .tonic-sign-button:focus-visible {
+    outline: 2px solid var(--c-accent);
+    outline-offset: 2px;
 }
 
 /* --- Tonal Center Tools Wrapper --- */
 .tonic-tools-wrapper {
     display: flex;
-    flex-direction: column;
-    gap: var(--space-1);
-    align-items: center;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: var(--space-015);
+    align-items: stretch;
+    width: 100%;
 }
 
 /* --- Degree Toggle Container --- */
 .degree-toggle-container {
     display: flex;
     flex-direction: column;
-    gap: var(--space-2);
-    align-items: center;
+    gap: var(--space-025);
+    align-items: stretch;
+    justify-content: center;
+    flex: 0 1 220px;
 }
 
 .degree-visibility-toggle-container {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: var(--space-1);
+    gap: var(--space-015);
     justify-content: center;
 }
 
@@ -153,7 +138,7 @@
     justify-content: space-between;
     align-items: center;
     height: 100%;
-    padding: 0 var(--space-2);
+    padding: 0 var(--space-025);
     pointer-events: none;
 }
 
@@ -178,4 +163,23 @@
 /* --- Focus Colours Container --- */
 .focus-colours-container .checkbox-text {
     font-size: 0.7em;
+}
+
+.focus-colours-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 1 140px;
+}
+
+@media (max-width: 900px) {
+    .tonic-tools-wrapper {
+        flex-direction: column;
+    }
+
+    #tonic-mode-grid,
+    .degree-toggle-container,
+    .focus-colours-container {
+        flex: 1 1 auto;
+    }
 }

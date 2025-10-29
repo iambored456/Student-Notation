@@ -100,8 +100,8 @@ const TripletsToolbar = {
         
         // Create SVG preview with appropriate width
         const isWide = stamp.span === 'quarter';
-        const svgWidth = isWide ? 96 : 48; // Quarter triplets are 2x wider
-        const svg = createTripletPreview(stamp, svgWidth, 48);
+        const svgWidth = isWide ? 80 : 40; // Quarter triplets are 2x wider
+        const svg = createTripletPreview(stamp, svgWidth, 40);
         button.appendChild(svg);
         
         return button;

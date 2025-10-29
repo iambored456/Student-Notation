@@ -4,11 +4,11 @@ input[type="range"] {
   -webkit-appearance: none;
   appearance: none;
   width: 100%;
-  height: var(--space-2);
+  height: var(--space-025);
   border-radius: var(--border-radius-sm);
   background: var(--c-gridline);
   outline: none;
-  margin-block-start: var(--space-2);
+  margin-block-start: var(--space-025);
   margin-block-end: 0;
 }
 
@@ -16,12 +16,13 @@ input[type="range"] {
   /* Modern standardized vertical slider - as recommended by browser */
   writing-mode: vertical-lr;
   direction: rtl;
-  
+
   /* Proper dimensions for vertical slider */
-  width: var(--space-2);
-  height: 150px;
-  margin: var(--space-2) auto;
-  
+  width: var(--slider-track-thickness);
+  height: 100%;
+  max-height: 100%;
+  margin: 0 auto;
+
   /* Standard slider styling */
   -webkit-appearance: none;
   -moz-appearance: none;
@@ -34,31 +35,31 @@ input[type="range"] {
 #tempo-slider::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
-  width: 18px;
-  height: 18px;
+  width: var(--slider-thumb-size);
+  height: var(--slider-thumb-size);
   border-radius: 50%;
-  background: #f8f8f8;
-  border: 2px solid #e0e0e0;
+  background: var(--c-text);
+  border: var(--slider-thumb-border) solid var(--c-surface);
   cursor: pointer;
 }
 
 #tempo-slider::-webkit-slider-thumb:active {
-  background: #f8f8f8;
-  border: 2px solid #e0e0e0;
+  background: var(--c-text);
+  border: var(--slider-thumb-border) solid var(--c-surface);
 }
 
 #tempo-slider::-moz-range-thumb {
-  width: 18px;
-  height: 18px;
+  width: var(--slider-thumb-size);
+  height: var(--slider-thumb-size);
   border-radius: 50%;
-  background: #f8f8f8;
-  border: 2px solid #e0e0e0;
+  background: var(--c-text);
+  border: var(--slider-thumb-border) solid var(--c-surface);
   cursor: pointer;
 }
 
 #tempo-slider::-moz-range-thumb:active {
-  background: #f8f8f8;
-  border: 2px solid #e0e0e0;
+  background: var(--c-text);
+  border: var(--slider-thumb-border) solid var(--c-surface);
 }
 
 /* Firefox-specific vertical slider track */
@@ -90,7 +91,7 @@ input[type="range"]::-moz-range-thumb {
 }
 
 .slider-label {
-  margin-block-start: var(--space-2);
+  margin-block-start: var(--space-025);
   color: var(--c-text-muted);
   text-align: center;
   user-select: none;

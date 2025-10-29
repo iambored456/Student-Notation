@@ -186,16 +186,15 @@
 }
 
 .waveform-speed-btn {
-    padding: var(--space-1);
-    font-size: 13px;
+    padding: var(--space-010);
+    font-size: 0.7rem;
     font-weight: 500;
     background-color: #ffffff;
     color: var(--c-text);
-    border: 1px solid var(--c-border);
     border-radius: var(--border-radius-sm);
     cursor: pointer;
     transition: all 0.2s ease;
-    min-width: 28px;
+    min-width: 24px;
     text-align: center;
     white-space: nowrap;
     overflow: hidden;

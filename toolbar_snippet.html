@@ -1,0 +1,693 @@
+<main id="app-container" role="main">
+  <!-- =======================================================
+        Toolbar Container
+       ======================================================= -->
+  <nav id="toolbar" role="navigation" aria-label="Music notation tools">
+    <!-- Container 1: Tools & Actions -->
+    <div id="toolbar-container-1">
+        <div class="toolbar-main-row">
+            <div class="toolbar-general-tools">
+                <div class="tool-subcontainer">
+                    <button class="toolkit-icon-button" id="settings-button" title="Settings"><img src="/assets/icons/Settings_optimized.svg" alt="Settings"></button>
+                    <button class="toolkit-icon-button" id="grid-zoom-in" title="Zoom In"><img src="/assets/icons/zoomIn.svg" alt="Zoom In"></button>
+                    <button class="toolkit-icon-button" id="redo-button" title="Redo"><img src="/assets/icons/Redo.svg" alt="Redo"></button>
+                    <button class="toolkit-icon-button" id="clear-button" title="Clear"><img src="/assets/icons/Clear.svg" alt="Clear"></button>
+                </div>
+                <div class="tool-subcontainer">
+                    <div id="volume-control-wrapper">
+                        <button class="toolkit-icon-button" id="volume-icon-button" aria-label="Volume" title="Volume"><img src="/assets/icons/Volume_optimized.svg" alt="Volume"></button>
+                        <div id="volume-popup">
+                            <input type="range" id="vertical-volume-slider" orient="vertical" min="0" max="100" value="100" step="1" />
+                        </div>
+                    </div>
+                    <button class="toolkit-icon-button" id="grid-zoom-out" title="Zoom Out"><img src="/assets/icons/zoomOut.svg" alt="Zoom Out"></button>
+                    <button class="toolkit-icon-button" id="undo-button" title="Undo"><img src="/assets/icons/Undo.svg" alt="Undo"></button>
+                    <button class="toolkit-icon-button eraser-button" id="eraser-tool-button" title="Eraser">
+                        <img src="/assets/icons/Eraser.svg" alt="Eraser" class="eraser-icon">
+                    </button>
+                </div>
+            </div>
+            <div class="tool-subcontainer" id="note-bank-container">
+                <div class="note-bank-column">
+                    <div class="note-pair" data-color="#4a90e2"><div class="note circle-note" data-type="circle"></div><div class="note oval-note" data-type="oval"></div></div>
+                    <div class="note-pair" data-color="#2d2d2d"><div class="note circle-note" data-type="circle"></div><div class="note oval-note" data-type="oval"></div></div>
+                    <div class="note-pair" data-color="#d66573"><div class="note circle-note" data-type="circle"></div><div class="note oval-note" data-type="oval"></div></div>
+                    <div class="note-pair" data-color="#68a03f"><div class="note circle-note" data-type="circle"></div><div class="note oval-note" data-type="oval"></div></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="toolbar-playback-row">
+            <button class="toolkit-icon-button" id="play-button" title="Play"><img src="/assets/icons/Play.svg" alt="Play"></button>
+            <button class="toolkit-icon-button" id="stop-button" title="Stop"><img src="/assets/icons/Stop.svg" alt="Stop"></button>
+            <button class="toolkit-icon-button" id="loop-button" title="Loop"><img src="/assets/icons/Loop.svg" alt="Loop"></button>
+        </div>
+    </div>
+    <!-- Container 2: Tabbed Interface -->
+    <div id="toolbar-container-2">
+        <div class="tab-sidebar">
+            <button class="tab-button" data-tab="timbre">Timbre</button>
+            <button class="tab-button" data-tab="pitch">Pitch</button>
+            <button class="tab-button" data-tab="rhythm">Rhythm</button>
+        </div>
+            <!-- Timbre Tab -->
+            <div class="tab-panel" id="timbre-panel" data-tab-target="timbre">
+                <div class="control-section preset-effects-container">
+                    <div class="preset-effects-split">
+                        <!-- Always-visible Waveform Section (Left) -->
+                        <div class="waveform-section">
+                            <button class="preset-tab-button waveform-tab-button active" disabled>Waveform</button>
+                            <div class="waveform-content-box">
+                                <div class="waveform-display-wrapper">
+                                    <canvas id="static-waveform-canvas"></canvas>
+                                    <div class="waveform-speed-controls">
+                                        <button class="waveform-speed-btn" data-speed="50">50%</button>
+                                        <button class="waveform-speed-btn" data-speed="10">10%</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Tabbed Controls Section (Right) -->
+                        <div class="preset-effects-controls">
+                            <div class="preset-effects-tabs">
+                                <button class="preset-tab-button active" data-preset-tab="presets">Presets</button>
+                                <button class="preset-tab-button" data-preset-tab="reverb-delay">Reverb<br>Delay</button>
+                                <button class="preset-tab-button" data-preset-tab="vibrato-tremolo">Vibrato<br>Tremolo</button>
+                            </div>
+                            <div class="preset-effects-content">
+                                <!-- Presets Tab -->
+                                <div class="preset-tab-panel active" id="presets-panel">
+                            <div class="preset-content-box">
+                                <div class="preset-grid" id="preset-buttons">
+                                    <div class="preset-column">
+                                        <button class="preset-button" id="preset-sine">Sine</button>
+                                        <button class="preset-button" id="preset-triangle">Triangle</button>
+                                        <button class="preset-button" id="preset-square">Square</button>
+                                        <button class="preset-button" id="preset-sawtooth">Sawtooth</button>
+                                    </div>
+                                    <div class="preset-column">
+                                        <button class="preset-button" id="preset-piano">Piano</button>
+                                        <button class="preset-button" id="preset-marimba">Marimba</button>
+                                        <button class="preset-button" id="preset-woodwind">Woodwind</button>
+                                        <button class="preset-button" id="preset-strings">Strings</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Reverb/Delay Tab -->
+                        <div class="preset-tab-panel" id="reverb-delay-panel">
+                            <div class="effects-content-box">
+                                <div class="position-controls-container">
+                                    <div class="position-control-group">
+                                        <h5 class="position-label">Reverb</h5>
+                                        <div class="position-component" id="reverb-position"></div>
+                                        <div class="position-axis-labels">
+                                            <span class="x-label">Time</span>
+                                            <span class="y-label">Size</span>
+                                        </div>
+                                    </div>
+                                    <div class="position-control-group">
+                                        <h5 class="position-label">Delay</h5>
+                                        <div class="position-component" id="delay-position"></div>
+                                        <div class="position-axis-labels">
+                                            <span class="x-label">Time</span>
+                                            <span class="y-label">Echoes</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Vibrato/Tremolo Tab -->
+                        <div class="preset-tab-panel" id="vibrato-tremolo-panel">
+                            <div class="effects-content-box">
+                                <div class="position-controls-container">
+                                    <div class="position-control-group">
+                                        <h5 class="position-label">Vibrato</h5>
+                                        <div class="position-component" id="vibrato-position"></div>
+                                        <div class="position-axis-labels">
+                                            <span class="x-label">Speed</span>
+                                            <span class="y-label">Span</span>
+                                        </div>
+                                    </div>
+                                    <div class="position-control-group">
+                                        <h5 class="position-label">Tremolo</h5>
+                                        <div class="position-component" id="tremolo-position"></div>
+                                        <div class="position-axis-labels">
+                                            <span class="x-label">Speed</span>
+                                            <span class="y-label">Span</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Legacy slider controls (kept for data sharing) -->
+                        <div class="effects-grid" style="display: none;">
+                            <button class="effect-button" data-effect="reverb">Reverb</button>
+                            <button class="effect-button" data-effect="delay">Delay</button>
+                            <button class="effect-button" data-effect="vibrato">Vibrato</button>
+                            <button class="effect-button" data-effect="tremolo">Tremolo</button>
+                        </div>
+                        <div class="effect-controls-container" id="effect-controls" style="display: none;">
+                            <!-- Effect controls will be dynamically inserted here for data synchronization -->
+                        </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="timbre-section-panel" id="harmonics-section">
+                    <div class="timbre-section-title">Harmonics</div>
+                    <div class="harmonics-panel">
+                        <div class="harmonics-main-row">
+                            <div class="harmonics-controls-grid">
+                                <!-- Row 1: Blend slider (left), empty (right) -->
+                                <div class="blend-slider-container">
+                                    <div id="blend-slider-container">
+                                        <div class="filter-blend-thumb" id="thumb-b" tabindex="0">B</div>
+                                    </div>
+                                </div>
+                                <div class="grid-empty-cell"></div>
+
+                                <!-- Row 2: Bins canvas (left), Main vertical slider (right) -->
+                                <div class="control-section harmonic-bins-container">
+                                    <div class="filter-main-panel"></div>
+                                </div>
+                                <div class="filter-right-column">
+                                    <div class="filter-button-wrapper"></div>
+                                </div>
+
+                                <!-- Row 3: Cutoff slider (left), empty (right) -->
+                                <div id="cutoff-slider-container">
+                                    <div class="filter-cutoff-thumb" id="thumb-c" tabindex="0">C</div>
+                                </div>
+                                <div class="grid-empty-cell"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="timbre-section-panel" id="envelope-section">
+                    <div class="timbre-section-title">Envelope</div>
+                    <div class="control-section adsr-container">
+                        <div class="adsr-controls-grid">
+                            <!-- Row 1: Envelope graph (left), Sustain vertical slider (right) -->
+                            <div class="adsr-graph-wrapper">
+                                <div id="adsr-envelope"></div>
+                            </div>
+                            <div class="sustain-slider-wrapper">
+                                <div id="sustain-slider-track">
+                                    <div id="sustain-slider-thumb" tabindex="0">S</div>
+                                </div>
+                            </div>
+
+                            <!-- Row 2: ADR horizontal slider (left), empty (right) -->
+                            <div id="multi-thumb-slider-container">
+                                <div class="time-slider-thumb" id="thumb-a" tabindex="0">A</div>
+                                <div class="time-slider-thumb" id="thumb-d" tabindex="0">D</div>
+                                <div class="time-slider-thumb" id="thumb-r" tabindex="0">R</div>
+                            </div>
+                            <div class="grid-empty-cell"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pitch Tab -->
+            <div class="tab-panel" id="pitch-panel" data-tab-target="pitch">
+                <div class="chord-shape-container">
+                    <div class="chord-shape-tabs">
+                        <button class="chord-tab-button active" data-chord-tab="tonic">Tonic</button>
+                        <button class="chord-tab-button" data-chord-tab="clef">Clef</button>
+                        <button class="chord-tab-button" data-chord-tab="intervals">Intervals</button>
+                        <button class="chord-tab-button" data-chord-tab="chords">Chords</button>
+                        <button class="chord-tab-button" data-chord-tab="mic-paint">Mic Paint</button>
+                        <button class="chord-tab-button" data-chord-tab="draw">Draw</button>
+                    </div>
+                    <div class="chord-shape-content">
+                        <div class="chord-tab-panel active" id="tonic-panel">
+                            <div class="tonic-content-box">
+                                <div class="tonic-tools-wrapper">
+                                   <div id="tonic-mode-grid" class="tonic-mode-grid">
+                                       <button class="tonic-sign-button tonic-mode-button" data-tonic="1">
+                                           <img src="/assets/tabicons/tonicShape_1.svg" alt="Tonic 1" class="tonic-shape-icon">
+                                           <span class="mode-label">Major</span>
+                                       </button>
+                                       <button class="tonic-sign-button tonic-mode-button" data-tonic="2">
+                                           <img src="/assets/tabicons/tonicShape_2.svg" alt="Tonic 2" class="tonic-shape-icon">
+                                           <span class="mode-label">Dorian</span>
+                                       </button>
+                                       <button class="tonic-sign-button tonic-mode-button" data-tonic="3">
+                                           <img src="/assets/tabicons/tonicShape_3.svg" alt="Tonic 3" class="tonic-shape-icon">
+                                           <span class="mode-label">Phrygian</span>
+                                       </button>
+                                       <button class="tonic-sign-button tonic-mode-button" data-tonic="4">
+                                           <img src="/assets/tabicons/tonicShape_4.svg" alt="Tonic 4" class="tonic-shape-icon">
+                                           <span class="mode-label">Lydian</span>
+                                       </button>
+                                       <button class="tonic-sign-button tonic-mode-button" data-tonic="5">
+                                           <img src="/assets/tabicons/tonicShape_5.svg" alt="Tonic 5" class="tonic-shape-icon">
+                                           <span class="mode-label">Mixolydian</span>
+                                       </button>
+                                       <button class="tonic-sign-button tonic-mode-button" data-tonic="6">
+                                           <img src="/assets/tabicons/tonicShape_6.svg" alt="Tonic 6" class="tonic-shape-icon">
+                                           <span class="mode-label">Minor</span>
+                                       </button>
+                                       <button class="tonic-sign-button tonic-mode-button" data-tonic="7">
+                                           <img src="/assets/tabicons/tonicShape_7.svg" alt="Tonic 7" class="tonic-shape-icon">
+                                           <span class="mode-label">Locrian</span>
+                                       </button>
+                                   </div>
+                                   <div class="degree-toggle-container">
+                                       <div class="degree-visibility-toggle-container">
+                                           <span class="toggle-text">Degrees</span>
+                                           <div class="two-state-toggle" id="degree-visibility-toggle">
+                                               <div class="two-state-slider"></div>
+                                               <div class="toggle-labels">
+                                                   <span class="toggle-label">Show</span>
+                                                   <span class="toggle-label">Hide</span>
+                                               </div>
+                                           </div>
+                                       </div>
+                                       <div class="degree-mode-toggle-container">
+                                           <div class="two-state-toggle" id="degree-mode-toggle">
+                                               <div class="two-state-slider"></div>
+                                               <div class="toggle-labels">
+                                                   <span class="toggle-label">Scale</span>
+                                                   <span class="toggle-label">Mode</span>
+                                               </div>
+                                           </div>
+                                       </div>
+                                   </div>
+                                   <div class="focus-colours-container">
+                                       <label class="checkbox-label">
+                                           <input type="checkbox" id="focus-colours-toggle" class="toolkit-checkbox">
+                                           <span class="checkbox-text">Focus Colours</span>
+                                       </label>
+                                   </div>
+                                </div>
+                        </div>
+                    </div>
+                    <div class="chord-tab-panel" id="clef-panel">
+                        <div class="clef-content-box">
+                            <div class="clef-picker-grid">
+                                <div class="clef-picker-column">
+                                    <div class="clef-wheel" id="clef-top-wheel" tabindex="0" aria-label="Select top note">
+                                        <div class="clef-wheel-viewport">
+                                            <div class="clef-wheel-options"></div>
+                                        </div>
+                                        <div class="clef-wheel-overlay"></div>
+                                    </div>
+                                </div>
+                                <div class="clef-picker-column">
+                                    <div class="clef-wheel" id="clef-bottom-wheel" tabindex="0" aria-label="Select bottom note">
+                                        <div class="clef-wheel-viewport">
+                                            <div class="clef-wheel-options"></div>
+                                        </div>
+                                        <div class="clef-wheel-overlay"></div>
+                                    </div>
+                                </div>
+                                <div class="clef-summary-column">
+                                    <div class="clef-summary-card">
+                                        <h4>Active Range</h4>
+                                        <div class="clef-summary-label" id="clef-range-label">C8 - C1</div>
+                                        <div class="clef-summary-metadata">
+                                            <span id="clef-range-count">88 pitches</span>
+                                        </div>
+                                        <label class="clef-snap-toggle">
+                                            <input type="checkbox" id="clef-snap-zoom-toggle">
+                                            <span>Snap Zoom to Range</span>
+                                        </label>
+                                        <button class="toolkit-button clef-reset-button" id="clef-reset-button" type="button">
+                                            Reset to Full Range
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="chord-tab-panel" id="intervals-panel">
+                            <div class="intervals-content-box">
+                                <div class="intervals-layout">
+                                    <div class="inversion-column">
+                                        <h4>Inversion</h4>
+                                        <div class="toggle-switch" id="inversion-toggle">
+                                            <div class="toggle-slider"></div>
+                                            <div class="state-labels">
+                                                <span class="state-label">Asc.</span>
+                                                <span class="state-label">Desc.</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="intervals-grid-column">
+                                        <div class="harmony-preset-grid intervals-4x4-grid">
+                                            <button class="harmony-preset-button">M6</button>
+                                            <button class="harmony-preset-button">A6</button>
+                                            <button class="harmony-preset-button">m7</button>
+                                            <button class="harmony-preset-button">M7</button>
+                                            <button class="harmony-preset-button">d5</button>
+                                            <button class="harmony-preset-button">P5</button>
+                                            <button class="harmony-preset-button">A5</button>
+                                            <button class="harmony-preset-button">m6</button>
+                                            <button class="harmony-preset-button">m3</button>
+                                            <button class="harmony-preset-button">M3</button>
+                                            <button class="harmony-preset-button">P4</button>
+                                            <button class="harmony-preset-button">A4</button>
+                                            <button class="harmony-preset-button">U</button>
+                                            <button class="harmony-preset-button">m2</button>
+                                            <button class="harmony-preset-button">M2</button>
+                                            <button class="harmony-preset-button">A2</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="chord-tab-panel" id="chords-panel">
+                            <div class="chords-content-box">
+                                <div class="chords-layout">
+                                    <div class="chord-inversion-column">
+                                        <h4>Position</h4>
+                                        <div class="six-state-toggle" id="chord-position-toggle-6">
+                                            <div class="six-state-slider"></div>
+                                            <div class="state-labels-6">
+                                                <span class="state-label">Root</span>
+                                                <span class="state-label">1st</span>
+                                                <span class="state-label">2nd</span>
+                                                <span class="state-label">3rd</span>
+                                                <span class="state-label">4th</span>
+                                                <span class="state-label">5th</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="chords-grid-column">
+                                        <div class="harmony-preset-grid chords-grid-6col">
+                                            <!-- Column 1: Triads -->
+                                            <button class="harmony-preset-button" data-chord-intervals='["1P", "3M", "5P"]' title="Major triad">X</button>
+                                            <button class="harmony-preset-button" data-chord-intervals='["1P", "3m", "5P"]' title="Minor triad">x</button>
+                                            <button class="harmony-preset-button" data-chord-intervals='["1P", "3m", "5d"]' title="Diminished triad">x°</button>
+                                            <button class="harmony-preset-button" data-chord-intervals='["1P", "3M", "6m"]' title="Augmented triad">X+</button>
+
+                                            <!-- Column 2: Seventh Chords (Part 1) -->
+                                            <button class="harmony-preset-button" data-chord-intervals='["1P", "3M", "5P", "7m"]' title="Dominant 7">X7</button>
+                                            <button class="harmony-preset-button" data-chord-intervals='["1P", "3m", "5P", "7m"]' title="Minor 7">x⁷</button>
+                                            <button class="harmony-preset-button" data-chord-intervals='["1P", "3M", "5P", "7M"]' title="Major 7">Xmaj⁷</button>
+                                            <button class="harmony-preset-button" data-chord-intervals='["1P", "3m", "5P", "7M"]' title="Minor-major 7">xmaj⁷</button>
+
+                                            <!-- Column 3: Seventh Chords (Part 2) -->
+                                            <button class="harmony-preset-button" data-chord-intervals='["1P", "3m", "5d", "7m"]' title="Half-diminished 7">ø⁷</button>
+                                            <button class="harmony-preset-button" data-chord-intervals='["1P", "3m", "5d", "6M"]' title="Fully diminished 7">x°⁷</button>
+                                            <button class="harmony-preset-button" data-chord-intervals='["1P", "3M", "5P", "6M"]' title="Major 6">X⁶</button>
+                                            <button class="harmony-preset-button" data-chord-intervals='["1P", "3m", "5P", "6M"]' title="Minor 6">x⁶</button>
+
+                                            <!-- Column 4: Extended Chords (Part 1) -->
+                                            <button class="harmony-preset-button" data-chord-intervals='["1P", "3M", "5P", "9M"]' title="Major add 9">Xadd9</button>
+                                            <button class="harmony-preset-button" data-chord-intervals='["1P", "3m", "5P", "9M"]' title="Minor add 9">xadd9</button>
+                                            <button class="harmony-preset-button" data-chord-intervals='["1P", "3M", "5P", "6M", "9M"]' title="Major 6/9">X6/9</button>
+                                            <button class="harmony-preset-button" data-chord-intervals='["1P", "2M", "5P"]' title="Suspended 2">Xsus2</button>
+
+                                            <!-- Column 5: Extended Chords (Part 2) -->
+                                            <button class="harmony-preset-button" data-chord-intervals='["1P", "3M", "5P", "7m", "9M"]' title="Dominant 9">X9</button>
+                                            <button class="harmony-preset-button" data-chord-intervals='["1P", "3M", "5P", "7M", "9M"]' title="Major 9">Xmaj9</button>
+                                            <button class="harmony-preset-button" data-chord-intervals='["1P", "3m", "5P", "7m", "9M"]' title="Minor 9">x⁹</button>
+                                            <button class="harmony-preset-button" data-chord-intervals='["1P", "4P", "5P"]' title="Suspended 4">Xsus4</button>
+
+                                            <!-- Column 6: Extended Chords (Part 3) -->
+                                            <button class="harmony-preset-button" data-chord-intervals='["1P", "3M", "5P", "7m", "9M", "11P"]' title="Dominant 11">X11</button>
+                                            <button class="harmony-preset-button" data-chord-intervals='["1P", "3m", "5P", "7m", "9M", "11P"]' title="Minor 11">x¹¹</button>
+                                            <button class="harmony-preset-button" data-chord-intervals='["1P", "3M", "5P", "7m", "9M", "13M"]' title="Dominant 13">X13</button>
+                                            <button class="harmony-preset-button" data-chord-intervals='["1P", "3M", "5P", "7M", "11A"]' title="Major 7 sharp 11 (Lydian)">Xmaj7♯11</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="chord-tab-panel" id="mic-paint-panel">
+                            <div class="paint-content-box">
+                                <div class="paint-layout-grid">
+                                    <div class="paint-main-controls">
+                                        <div class="paint-buttons-column">
+                                            <button class="toolkit-button" id="mic-paint-toggle">Mic Paint (OFF)</button>
+                                            <button class="toolkit-button" id="paint-clear-btn" disabled>Clear Paint</button>
+                                            <select id="mic-device-select" class="mic-device-selector">
+                                                <option value="default">Default Device</option>
+                                                <option value="detecting">Detecting devices...</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="paint-toggles-controls">
+                                        <div class="paint-color-toggle-container">
+                                            <h5>Colour</h5>
+                                            <div class="two-state-toggle" id="paint-color-toggle">
+                                                <div class="two-state-slider"></div>
+                                                <div class="toggle-labels">
+                                                    <span class="toggle-label">Chromatic</span>
+                                                    <span class="toggle-label">Shape Note</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="paint-playback-toggle-container">
+                                            <h5>Playback</h5>
+                                            <div class="two-state-toggle active" id="paint-playback-toggle">
+                                                <div class="two-state-slider"></div>
+                                                <div class="toggle-labels">
+                                                    <span class="toggle-label">Off</span>
+                                                    <span class="toggle-label">On</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="paint-control-group">
+                                            <label for="sidebar-trail-thickness">Thickness</label>
+                                            <select id="sidebar-trail-thickness" class="paint-control-select">
+                                                <option value="2">2px</option>
+                                                <option value="4">4px</option>
+                                                <option value="6" selected>6px</option>
+                                                <option value="8">8px</option>
+                                                <option value="10">10px</option>
+                                                <option value="12">12px</option>
+                                                <option value="14">14px</option>
+                                                <option value="16">16px</option>
+                                                <option value="18">18px</option>
+                                                <option value="20">20px</option>
+                                            </select>
+                                        </div>
+                                        <div class="paint-control-group">
+                                            <label for="sidebar-trail-opacity">Opacity</label>
+                                            <select id="sidebar-trail-opacity" class="paint-control-select">
+                                                <option value="5">5%</option>
+                                                <option value="10">10%</option>
+                                                <option value="15">15%</option>
+                                                <option value="20">20%</option>
+                                                <option value="25">25%</option>
+                                                <option value="30">30%</option>
+                                                <option value="35">35%</option>
+                                                <option value="40">40%</option>
+                                                <option value="45">45%</option>
+                                                <option value="50">50%</option>
+                                                <option value="55">55%</option>
+                                                <option value="60">60%</option>
+                                                <option value="65">65%</option>
+                                                <option value="70">70%</option>
+                                                <option value="75">75%</option>
+                                                <option value="80" selected>80%</option>
+                                                <option value="85">85%</option>
+                                                <option value="90">90%</option>
+                                                <option value="95">95%</option>
+                                                <option value="100">100%</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="mic-meter-container-vertical">
+                                        <div class="mic-meter-wrapper-vertical" id="mic-meter-wrapper">
+                                            <div class="meter-placeholder" id="meter-placeholder">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="meter-settings-panel hidden" id="meter-settings-panel">
+                                    <div class="meter-setting-group">
+                                        <label for="meter-size-select">Size:</label>
+                                        <select id="meter-size-select" class="meter-control">
+                                            <option value="compact">Compact</option>
+                                            <option value="wide" selected>Wide</option>
+                                        </select>
+                                    </div>
+                                    <div class="meter-setting-group">
+                                        <label for="meter-fps-select">Frame Rate:</label>
+                                        <select id="meter-fps-select" class="meter-control">
+                                            <option value="12">12 FPS</option>
+                                            <option value="20">20 FPS</option>
+                                            <option value="30" selected>30 FPS</option>
+                                            <option value="60">60 FPS</option>
+                                        </select>
+                                    </div>
+                                    <div class="meter-setting-group">
+                                        <label for="meter-battery-saver">Battery Saver:</label>
+                                        <input type="checkbox" id="meter-battery-saver" class="meter-control">
+                                    </div>
+                                    <div class="meter-setting-group">
+                                        <button class="toolkit-button" id="meter-calibrate-btn">Auto-Calibrate</button>
+                                        <button class="toolkit-button" id="meter-reset-btn">Reset</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="chord-tab-panel" id="draw-panel">
+                            <div class="draw-content-box">
+                                <div class="draw-tools-row">
+                                    <button class="draw-tool-button" data-draw-tool="arrow" title="Arrow Tool">
+                                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <line x1="4" y1="20" x2="20" y2="4"/>
+                                            <polyline points="14,4 20,4 20,10"/>
+                                        </svg>
+                                    </button>
+                                    <button class="draw-tool-button" data-draw-tool="text" title="Text Tool">
+                                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <polyline points="4,7 4,4 20,4 20,7"/>
+                                            <line x1="12" y1="4" x2="12" y2="20"/>
+                                            <line x1="9" y1="20" x2="15" y2="20"/>
+                                        </svg>
+                                    </button>
+                                    <button class="draw-tool-button" data-draw-tool="marker" title="Marker Tool">
+                                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <!-- Pointed marker tip -->
+                                            <path d="M18 2L6 14l-2 6 6-2L22 6l-4-4z"/>
+                                            <line x1="10" y1="18" x2="6" y2="14"/>
+                                        </svg>
+                                    </button>
+                                    <button class="draw-tool-button" data-draw-tool="highlighter" title="Highlighter Tool">
+                                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" opacity="0.5">
+                                            <!-- Flat highlighter head -->
+                                            <rect x="3" y="3" width="4" height="18" rx="1"/>
+                                            <path d="M7 5h12l-2 14H7z"/>
+                                        </svg>
+                                    </button>
+                                    <button class="draw-tool-button" data-draw-tool="lasso" title="Lasso Select">
+                                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-dasharray="3 2">
+                                            <ellipse cx="12" cy="12" rx="8" ry="6" transform="rotate(-15 12 12)"/>
+                                        </svg>
+                                    </button>
+                                </div>
+                                <div class="draw-tool-options" id="draw-tool-options">
+                                    <!-- Tool options will be dynamically inserted here -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        <!-- Rhythm Tab -->
+        <div class="tab-panel" id="rhythm-panel" data-tab-target="rhythm">
+            <div class="rhythm-stamps-container">
+                <div class="rhythm-tab-sidebar">
+                    <button class="rhythm-tab-button active" data-rhythm-tab="tempo">Tempo</button>
+                    <button class="rhythm-tab-button" data-rhythm-tab="stamps">Sixteenths</button>
+                    <button class="rhythm-tab-button" data-rhythm-tab="triplets">Triplets</button>
+                    <button class="rhythm-tab-button" data-rhythm-tab="controls">Controls</button>
+                </div>
+                <div class="rhythm-tab-content">
+                    <div class="rhythm-tab-panel active" id="tempo-panel">
+                        <div class="tempo-content-box">
+                            <div class="tempo-container">
+                                <div class="tempo-column">
+                                    <div class="tempo-input-group">
+                                        <img src="/assets/tabicons/eigthNote.svg" alt="Eighth Note Tempo" class="tempo-label-icon">
+                                        <div id="eighth-note-tempo"></div>
+                                    </div>
+                                    <div class="tempo-input-group">
+                                        <img src="/assets/tabicons/quarterNote.svg" alt="Quarter Note Tempo" class="tempo-label-icon">
+                                        <div id="quarter-note-tempo"></div>
+                                    </div>
+                                    <div class="tempo-input-group">
+                                        <img src="/assets/tabicons/dottedQuarterNote.svg" alt="Dotted Quarter Note Tempo" class="tempo-label-icon">
+                                        <div id="dotted-quarter-tempo"></div>
+                                    </div>
+                                </div>
+                                <div class="tempo-column-2">
+                                    <input type="range" id="tempo-slider" min="30" max="240" value="90">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="rhythm-tab-panel" id="stamps-panel">
+                        <div id="stamps-toolbar-container" class="stamps-toolbar-container">
+                            <!-- Stamps toolbar will be rendered here by JavaScript -->
+                        </div>
+                    </div>
+                    <div class="rhythm-tab-panel" id="triplets-panel">
+                        <div id="triplets-toolbar-container" class="triplets-toolbar-container">
+                            <!-- Triplets toolbar will be rendered here by JavaScript -->
+                        </div>
+                    </div>
+                    <div class="rhythm-tab-panel" id="controls-panel">
+                        <div class="rhythm-structure-container">
+                            <div class="control-subsection">
+                                <h4>Add/Del Beat</h4>
+                                <div class="macrobeat-adjust-group">
+                                    <button class="toolkit-button toolkit-button--ghost" id="macrobeat-decrease">-</button>
+                                    <button class="toolkit-button toolkit-button--ghost" id="macrobeat-increase">+</button>
+                                </div>
+                            </div>
+                            <div class="control-subsection">
+                                <h4>Pickup</h4>
+                                <div class="toggle-button-group"><button class="sidebar-toggle-button" id="anacrusis-on-btn">On</button><button class="sidebar-toggle-button" id="anacrusis-off-btn">Off</button></div>
+                            </div>
+                            <div class="control-subsection">
+                                <h4>Modulation</h4>
+                                <div class="modulation-controls">
+                                    <button class="toolkit-button modulation-ratio-btn" id="modulation-2-3-btn" data-ratio="2:3" title="Place 2:3 modulation marker">2:3</button>
+                                    <button class="toolkit-button modulation-ratio-btn" id="modulation-3-2-btn" data-ratio="3:2" title="Place 3:2 modulation marker">3:2</button>
+                                    <button class="toolkit-button" id="modulation-clear-btn" title="Clear all modulation markers">Clear</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+        </div>
+    </div>
+  </nav>
+
+  <div id="canvas-container" role="region" aria-label="Musical notation canvas">
+    <div id="canvas-content">
+        <div id="pitch-grid-wrapper">
+            <div id="canvas-macrobeat-tools">
+                <div id="accidental-controls-container-v2">
+                    <button id="flat-toggle-btn" class="accidental-button active" aria-pressed="true">♭</button>
+                    <button id="sharp-toggle-btn" class="accidental-button active" aria-pressed="true">♯</button>
+                    <button id="frequency-toggle-btn" class="accidental-button" aria-pressed="false">440</button>
+                </div>
+                <div id="beat-line-ui">
+                    <div id="beat-line-button-layer"></div>
+                </div>
+            </div>
+            <div id="pitch-grid-container">
+                <div id="pitch-canvas-wrapper">
+                    <canvas id="notation-grid"></canvas>
+                    <canvas id="pitch-paint-canvas"></canvas>
+                    <canvas id="playhead-canvas"></canvas>
+                    <canvas id="hover-canvas"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="drum-grid-wrapper">
+        <canvas id="drum-grid"></canvas>
+        <canvas id="drum-playhead-canvas"></canvas>
+        <canvas id="drum-hover-canvas"></canvas>
+    </div>
+</div>
+
+  <!-- Chord Candidate Drop-up Menu -->
+  <div id="chord-candidate-menu" class="hidden">
+      <div id="chord-candidate-list"></div>
+  </div>
+  <div id="chord-candidate-overlay" class="hidden"></div>
+
+</main>

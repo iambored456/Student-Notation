@@ -26,7 +26,6 @@ class DOMCache {
 
         // Layout containers
         this.cacheElement('appContainer', 'app-container');
-        this.cacheElement('gridContainer', 'grid-container');
         this.cacheElement('pitchGridWrapper', 'pitch-grid-wrapper');
         this.cacheElement('drumGridWrapper', 'drum-grid-wrapper');
 
@@ -41,14 +40,12 @@ class DOMCache {
         
         // Note bank and tonic controls
         this.cacheElement('noteBankContainer', 'note-bank-container');
-        this.cacheElement('tonicDropdownContainer', 'tonic-dropdown-container');
-        this.cacheElement('tonicDropdownButton', 'tonic-dropdown-button');
-        this.cacheElement('tonicDropdownLabel', 'tonic-dropdown-label');
-        this.cacheElement('tonicDropdownMenu', 'tonic-dropdown-menu');
+        this.cacheElement('tonicModeGrid', 'tonic-mode-grid');
         this.cacheElement('degreeVisibilityToggle', 'degree-visibility-toggle');
         this.cacheElement('degreeModeToggle', 'degree-mode-toggle');
         this.cacheElement('flatBtn', 'flat-toggle-btn');
         this.cacheElement('sharpBtn', 'sharp-toggle-btn');
+        this.cacheElement('frequencyBtn', 'frequency-toggle-btn');
         this.cacheElement('focusColoursToggle', 'focus-colours-toggle');
         this.cacheElement('harmonyContainerMain', 'chordShape-container');
 

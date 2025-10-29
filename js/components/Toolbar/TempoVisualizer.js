@@ -145,19 +145,31 @@ class TempoVisualizer {
     triggerPulse(type) {
         const wasAlreadyAnimating = this.activeAnimations.has(type);
         const now = performance.now();
-        
-        
+
         // Always reset/start new animation (handles overlapping pulses)
         const animationState = {
             startTime: now,
             phase: 'scaleUp'
         };
-        
+
         this.activeAnimations.set(type, animationState);
-        
+
+        // Temporarily enable animation for tap tempo pulses
+        const wasActive = this.isActive;
+        this.isActive = true;
+
         // Start animation loop if not already running
         if (this.activeAnimations.size === 1) {
             this.animationLoop();
+        }
+
+        // Restore isActive after animation completes
+        if (!wasActive) {
+            setTimeout(() => {
+                if (this.activeAnimations.size === 0) {
+                    this.isActive = false;
+                }
+            }, this.popDuration.scaleUp + this.popDuration.scaleDown + 50);
         }
     }
     

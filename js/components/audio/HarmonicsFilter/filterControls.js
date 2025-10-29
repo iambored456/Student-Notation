@@ -94,19 +94,20 @@ function handleVerticalBlendDrag(e) {
 
 
 export function initFilterControls() {
-    container = document.querySelector('.harmonic-bins-container');
+    container = document.querySelector('.filter-container');
     blendThumb = document.getElementById('thumb-b');
     blendTrack = document.getElementById('blend-slider-container');
     cutoffThumb = document.getElementById('thumb-c');
     cutoffTrack = document.getElementById('cutoff-slider-container');
 
     if (!container || !blendThumb || !cutoffThumb) {
+        console.error('[FILTER CONTROLS] Missing required elements', { container, blendThumb, cutoffThumb });
         return;
     }
     
     
     // Get the blend slider wrapper and inner elements
-    const blendWrapper = document.querySelector('.blend-slider-container');
+    const blendWrapper = container?.querySelector('.blend-slider-container');
     if (blendWrapper && blendTrack) {
         const wrapperRect = blendWrapper.getBoundingClientRect();
         const trackRect = blendTrack.getBoundingClientRect();
@@ -121,36 +122,46 @@ export function initFilterControls() {
     // Create the vertical blend slider
     createVerticalBlendSlider();
 
-    blendThumb.addEventListener('mousedown', e => {
+    blendThumb.addEventListener('pointerdown', e => {
+        console.log('[BLEND SLIDER] Pointerdown on blend thumb');
         e.preventDefault();
         isDraggingBlend = true;
         document.body.style.cursor = 'ew-resize';
-        const onMove = (ev) => handleBlendDrag(ev);
+        const onMove = (ev) => {
+            console.log('[BLEND SLIDER] Moving', { clientX: ev.clientX });
+            handleBlendDrag(ev);
+        };
         const onUp = () => {
+            console.log('[BLEND SLIDER] Pointerup');
             isDraggingBlend = false;
             document.body.style.cursor = 'default';
-            window.removeEventListener('mousemove', onMove);
-            window.removeEventListener('mouseup', onUp);
+            window.removeEventListener('pointermove', onMove);
+            window.removeEventListener('pointerup', onUp);
             store.recordState();
         };
-        window.addEventListener('mousemove', onMove);
-        window.addEventListener('mouseup', onUp);
+        window.addEventListener('pointermove', onMove);
+        window.addEventListener('pointerup', onUp);
     });
 
-    cutoffThumb.addEventListener('mousedown', e => {
+    cutoffThumb.addEventListener('pointerdown', e => {
+        console.log('[CUTOFF SLIDER] Pointerdown on cutoff thumb');
         e.preventDefault();
         isDraggingCutoff = true;
         document.body.style.cursor = 'ew-resize';
-        const onMove = (ev) => handleCutoffDrag(ev);
+        const onMove = (ev) => {
+            console.log('[CUTOFF SLIDER] Moving', { clientX: ev.clientX });
+            handleCutoffDrag(ev);
+        };
         const onUp = () => {
+            console.log('[CUTOFF SLIDER] Pointerup');
             isDraggingCutoff = false;
             document.body.style.cursor = 'default';
-            window.removeEventListener('mousemove', onMove);
-            window.removeEventListener('mouseup', onUp);
+            window.removeEventListener('pointermove', onMove);
+            window.removeEventListener('pointerup', onUp);
             store.recordState();
         };
-        window.addEventListener('mousemove', onMove);
-        window.addEventListener('mouseup', onUp);
+        window.addEventListener('pointermove', onMove);
+        window.addEventListener('pointerup', onUp);
     });
 
     store.on('noteChanged', ({ newNote }) => {
@@ -171,8 +182,7 @@ export function initFilterControls() {
 
     // Log final dimensions after initialization
     setTimeout(() => {
-        
-        const blendWrapper = document.querySelector('.blend-slider-container');
+        const blendWrapper = container?.querySelector('.blend-slider-container');
         if (blendWrapper) {
             const wrapperRect = blendWrapper.getBoundingClientRect();
             
@@ -183,46 +193,38 @@ export function initFilterControls() {
 }
 
 function createVerticalBlendSlider() {
-    // Find the filter button wrapper and replace it
-    const filterButtonWrapper = document.querySelector('.filter-button-wrapper');
-    if (!filterButtonWrapper) return;
-    
-    // Clear the wrapper and create new vertical slider
-    filterButtonWrapper.innerHTML = '';
-    filterButtonWrapper.className = 'vertical-blend-wrapper';
-    
-    // Create the vertical track
-    verticalBlendTrack = document.createElement('div');
-    verticalBlendTrack.id = 'vertical-blend-track';
-    verticalBlendTrack.className = 'vertical-slider-track';
-    
-    // Create the thumb
-    verticalBlendSlider = document.createElement('div');
-    verticalBlendSlider.id = 'vertical-blend-thumb';
-    verticalBlendSlider.className = 'vertical-slider-thumb';
-    verticalBlendSlider.textContent = 'M';
-    verticalBlendSlider.title = 'Filter Mix: 0% to 100%';
-    
-    verticalBlendTrack.appendChild(verticalBlendSlider);
-    filterButtonWrapper.appendChild(verticalBlendTrack);
-    
+    // The vertical blend slider is now created by harmonicBins.js
+    // Just get references to the existing elements
+    verticalBlendTrack = document.getElementById('vertical-blend-track');
+    verticalBlendSlider = document.getElementById('vertical-blend-thumb');
+
+    if (!verticalBlendTrack || !verticalBlendSlider) {
+        console.error('[FILTER CONTROLS] Vertical blend slider elements not found');
+        return;
+    }
+
     // Add event listeners for the vertical slider
-    verticalBlendSlider.addEventListener('mousedown', e => {
+    verticalBlendSlider.addEventListener('pointerdown', e => {
+        console.log('[VERTICAL BLEND] Pointerdown on M thumb');
         e.preventDefault();
         isDraggingVerticalBlend = true;
         document.body.style.cursor = 'ns-resize';
-        
-        const onMove = (ev) => handleVerticalBlendDrag(ev);
+
+        const onMove = (ev) => {
+            console.log('[VERTICAL BLEND] Moving', { clientY: ev.clientY });
+            handleVerticalBlendDrag(ev);
+        };
         const onUp = () => {
+            console.log('[VERTICAL BLEND] Pointerup');
             isDraggingVerticalBlend = false;
             document.body.style.cursor = 'default';
-            window.removeEventListener('mousemove', onMove);
-            window.removeEventListener('mouseup', onUp);
+            window.removeEventListener('pointermove', onMove);
+            window.removeEventListener('pointerup', onUp);
             store.recordState();
         };
-        
-        window.addEventListener('mousemove', onMove);
-        window.addEventListener('mouseup', onUp);
+
+        window.addEventListener('pointermove', onMove);
+        window.addEventListener('pointerup', onUp);
     });
     
     // Click on track to position slider

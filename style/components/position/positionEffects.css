@@ -90,7 +90,7 @@
 @media (max-width: 768px) {
     .position-controls-container {
         flex-direction: column;
-        gap: var(--space-3);
+        gap: var(--space-035);
     }
     
     .position-control-group {

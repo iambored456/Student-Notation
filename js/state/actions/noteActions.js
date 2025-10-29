@@ -68,6 +68,18 @@ export const noteActions = {
         this.emit('notesChanged');
     },
 
+    updateNoteRow(note, newRow) {
+        note.row = newRow;
+        this.emit('notesChanged');
+    },
+
+    updateMultipleNoteRows(notes, rowOffsets) {
+        notes.forEach((note, index) => {
+            note.row = rowOffsets[index];
+        });
+        this.emit('notesChanged');
+    },
+
     eraseInPitchArea(col, row, width = 1, record = true) {
         const eraseEndCol = col + width - 1;
         const eraseStartRow = row - 1; // Eraser starts 1 row above

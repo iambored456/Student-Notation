@@ -3,61 +3,107 @@
    ========================================================================= */
 
 /* --- Toolbar Container Layout --- */
-#toolbar-container-1,
-#toolbar-container-2 {
+#toolbar-primary,
+#toolbar-secondary {
     display: flex;
     border: 1px solid var(--c-border);
     border-radius: var(--border-radius-md);
     background-color: var(--c-surface);
 }
 
-#toolbar-container-1 {
-    padding: var(--space-2);
+#toolbar-primary {
     flex: 0 0 auto;
-    gap: var(--space-2);
-    align-items: stretch;
+    padding: var(--space-025);
     height: 100%;
-    overflow: visible;
-    display: flex;
-    flex-direction: column;
-}
-
-.toolbar-main-row {
-    display: flex;
-    gap: var(--space-2);
-    align-items: stretch;
-}
-
-.toolbar-playback-row {
-    display: flex;
-    gap: var(--space-3);
-    align-items: center;
-    justify-content: center;
-    padding: var(--space-1) 0;
-}
-
-#toolbar-container-2 {
-    height: 100%;
+    max-height: 100%;
     overflow: hidden;
 }
 
-.tool-subcontainer {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-2);
-    align-items: center;
-    padding: 0;
-    background-color: transparent;
-    border-radius: 0;
-    border-right: none; /* Remove vertical gray separating lines */
+.primary-toolbar-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-rows: 4fr 1fr;
+    grid-template-areas:
+        "actions notebank"
+        "playback playback";
+    gap: var(--space-020);
     height: 100%;
-    justify-content: center;
-    overflow: visible;
+}
+
+.primary-toolbar-cell {
+    min-width: 0;
     min-height: 0;
 }
 
-.tool-subcontainer:last-child, .control-section:last-child {
-    border-right: none;
+.primary-toolbar-actions {
+    grid-area: actions;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-rows: repeat(4, minmax(0, 1fr));
+    gap: var(--space-020);
+    align-content: stretch;
+    align-items: stretch;
+}
+
+.primary-toolbar-actions .toolkit-icon-button,
+.primary-toolbar-actions #volume-control-wrapper {
+    width: 100%;
+    height: 100%;
+    min-height: 0;
+}
+
+.primary-toolbar-actions #volume-control-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+}
+
+.primary-toolbar-actions .toolkit-icon-button {
+    aspect-ratio: 1 / 1;
+}
+
+.primary-toolbar-actions .toolkit-icon-button img {
+    width: 100%;
+    height: 100%;
+}
+
+.primary-toolbar-notebank {
+    grid-area: notebank;
+    display: flex;
+    justify-content: flex-end;
+    align-items: stretch;
+}
+
+.primary-toolbar-notebank #note-bank-container {
+    height: 100%;
+    max-width: 100%;
+}
+
+.primary-toolbar-playback {
+    grid-area: playback;
+    display: flex;
+    align-items: center;
+    gap: var(--space-020);
+    justify-content: center;
+    overflow: hidden;
+}
+
+.primary-toolbar-playback .toolkit-icon-button {
+    height: 100%;
+    width: auto;
+    aspect-ratio: 1 / 1;
+    flex: 0 0 auto;
+    max-width: 25%;
+}
+
+#toolbar-secondary {
+    flex: 0 1 auto;
+    height: 100%;
+    min-height: 0;
+    overflow: hidden;
+    display: flex;
+    min-width: fit-content;
 }
 
 .tab-sidebar {
@@ -70,8 +116,8 @@
 
 .tab-content {
     flex: 1;
-    padding: var(--space-2);
-    background-color: var(--c-surface);
+    padding: 0;
+    background-color: transparent;
     overflow-x: auto; /* Only allow horizontal scrolling if needed */
     overflow-y: hidden; /* Disable vertical scrollbar */
     min-width: 0;
@@ -88,12 +134,12 @@
     overflow: visible;
 }
 
-/* Also allow toolbar-container-2 to overflow when dropdown is open */
-#toolbar-container-2:has(.dropdown-container.open) {
+/* Also allow toolbar-secondary to overflow when dropdown is open */
+#toolbar-secondary:has(.dropdown-container.open) {
     overflow: visible;
 }
 
-#toolbar-container-2.dropdown-open {
+#toolbar-secondary.dropdown-open {
     overflow: visible;
 }
 
@@ -105,7 +151,7 @@
 
 .tab-panel.active {
     display: flex;
-    gap: var(--space-1); /* Reduced from --space-2 to prevent toolbar overflow */
+    gap: 0;
     min-height: 0; /* Allow flex children to shrink */
 }
 
@@ -124,7 +170,7 @@
 }
 
 .preset-effects-container {
-    align-items: center;
+    align-items: flex-start;
     justify-content: flex-start;
     flex: 0 0 auto;
     width: fit-content;
@@ -149,8 +195,14 @@
 
 /* --- Main Structure Container (Add/Del Beat, Pickup, Modulation Column) --- */
 .rhythm-structure-container {
+    display: flex;
     flex-direction: column;
     gap: var(--space-3);
+    background-color: var(--c-surface);
+    border: 1px solid var(--c-border);
+    border-radius: var(--border-radius-md);
+    box-shadow: var(--box-shadow-sm);
+    padding: var(--space-015);
 }
 
 .control-subsection {
@@ -182,11 +234,22 @@
     justify-content: center;
 }
 
+/* --- Modulation Container --- */
+.modulation-container {
+    display: flex;
+    flex-direction: column;
+    background-color: var(--c-surface);
+    border: 1px solid var(--c-border);
+    border-radius: var(--border-radius-md);
+    box-shadow: var(--box-shadow-sm);
+    padding: var(--space-015);
+}
+
 /* --- Modulation Controls --- */
 .modulation-controls {
     display: flex;
     gap: var(--space-2);
-    align-items: center;
+    align-items: flex-start;
 }
 
 /* --- Rhythm Stamps Tabs --- */
@@ -210,19 +273,28 @@
 
 .rhythm-tab-content {
     flex: 1;
-    padding: var(--space-2);
+    padding: var(--space-015);
     background-color: var(--c-surface);
     overflow: auto;
     min-width: 0;
+    border: 1px solid var(--c-border);
+    border-top: none;
+    border-radius: 0 0 var(--border-radius-md) var(--border-radius-md);
+    box-shadow: var(--box-shadow-sm);
 }
 
 .rhythm-tab-panel {
     display: none;
     padding: 0;
+    height: 100%;
 }
 
 .rhythm-tab-panel.active {
-    display: block;
+    display: flex;
+    flex-direction: row;
+    gap: var(--space-1);
+    height: 100%;
+    max-height: 100%;
 }
 
 /* --- Stamps Toolbar Layout --- */
@@ -266,7 +338,7 @@
 .triplets-main-container {
     display: flex;
     flex-direction: column;
-    align-items: center;
+    align-items: flex-start;
 }
 
 .triplets-sections {
@@ -279,7 +351,7 @@
     display: flex;
     flex-direction: column;
     gap: var(--space-2);
-    align-items: center;
+    align-items: flex-start;
 }
 
 .triplets-grid {

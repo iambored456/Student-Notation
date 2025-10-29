@@ -107,7 +107,7 @@ function isPitchInScale(pitchName, scaleNotes) {
 export function drawLegends(ctx, options, startRow, endRow) {
     const { fullRowData, columnWidths, cellWidth, cellHeight, colorMode } = options;
     const { sharp, flat } = store.state.accidentalMode;
-    const { focusColours } = store.state;
+    const { focusColours, showFrequencyLabels } = store.state;
     
     // Focus colours logic - get tonic information and scales
     let leftScale = [];
@@ -127,9 +127,19 @@ export function drawLegends(ctx, options, startRow, endRow) {
         }
     }
     
-    
 
-    const processLabel = (label, relevantScale = []) => {
+
+    const processLabel = (label, relevantScale = [], rowData = null) => {
+        // If frequency mode is enabled, always return the frequency value
+        // This bypasses all flat/sharp/focus color logic
+        if (showFrequencyLabels) {
+            if (rowData && rowData.frequency) {
+                return String(rowData.frequency);
+            }
+            // If no rowData or frequency, still return something to avoid null
+            return label;
+        }
+
         if (!label.includes('/')) return label;
 
         // ---Preserve the octave number ---
@@ -215,20 +225,21 @@ export function drawLegends(ctx, options, startRow, endRow) {
                 if (row.column === colLabel) {
                     const y = getRowY(rowIndex, options);
                     const isAccidental = row.pitch.includes('/');
-                    const shouldHideAccidental = isAccidental && isAccidentalHidden();
-                    
+                    // Don't hide accidentals when in frequency mode
+                    const shouldHideAccidental = !showFrequencyLabels && isAccidental && isAccidentalHidden();
+
                     // Set transparency for background colors
                     let bgColor = colorMode === 'bw' ? '#ffffff' : (row.hex || '#ffffff');
-                    
+
                     // Pre-check if this pitch should be shown at all (for Focus Colours filtering)
-                    const pitchToDraw = processLabel(row.pitch, relevantScale);
+                    const pitchToDraw = processLabel(row.pitch, relevantScale, row);
                     const shouldSkipPitch = pitchToDraw === null;
-                    
+
                     // Check if we should apply transparency
                     let shouldApplyTransparency = shouldHideAccidental || shouldSkipPitch;
-                    
-                    // Focus colours logic: make non-scale pitches transparent
-                    if (focusColours && relevantScale.length > 0 && !shouldSkipPitch) {
+
+                    // Focus colours logic: make non-scale pitches transparent (but not in frequency mode)
+                    if (!showFrequencyLabels && focusColours && relevantScale.length > 0 && !shouldSkipPitch) {
                         const isPitchInRelevantScale = isPitchInScale(row.pitch, relevantScale);
                         if (!isPitchInRelevantScale) {
                             shouldApplyTransparency = true;

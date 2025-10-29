@@ -55,24 +55,74 @@ function calculateColorOffset(note, allNotes, options) {
 // Helper function to calculate vibrato Y offset
 function calculateVibratoYOffset(note, options) {
     const { cellHeight } = options;
-    
+
     // Check if this note should be animated
     const shouldAnimate = window.animationEffectsManager ? window.animationEffectsManager.shouldAnimateNote(note) : false;
     if (!shouldAnimate) {
         return 0;
     }
-    
+
     // Get vibrato offset in semitones from animation service
     const vibratoOffsetSemitones = window.animationEffectsManager ? window.animationEffectsManager.getVibratoYOffset(note.color) : 0;
-    
-    
+
+
     // Convert semitones to pixels
     // In the pitch grid, one row = one semitone = cellHeight
     // So vibrato offset in pixels = offset in semitones * cellHeight
     const vibratoOffsetPixels = vibratoOffsetSemitones * cellHeight;
-    
-    
+
+
     return vibratoOffsetPixels;
+}
+
+// Helper function to draw radiating fill for envelope visualization
+function drawEnvelopeFill(ctx, note, centerX, centerY, rx, ry) {
+    // Check if this note should have fill animation
+    if (!window.animationEffectsManager) {
+        return;
+    }
+
+    const shouldFill = window.animationEffectsManager.shouldFillNote(note);
+
+    if (!shouldFill) return;
+
+    // Get fill level (0 to 1)
+    const fillLevel = window.animationEffectsManager.getFillLevel(note);
+
+    if (fillLevel <= 0) return;
+
+    // Draw filled ellipse that radiates inward from perimeter with gradient
+    // fillLevel 0 = no fill, fillLevel 1 = fully filled
+    ctx.save();
+
+    // Calculate the inner "unfilled" radius based on fill level
+    // When fillLevel = 0, innerRatio = 1 (full size, no fill visible)
+    // When fillLevel = 1, innerRatio = 0 (no inner space, fully filled)
+    const innerRatio = 1 - fillLevel;
+
+    // Create radial gradient for the fill effect
+    // The gradient radiates from the center outward to create the "filling" effect
+    const gradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, Math.max(rx, ry));
+
+    // Inner part (where the fill hasn't reached yet) - completely transparent
+    gradient.addColorStop(0, 'transparent');
+    gradient.addColorStop(Math.max(0, innerRatio - 0.05), 'transparent');
+
+    // Linear gradient from fill edge to outer perimeter
+    // Creates smooth fade: darkest at the outer stroke, fading to transparent toward center
+    gradient.addColorStop(innerRatio, note.color + '1F'); // 12% opacity at fill edge
+    gradient.addColorStop(1, note.color + 'BF'); // 75% opacity at outer perimeter
+
+    // Create clipping path for the shape
+    ctx.beginPath();
+    ctx.ellipse(centerX, centerY, rx, ry, 0, 0, 2 * Math.PI);
+    ctx.clip();
+
+    // Fill with gradient
+    ctx.fillStyle = gradient;
+    ctx.fillRect(centerX - rx - 10, centerY - ry - 10, (rx + 10) * 2, (ry + 10) * 2);
+
+    ctx.restore();
 }
 
 // Helper function to calculate vertical offset for note tails
@@ -192,22 +242,25 @@ export function drawTwoColumnOvalNote(ctx, options, note, rowIndex) {
 
     // Save context state for cleaner rendering
     ctx.save();
-    
+
+    // Draw envelope fill animation FIRST (underneath the stroke)
+    drawEnvelopeFill(ctx, note, centerX, y, rx, ry);
+
     // Draw the circle/ellipse as a ring (hollow center)
     ctx.beginPath();
     ctx.ellipse(centerX, y, rx, ry, 0, 0, 2 * Math.PI);
-    
+
     // Only stroke, no fill (to create transparent center)
     ctx.strokeStyle = note.color;
     ctx.lineWidth = dynamicStrokeWidth;
     ctx.shadowColor = note.color;
     ctx.shadowBlur = SHADOW_BLUR_RADIUS;
     ctx.stroke();
-    
+
     // Reset shadow
     ctx.shadowBlur = 0;
     ctx.shadowColor = 'transparent';
-    
+
     ctx.restore();
 
     // Draw degree text if enabled
@@ -244,22 +297,25 @@ export function drawSingleColumnOvalNote(ctx, options, note, rowIndex) {
 
     // Save context state
     ctx.save();
-    
+
+    // Draw envelope fill animation FIRST (underneath the stroke)
+    drawEnvelopeFill(ctx, note, cx, y, rx, ry);
+
     // Draw the oval as transparent ring (not filled)
     ctx.beginPath();
     ctx.ellipse(cx, y, rx, ry, 0, 0, 2 * Math.PI);
-    
+
     // Only stroke, no fill (to create transparent center)
     ctx.strokeStyle = note.color;
     ctx.lineWidth = dynamicStrokeWidth;
     ctx.shadowColor = note.color;
     ctx.shadowBlur = SHADOW_BLUR_RADIUS;
     ctx.stroke();
-    
+
     // Reset shadow
     ctx.shadowBlur = 0;
     ctx.shadowColor = 'transparent';
-    
+
     ctx.restore();
 
     // Draw degree text if enabled

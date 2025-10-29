@@ -3,6 +3,7 @@ import store from '../../../state/index.js';
 import logger from '../../../utils/logger.js';
 import VibratoCanvasEffect from './vibratoCanvasEffect.js';
 import TremoloWaveformEffect from './tremoloWaveformEffect.js';
+import EnvelopeFillEffect from './envelopeFillEffect.js';
 
 logger.moduleLoaded('AnimationEffectsManager');
 
@@ -19,13 +20,14 @@ class AnimationEffectsManager {
         // Initialize specific animation effect handlers
         this.vibratoEffect = new VibratoCanvasEffect();
         this.tremoloEffect = new TremoloWaveformEffect();
-        
+        this.envelopeFillEffect = new EnvelopeFillEffect();
+
         // Single animation loop for all effects (eliminates conflicts)
         this.isRunning = false;
         this.animationFrameId = null;
         this.lastTime = 0;
         this.lastRenderTrigger = 0;
-        
+
         logger.info('AnimationEffectsManager', 'Initialized with single animation loop', null, 'animation');
     }
 
@@ -36,6 +38,7 @@ class AnimationEffectsManager {
         // Initialize individual effect handlers
         this.vibratoEffect.init();
         this.tremoloEffect.init();
+        this.envelopeFillEffect.init();
 
         // Listen for visual effect changes from main coordinator
         // Note: Individual effects also listen, but we coordinate the main loop here
@@ -43,7 +46,7 @@ class AnimationEffectsManager {
             if (effectType === 'vibrato' || effectType === 'tremolo') {
                 // Effect parameters changed - update animation state
                 setTimeout(() => this.updateAnimationState(), 0); // Defer to avoid timing issues
-                
+
                 // For tremolo, immediately trigger amplitude updates for waveform/ADSR
                 // regardless of animation timing - tremolo affects static displays too
                 if (effectType === 'tremolo') {
@@ -70,7 +73,8 @@ class AnimationEffectsManager {
         // Update all effect animations
         this.vibratoEffect.updateAnimationPhases(currentTime);
         this.tremoloEffect.updateAnimationPhases(currentTime);
-        
+        this.envelopeFillEffect.updateAnimationPhases(currentTime);
+
         // Trigger visual updates with throttling
         this.triggerVisualUpdates(currentTime);
         
@@ -148,10 +152,16 @@ class AnimationEffectsManager {
     /**
      * Update animation state - start/stop loop as needed
      */
+    shouldEnvelopeFillBeRunning() {
+        // Envelope fill should run when there are active fills
+        return this.envelopeFillEffect.shouldBeRunning();
+    }
+
     updateAnimationState() {
         const vibratoShouldRun = this.shouldVibratoBeRunning();
         const tremoloShouldRun = this.shouldTremoloBeRunning();
-        const shouldAnimate = vibratoShouldRun || tremoloShouldRun;
+        const envelopeFillShouldRun = this.shouldEnvelopeFillBeRunning();
+        const shouldAnimate = vibratoShouldRun || tremoloShouldRun || envelopeFillShouldRun;
 
         if (shouldAnimate && !this.isRunning) {
             this.start();
@@ -171,12 +181,14 @@ class AnimationEffectsManager {
             // Get active colors from both effects
             const activeVibratoColors = this.vibratoEffect.getActiveColors();
             const activeTremoloColors = this.tremoloEffect.getActiveColors();
+            const hasEnvelopeFills = this.envelopeFillEffect.activeFills.size > 0;
 
-            // Emit canvas updates for vibrato (note positions)
-            if (activeVibratoColors.length > 0) {
+            // Emit canvas updates for vibrato (note positions) or envelope fills
+            if (activeVibratoColors.length > 0 || hasEnvelopeFills) {
                 store.emit('animationUpdate', {
-                    type: 'vibrato',
-                    activeColors: activeVibratoColors
+                    type: activeVibratoColors.length > 0 ? 'vibrato' : 'envelopeFill',
+                    activeColors: activeVibratoColors,
+                    hasEnvelopeFills: hasEnvelopeFills
                 });
             }
 
@@ -235,6 +247,17 @@ class AnimationEffectsManager {
     }
 
     /**
+     * Envelope fill delegation methods
+     */
+    getFillLevel(note) {
+        return this.envelopeFillEffect.getFillLevel(note);
+    }
+
+    shouldFillNote(note) {
+        return this.envelopeFillEffect.shouldFillNote(note);
+    }
+
+    /**
      * Trigger tremolo amplitude updates for waveform/ADSR displays
      * This is called immediately when tremolo parameters change, regardless of animation timing
      */
@@ -264,6 +287,7 @@ class AnimationEffectsManager {
         this.stop();
         this.vibratoEffect.dispose();
         this.tremoloEffect.dispose();
+        this.envelopeFillEffect.dispose();
         logger.info('AnimationEffectsManager', 'Disposed', null, 'animation');
     }
 }

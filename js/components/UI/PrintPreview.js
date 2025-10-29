@@ -104,14 +104,30 @@ const PrintPreview = {
     render() {
         if (!store.state.isPrintPreviewActive) return;
         this.updateControls();
-        
+
         const wrapperWidth = this.canvasWrapper.clientWidth;
         const wrapperHeight = this.canvasWrapper.clientHeight;
         if (wrapperWidth === 0 || wrapperHeight === 0) return;
 
-        const scoreCanvas = PrintService.generateScoreCanvas(store.state.printOptions, { 
-            width: wrapperWidth, 
-            height: wrapperHeight 
+        // Adjust target dimensions based on orientation to match print aspect ratio
+        const orientation = store.state.printOptions.orientation;
+        const aspectRatio = orientation === 'landscape' ? (10.5 / 8) : (8 / 10.5);
+
+        let targetWidth = wrapperWidth;
+        let targetHeight = wrapperHeight;
+
+        // Fit the preview to the wrapper while maintaining the print aspect ratio
+        if (wrapperWidth / wrapperHeight > aspectRatio) {
+            // Wrapper is wider than needed, constrain by height
+            targetWidth = wrapperHeight * aspectRatio;
+        } else {
+            // Wrapper is taller than needed, constrain by width
+            targetHeight = wrapperWidth / aspectRatio;
+        }
+
+        const scoreCanvas = PrintService.generateScoreCanvas(store.state.printOptions, {
+            width: targetWidth,
+            height: targetHeight
         });
 
         if (scoreCanvas) {

@@ -4,11 +4,9 @@ import RhythmService from '../../../services/rhythmService.js';
 
 
 export function renderRhythmUI() {
-    
-    const container = document.getElementById('beat-line-controls');
-    if (!container) {
-        return;
-    }
+
+    const container = document.getElementById('beat-line-button-layer');
+    if (!container) return;
 
     container.innerHTML = '';
     const canvas = document.getElementById('notation-grid');
@@ -19,30 +17,33 @@ export function renderRhythmUI() {
     const canvasRect = canvas.getBoundingClientRect();
     const containerRect = container.getBoundingClientRect();
     const offsetLeft = canvasRect.left - containerRect.left;
-    
+
 
     const buttons = RhythmService.getRhythmUIButtons();
 
     buttons.forEach((buttonData, index) => {
         const btn = document.createElement('button');
+        btn.type = 'button';
         btn.textContent = buttonData.content;
         btn.className = 'rhythm-ui-button';
+        btn.dataset.type = buttonData.type;
+        btn.classList.add(`rhythm-ui-button--${buttonData.type}`);
         btn.style.position = 'absolute';
-        
+
         const finalLeft = offsetLeft + buttonData.x;
         btn.style.left = `${finalLeft}px`;
         btn.style.top = `${buttonData.y}px`;
         btn.style.transform = 'translateX(-50%)';
-        
-        
+
+
         if (buttonData.type === 'grouping') {
             btn.addEventListener('click', () => store.toggleMacrobeatGrouping(buttonData.index));
         } else {
             btn.addEventListener('click', () => store.cycleMacrobeatBoundaryStyle(buttonData.index));
         }
-        
+
         container.appendChild(btn);
     });
-    
+
     // renderRhythmUI() complete
 }

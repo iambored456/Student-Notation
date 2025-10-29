@@ -6,22 +6,46 @@
    ========================================================================= */
 
 /* --- Container Styles --- */
-.harmonic-bins-container {
-  flex-direction: column;
-  justify-content: flex-start;
-  flex: 0 1 auto; /* Changed from flex-grow: 1 to prevent overflow */
-  max-height: fit-content; /* Constrain to content size */
-  margin-left: var(--space-2); /* Add gap from previous component (waveform) */
+.filter-container {
+  display: grid;
+  grid-template-columns: auto auto; /* Left column: sliders/bins, Right column: M slider */
+  grid-template-rows: auto 1fr auto; /* Top: blend, Middle: bins (grows), Bottom: cutoff */
+  gap: 0;
+  flex: 1 1 auto;
+  margin-left: 0;
+  min-height: 0; /* Allow shrinking below content size */
+  background-color: var(--c-surface);
+  border: 1px solid var(--c-border);
+  border-radius: var(--border-radius-md);
+  padding: 0 0 0 5px; /* Only left padding */
 }
 
-/* --- Filter Controls (Top Layer) --- */
+/* --- Grid Positioning --- */
 .blend-slider-container {
+    grid-column: 1;
+    grid-row: 1;
     display: flex;
     align-items: center;
-    width: 100%;
     margin: 0;
     padding: 0;
-    flex-shrink: 0;
+    min-height: var(--slider-thumb-size);
+}
+
+.filter-bins-wrapper {
+    grid-column: 1;
+    grid-row: 2;
+    display: flex;
+    min-height: 0;
+}
+
+.filter-vertical-blend-wrapper {
+    grid-column: 2;
+    grid-row: 2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 0; /* Allow shrinking with grid row */
+    min-width: var(--slider-thumb-size);
 }
 
 #filter-enable-toggle {
@@ -43,49 +67,38 @@
     border-color: var(--c-accent-hover);
 }
 
-.filter-main-panel {
-    display: flex;
-    flex-direction: row;
-    width: 100%;
-    flex-grow: 1;
-    gap: 0;
-    margin: 0;
-    padding: 0;
-    min-height: 0;
-}
-
-.filter-button-wrapper {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 0;
-    margin: 0;
-    width: 0;
-    transition: opacity 0.2s;
-}
-
 /* --- Horizontal Sliders --- */
 #blend-slider-container,
 #cutoff-slider-container {
     position: relative;
-    height: 10px; /* Fixed 10px height for both sliders */
-    border-radius: var(--border-radius-sm);
-    flex-grow: 1; /* Restore flex-grow but constrain with container padding */
+    width: 100%;
+    height: var(--slider-track-thickness);
+    min-height: var(--slider-thumb-size); /* Container height to accommodate thumb */
+    display: flex;
+    align-items: center; /* Center the thin rail vertically within the tall container */
+    flex-shrink: 0;
+}
 
+/* The actual slider rail (thin 10px bar) */
+#blend-slider-container::before,
+#cutoff-slider-container::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: var(--slider-track-thickness); /* Rail is 10px thin */
+    border-radius: var(--border-radius-sm);
     background: linear-gradient(
-      to right, 
-      var(--c-accent) var(--progress, 0%), 
+      to right,
+      var(--c-accent) var(--progress, 0%),
       var(--c-gridline) var(--progress, 0%)
     );
 }
 
 #cutoff-slider-container {
-    width: 100%;
-    align-self: flex-start;
+    grid-column: 1;
+    grid-row: 3;
     transition: opacity 0.2s;
-    flex-shrink: 0;
-    max-height: 10px; /* Prevent container from expanding beyond blend slider height */
     margin: 0;
     padding: 0;
 }
@@ -95,12 +108,12 @@
     position: absolute;
     top: 50%;
     transform: translate(-50%, -50%);
-    width: 20px;
-    height: 20px;
+    width: var(--slider-thumb-size);
+    height: var(--slider-thumb-size);
     font-size: 12px;
     background-color: var(--c-accent);
     border-radius: 50%;
-    border: 2px solid var(--c-surface);
+    border: var(--slider-thumb-border) solid var(--c-surface);
     box-shadow: var(--box-shadow-sm);
     cursor: grab;
     color: var(--c-surface);
@@ -125,16 +138,17 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    width: 30px;
+    width: fit-content;
+    min-width: var(--slider-thumb-size);
+    height: 100%; /* Fill parent height */
     margin: 0;
     padding: 0;
 }
 
 #vertical-blend-track {
     position: relative;
-    width: var(--space-2);
+    width: var(--slider-track-thickness);
     height: 100%;
-    min-height: 80px; 
     background: linear-gradient(
         to top,
         var(--c-accent) var(--blend-progress, 0%),
@@ -148,13 +162,13 @@
     position: absolute;
     left: 50%;
     transform: translate(-50%, 50%);
-    width: 20px;
-    height: 20px;
+    width: var(--slider-thumb-size);
+    height: var(--slider-thumb-size);
     background-color: var(--c-accent);
     border-radius: 50%;
-    border: 2px solid var(--c-surface);
+    border: var(--slider-thumb-border) solid var(--c-surface);
     box-shadow: var(--box-shadow-sm);
-    cursor: ns-resize; 
+    cursor: ns-resize;
     color: var(--c-surface);
     font-size: 12px;
     font-weight: bold;
@@ -175,8 +189,11 @@
 .harmonic-bins-grid {
   display: flex;
   flex-direction: row;
-  flex: 0 0 11rem;
-  height: 7.8rem;
+  flex: 1 1 auto;
+  min-width: 11rem;
+  height: 100%;
+  min-height: 60px; /* Minimum usable height */
+  max-height: 7.8rem; /* Preferred maximum height */
   position: relative;
   gap: 0;
   padding: 0;
@@ -235,10 +252,11 @@
   cursor: pointer;
   margin: 0;
   padding: 0;
-  min-height: 60px;
+  min-height: 0;
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
+  pointer-events: auto;
 }
 
 /* Snap zone at bottom of slider */
@@ -278,6 +296,7 @@
   width: 20px;
   height: 20px;
   flex-shrink: 0;
+  position: relative;
 }
 
 .phase-button:hover {

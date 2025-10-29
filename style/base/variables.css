@@ -19,15 +19,47 @@
   --c-accent-light: #63a9fd;    /* Subtle accent highlight */
   --c-accent-rgb: 74, 144, 226; /* Accent in rgb for box-shadows */
 
-  /* Spacing & Sizing */
+  /* Spacing Scale */
+  --space-0: 0rem;
+  --space-005: 0.05rem;
+  --space-010: 0.10rem;
+  --space-015: 0.15rem;
+  --space-020: 0.20rem;
+  --space-025: 0.25rem;
+  --space-030: 0.30rem;
+  --space-035: 0.35rem;
+  --space-040: 0.40rem;
+  --space-045: 0.45rem;
+  --space-050: 0.50rem;
+  --space-055: 0.55rem;
+  --space-060: 0.60rem;
+  --space-065: 0.65rem;
+  --space-070: 0.70rem;
+  --space-075: 0.75rem;
+  --space-080: 0.80rem;
+  --space-085: 0.85rem;
+  --space-090: 0.90rem;
+  --space-095: 0.95rem;
+  --space-100: 1rem;
+  --space-150: 1.5rem;
+  --space-200: 2rem;
+
+  /* Legacy aliases slated for removal */
   --space-1: 0.125rem;
   --space-2: 0.25rem;
   --space-3: 0.375rem;
   --space-4: 0.5rem;
   --space-5: 0.75rem;
-  --app-padding: var(--space-2);
+
+  --app-padding: var(--space-025);
   --note-size: 1rem;
   --note-margin: var(--space-1);
+
+  /* Slider dimensions */
+  --slider-thumb-size: 20px; /* Base thumb diameter */
+  --slider-thumb-border: 2px; /* Thumb border width */
+  --slider-thumb-total: calc(var(--slider-thumb-size) + (var(--slider-thumb-border) * 2)); /* Total space needed for thumb */
+  --slider-track-thickness: calc(var(--slider-thumb-size) / 2); /* Track/rail thickness - half of thumb size */
 
   /* Borders & Shadows */
   --border-radius-sm: 3px;
