@@ -1,27 +1,22 @@
-.clef-content-box {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    padding: 0.2rem;
-    background: var(--panel-surface, #f8f9fa);
-    border-radius: 16px;
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6);
-}
+/* Clef content box inherits flex layout from parent */
 
 .clef-picker-grid {
-    display: grid;
-    grid-template-columns: repeat(2, auto) minmax(200px, 240px);
-    gap: 12px;
-    align-items: start;
-    justify-content: start;
+    display: flex;
+    flex-direction: row;
+    gap: var(--space-025);
+    align-items: stretch;
+    width: 100%;
+    height: 100%;
+    min-height: 0;
 }
 
 .clef-picker-column {
     display: flex;
     flex-direction: column;
-    gap: 8px;
-    align-items: flex-start;
-    width: fit-content;
+    gap: var(--space-015);
+    align-items: stretch;
+    flex: 0 0 auto;
+    min-width: 0;
 }
 
 .clef-wheel {
@@ -31,6 +26,8 @@
     border: 1px solid rgba(0, 0, 0, 0.05);
     box-shadow: 0 10px 30px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,0.5);
     height: 150px;
+    min-width: 90px;
+    width: 90px;
     outline: none;
     cursor: grab;
     display: flex;
@@ -127,23 +124,26 @@
 .clef-summary-column {
     display: flex;
     flex-direction: column;
-    height: 100%;
-    max-height: 100%;
+    flex: 0 1 auto;
+    min-width: fit-content;
+    width: auto;
+    min-height: 0;
 }
 
 .clef-summary-card {
-    background: linear-gradient(180deg, rgba(255,255,255,0.95) 0%, rgba(248,249,250,0.95) 100%);
-    border-radius: 16px;
-    padding: 10px;
-    border: 1px solid rgba(0,0,0,0.05);
-    box-shadow: 0 12px 24px rgba(0,0,0,0.08);
+    background: var(--c-surface);
+    border-radius: var(--border-radius-md);
+    padding: var(--space-015);
+    border: 1px solid var(--c-border);
+    box-shadow: var(--box-shadow-sm);
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: var(--space-015);
     height: 100%;
-    max-height: 100%;
-    overflow: auto;
-    font-size: 0.65rem;
+    min-height: 0;
+    overflow: hidden;
+    font-size: 0.7rem;
+    width: fit-content;
 }
 
 .clef-summary-card h4 {
@@ -209,18 +209,28 @@
     transform: translateX(16px);
 }
 
+.clef-presets-column {
+    display: flex;
+    flex-direction: column;
+    flex: 0 0 auto;
+    min-width: fit-content;
+    min-height: 0;
+    justify-content: center;
+}
+
 .clef-preset-buttons {
     display: flex;
-    gap: 6px;
-    margin-top: 4px;
-    flex-wrap: wrap;
+    flex-direction: row;
+    gap: var(--space-015);
+    flex-wrap: nowrap;
 }
 
 .clef-preset-button {
-    flex: 1;
-    min-width: 60px;
-    padding: 6px 10px;
-    font-size: 0.65rem;
+    flex: 0 0 auto;
+    min-width: 0;
+    padding: var(--space-015) var(--space-025);
+    font-size: 0.7rem;
+    white-space: nowrap;
 }
 
 .clef-wheel[data-disabled="true"] {

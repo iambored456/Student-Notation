@@ -263,24 +263,50 @@ class DynamicWaveformVisualizer {
             amplitude = amplitude * tremoloMultiplier;
         }
 
+        // Get vibrato horizontal stretch factor
+        let vibratoStretch = 0; // 0 = no stretch, positive = compress (higher freq), negative = expand (lower freq)
+        if (window.animationEffectsManager && window.animationEffectsManager.vibratoCanvasEffect) {
+            const vibratoEffect = window.animationEffectsManager.vibratoCanvasEffect;
+            const animation = vibratoEffect.animations.get(color);
+
+            if (animation && vibratoEffect.shouldBeRunning()) {
+                // Get the current phase sine value
+                const sineValue = Math.sin(animation.phase);
+
+                // Positive sine = pitch going up = higher frequency = compress waveform (positive stretch)
+                // Map amplitude (in semitones) to horizontal stretch factor
+                // amplitude of 0.5 semitones (max) should give ~20% stretch
+                vibratoStretch = sineValue * animation.amplitude * 0.4; // 0.5 * 0.4 = 0.2 (20% max stretch)
+            }
+        }
+
         // Apply normalization to keep peak at 1.0
         let maxAmp = 0;
         for (let i = 0; i < waveform.length; i++) {
             maxAmp = Math.max(maxAmp, Math.abs(waveform[i]));
         }
-        
+
         const normalizationFactor = maxAmp > 1.0 ? 1.0 / maxAmp : 1.0;
-        
+
         this.ctx.strokeStyle = color;
         this.ctx.lineWidth = 2;
         this.ctx.beginPath();
 
-        const samplesPerPixel = waveform.length / width;
+        // Base samples per pixel, modified by vibrato stretch
+        // Positive stretch = more samples per pixel = compressed waveform
+        const baseSpread = waveform.length / width;
+        const stretchedSpread = baseSpread * (1 + vibratoStretch);
 
         for (let x = 0; x < width; x++) {
-            const sampleIndex = Math.floor(x * samplesPerPixel);
-            const sample = (waveform[sampleIndex] || 0) * normalizationFactor;
-            
+            // Apply horizontal shift to the right
+            const shiftAmount = vibratoStretch * width * 0.3; // 30% of width max shift
+            const shiftedX = x + shiftAmount;
+
+            // Sample from stretched position
+            const sampleIndex = Math.floor(shiftedX * stretchedSpread);
+            const clampedIndex = Math.max(0, Math.min(waveform.length - 1, sampleIndex));
+            const sample = (waveform[clampedIndex] || 0) * normalizationFactor;
+
             // Apply tremolo-modulated amplitude
             const y = centerY - (sample * amplitude);
 
@@ -292,9 +318,9 @@ class DynamicWaveformVisualizer {
         }
 
         this.ctx.stroke();
-        
-        logger.debug('DynamicWaveformVisualizer', `Drew single live waveform for ${color} with tremolo`, 
-            { tremoloMultiplier: amplitude / baseAmplitude }, 'waveform');
+
+        logger.debug('DynamicWaveformVisualizer', `Drew single live waveform for ${color} with tremolo and vibrato stretch`,
+            { tremoloMultiplier: amplitude / baseAmplitude, vibratoStretch }, 'waveform');
     }
 
     drawLayeredLiveWaveform(waveform, color, width, centerY, baseAmplitude, totalLayers) {
@@ -307,6 +333,18 @@ class DynamicWaveformVisualizer {
             amplitude = amplitude * tremoloMultiplier;
         }
 
+        // Get vibrato horizontal stretch factor
+        let vibratoStretch = 0;
+        if (window.animationEffectsManager && window.animationEffectsManager.vibratoCanvasEffect) {
+            const vibratoEffect = window.animationEffectsManager.vibratoCanvasEffect;
+            const animation = vibratoEffect.animations.get(color);
+
+            if (animation && vibratoEffect.shouldBeRunning()) {
+                const sineValue = Math.sin(animation.phase);
+                vibratoStretch = sineValue * animation.amplitude * 0.4;
+            }
+        }
+
         // Apply normalization
         let maxAmp = 0;
         for (let i = 0; i < waveform.length; i++) {
@@ -315,18 +353,23 @@ class DynamicWaveformVisualizer {
         const normalizationFactor = maxAmp > 1.0 ? 1.0 / maxAmp : 1.0;
 
         const alpha = Math.max(0.4, 1.0 / totalLayers);
-        const strokeColor = hexToRgba(color, alpha * 2); 
+        const strokeColor = hexToRgba(color, alpha * 2);
         const fillColor = hexToRgba(color, alpha * 0.5);
 
         this.ctx.strokeStyle = strokeColor;
         this.ctx.lineWidth = 1.5;
         this.ctx.beginPath();
 
-        const samplesPerPixel = waveform.length / width;
+        const baseSpread = waveform.length / width;
+        const stretchedSpread = baseSpread * (1 + vibratoStretch);
 
         for (let x = 0; x < width; x++) {
-            const sampleIndex = Math.floor(x * samplesPerPixel);
-            const sample = (waveform[sampleIndex] || 0) * normalizationFactor;
+            const shiftAmount = vibratoStretch * width * 0.3;
+            const shiftedX = x + shiftAmount;
+
+            const sampleIndex = Math.floor(shiftedX * stretchedSpread);
+            const clampedIndex = Math.max(0, Math.min(waveform.length - 1, sampleIndex));
+            const sample = (waveform[clampedIndex] || 0) * normalizationFactor;
 
             // Apply tremolo-modulated amplitude with layering reduction
             const y = centerY - (sample * amplitude * 0.7);

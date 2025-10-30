@@ -47,7 +47,7 @@ class VibratoCanvasEffect extends BaseAnimationEffect {
             const animationData = {
                 frequency: frequencyHz,
                 amplitude: amplitudeSemitones,
-                phase: existingAnimation?.phase || Math.PI / 2, // Preserve existing phase to avoid restart jitter
+                phase: existingAnimation?.phase || 0, // Start at 0 to match audio LFO phase
                 lastUpdate: performance.now()
             };
 
@@ -92,7 +92,10 @@ class VibratoCanvasEffect extends BaseAnimationEffect {
         }
 
         // Calculate sine wave offset
-        const offset = Math.sin(animation.phase) * animation.amplitude;
+        // Negate to flip direction: positive offset should move pitch UP (visual UP on screen)
+        const sineValue = Math.sin(animation.phase);
+        const offset = -sineValue * animation.amplitude;
+        console.log('Visual vibrato | sine:', sineValue.toFixed(3), 'offset (negated):', offset.toFixed(3), 'phase:', animation.phase.toFixed(3));
         return offset; // Returns offset in abstract units (semitones)
     }
 

@@ -208,6 +208,7 @@ class FilteredVoice extends Tone.Synth {
             const hzDeviation = referenceFreq * hzDeviationFactor;
             
             this.vibratoGain.gain.value = hzDeviation;
+            console.log('Audio vibrato gain set to:', hzDeviation, 'Hz (for', centsAmplitude, 'cents)');
             
         }
     }

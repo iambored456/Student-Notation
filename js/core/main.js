@@ -331,6 +331,9 @@ document.addEventListener("DOMContentLoaded", async () => {
     // Initialize Rhythm Tabs
     initRhythmTabs();
 
+    // Initialize Accidental Buttons (Flat, Sharp, Hz)
+    initAccidentalButtons();
+
     // Initialize static waveform visualizer
     logger.initStart('Static Waveform Visualizer');
     if (initStaticWaveformVisualizer()) {
@@ -514,46 +517,188 @@ document.addEventListener("DOMContentLoaded", async () => {
 
 // Rhythm Tabs Functionality
 function initRhythmTabs() {
-    
-    const rhythmContainer = document.querySelector('.rhythm-stamps-container');
-    const rhythmTabSidebar = document.querySelector('.rhythm-tab-sidebar');
+
+    const rhythmContainer = document.querySelector('.rhythm-tabs-container');
+    const rhythmTabs = document.querySelector('.rhythm-tabs');
     const rhythmTabContent = document.querySelector('.rhythm-tab-content');
     const rhythmTabButtons = document.querySelectorAll('.rhythm-tab-button');
     const rhythmTabPanels = document.querySelectorAll('.rhythm-tab-panel');
-    
-    
+
+
     if (rhythmContainer) {
         const containerStyles = window.getComputedStyle(rhythmContainer);
-        
+
         // Check if we have the expected classes
     }
-    
-    if (rhythmTabSidebar) {
-        const sidebarStyles = window.getComputedStyle(rhythmTabSidebar);
+
+    if (rhythmTabs) {
+        const tabsStyles = window.getComputedStyle(rhythmTabs);
     }
-    
+
+    console.log('[Rhythm Tabs Init]', {
+        rhythmContainer: rhythmContainer ? 'found' : 'NOT FOUND',
+        rhythmTabs: rhythmTabs ? 'found' : 'NOT FOUND',
+        rhythmTabContent: rhythmTabContent ? 'found' : 'NOT FOUND',
+        buttonsCount: rhythmTabButtons.length,
+        panelsCount: rhythmTabPanels.length,
+        buttons: Array.from(rhythmTabButtons).map(btn => ({
+            text: btn.textContent,
+            dataTab: btn.getAttribute('data-rhythm-tab')
+        })),
+        panels: Array.from(rhythmTabPanels).map(panel => ({
+            id: panel.id,
+            hasActiveClass: panel.classList.contains('active')
+        }))
+    });
+
     if (!rhythmTabButtons.length || !rhythmTabPanels.length) {
+        console.warn('[Rhythm Tabs] No buttons or panels found, aborting');
         return;
     }
-    
+
     rhythmTabButtons.forEach((button, index) => {
-        
+
         button.addEventListener('click', (e) => {
             const targetTab = button.getAttribute('data-rhythm-tab');
-            
+
+            console.log('[Rhythm Tab Click]', {
+                clickedButton: button.textContent,
+                targetTab: targetTab,
+                targetPanelId: `${targetTab}-panel`
+            });
+
             // Remove active class from all buttons and panels
-            rhythmTabButtons.forEach(btn => btn.classList.remove('active'));
-            rhythmTabPanels.forEach(panel => panel.classList.remove('active'));
-            
+            rhythmTabButtons.forEach(btn => {
+                console.log('[Removing active from button]', btn.textContent);
+                btn.classList.remove('active');
+            });
+            rhythmTabPanels.forEach(panel => {
+                console.log('[Removing active from panel]', panel.id);
+                panel.classList.remove('active');
+            });
+
             // Add active class to clicked button and corresponding panel
             button.classList.add('active');
+            console.log('[Added active to button]', button.textContent);
+
             const targetPanel = document.getElementById(`${targetTab}-panel`);
-            
+
             if (targetPanel) {
                 targetPanel.classList.add('active');
+                console.log('[Added active to panel]', targetPanel.id, {
+                    display: getComputedStyle(targetPanel).display,
+                    hasActiveClass: targetPanel.classList.contains('active')
+                });
             } else {
+                console.warn('[Target panel NOT FOUND]', `${targetTab}-panel`);
             }
+
+            // Log final state
+            console.log('[Final state after click]', {
+                allPanels: Array.from(rhythmTabPanels).map(p => ({
+                    id: p.id,
+                    hasActive: p.classList.contains('active'),
+                    display: getComputedStyle(p).display
+                }))
+            });
         });
     });
-    
+
+}
+
+// Hz / Accidental Button Functionality
+function initAccidentalButtons() {
+    const flatBtn = document.getElementById('flat-toggle-btn');
+    const sharpBtn = document.getElementById('sharp-toggle-btn');
+    const hzBtn = document.getElementById('hz-toggle-btn');
+
+    if (!flatBtn || !sharpBtn || !hzBtn) {
+        console.warn('[Accidental Buttons] One or more buttons not found');
+        return;
+    }
+
+    // Store previous flat/sharp state before entering Hz mode
+    let savedFlatState = flatBtn.classList.contains('active');
+    let savedSharpState = sharpBtn.classList.contains('active');
+
+    // Hz button click handler
+    hzBtn.addEventListener('click', () => {
+        const isHzActive = hzBtn.classList.contains('active');
+
+        if (isHzActive) {
+            // Exiting Hz mode - restore previous flat/sharp state
+            hzBtn.classList.remove('active');
+            hzBtn.setAttribute('aria-pressed', 'false');
+
+            // Restore saved flat/sharp states
+            flatBtn.classList.toggle('active', savedFlatState);
+            flatBtn.setAttribute('aria-pressed', savedFlatState);
+            sharpBtn.classList.toggle('active', savedSharpState);
+            sharpBtn.setAttribute('aria-pressed', savedSharpState);
+
+            // Update store
+            store.state.showFrequencyLabels = false;
+            store.emit('layoutConfigChanged');
+        } else {
+            // Entering Hz mode - save current flat/sharp state
+            savedFlatState = flatBtn.classList.contains('active');
+            savedSharpState = sharpBtn.classList.contains('active');
+
+            // Activate Hz, disable flat/sharp visually
+            hzBtn.classList.add('active');
+            hzBtn.setAttribute('aria-pressed', 'true');
+            flatBtn.classList.remove('active');
+            flatBtn.setAttribute('aria-pressed', 'false');
+            sharpBtn.classList.remove('active');
+            sharpBtn.setAttribute('aria-pressed', 'false');
+
+            // Update store
+            store.state.showFrequencyLabels = true;
+            store.emit('layoutConfigChanged');
+        }
+    });
+
+    // Flat button click handler
+    flatBtn.addEventListener('click', () => {
+        const isHzActive = hzBtn.classList.contains('active');
+
+        if (isHzActive) {
+            // Exit Hz mode first
+            hzBtn.classList.remove('active');
+            hzBtn.setAttribute('aria-pressed', 'false');
+            store.state.showFrequencyLabels = false;
+        }
+
+        // Toggle flat state
+        const newFlatState = !flatBtn.classList.contains('active');
+        flatBtn.classList.toggle('active', newFlatState);
+        flatBtn.setAttribute('aria-pressed', newFlatState);
+        savedFlatState = newFlatState;
+
+        // Trigger canvas redraw
+        store.emit('layoutConfigChanged');
+    });
+
+    // Sharp button click handler
+    sharpBtn.addEventListener('click', () => {
+        const isHzActive = hzBtn.classList.contains('active');
+
+        if (isHzActive) {
+            // Exit Hz mode first
+            hzBtn.classList.remove('active');
+            hzBtn.setAttribute('aria-pressed', 'false');
+            store.state.showFrequencyLabels = false;
+        }
+
+        // Toggle sharp state
+        const newSharpState = !sharpBtn.classList.contains('active');
+        sharpBtn.classList.toggle('active', newSharpState);
+        sharpBtn.setAttribute('aria-pressed', newSharpState);
+        savedSharpState = newSharpState;
+
+        // Trigger canvas redraw
+        store.emit('layoutConfigChanged');
+    });
+
+    console.log('[Accidental Buttons] Initialized Hz, Flat, and Sharp buttons');
 }

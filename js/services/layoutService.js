@@ -241,20 +241,29 @@ const LayoutService = {
         const { ctx, drumCtx, canvasContainer } = initDOMElements();
         requestAnimationFrame(recalcAndApplyLayout);
         this.initScrollHandler();
-       
+
         const handleWindowResize = () => {
             if (isRecalculating) {
                 return;
             }
-            
+
             clearTimeout(resizeTimeout);
             resizeTimeout = setTimeout(() => {
                 recalcAndApplyLayout();
             }, RESIZE_DEBOUNCE_DELAY);
         };
-        
+
         window.addEventListener('resize', handleWindowResize);
         return { ctx, drumCtx };
+    },
+
+    getCurrentZoomLevel() {
+        return currentZoomLevel;
+    },
+
+    setZoomLevel(newZoom) {
+        currentZoomLevel = newZoom;
+        recalcAndApplyLayout();
     },
     
     initScrollHandler() {

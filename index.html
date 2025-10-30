@@ -30,70 +30,6 @@
 <button class="sidebar-button" id="hide-harmony-toggle" title="Toggle Harmony Analysis Grid"><img src="/assets/sidebar/Hide Analysis.svg" alt="Toggle Harmony"><span class="sidebar-button-text">Hide Analysis</span></button>
 <button class="sidebar-button" id="hide-drumgrid-toggle" title="Toggle Drum Grid"><img src="/assets/sidebar/Hide Drums.svg" alt="Toggle Drum Grid"><span class="sidebar-button-text">Hide Drum Grid</span></button>
 </div>
-<div class="sidebar-container">
-<h4 class="sidebar-section-title">Paint Controls</h4>
-<div class="sidebar-paint-controls">
-<div class="paint-control-group">
-<label for="sidebar-trail-thickness">Thickness</label>
-<select id="sidebar-trail-thickness" class="paint-control-select">
-<option value="2">2px</option>
-<option value="4">4px</option>
-<option value="6" selected>6px</option>
-<option value="8">8px</option>
-<option value="10">10px</option>
-<option value="12">12px</option>
-<option value="14">14px</option>
-<option value="16">16px</option>
-<option value="18">18px</option>
-<option value="20">20px</option>
-</select>
-</div>
-<div class="paint-control-group">
-<label for="sidebar-trail-opacity">Opacity</label>
-<select id="sidebar-trail-opacity" class="paint-control-select">
-<option value="5">5%</option>
-<option value="10">10%</option>
-<option value="15">15%</option>
-<option value="20">20%</option>
-<option value="25">25%</option>
-<option value="30">30%</option>
-<option value="35">35%</option>
-<option value="40">40%</option>
-<option value="45">45%</option>
-<option value="50">50%</option>
-<option value="55">55%</option>
-<option value="60">60%</option>
-<option value="65">65%</option>
-<option value="70">70%</option>
-<option value="75">75%</option>
-<option value="80" selected>80%</option>
-<option value="85">85%</option>
-<option value="90">90%</option>
-<option value="95">95%</option>
-<option value="100">100%</option>
-</select>
-</div>
-</div>
-</div>
-<div class="sidebar-container">
-<h4 class="sidebar-section-title">Visualization Controls</h4>
-<div class="sidebar-viz-controls">
-<div class="sidebar-control-group">
-<label for="adsr-time-scale">ADSR Time Scale</label>
-<input type="range" id="adsr-time-scale" min="0.1" max="5.0" step="0.1" value="1.0" class="sidebar-range-input">
-<span id="adsr-time-scale-value" class="sidebar-value-display">1.0x</span>
-</div>
-<div class="sidebar-control-group">
-<label for="adsr-width-scale">ADSR Base Width</label>
-<input type="range" id="adsr-width-scale" min="50" max="200" step="10" value="100" class="sidebar-range-input">
-<span id="adsr-width-scale-value" class="sidebar-value-display">100%</span>
-</div>
-<div class="sidebar-control-group">
-<label for="waveform-extend-toggle">Waveform View</label>
-<button id="waveform-extend-toggle" class="sidebar-toggle-button" title="Toggle between 360° and 480° waveform view">360°</button>
-</div>
-</div>
-</div>
 </aside>
 <main id="app-container" role="main">
   <!-- =======================================================
@@ -293,45 +229,67 @@
                     <div class="pitch-tab-content">
                         <div class="pitch-tab-panel active" id="tonic-panel">
                             <div class="tonic-content-box">
-                                <div class="tonic-tools-wrapper">
-                                   <div id="tonic-dropdown-container" class="dropdown-container">
-                                       <button id="tonic-dropdown-button" class="toolkit-button tonic-dropdown-toggle"><span id="tonic-dropdown-label"><img src="/assets/tabicons/tonicShape_1.svg" alt="Tonic 1" class="tonic-shape-icon"> Major</span> <span class="dropdown-arrow">▼</span></button>
-                                       <div id="tonic-dropdown-menu" class="dropdown-menu">
-                                           <button class="tonic-sign-button" data-tonic="1"><img src="/assets/tabicons/tonicShape_1.svg" alt="Tonic 1" class="tonic-shape-icon"><span class="mode-label">Major</span></button>
-                                           <button class="tonic-sign-button" data-tonic="2"><img src="/assets/tabicons/tonicShape_2.svg" alt="Tonic 2" class="tonic-shape-icon"><span class="mode-label">Dorian</span></button>
-                                           <button class="tonic-sign-button" data-tonic="3"><img src="/assets/tabicons/tonicShape_3.svg" alt="Tonic 3" class="tonic-shape-icon"><span class="mode-label">Phrygian</span></button>
-                                           <button class="tonic-sign-button" data-tonic="4"><img src="/assets/tabicons/tonicShape_4.svg" alt="Tonic 4" class="tonic-shape-icon"><span class="mode-label">Lydian</span></button>
-                                           <button class="tonic-sign-button" data-tonic="5"><img src="/assets/tabicons/tonicShape_5.svg" alt="Tonic 5" class="tonic-shape-icon"><span class="mode-label">Mixolydian</span></button>
-                                           <button class="tonic-sign-button" data-tonic="6"><img src="/assets/tabicons/tonicShape_6.svg" alt="Tonic 6" class="tonic-shape-icon"><span class="mode-label">Minor</span></button>
-                                           <button class="tonic-sign-button" data-tonic="7"><img src="/assets/tabicons/tonicShape_7.svg" alt="Tonic 7" class="tonic-shape-icon"><span class="mode-label">Locrian</span></button>
+                                <div class="tonic-layout">
+                                   <div class="tonic-modes-container">
+                                       <div class="tonic-modes-grid">
+                                           <button class="tonic-mode-button" data-tonic="1">
+                                               <img src="/assets/tabicons/tonicShape_1.svg" alt="Major" class="tonic-mode-icon">
+                                               <span class="tonic-mode-label">Major</span>
+                                           </button>
+                                           <button class="tonic-mode-button" data-tonic="2">
+                                               <img src="/assets/tabicons/tonicShape_2.svg" alt="Dorian" class="tonic-mode-icon">
+                                               <span class="tonic-mode-label">Dorian</span>
+                                           </button>
+                                           <button class="tonic-mode-button" data-tonic="3">
+                                               <img src="/assets/tabicons/tonicShape_3.svg" alt="Phrygian" class="tonic-mode-icon">
+                                               <span class="tonic-mode-label">Phrygian</span>
+                                           </button>
+                                           <button class="tonic-mode-button" data-tonic="4">
+                                               <img src="/assets/tabicons/tonicShape_4.svg" alt="Lydian" class="tonic-mode-icon">
+                                               <span class="tonic-mode-label">Lydian</span>
+                                           </button>
+                                           <button class="tonic-mode-button" data-tonic="5">
+                                               <img src="/assets/tabicons/tonicShape_5.svg" alt="Mixolydian" class="tonic-mode-icon">
+                                               <span class="tonic-mode-label">Mixolydian</span>
+                                           </button>
+                                           <button class="tonic-mode-button" data-tonic="6">
+                                               <img src="/assets/tabicons/tonicShape_6.svg" alt="Minor" class="tonic-mode-icon">
+                                               <span class="tonic-mode-label">Minor</span>
+                                           </button>
+                                           <button class="tonic-mode-button" data-tonic="7">
+                                               <img src="/assets/tabicons/tonicShape_7.svg" alt="Locrian" class="tonic-mode-icon">
+                                               <span class="tonic-mode-label">Locrian</span>
+                                           </button>
                                        </div>
                                    </div>
-                                   <div class="degree-toggle-container">
-                                       <div class="degree-visibility-toggle-container">
-                                           <span class="toggle-text">Degrees</span>
-                                           <div class="two-state-toggle" id="degree-visibility-toggle">
-                                               <div class="two-state-slider"></div>
-                                               <div class="toggle-labels">
-                                                   <span class="toggle-label">Show</span>
-                                                   <span class="toggle-label">Hide</span>
+                                   <div class="tonic-degrees-container">
+                                       <div class="degree-toggle-container">
+                                           <div class="degree-visibility-toggle-container">
+                                               <span class="toggle-text">Degrees</span>
+                                               <div class="two-state-toggle" id="degree-visibility-toggle">
+                                                   <div class="two-state-slider"></div>
+                                                   <div class="toggle-labels">
+                                                       <span class="toggle-label">Show</span>
+                                                       <span class="toggle-label">Hide</span>
+                                                   </div>
+                                               </div>
+                                           </div>
+                                           <div class="degree-mode-toggle-container">
+                                               <div class="two-state-toggle" id="degree-mode-toggle">
+                                                   <div class="two-state-slider"></div>
+                                                   <div class="toggle-labels">
+                                                       <span class="toggle-label">Scale</span>
+                                                       <span class="toggle-label">Mode</span>
+                                                   </div>
                                                </div>
                                            </div>
                                        </div>
-                                       <div class="degree-mode-toggle-container">
-                                           <div class="two-state-toggle" id="degree-mode-toggle">
-                                               <div class="two-state-slider"></div>
-                                               <div class="toggle-labels">
-                                                   <span class="toggle-label">Scale</span>
-                                                   <span class="toggle-label">Mode</span>
-                                               </div>
-                                           </div>
+                                       <div class="focus-colours-container">
+                                           <label class="checkbox-label">
+                                               <input type="checkbox" id="focus-colours-toggle" class="toolkit-checkbox">
+                                               <span class="checkbox-text">Focus Colours</span>
+                                           </label>
                                        </div>
-                                   </div>
-                                   <div class="focus-colours-container">
-                                       <label class="checkbox-label">
-                                           <input type="checkbox" id="focus-colours-toggle" class="toolkit-checkbox">
-                                           <span class="checkbox-text">Focus Colours</span>
-                                       </label>
                                    </div>
                                 </div>
                         </div>
@@ -362,24 +320,22 @@
                                         <div class="clef-summary-metadata">
                                             <span id="clef-range-count">88 pitches</span>
                                         </div>
-                                        <label class="clef-snap-toggle">
-                                            <input type="checkbox" id="clef-snap-zoom-toggle">
-                                            <span>Snap Zoom to Range</span>
-                                        </label>
-                                        <div class="clef-preset-buttons">
-                                            <button class="toolkit-button clef-preset-button" id="clef-full-range-button" type="button">
-                                                Full Range
-                                            </button>
-                                            <button class="toolkit-button clef-preset-button" id="clef-treble-button" type="button">
-                                                Treble
-                                            </button>
-                                            <button class="toolkit-button clef-preset-button" id="clef-alto-button" type="button">
-                                                Alto
-                                            </button>
-                                            <button class="toolkit-button clef-preset-button" id="clef-bass-button" type="button">
-                                                Bass
-                                            </button>
-                                        </div>
+                                    </div>
+                                </div>
+                                <div class="clef-presets-column">
+                                    <div class="clef-preset-buttons">
+                                        <button class="toolkit-button clef-preset-button" id="clef-full-range-button" type="button">
+                                            Full Range
+                                        </button>
+                                        <button class="toolkit-button clef-preset-button" id="clef-treble-button" type="button">
+                                            Treble
+                                        </button>
+                                        <button class="toolkit-button clef-preset-button" id="clef-alto-button" type="button">
+                                            Alto
+                                        </button>
+                                        <button class="toolkit-button clef-preset-button" id="clef-bass-button" type="button">
+                                            Bass
+                                        </button>
                                     </div>
                                 </div>
                             </div>
@@ -504,6 +460,51 @@
                                             </div>
                                         </div>
                                     </div>
+                                    <div class="paint-settings-controls">
+                                        <div class="paint-settings-box">
+                                            <h5>Trail Settings</h5>
+                                            <div class="paint-control-group">
+                                                <label for="sidebar-trail-thickness">Thickness</label>
+                                                <select id="sidebar-trail-thickness" class="paint-control-select">
+                                                    <option value="2">2px</option>
+                                                    <option value="4">4px</option>
+                                                    <option value="6" selected>6px</option>
+                                                    <option value="8">8px</option>
+                                                    <option value="10">10px</option>
+                                                    <option value="12">12px</option>
+                                                    <option value="14">14px</option>
+                                                    <option value="16">16px</option>
+                                                    <option value="18">18px</option>
+                                                    <option value="20">20px</option>
+                                                </select>
+                                            </div>
+                                            <div class="paint-control-group">
+                                                <label for="sidebar-trail-opacity">Opacity</label>
+                                                <select id="sidebar-trail-opacity" class="paint-control-select">
+                                                    <option value="5">5%</option>
+                                                    <option value="10">10%</option>
+                                                    <option value="15">15%</option>
+                                                    <option value="20">20%</option>
+                                                    <option value="25">25%</option>
+                                                    <option value="30">30%</option>
+                                                    <option value="35">35%</option>
+                                                    <option value="40">40%</option>
+                                                    <option value="45">45%</option>
+                                                    <option value="50">50%</option>
+                                                    <option value="55">55%</option>
+                                                    <option value="60">60%</option>
+                                                    <option value="65">65%</option>
+                                                    <option value="70">70%</option>
+                                                    <option value="75">75%</option>
+                                                    <option value="80" selected>80%</option>
+                                                    <option value="85">85%</option>
+                                                    <option value="90">90%</option>
+                                                    <option value="95">95%</option>
+                                                    <option value="100">100%</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
                                     <div class="mic-meter-container-vertical">
                                         <div class="mic-meter-wrapper-vertical" id="mic-meter-wrapper">
                                             <div class="meter-placeholder" id="meter-placeholder">
@@ -586,14 +587,14 @@
 
             <!-- Rhythm Tab -->
             <div class="tab-panel" id="rhythm-panel">
-                <div class="control-section rhythm-stamps-container">
-                    <div class="rhythm-tab-sidebar">
+                <div class="control-section rhythm-tabs-container">
+                    <div class="rhythm-tabs">
                         <button class="rhythm-tab-button active" data-rhythm-tab="tempo">Tempo</button>
                         <button class="rhythm-tab-button" data-rhythm-tab="stamps">Sixteenths</button>
                         <button class="rhythm-tab-button" data-rhythm-tab="triplets">Triplets</button>
                     </div>
                     <div class="rhythm-tab-content">
-                        <div class="rhythm-tab-panel active" id="tempo-panel">
+                        <div class="rhythm-tab-panel tempo-tab-panel active" id="tempo-panel">
                             <div class="tempo-content-box">
                                 <div class="tempo-container">
                                     <div class="tempo-column">
@@ -663,8 +664,9 @@
             <div id="canvas-macrobeat-tools">
                 <div class="macrobeat-left-controls">
                     <div id="accidental-controls-container-v2" class="macrobeat-accidentals">
-                        <button id="flat-toggle-btn" class="accidental-button active" aria-pressed="true">?T-</button>
-                        <button id="sharp-toggle-btn" class="accidental-button active" aria-pressed="true">?T_</button>
+                        <button id="flat-toggle-btn" class="accidental-button active" aria-pressed="true">♭</button>
+                        <button id="sharp-toggle-btn" class="accidental-button active" aria-pressed="true">♯</button>
+                        <button id="hz-toggle-btn" class="accidental-button" aria-pressed="false">Hz</button>
                     </div>
                 </div>
                 <div id="beat-line-button-layer"></div>
@@ -836,7 +838,7 @@
     
     document.querySelectorAll('.pitch-tab-button').forEach(button => {
         button.addEventListener('click', () => {
-            const tabId = button.dataset.chordTab;
+            const tabId = button.dataset.pitchTab;
             document.querySelectorAll('.pitch-tab-button').forEach(btn => btn.classList.remove('active'));
             button.classList.add('active');
             document.querySelectorAll('.pitch-tab-panel').forEach(panel => panel.classList.remove('active'));
@@ -847,5 +849,6 @@
 <script type="module" src="/js/core/main.js"></script>
 </body>
 </html>
+
 
 

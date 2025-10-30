@@ -98,9 +98,9 @@ class WheelPicker {
             this.deltaBuffer += deltaY;
             const step = this.optionHeight || SCROLL_STEP;
             while (Math.abs(this.deltaBuffer) >= step) {
-                const direction = Math.sign(this.deltaBuffer);
+                const direction = -Math.sign(this.deltaBuffer); // Inverted: drag down = scroll up
                 this.increment(direction);
-                this.deltaBuffer -= direction * step;
+                this.deltaBuffer -= Math.sign(this.deltaBuffer) * step; // Use original sign for buffer
             }
         });
 
@@ -211,15 +211,6 @@ class WheelPicker {
             offset = (viewportHeight / 2) - (padding + optionHeight / 2);
         }
         this.optionsEl.style.transform = `translateY(${offset}px)`;
-
-        console.log(`[ClefRangeController] ${this.debugLabel} update`, {
-            viewportHeight,
-            optionHeight,
-            padding,
-            selectedIndex: this.selectedIndex,
-            centerOffset: selectedNode ? selectedNode.offsetTop + optionHeight / 2 : null,
-            offset
-        });
     }
 }
 
@@ -243,7 +234,6 @@ class ClefRangeController {
         this.trebleButton = document.getElementById('clef-treble-button');
         this.altoButton = document.getElementById('clef-alto-button');
         this.bassButton = document.getElementById('clef-bass-button');
-        this.snapToggle = document.getElementById('clef-snap-zoom-toggle');
 
         if (!this.topWheel || !this.bottomWheel) {
             logger.warn('ClefRangeController', 'Clef tab elements not found; skipping initialization', null, 'ui');
@@ -289,25 +279,8 @@ class ClefRangeController {
             this.bassButton.addEventListener('click', () => this.setPresetRange('bass'));
         }
 
-        if (this.snapToggle) {
-            this.snapToggle.checked = Boolean(store.state.snapZoomToRange);
-            this.snapToggle.addEventListener('change', () => {
-                const enabled = Boolean(this.snapToggle.checked);
-                store.setSnapZoomToRange(enabled);
-                if (enabled && LayoutService && typeof LayoutService.snapZoomToCurrentRange === 'function') {
-                    LayoutService.snapZoomToCurrentRange();
-                }
-            });
-        }
-
         store.on('pitchRangeChanged', (range) => {
             this.syncFromStore(range);
-        });
-
-        store.on('snapZoomSettingChanged', (enabled) => {
-            if (this.snapToggle && this.snapToggle.checked !== enabled) {
-                this.snapToggle.checked = enabled;
-            }
         });
 
         this.currentRange = initialRange;
@@ -355,13 +328,19 @@ class ClefRangeController {
     }
 
     commitRangeChange(topIndex, bottomIndex) {
+        console.log(`[CommitRange] Called with top=${topIndex}, bottom=${bottomIndex}`);
+
         const previousRange = this.currentRange || store.state.pitchRange || { topIndex: 0 };
         const normalisedTop = Math.max(0, Math.min(this.masterOptions.length - 1, topIndex));
         const normalisedBottom = Math.max(normalisedTop, Math.min(this.masterOptions.length - 1, bottomIndex));
 
+        console.log(`[CommitRange] Normalized to top=${normalisedTop}, bottom=${normalisedBottom}`);
+        console.log(`[CommitRange] Current range:`, this.currentRange);
+
         if (this.currentRange &&
             this.currentRange.topIndex === normalisedTop &&
             this.currentRange.bottomIndex === normalisedBottom) {
+            console.log(`[CommitRange] Range unchanged, skipping commit`);
             return;
         }
 
@@ -379,16 +358,29 @@ class ClefRangeController {
         this.lastBottomIndex = normalisedBottom;
         this.updateSummary();
 
+        console.log(`[CommitRange] Setting pitch range in store`);
         store.setPitchRange({
             topIndex: normalisedTop,
             bottomIndex: normalisedBottom
         }, { maintainGlobalStart });
 
+        // Auto-enable snap zoom when user interacts with range controls
+        console.log(`[CommitRange] Snap zoom currently: ${store.state.snapZoomToRange}`);
+        if (!store.state.snapZoomToRange) {
+            console.log(`[CommitRange] Enabling snap zoom`);
+            store.setSnapZoomToRange(true);
+        }
+
+        console.log(`[CommitRange] Snap zoom now: ${store.state.snapZoomToRange}`);
         if (LayoutService && typeof LayoutService.snapZoomToCurrentRange === 'function' && store.state.snapZoomToRange) {
+            console.log(`[CommitRange] Calling snapZoomToCurrentRange`);
             LayoutService.snapZoomToCurrentRange();
         } else if (LayoutService && typeof LayoutService.recalculateLayout === 'function') {
+            console.log(`[CommitRange] Calling recalculateLayout (snap zoom not enabled)`);
             LayoutService.recalculateLayout();
         }
+
+        console.log(`[CommitRange] Complete`);
     }
 
     syncFromStore(range) {
@@ -461,8 +453,12 @@ class ClefRangeController {
             if (progress < 1) {
                 requestAnimationFrame(animate);
             } else {
-                // Final commit with sound enabled
-                picker.setIndex(targetIndex);
+                // Final commit - ensure we're at target and trigger onChange
+                picker.selectedIndex = targetIndex;
+                picker.updateVisuals();
+                if (typeof picker.onChange === 'function') {
+                    picker.onChange(targetIndex, picker.options[targetIndex]);
+                }
             }
         };
 
@@ -475,8 +471,7 @@ class ClefRangeController {
         switch (preset) {
             case 'full':
                 // Full range: C8 to C1 (or entire available range)
-                this.animateWheelToIndex(this.topPicker, 0);
-                this.animateWheelToIndex(this.bottomPicker, this.masterOptions.length - 0);
+                this.animateRangeTransition(0, this.masterOptions.length - 1);
                 return;
 
             case 'treble':
@@ -488,7 +483,7 @@ class ClefRangeController {
             case 'alto':
                 // Alto: E3 to A4
                 topNote = 'B♭/A♯4';
-                bottomNote = 'E3';
+                bottomNote = 'D3';
                 break;
 
             case 'bass':
@@ -509,9 +504,139 @@ class ClefRangeController {
             return;
         }
 
-        // Animate both wheels simultaneously
-        this.animateWheelToIndex(this.topPicker, topIndex);
-        this.animateWheelToIndex(this.bottomPicker, bottomIndex);
+        // Animate range transition with synchronized wheels and canvas
+        this.animateRangeTransition(topIndex, bottomIndex);
+    }
+
+    animateRangeTransition(targetTopIndex, targetBottomIndex, duration = 500) {
+        const startTopIndex = this.topPicker.getIndex();
+        const startBottomIndex = this.bottomPicker.getIndex();
+        const topDistance = targetTopIndex - startTopIndex;
+        const bottomDistance = targetBottomIndex - startBottomIndex;
+        const startTime = performance.now();
+
+        console.log(`[AnimateRange] Starting animation:`, {
+            startTop: startTopIndex,
+            targetTop: targetTopIndex,
+            startBottom: startBottomIndex,
+            targetBottom: targetBottomIndex,
+            duration
+        });
+
+        // Temporarily disable snap zoom during animation
+        const wasSnapEnabled = store.state.snapZoomToRange;
+        console.log(`[AnimateRange] Snap zoom was ${wasSnapEnabled ? 'enabled' : 'disabled'}, disabling for animation`);
+        if (wasSnapEnabled) {
+            store.setSnapZoomToRange(false);
+        }
+
+        // Calculate start and target zoom levels
+        const startZoom = LayoutService.getCurrentZoomLevel ? LayoutService.getCurrentZoomLevel() : 1.0;
+        const targetZoom = this.calculateTargetZoom(targetTopIndex, targetBottomIndex);
+        const zoomDistance = targetZoom - startZoom;
+
+        console.log(`[AnimateRange] Zoom animation: ${Math.round(startZoom * 100)}% -> ${Math.round(targetZoom * 100)}%`);
+
+        let frameCount = 0;
+
+        const animate = (currentTime) => {
+            const elapsed = currentTime - startTime;
+            const progress = Math.min(elapsed / duration, 1);
+
+            // Ease-in-out cubic for smooth, natural movement
+            const eased = progress < 0.5
+                ? 4 * progress * progress * progress
+                : 1 - Math.pow(-2 * progress + 2, 3) / 2;
+
+            // Calculate current indices for both wheels
+            const currentTopIndex = Math.round(startTopIndex + (topDistance * eased));
+            const currentBottomIndex = Math.round(startBottomIndex + (bottomDistance * eased));
+
+            // Calculate current zoom level
+            const currentZoom = startZoom + (zoomDistance * eased);
+
+            frameCount++;
+            if (frameCount % 10 === 0 || progress === 1) {
+                console.log(`[AnimateRange] Frame ${frameCount}: progress=${(progress * 100).toFixed(1)}%, top=${currentTopIndex}, bottom=${currentBottomIndex}, zoom=${Math.round(currentZoom * 100)}%`);
+            }
+
+            // Update wheel visuals silently
+            this.topPicker.setIndex(currentTopIndex, { silent: true });
+            this.bottomPicker.setIndex(currentBottomIndex, { silent: true });
+
+            // Directly update store.state.pitchRange and fullRowData without emitting events
+            store.state.pitchRange = {
+                topIndex: currentTopIndex,
+                bottomIndex: currentBottomIndex
+            };
+
+            if (masterRowData && masterRowData.length > 0) {
+                store.state.fullRowData = masterRowData.slice(currentTopIndex, currentBottomIndex + 1);
+            }
+
+            // Update zoom level directly
+            if (LayoutService.setZoomLevel) {
+                LayoutService.setZoomLevel(currentZoom);
+            }
+
+            // Trigger canvas redraw to show the updated range and zoom
+            document.dispatchEvent(new CustomEvent('canvasResized', {
+                detail: { source: 'clefRangeAnimation' }
+            }));
+
+            if (progress < 1) {
+                requestAnimationFrame(animate);
+            } else {
+                // Animation complete - finalize everything properly
+                console.log(`[AnimateRange] Animation complete, finalizing at top=${targetTopIndex}, bottom=${targetBottomIndex}`);
+
+                // Force final positions
+                this.topPicker.selectedIndex = targetTopIndex;
+                this.bottomPicker.selectedIndex = targetBottomIndex;
+                this.topPicker.updateVisuals();
+                this.bottomPicker.updateVisuals();
+
+                // Update the controller's internal range tracking
+                this.currentRange = { topIndex: targetTopIndex, bottomIndex: targetBottomIndex };
+                this.lastTopIndex = targetTopIndex;
+                this.lastBottomIndex = targetBottomIndex;
+                this.updateSummary();
+
+                // Now properly commit the range change through the normal flow
+                console.log(`[AnimateRange] Committing final range change through setPitchRange`);
+                store.setPitchRange({
+                    topIndex: targetTopIndex,
+                    bottomIndex: targetBottomIndex
+                });
+
+                // Re-enable snap zoom (but don't trigger it since we already animated to the target)
+                console.log(`[AnimateRange] Re-enabling snap zoom`);
+                store.setSnapZoomToRange(true);
+
+                console.log(`[AnimateRange] Animation fully complete`);
+            }
+        };
+
+        requestAnimationFrame(animate);
+    }
+
+    calculateTargetZoom(topIndex, bottomIndex) {
+        // Calculate what zoom level would be needed to fit this range
+        const totalRanks = bottomIndex - topIndex + 1;
+        if (totalRanks === 0) return 1.0;
+
+        const pitchGridContainer = document.getElementById('pitch-grid-container');
+        const containerHeight = pitchGridContainer?.clientHeight || (window.innerHeight * 0.7);
+
+        if (!containerHeight || containerHeight <= 0) return 1.0;
+
+        const BASE_ABSTRACT_UNIT = 30;
+        const requiredZoom = (2 * containerHeight) / (totalRanks * BASE_ABSTRACT_UNIT);
+
+        // Clamp between min and max zoom levels
+        const MIN_ZOOM = 0.1;
+        const MAX_ZOOM = 5.0;
+        return Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, requiredZoom));
     }
 }
 

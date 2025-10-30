@@ -43,6 +43,10 @@
   padding: var(--space-020) var(--space-035);
   border-radius: var(--border-radius-sm);
   cursor: pointer;
+  text-align: center;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .macrobeat-accidentals .accidental-button.active {

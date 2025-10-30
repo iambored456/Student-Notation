@@ -146,26 +146,26 @@ const lightenColor = (hex, percent = 50) => {
 
 export function initToolSelectors() {
     const {
-        noteBankContainer, eraserButton: eraserBtn, tonicModeGrid,
+        noteBankContainer, eraserButton: eraserBtn,
         degreeVisibilityToggle, degreeModeToggle, flatBtn, sharpBtn, frequencyBtn, focusColoursToggle
     } = domCache.getMultiple(
-        'noteBankContainer', 'eraserButton', 'tonicModeGrid',
+        'noteBankContainer', 'eraserButton',
         'degreeVisibilityToggle', 'degreeModeToggle', 'flatBtn', 'sharpBtn', 'frequencyBtn', 'focusColoursToggle'
     );
 
     // Get harmony container directly since it uses a class, not an ID
     const harmonyContainer = document.querySelector('.pitch-tabs-container');
     const harmonyPresetGrid = document.querySelector('.harmony-preset-grid');
-    
+
     // Get inversion toggle element
     const inversionToggle = document.getElementById('inversion-toggle');
-    
+
     // Get chord position toggle element (single 6-state toggle)
     const chordPositionToggle6 = document.getElementById('chord-position-toggle-6');
 
     // Initialize clef range controls when the elements are available
     clefRangeController.init();
-    
+
     // Define 4-note chord types
     const fourNoteChords = ['X7', 'x⁷', 'ø⁷', 'Xmaj7', 'x°7'];
 
@@ -183,7 +183,8 @@ export function initToolSelectors() {
         eraserBtn.addEventListener('click', () => store.setSelectedTool('eraser'));
     }
 
-    const tonicModeButtons = tonicModeGrid ? Array.from(tonicModeGrid.querySelectorAll('.tonic-sign-button')) : [];
+    // Get tonic mode buttons from the new grid structure
+    const tonicModeButtons = Array.from(document.querySelectorAll('.tonic-mode-button'));
 
     const updateTonicModeButtons = (activeNumber = store.state.selectedToolTonicNumber) => {
         if (!tonicModeButtons.length) return;

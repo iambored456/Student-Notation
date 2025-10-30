@@ -1,73 +1,120 @@
 /* ==========================================================================
-   TONIC CONTROLS AND DROPDOWN
+   TONIC CONTROLS - MODE BUTTONS AND DEGREES
    ========================================================================= */
 
-/* --- Inline Mode Selection Grid --- */
-#tonic-mode-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
-    gap: var(--space-015);
-    width: 100%;
-    align-items: stretch;
-    justify-items: stretch;
-    flex: 1 1 320px;
-}
+/* --- Tonic Content Box --- */
+/* Inherits flex layout from .intervals-content-box parent class */
 
-#tonic-mode-grid .tonic-sign-button {
-    border: 1px solid var(--c-border);
-    border-radius: var(--border-radius-sm);
-    background-color: var(--c-surface);
-    padding: var(--space-015) var(--space-025);
+/* --- Tonic Layout --- */
+.tonic-layout {
     display: flex;
     flex-direction: row;
+    gap: var(--space-025);
+    align-items: stretch;
+    width: 100%;
+    height: 100%;
+    min-height: 0;
+    flex: 1;
+}
+
+/* --- Tonic Modes Container --- */
+.tonic-modes-container {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    min-width: 0;
+}
+
+/* --- Tonic Modes Grid (4x3 with 7 buttons) --- */
+.tonic-modes-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    grid-template-rows: repeat(2, 1fr);
+    gap: var(--space-015);
+    width: 100%;
+    height: 100%;
+    min-height: 0;
+}
+
+/* --- Tonic Mode Button Styles (similar to harmony preset buttons) --- */
+.tonic-mode-button {
+    background-color: transparent;
+    color: var(--c-text);
+    border: 1px solid var(--c-border);
+    border-radius: var(--border-radius-sm);
+    padding: var(--space-010);
+    display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: var(--space-015);
+    gap: var(--space-010);
+    cursor: pointer;
     transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
-    width: 100%;
-    color: var(--c-text);
+    min-height: 0;
+    overflow: hidden;
 }
 
-#tonic-mode-grid .tonic-sign-button .mode-label {
-    font-size: 0.8rem;
-    color: var(--c-text);
-    font-weight: 600;
-}
-
-#tonic-mode-grid .tonic-sign-button .tonic-shape-icon {
+.tonic-mode-icon {
     width: 1.4rem;
     height: 1.4rem;
+    object-fit: contain;
+    flex-shrink: 0;
 }
 
-#tonic-mode-grid .tonic-sign-button:hover {
-    background-color: var(--c-surface-muted);
-    border-color: var(--c-border-strong);
+.tonic-mode-label {
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: var(--c-text);
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
-#tonic-mode-grid .tonic-sign-button.selected {
-    background: var(--c-accent);
-    border-color: var(--c-accent);
-    color: var(--c-surface);
+.tonic-mode-button:hover {
+    background-color: var(--c-border);
+}
+
+.tonic-mode-button:focus {
+    background-color: transparent;
+    color: var(--c-text);
+    outline: none;
+}
+
+.tonic-mode-button:focus:hover {
+    background-color: var(--c-border);
+}
+
+.tonic-mode-button.selected {
+    background-color: var(--c-accent-light, #63a9fd);
+    color: var(--c-text, #212529);
+    border-color: var(--c-accent, #4A90E2);
     box-shadow: 0 0 8px rgba(74, 144, 226, 0.45);
 }
 
-#tonic-mode-grid .tonic-sign-button.selected .mode-label {
-    color: var(--c-surface);
+.tonic-mode-button.selected .tonic-mode-label {
+    color: var(--c-text);
+    font-weight: 700;
 }
 
-#tonic-mode-grid .tonic-sign-button:focus-visible {
-    outline: 2px solid var(--c-accent);
-    outline-offset: 2px;
+.tonic-mode-button.selected:focus {
+    background-color: var(--c-accent-light);
+    color: var(--c-text);
 }
 
-/* --- Tonal Center Tools Wrapper --- */
-.tonic-tools-wrapper {
+/* --- Tonic Degrees Container (right sidebar) --- */
+.tonic-degrees-container {
+    flex: 0 0 auto;
     display: flex;
-    flex-direction: row;
-    flex-wrap: wrap;
-    gap: var(--space-015);
+    flex-direction: column;
+    gap: var(--space-025);
+    min-width: 140px;
+    max-width: 160px;
     align-items: stretch;
-    width: 100%;
+    justify-content: flex-start;
+    height: 100%;
+    min-height: 0;
 }
 
 /* --- Degree Toggle Container --- */

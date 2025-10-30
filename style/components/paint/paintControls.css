@@ -37,10 +37,10 @@
 
 .paint-layout-grid {
     display: grid;
-    grid-template-columns: auto auto auto;
+    grid-template-columns: auto auto auto auto;
     gap: 1rem;
     align-items: start;
-    grid-template-areas: "buttons toggles meter";
+    grid-template-areas: "buttons toggles settings meter";
     height: 100%;
     min-height: 150px;
 }
@@ -76,6 +76,57 @@
     align-items: center;
     height: fit-content;
     max-height: 100%;
+}
+
+.paint-settings-controls {
+    grid-area: settings;
+    display: flex;
+    flex-direction: column;
+    gap: 0rem;
+    height: fit-content;
+}
+
+.paint-settings-box {
+    background-color: var(--c-surface);
+    border: 1px solid var(--c-border);
+    border-radius: var(--border-radius-md);
+    padding: var(--space-015);
+    box-shadow: var(--box-shadow-sm);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-015);
+}
+
+.paint-settings-box h5 {
+    margin: 0 0 var(--space-010) 0;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--c-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.paint-control-group {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-010);
+}
+
+.paint-control-group label {
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--c-text);
+}
+
+.paint-control-select {
+    padding: var(--space-010) var(--space-015);
+    border: 1px solid var(--c-border);
+    border-radius: var(--border-radius-sm);
+    background-color: var(--c-bg);
+    color: var(--c-text);
+    font-family: var(--main-font);
+    font-size: 0.75rem;
+    cursor: pointer;
 }
 
 #mic-paint-toggle {
