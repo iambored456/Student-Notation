@@ -1,6 +1,6 @@
-// js/services/timbreEffects/effectsAnimation/delayADSREffect.js
+﻿// js/services/timbreEffects/effectsAnimation/delayADSREffect.js
 import BaseAnimationEffect from './baseAnimationEffect.js';
-import logger from '../../../utils/logger.js';
+import logger from '@utils/logger.js';
 
 logger.moduleLoaded('DelayADSREffect');
 

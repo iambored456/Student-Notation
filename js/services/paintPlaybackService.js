@@ -1,7 +1,7 @@
 // js/services/paintPlaybackService.js
 import * as Tone from 'tone';
-import store from '../state/index.js';
-import logger from '../utils/logger.js';
+import store from '@state/index.js';
+import logger from '@utils/logger.js';
 
 logger.moduleLoaded('PaintPlaybackService');
 

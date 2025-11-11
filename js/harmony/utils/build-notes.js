@@ -1,5 +1,6 @@
 // js/harmony/utils/build-notes.js
 import { Chord, Note } from "tonal";
+import logger from "@utils/logger.js";
 
 const SHARP_KEYS = ['C', 'G', 'D', 'A', 'E', 'B', 'F#', 'C#'];
 function keyPrefersSharps(keyTonic) {
@@ -32,7 +33,7 @@ export function buildNotes(shape, keyTonic) {
   let { notes } = Chord.get(symbol);
 
   if (!notes || notes.length === 0) {
-      console.warn(`[buildNotes] Tonal.js could not parse symbol: "${symbol}". Returning empty array.`);
+      logger.warn('BuildNotes', `Tonal.js could not parse symbol: "${symbol}". Returning empty array.`, { symbol }, 'harmony');
       return [];
   }
 

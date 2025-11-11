@@ -19,6 +19,17 @@
     overflow: hidden;
 }
 
+/* Allow the volume slider popup to render outside the primary toolbar bounds */
+#toolbar-primary:has(#volume-popup.visible) {
+    overflow: visible;
+}
+
+/* Bubble the overflow permission up to the main toolbar when the popup is open */
+#toolbar:has(#volume-popup.visible) {
+    overflow-x: visible;
+    overflow-y: visible;
+}
+
 .primary-toolbar-grid {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -388,4 +399,3 @@
    ========================================================================= */
 
 /* Timbre-specific toolbar layouts - currently minimal but reserved for future use */
-

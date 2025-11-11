@@ -1,5 +1,5 @@
 // js/state/actions/paintActions.js
-import logger from '../../utils/logger.js';
+import logger from '@utils/logger.js';
 
 logger.moduleLoaded('paintActions', 'state');
 

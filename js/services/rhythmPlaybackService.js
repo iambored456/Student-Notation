@@ -1,9 +1,10 @@
 // js/services/rhythmPlaybackService.js
 import * as Tone from 'tone';
-import { getStampScheduleEvents } from '../rhythm/scheduleStamps.js';
-import store from '../state/index.js';
+import { getStampScheduleEvents } from '@/rhythm/scheduleStamps.js';
+import { getTripletScheduleEvents } from '@/rhythm/scheduleTriplets.js';
+import store from '@state/index.js';
 import SynthEngine from './synthEngine.js';
-import logger from '../utils/logger.js';
+import logger from '@utils/logger.js';
 
 logger.moduleLoaded('RhythmPlaybackService');
 
@@ -169,70 +170,65 @@ class RhythmPlaybackService {
             return;
         }
 
-        // Import dynamically to avoid circular dependency
-        import('../rhythm/scheduleTriplets.js').then(module => {
-            const { getTripletScheduleEvents } = module;
+        // Clear any previously scheduled preview events
+        this.stopCurrentPattern();
 
-            // Clear any previously scheduled preview events
-            this.stopCurrentPattern();
+        // Get the triplet's event structure with per-shape offsets
+        const events = getTripletScheduleEvents(tripletStampId, placement);
 
-            // Get the triplet's event structure with per-shape offsets
-            const events = getTripletScheduleEvents(tripletStampId, placement);
+        if (!events || events.length === 0) {
+            logger.warn('RhythmPlaybackService', `No events found for triplet ${tripletStampId}`);
+            return;
+        }
 
-            if (!events || events.length === 0) {
-                logger.warn('RhythmPlaybackService', `No events found for triplet ${tripletStampId}`);
-                return;
-            }
-
-            logger.debug('RhythmPlaybackService', `Playing triplet pattern ${tripletStampId}: ${events.length} notes`, {
-                tripletStampId,
-                basePitch: pitch,
-                color,
-                events,
-                hasShapeOffsets: !!placement?.shapeOffsets
-            });
-
-            // Use direct SynthEngine calls with absolute timing
-            const now = Tone.now();
-            const baseRow = placement?.row;
-
-            events.forEach((event, index) => {
-                try {
-                    // Convert Tone.js time notation to absolute time
-                    const offsetSeconds = Tone.Time(event.offset).toSeconds();
-                    const attackTime = now + offsetSeconds;
-                    const duration = Tone.Time(event.duration).toSeconds();
-                    const releaseTime = attackTime + duration;
-
-                    // Calculate pitch for this individual shape
-                    let shapePitch = pitch;
-                    if (baseRow !== undefined && event.rowOffset !== 0) {
-                        const shapeRow = baseRow + event.rowOffset;
-                        const rowData = store.state.fullRowData[shapeRow];
-                        if (rowData) {
-                            shapePitch = rowData.toneNote.replace('♭', 'b').replace('♯', '#');
-                        }
-                    }
-
-                    // Schedule the note
-                    SynthEngine.triggerAttack(shapePitch, color, attackTime);
-                    SynthEngine.triggerRelease(shapePitch, color, releaseTime);
-
-                    // Store the timing info for potential cancellation
-                    this.scheduledEvents.push({
-                        pitch: shapePitch,
-                        color,
-                        attackTime,
-                        releaseTime
-                    });
-
-                } catch (error) {
-                    logger.warn('RhythmPlaybackService', `Error scheduling triplet note ${index + 1}`, error);
-                }
-            });
-
-            logger.info('RhythmPlaybackService', `Scheduled ${events.length} notes for triplet pattern ${tripletStampId}`);
+        logger.debug('RhythmPlaybackService', `Playing triplet pattern ${tripletStampId}: ${events.length} notes`, {
+            tripletStampId,
+            basePitch: pitch,
+            color,
+            events,
+            hasShapeOffsets: !!placement?.shapeOffsets
         });
+
+        // Use direct SynthEngine calls with absolute timing
+        const now = Tone.now();
+        const baseRow = placement?.row;
+
+        events.forEach((event, index) => {
+            try {
+                // Convert Tone.js time notation to absolute time
+                const offsetSeconds = Tone.Time(event.offset).toSeconds();
+                const attackTime = now + offsetSeconds;
+                const duration = Tone.Time(event.duration).toSeconds();
+                const releaseTime = attackTime + duration;
+
+                // Calculate pitch for this individual shape
+                let shapePitch = pitch;
+                if (baseRow !== undefined && event.rowOffset !== 0) {
+                    const shapeRow = baseRow + event.rowOffset;
+                    const rowData = store.state.fullRowData[shapeRow];
+                    if (rowData) {
+                        shapePitch = rowData.toneNote.replace('?T-', 'b').replace('?T_', '#');
+                    }
+                }
+
+                // Schedule the note
+                SynthEngine.triggerAttack(shapePitch, color, attackTime);
+                SynthEngine.triggerRelease(shapePitch, color, releaseTime);
+
+                // Store the timing info for potential cancellation
+                this.scheduledEvents.push({
+                    pitch: shapePitch,
+                    color,
+                    attackTime,
+                    releaseTime
+                });
+
+            } catch (error) {
+                logger.warn('RhythmPlaybackService', `Error scheduling triplet note ${index + 1}`, error);
+            }
+        });
+
+        logger.info('RhythmPlaybackService', `Scheduled ${events.length} notes for triplet pattern ${tripletStampId}`);
     }
 
     /**

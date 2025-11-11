@@ -1,15 +1,16 @@
 // js/services/scrollSyncService.js
+import logger from '@utils/logger.js';
 
 /**
  * Service to synchronize horizontal scrolling between pitch grid and drum grid
  */
 class ScrollSyncService {
     constructor() {
-        this.canvasContainer = null;
+        this.gridsWrapper = null;
         this.pitchGridWrapper = null;
         this.drumGridWrapper = null;
         this.isInitialized = false;
-        
+
         // Prevent infinite scroll loops
         this.isScrolling = false;
         this.lastScrollTime = 0;
@@ -17,90 +18,50 @@ class ScrollSyncService {
     }
 
     init() {
-        this.canvasContainer = document.getElementById('canvas-container');
+        // With new structure, grids-wrapper is the main scrollable container
+        this.gridsWrapper = document.getElementById('grids-wrapper');
         this.pitchGridWrapper = document.getElementById('pitch-grid-wrapper');
         this.drumGridWrapper = document.getElementById('drum-grid-wrapper');
 
-        if (!this.canvasContainer || !this.pitchGridWrapper || !this.drumGridWrapper) {
-            console.error('ScrollSyncService: Required elements not found');
+        if (!this.gridsWrapper || !this.pitchGridWrapper || !this.drumGridWrapper) {
+            logger.error('ScrollSyncService', 'Required elements not found for scroll sync', null, 'scroll');
             return;
         }
 
         this.setupScrollSynchronization();
         this.isInitialized = true;
-        
+        logger.info('ScrollSyncService', 'Initialized with unified grids-wrapper structure', null, 'scroll');
     }
 
     setupScrollSynchronization() {
-        // Find which container actually has the scrollbar
-        const scrollableContainers = [
-            this.canvasContainer,
-            this.pitchGridWrapper,
-            document.getElementById('pitch-grid-container')
-        ].filter(el => el !== null);
+        // With unified structure, grids-wrapper is the primary scroll container
+        // Both pitch and drum grids are children and scroll together automatically
+        // No manual sync needed, but we keep the service for potential future use
 
-        // All containers that need to be synced (including drum grid)
-        const allSyncTargets = [
-            ...scrollableContainers,
-            this.drumGridWrapper,
-        ].filter(el => el !== null);
+        // Listen to scroll on grids-wrapper for debugging/monitoring
+        this.gridsWrapper.addEventListener('scroll', (e) => {
+            const now = Date.now();
 
-        // Listen to scroll events on all potential containers
-        scrollableContainers.forEach(container => {
-            container.addEventListener('scroll', (e) => {
-                const now = Date.now();
-                
-                // Debounce rapid scroll events to prevent acceleration
-                if (now - this.lastScrollTime < 10) {
-                    return;
-                }
-                this.lastScrollTime = now;
-                
-                if (this.isScrolling) {
-                    console.log(`📜 ScrollSync: Ignoring scroll event - sync in progress`);
-                    return;
-                }
-                
-                this.isScrolling = true;
-                const scrollLeft = e.target.scrollLeft;
-                
-                console.log(`📜 ScrollSync: ${e.target.id || e.target.className} scrolled to ${scrollLeft}px`);
-                
-                // Cancel any pending sync
-                if (this.pendingSync) {
-                    cancelAnimationFrame(this.pendingSync);
-                }
-                
-                // Immediate sync without requestAnimationFrame to prevent acceleration
-                this.syncAllTargets(e.target, scrollLeft, allSyncTargets);
-                this.isScrolling = false;
-            });
-        });
-    }
-
-    syncAllTargets(sourceElement, scrollLeft, allTargets) {
-        allTargets.forEach(target => {
-            if (target !== sourceElement && Math.abs(target.scrollLeft - scrollLeft) > 2) {
-                target.scrollLeft = scrollLeft;
+            // Debounce rapid scroll events
+            if (now - this.lastScrollTime < 10) {
+                return;
             }
+            this.lastScrollTime = now;
+
+            // Both grids scroll together via parent container - no manual sync needed
+            logger.debug('ScrollSyncService', `Unified scroll: ${e.target.scrollLeft}px`, null, 'scroll');
         });
     }
 
     // Manual sync method for programmatic scrolling
     syncScrollTo(scrollLeft) {
-        if (!this.isInitialized) return;
-        
+        if (!this.isInitialized || !this.gridsWrapper) return;
+
         this.isScrolling = true;
-        
-        const allTargets = [
-            this.canvasContainer,
-            this.pitchGridWrapper,
-            document.getElementById('pitch-grid-container'),
-            this.drumGridWrapper,
-        ].filter(el => el !== null);
-        
-        this.syncAllTargets(null, scrollLeft, allTargets);
-        
+
+        // With unified structure, just set scroll on the parent grids-wrapper
+        this.gridsWrapper.scrollLeft = scrollLeft;
+
         setTimeout(() => {
             this.isScrolling = false;
         }, 10);

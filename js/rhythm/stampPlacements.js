@@ -1,7 +1,7 @@
 // js/rhythm/stampPlacements.js
 import { getStampById } from './stamps.js';
-import store from '../state/index.js';
-import logger from '../utils/logger.js';
+import store from '@state/index.js';
+import logger from '@utils/logger.js';
 
 logger.moduleLoaded('StampPlacements', 'stamps');
 
@@ -50,20 +50,6 @@ export function placeStamp(stampId, startColumn, row, color = '#4a90e2') {
  * @returns {boolean} True if any stamps were removed
  */
 export function removeStampsInEraserArea(eraseStartCol, eraseEndCol, eraseStartRow, eraseEndRow) {
-  console.log('[STAMP ERASE] Function called with:', {
-    eraseStartCol,
-    eraseEndCol, 
-    eraseStartRow,
-    eraseEndRow,
-    totalStamps: store.state.stampPlacements.length,
-    allStampPlacements: store.state.stampPlacements.map(p => ({
-      id: p.id,
-      startCol: p.startColumn,
-      endCol: p.endColumn,
-      row: p.row
-    }))
-  });
-  
   // Use store method for erasing stamps
   return store.eraseStampsInArea(eraseStartCol, eraseEndCol, eraseStartRow, eraseEndRow);
 }

@@ -1,7 +1,7 @@
 // js/state/actions/noteActions.js
 import { getMacrobeatInfo } from '../selectors.js';
-import logger from '../../utils/logger.js';
-import TonalService from '../../services/tonalService.js';
+import logger from '@utils/logger.js';
+import TonalService from '@services/tonalService.js';
 
 function generateUUID() {
     return `uuid-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
@@ -33,11 +33,11 @@ export const noteActions = {
                     // Toggle the enharmonic preference
                     existingNote.enharmonicPreference = !existingNote.enharmonicPreference;
                     
-                    console.log(`🎵 [ENHARMONIC] Toggled enharmonic preference for note:`, {
+                    logger.debug('NoteActions', '[ENHARMONIC] Toggled enharmonic preference for note', {
                         noteUuid: existingNote.uuid,
                         currentDegree,
                         enharmonicPreference: existingNote.enharmonicPreference
-                    });
+                    }, 'notes');
                     
                     // Emit change to trigger re-render
                     this.emit('notesChanged');

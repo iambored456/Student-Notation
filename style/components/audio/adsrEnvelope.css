@@ -2,13 +2,16 @@
 
 .adsr-container {
     display: grid;
-    grid-template-columns: auto auto; /* Left column: graph/ADR slider, Right column: S slider */
+    grid-template-columns: 1fr auto; /* Left column: graph/ADR slider, Right column: S slider */
     grid-template-rows: 1fr auto; /* Top: graph (grows), Bottom: ADR slider */
     gap: 0;
-    overflow: visible;
+    overflow: hidden;
     padding: 5px 0 0 5px; /* Top and left padding only */
-    flex: 1 1 auto;
+    flex: 0 1 300px !important;
     min-height: 0;
+    min-width: 0 !important;
+    width: 100% !important;
+    max-width: 300px !important;
     background-color: var(--c-surface);
     border: 1px solid var(--c-border);
     border-radius: var(--border-radius-md);
@@ -21,6 +24,7 @@
     border-radius: var(--border-radius-sm);
     overflow: visible;
     min-height: 0;
+    min-width: 0;
 }
 #adsr-envelope {
     position: relative; /* Establish positioning context for absolute children */
@@ -43,6 +47,7 @@
     justify-content: center;
     padding-inline: 0rem;
     width: fit-content;
+    max-width: var(--slider-thumb-size);
     min-width: var(--slider-thumb-size);
 }
 #sustain-slider-track {
@@ -106,6 +111,7 @@
     width: 100%;
     height: var(--slider-track-thickness);
     min-height: var(--slider-thumb-size); /* Container height to accommodate thumb */
+    min-width: 0;
     display: flex;
     align-items: center; /* Center the thin rail vertically within the tall container */
 }

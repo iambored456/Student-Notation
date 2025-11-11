@@ -1,6 +1,6 @@
-// js/services/timbreEffects/effectsAnimation/animationEffectsManager.js
-import store from '../../../state/index.js';
-import logger from '../../../utils/logger.js';
+﻿// js/services/timbreEffects/effectsAnimation/animationEffectsManager.js
+import store from '@state/index.js';
+import logger from '@utils/logger.js';
 import VibratoCanvasEffect from './vibratoCanvasEffect.js';
 import TremoloWaveformEffect from './tremoloWaveformEffect.js';
 import EnvelopeFillEffect from './envelopeFillEffect.js';
@@ -13,7 +13,7 @@ logger.moduleLoaded('AnimationEffectsManager');
  * Eliminates multiple competing animation loops
  * 
  * Data Flow:
- * EffectsCoordinator → AnimationEffectsManager → Specific Animation Effects → Canvas/Waveform Updates
+ * EffectsCoordinator â†’ AnimationEffectsManager â†’ Specific Animation Effects â†’ Canvas/Waveform Updates
  */
 class AnimationEffectsManager {
     constructor() {

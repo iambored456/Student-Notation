@@ -1,8 +1,8 @@
 // js/utils/stampHitTest.js
 // Hit testing utility for detecting individual shapes within stamps
 
-import { getStampById } from '../rhythm/stamps.js';
-import { getColumnX, getRowY } from '../components/Canvas/PitchGrid/renderers/rendererUtils.js';
+import { getStampById } from '@/rhythm/stamps.js';
+import { getColumnX, getRowY } from '@components/canvas/pitchGrid/renderers/rendererUtils.js';
 
 /**
  * Finds the individual shape (diamond or oval) under mouse position
@@ -15,7 +15,6 @@ import { getColumnX, getRowY } from '../components/Canvas/PitchGrid/renderers/re
 export function hitTestStampShape(mouseX, mouseY, placement, options) {
     const stamp = getStampById(placement.stampId);
     if (!stamp) {
-        console.log('[STAMP HIT TEST] No stamp found for stampId:', placement.stampId);
         return null;
     }
 
@@ -25,13 +24,6 @@ export function hitTestStampShape(mouseX, mouseY, placement, options) {
     const stampWidth = options.cellWidth * 2; // Stamps span 2 microbeats
     const stampHeight = options.cellHeight;
     const centerY = stampY + stampHeight / 2;
-
-    console.log('[STAMP HIT TEST] Testing position:', {
-        mouseX,
-        mouseY,
-        stampBounds: { x: stampX, y: stampY, width: stampWidth, height: stampHeight },
-        stampId: placement.stampId
-    });
 
     // Calculate slot centers (matching stampRenderer.js)
     const slotCenters = [0.125, 0.375, 0.625, 0.875].map(
@@ -53,16 +45,7 @@ export function hitTestStampShape(mouseX, mouseY, placement, options) {
         // Hit radius - increased for easier hover detection and dragging
         const hitRadius = Math.min(stampWidth * 0.20, stampHeight * 1.0);
 
-        console.log(`[STAMP HIT TEST] Testing diamond slot ${slot}:`, {
-            cx,
-            cy: shapeCenterY,
-            distance,
-            hitRadius,
-            isHit: distance < hitRadius
-        });
-
         if (distance < hitRadius) {
-            console.log('[STAMP HIT TEST] ✓ Hit diamond:', { slot, shapeKey, rowOffset });
             return {
                 type: 'diamond',
                 slot,
@@ -92,16 +75,7 @@ export function hitTestStampShape(mouseX, mouseY, placement, options) {
         // Hit radius for ovals - larger for easier interaction
         const hitRadius = Math.min(stampWidth * 0.25, stampHeight * 1.0);
 
-        console.log(`[STAMP HIT TEST] Testing oval slot ${ovalStart}:`, {
-            cx,
-            cy: shapeCenterY,
-            distance,
-            hitRadius,
-            isHit: distance < hitRadius
-        });
-
         if (distance < hitRadius) {
-            console.log('[STAMP HIT TEST] ✓ Hit oval:', { slot: ovalStart, shapeKey, rowOffset });
             return {
                 type: 'oval',
                 slot: ovalStart,
@@ -113,7 +87,6 @@ export function hitTestStampShape(mouseX, mouseY, placement, options) {
         }
     }
 
-    console.log('[STAMP HIT TEST] No shape hit');
     return null;
 }
 
@@ -126,8 +99,6 @@ export function hitTestStampShape(mouseX, mouseY, placement, options) {
  * @returns {Object|null} Hit result or null
  */
 export function hitTestAnyStampShape(mouseX, mouseY, placements, options) {
-    console.log('[STAMP HIT TEST] Testing against', placements.length, 'stamp placements');
-
     for (const placement of placements) {
         const hitResult = hitTestStampShape(mouseX, mouseY, placement, options);
         if (hitResult) {

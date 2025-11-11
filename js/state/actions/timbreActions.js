@@ -1,6 +1,6 @@
-// js/state/actions/timbreActions.js
+﻿// js/state/actions/timbreActions.js
 import { createDefaultFilterState } from '../initialState/timbres.js';
-import logger from '../../utils/logger.js';
+import logger from '@utils/logger.js';
 
 export const timbreActions = {
     setADSR(color, newADSR) {
@@ -13,15 +13,15 @@ export const timbreActions = {
 
     setFilterSettings(color, newSettings) {
         if (this.state.timbres[color]) {
-            console.log('setFilterSettings called:', { color, newSettings, activePresetName: this.state.timbres[color].activePresetName });
-            console.trace('setFilterSettings call stack');
+            logger.debug('TimbreActions', 'setFilterSettings called', { color, newSettings, activePresetName: this.state.timbres[color].activePresetName }, 'timbre');
+            logger.debug('TimbreActions', 'setFilterSettings call stack', { stack: new Error().stack }, 'timbre');
             Object.assign(this.state.timbres[color].filter, newSettings);
             const blend = this.state.timbres[color].filter.blend;
             if (blend <= 0.0) this.state.timbres[color].filter.type = 'highpass';
             else if (blend >= 2.0) this.state.timbres[color].filter.type = 'lowpass';
             else this.state.timbres[color].filter.type = 'bandpass';
             if(newSettings.enabled === undefined) {
-                console.log('Clearing activePresetName because enabled is undefined');
+                logger.debug('TimbreActions', 'Clearing activePresetName because enabled is undefined', { color }, 'timbre');
                 this.state.timbres[color].activePresetName = null;
             }
             this.emit('timbreChanged', color);

@@ -1,5 +1,5 @@
-// js/services/timbreEffects/effectsAudio/reverbAudioEffect.js
-import logger from '../../../utils/logger.js';
+﻿// js/services/timbreEffects/effectsAudio/reverbAudioEffect.js
+import logger from '@utils/logger.js';
 import * as Tone from 'tone';
 
 logger.moduleLoaded('ReverbAudioEffect');
@@ -129,10 +129,10 @@ class ReverbAudioEffect {
 
         // Convert percentage values to Tone.js parameters
         // Use both decay and roomSize to determine reverb characteristics
-        const baseDecay = Math.max(0.1, (decay / 100) * 8); // 0-100% → 0.1-8 seconds
+        const baseDecay = Math.max(0.1, (decay / 100) * 8); // 0-100% â†’ 0.1-8 seconds
         const roomSizeMultiplier = 1 + (roomSize / 100) * 1.5; // roomSize adds 0-150% to decay time
         const decayTime = baseDecay * roomSizeMultiplier;
-        const wetAmount = wet / 100; // 0-100% → 0-1
+        const wetAmount = wet / 100; // 0-100% â†’ 0-1
 
         // Use Tone.Reverb's built-in wet/dry mixing for consistent loudness
         // DO NOT connect here - audioEffectsManager will connect it in the effects chain
@@ -189,8 +189,8 @@ class ReverbAudioEffect {
             return null;
         }
 
-        const decayTime = Math.max(0.1, (decay / 100) * 10); // 0-100% → 0.1-10 seconds
-        const wetAmount = wet / 100; // 0-100% → 0-1
+        const decayTime = Math.max(0.1, (decay / 100) * 10); // 0-100% â†’ 0.1-10 seconds
+        const wetAmount = wet / 100; // 0-100% â†’ 0-1
         
         return {
             decay: decayTime,

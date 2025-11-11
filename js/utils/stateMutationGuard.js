@@ -159,24 +159,6 @@ export function checkForMutations(currentState, actionName = 'unknown') {
         );
         
         if (criticalMutations.length > 0) {
-            console.error('[STATE GUARD] Unauthorized state mutations detected!', {
-                action: actionName,
-                mutations: criticalMutations,
-                totalMutations: mutations.length,
-                criticalMutations: criticalMutations.length
-            });
-
-            // Log detailed mutation info
-            criticalMutations.forEach(mutation => {
-                console.error('[STATE MUTATION]', {
-                    path: mutation.path,
-                    type: mutation.type,
-                    oldValue: mutation.oldValue,
-                    newValue: mutation.newValue,
-                    action: actionName
-                });
-            });
-            
             mutationLog.push({
                 action: actionName,
                 mutations: criticalMutations,
@@ -228,10 +210,12 @@ export function createProtectedStore(store) {
         
         set(target, prop, value) {
             if (prop === 'state') {
-                console.error('[STATE GUARD] Direct state assignment detected!', {
+                mutationLog.push({
+                    action: 'direct_state_assignment',
                     property: prop,
-                    value: value,
-                    stack: new Error().stack
+                    value,
+                    stack: new Error().stack,
+                    timestamp: Date.now()
                 });
             }
 
@@ -262,11 +246,13 @@ function createProtectedState(state, path) {
         },
         
         set(target, prop, value) {
-            console.error('[STATE GUARD] Direct state mutation detected!', {
+            mutationLog.push({
+                action: 'direct_state_mutation',
                 path: `${path}.${prop}`,
                 oldValue: target[prop],
                 newValue: value,
-                stack: new Error().stack
+                stack: new Error().stack,
+                timestamp: Date.now()
             });
 
             // Allow the mutation in dev mode, but log it

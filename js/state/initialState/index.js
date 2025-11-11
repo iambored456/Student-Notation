@@ -58,7 +58,6 @@ export const initialState = {
     degreeDisplayMode: 'off',
     accidentalMode: { sharp: true, flat: true },
     showFrequencyLabels: false,
-    savedAccidentalMode: { sharp: true, flat: true }, // Stores accidental state when frequency mode is active
     focusColours: false,
     snapZoomToRange: false,
     

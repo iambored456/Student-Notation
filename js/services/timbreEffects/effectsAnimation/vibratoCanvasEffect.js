@@ -1,6 +1,6 @@
-// js/services/timbreEffects/effectsAnimation/vibratoCanvasEffect.js
+﻿// js/services/timbreEffects/effectsAnimation/vibratoCanvasEffect.js
 import BaseAnimationEffect from './baseAnimationEffect.js';
-import logger from '../../../utils/logger.js';
+import logger from '@utils/logger.js';
 
 logger.moduleLoaded('VibratoCanvasEffect');
 
@@ -67,7 +67,7 @@ class VibratoCanvasEffect extends BaseAnimationEffect {
     updateAnimationPhases(currentTime) {
         this.animations.forEach((animation, color) => {
             const deltaTime = (currentTime - animation.lastUpdate) / 1000; // Convert to seconds
-            animation.phase += animation.frequency * deltaTime * 2 * Math.PI; // 2π for full cycle
+            animation.phase += animation.frequency * deltaTime * 2 * Math.PI; // 2Ï€ for full cycle
             animation.lastUpdate = currentTime;
             
             // Keep phase in reasonable range to prevent floating point overflow
@@ -95,7 +95,7 @@ class VibratoCanvasEffect extends BaseAnimationEffect {
         // Negate to flip direction: positive offset should move pitch UP (visual UP on screen)
         const sineValue = Math.sin(animation.phase);
         const offset = -sineValue * animation.amplitude;
-        console.log('Visual vibrato | sine:', sineValue.toFixed(3), 'offset (negated):', offset.toFixed(3), 'phase:', animation.phase.toFixed(3));
+        logger.debug('VibratoCanvasEffect', 'Visual vibrato', { sine: sineValue.toFixed(3), offset: offset.toFixed(3), phase: animation.phase.toFixed(3) }, 'effects');
         return offset; // Returns offset in abstract units (semitones)
     }
 

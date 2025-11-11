@@ -112,28 +112,31 @@ export const viewActions = {
     // Tools
     toggleAccidentalMode(type) {
         if (!this.state.accidentalMode.hasOwnProperty(type)) return;
-        this.state.accidentalMode[type] = !this.state.accidentalMode[type];
-        // Removed constraint - both buttons can now be inactive simultaneously
+
+        const currentValue = this.state.accidentalMode[type];
+        const otherType = type === 'flat' ? 'sharp' : 'flat';
+        const otherValue = this.state.accidentalMode[otherType];
+
+        // If trying to turn OFF this type and the other is already OFF,
+        // turn the other ON instead (prevent both being OFF)
+        if (currentValue && !otherValue) {
+            this.state.accidentalMode[otherType] = true;
+            this.state.accidentalMode[type] = false;
+        } else {
+            // Normal toggle
+            this.state.accidentalMode[type] = !currentValue;
+        }
+
         this.emit('accidentalModeChanged', this.state.accidentalMode);
         this.emit('layoutConfigChanged');
     },
 
     toggleFrequencyLabels() {
-        const wasShowingFrequencies = this.state.showFrequencyLabels;
-
-        if (wasShowingFrequencies) {
-            // Turning OFF frequency mode - restore previous accidental state
-            this.state.showFrequencyLabels = false;
-            this.state.accidentalMode = { ...this.state.savedAccidentalMode };
-        } else {
-            // Turning ON frequency mode - save current accidental state and disable both
-            this.state.savedAccidentalMode = { ...this.state.accidentalMode };
-            this.state.showFrequencyLabels = true;
-            this.state.accidentalMode = { sharp: false, flat: false };
-        }
+        // Simply toggle the frequency display mode
+        // Does NOT modify accidental mode state
+        this.state.showFrequencyLabels = !this.state.showFrequencyLabels;
 
         this.emit('frequencyLabelsChanged', this.state.showFrequencyLabels);
-        this.emit('accidentalModeChanged', this.state.accidentalMode);
         this.emit('layoutConfigChanged');
     },
 

@@ -1,10 +1,10 @@
 // js/services/annotationService.js
-import store from '../state/index.js';
-import logger from '../utils/logger.js';
-import { getColumnFromX, getRowFromY, getColumnX, getRowY } from '../components/Canvas/PitchGrid/renderers/rendererUtils.js';
+import store from '@state/index.js';
+import logger from '@utils/logger.js';
+import { getColumnFromX, getRowFromY, getColumnX, getRowY } from '@components/canvas/pitchGrid/renderers/rendererUtils.js';
 import LayoutService from './layoutService.js';
-import PitchGridController from '../components/Canvas/PitchGrid/PitchGrid.js';
-import { isPointInPolygon, calculateConvexHull, isPointNearHull, polygonIntersectsEllipse, polygonIntersectsRect } from '../utils/geometryUtils.js';
+import PitchGridController from '@components/canvas/pitchGrid/pitchGrid.js';
+import { isPointInPolygon, calculateConvexHull, isPointNearHull, polygonIntersectsEllipse, polygonIntersectsRect } from '@utils/geometryUtils.js';
 
 logger.moduleLoaded('AnnotationService', 'annotation');
 

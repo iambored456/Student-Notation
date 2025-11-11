@@ -6,7 +6,7 @@ import {
     DEFAULT_GRAY_COLOR, HEX_COLOR_START_INDEX, HEX_RED_END_INDEX,
     HEX_GREEN_END_INDEX, HEX_BLUE_END_INDEX, HEX_RADIX,
     SHADE_BLACK_VALUE, SHADE_WHITE_VALUE
-} from '../core/constants.js';
+} from '@/core/constants.js';
 
 /**
  * @param {string} hex

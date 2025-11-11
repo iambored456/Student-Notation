@@ -1,13 +1,13 @@
 // js/services/transportService.js
 import * as Tone from 'tone';
-import store from '../state/index.js';
-import { getPlacedTonicSigns, getMacrobeatInfo } from '../state/selectors.js';
+import store from '@state/index.js';
+import { getPlacedTonicSigns, getMacrobeatInfo } from '@state/selectors.js';
 import LayoutService from './layoutService.js';
 import SynthEngine from './synthEngine.js';
 import GlobalService from './globalService.js';
 import domCache from './domCache.js';
-import logger from '../utils/logger.js';
-import DrumPlayheadRenderer from '../components/Canvas/DrumGrid/drumPlayheadRenderer.js';
+import logger from '@utils/logger.js';
+import DrumPlayheadRenderer from '@components/canvas/drumGrid/drumPlayheadRenderer.js';
 
 /**
  * Gets the base (non-modulated) column X position for playhead timing
@@ -22,18 +22,27 @@ function getBaseColumnX(columnIndex) {
     }
     return x;
 }
-import { getStampPlaybackData } from '../rhythm/stampPlacements.js';
-import { getStampScheduleEvents } from '../rhythm/scheduleStamps.js';
-import { getTripletPlaybackData } from '../rhythm/tripletPlacements.js';
-import { getTripletScheduleEvents } from '../rhythm/scheduleTriplets.js';
-import { createCoordinateMapping, canvasXToSeconds, secondsToCanvasX, columnToRegularTime } from '../rhythm/modulationMapping.js';
-import { analyzeNoteCrossesMarkers } from '../components/Canvas/PitchGrid/renderers/notes.js';
-import { getColumnX } from '../components/Canvas/PitchGrid/renderers/rendererUtils.js';
+import { getStampPlaybackData } from '@/rhythm/stampPlacements.js';
+import { getStampScheduleEvents } from '@/rhythm/scheduleStamps.js';
+import { getTripletPlaybackData } from '@/rhythm/tripletPlacements.js';
+import { getTripletScheduleEvents } from '@/rhythm/scheduleTriplets.js';
+import { createCoordinateMapping, canvasXToSeconds, secondsToCanvasX, columnToRegularTime } from '@/rhythm/modulationMapping.js';
+import { analyzeNoteCrossesMarkers } from '@components/canvas/pitchGrid/renderers/notes.js';
+import { getColumnX } from '@components/canvas/pitchGrid/renderers/rendererUtils.js';
+
+const FLAT_SYMBOL = '\u266d';
+const SHARP_SYMBOL = '\u266f';
+const LOOP_EPSILON = 1e-4;
 
 // Helper function to get pitch from row index (like in pitchGridInteractor.js)
 function getPitchFromRow(rowIndex) {
     const rowData = store.state.fullRowData[rowIndex];
-    return rowData ? rowData.toneNote.replace('♭', 'b').replace('♯', '#') : 'C4';
+    if (!rowData) {
+        return 'C4';
+    }
+    return rowData.toneNote
+        .replace(FLAT_SYMBOL, 'b')
+        .replace(SHARP_SYMBOL, '#');
 }
 
 logger.moduleLoaded('TransportService');
@@ -41,6 +50,43 @@ logger.moduleLoaded('TransportService');
 let playheadAnimationFrame;
 let drumPlayers;
 let timeMap = [];
+let configuredLoopStart = 0;
+let configuredLoopEnd = 0;
+
+const transportDebugSnapshot = () => {
+    const transport = Tone?.Transport;
+    return {
+        bpm: Number(transport?.bpm?.value ?? store.state.tempo),
+        seconds: Number(transport?.seconds ?? 0),
+        position: transport?.position ?? '0:0:0',
+        state: transport?.state ?? 'stopped',
+        loop: {
+            enabled: Boolean(transport?.loop),
+            start: Number(transport?.loopStart ?? 0),
+            end: Number(transport?.loopEnd ?? 0)
+        },
+        storeTempo: store.state.tempo,
+        storeLooping: store.state.isLooping
+    };
+};
+
+function logTransportDebug(event, details = {}) {
+    // Logging disabled
+}
+
+function reapplyConfiguredLoopBounds() {
+    if (configuredLoopEnd > configuredLoopStart) {
+        const loopStartDiff = Math.abs(Tone.Transport.loopStart - configuredLoopStart);
+        const loopEndDiff = Math.abs(Tone.Transport.loopEnd - configuredLoopEnd);
+        if (loopStartDiff > LOOP_EPSILON || loopEndDiff > LOOP_EPSILON) {
+            Tone.Transport.loopStart = configuredLoopStart;
+            Tone.Transport.loopEnd = configuredLoopEnd;
+        }
+        if (Tone.Transport.loop !== store.state.isLooping) {
+            Tone.Transport.loop = store.state.isLooping;
+        }
+    }
+}
 
 function getMicrobeatDuration() {
     const tempo = store.state.tempo;
@@ -161,10 +207,12 @@ function calculateNoteTriggerTime(columnIndex) {
 }
 
 function getPitchForNote(note) {
-    const rowData = store.state.fullRowData; 
+    const rowData = store.state.fullRowData;
     if (rowData && rowData[note.row]) {
         const pitch = rowData[note.row].toneNote;
-        return pitch.replace('♭', 'b').replace('♯', '#');
+        return pitch
+            .replace(FLAT_SYMBOL, 'b')
+            .replace(SHARP_SYMBOL, '#');
     }
     return 'C4';
 }
@@ -178,6 +226,13 @@ function scheduleNotes() {
     const anacrusisOffset = timeMap[2] || 0;
 
     const hasModulation = store.state.modulationMarkers && store.state.modulationMarkers.length > 0;
+
+    logTransportDebug('scheduleNotes:start', {
+        anacrusisOffset,
+        noteCount: store.state.placedNotes.length,
+        hasModulation,
+        lassoActive: Boolean(store.state.lassoSelection?.isActive)
+    });
 
     // Check if lasso selection is active for playback isolation
     const lassoActive = store.state.lassoSelection?.isActive;
@@ -394,7 +449,7 @@ function scheduleNotes() {
         }
 
         // Get the schedule events for this triplet, passing placement for per-shape offsets
-        console.log('[TRANSPORT DEBUG] Scheduling triplet:', {
+        logger.debug('TransportService', '[TRANSPORT DEBUG] Scheduling triplet', {
             stampId: tripletData.stampId,
             baseRow: tripletData.row,
             hasPlacement: !!tripletData.placement,
@@ -416,7 +471,7 @@ function scheduleNotes() {
             const shapeRow = tripletData.row + event.rowOffset;
             const shapePitch = getPitchFromRow(shapeRow);
 
-            console.log('[TRANSPORT DEBUG] Scheduling shape:', {
+            logger.debug('TransportService', '[TRANSPORT DEBUG] Scheduling shape', {
                 slot: event.slot,
                 rowOffset: event.rowOffset,
                 baseRow: tripletData.row,
@@ -449,6 +504,12 @@ function scheduleNotes() {
     });
     
     logger.debug('TransportService', 'scheduleNotes', `Finished scheduling ${store.state.placedNotes.length} notes, ${stampPlaybackData.length} stamps, and ${tripletPlaybackData.length} triplets`, 'audio');
+    logTransportDebug('scheduleNotes:complete', {
+        noteCount: store.state.placedNotes.length,
+        stampCount: stampPlaybackData.length,
+        tripletCount: tripletPlaybackData.length,
+        hasModulation
+    });
 }
 
 function animatePlayhead() {
@@ -456,27 +517,34 @@ function animatePlayhead() {
     if (!playheadCanvas) return;
     const ctx = playheadCanvas.getContext('2d');
     
-    // DYNAMIC TEMPO: Track modulation markers and adjust BPM as playhead crosses them
-    const hasModulation = store.state.modulationMarkers && store.state.modulationMarkers.length > 0;
     const maxXPos = getBaseColumnX(store.state.columnWidths.length - 2);
-    const musicalDuration = timeMap[store.state.columnWidths.length - 2] || 0;
     
-    // Track which modulation markers we've passed
-    let passedMarkers = new Set();
     const baseTempo = store.state.tempo;
-    let currentTempoMultiplier = 1.0;
+    const TEMPO_MULTIPLIER_EPSILON = 0.0001;
+    const MARKER_PASS_EPSILON = 0.5; // pixels
+    const getMarkerX = marker => marker?.xPosition ?? 477.5;
+    const initialBpm = typeof Tone.Transport?.bpm?.value === 'number'
+        ? Tone.Transport.bpm.value
+        : baseTempo;
+    let lastAppliedTempoMultiplier = baseTempo !== 0 ? initialBpm / baseTempo : 1.0;
 
     function draw() {
         if (Tone.Transport.state !== 'started' || !playheadCanvas) {
             return;
         }
 
+        const transportLoopEnd = Tone.Transport.loopEnd ?? 0;
+        const timelineEnd = timeMap.length > 0 ? timeMap[timeMap.length - 1] : 0;
         const isLooping = store.state.isLooping;
+        const playbackEnd = (isLooping && transportLoopEnd > 0) ? transportLoopEnd : timelineEnd;
         const currentTime = Tone.Transport.seconds;
 
-        // Check if we should stop - either when not looping OR when we reach the end even with looping
-        if (currentTime >= musicalDuration) {
-            logger.info('TransportService', 'Playback reached end. Stopping playhead.', { currentTime, musicalDuration, isLooping }, 'transport');
+        const reachedEnd = currentTime >= (playbackEnd - 0.001);
+
+        // Stop only when looping is disabled; otherwise let Tone.js handle the wrap-around
+        if (!isLooping && reachedEnd) {
+            logger.info('TransportService', 'Playback reached end. Stopping playhead.', { currentTime, playbackEnd, isLooping }, 'transport');
+            logTransportDebug('animate:stop-guard', { currentTime, playbackEnd, isLooping, loopStart: Tone.Transport.loopStart, loopEnd: Tone.Transport.loopEnd });
             TransportService.stop();
             return;
         }
@@ -520,39 +588,67 @@ function animatePlayhead() {
         
         const finalXPos = Math.min(xPos, maxXPos);
         
-        // DYNAMIC TEMPO: Check if playhead has crossed any modulation markers
-        if (hasModulation && store.state.modulationMarkers) {
-            for (const marker of store.state.modulationMarkers) {
-                if (!marker.active) continue;
-                
-                // Get marker's visual X position  
-                const markerX = marker.xPosition || 477.5; // Fallback to stored position
-                
-                // Check if playhead has just crossed this marker
-                if (finalXPos >= markerX && !passedMarkers.has(marker.id)) {
-                    passedMarkers.add(marker.id);
-                    
-                    // Apply tempo modulation based on marker type
-                    let tempoAdjustment;
-                    if (Math.abs(marker.ratio - (2/3)) < 0.001) {
-                        // 2:3 compression: tempo should increase (1/ratio = 1.5x faster)
-                        tempoAdjustment = 1 / marker.ratio;
-                    } else if (Math.abs(marker.ratio - (3/2)) < 0.001) {
-                        // 3:2 expansion: tempo should decrease (1/ratio = 0.667x slower)
-                        tempoAdjustment = 1 / marker.ratio;
-                    } else {
-                        // Other ratios: use inverted ratio as default
-                        tempoAdjustment = 1 / marker.ratio;
-                    }
-                    
-                    currentTempoMultiplier *= tempoAdjustment;
-                    const newTempo = baseTempo * currentTempoMultiplier;
-                    
-                    
-                    // Apply the tempo change
-                    Tone.Transport.bpm.value = newTempo;
+        // DYNAMIC TEMPO: Apply modulation based on marker positions each frame
+        const modulationMarkers = Array.isArray(store.state.modulationMarkers)
+            ? store.state.modulationMarkers
+            : [];
+
+        const activeMarkers = modulationMarkers
+            .filter(marker => marker?.active && typeof marker.ratio === 'number' && marker.ratio !== 0)
+            .sort((a, b) => getMarkerX(a) - getMarkerX(b));
+
+        if (activeMarkers.length > 0) {
+            let targetMultiplier = 1.0;
+
+            for (const marker of activeMarkers) {
+                const markerX = getMarkerX(marker);
+                if (finalXPos + MARKER_PASS_EPSILON >= markerX) {
+                    targetMultiplier *= 1 / marker.ratio;
+                } else {
+                    break;
                 }
             }
+
+            if (!Number.isFinite(targetMultiplier) || targetMultiplier <= 0) {
+                targetMultiplier = 1.0;
+            }
+
+            if (Math.abs(targetMultiplier - lastAppliedTempoMultiplier) > TEMPO_MULTIPLIER_EPSILON) {
+                const newTempo = baseTempo * targetMultiplier;
+                Tone.Transport.bpm.value = newTempo;
+                reapplyConfiguredLoopBounds();
+                lastAppliedTempoMultiplier = targetMultiplier;
+                const tempoDetails = {
+                    targetMultiplier: Number(targetMultiplier.toFixed(6)),
+                    newTempo: Number(newTempo.toFixed(3)),
+                    markerCount: activeMarkers.length,
+                    finalXPos: Number(finalXPos.toFixed(2))
+                };
+                logger.debug(
+                    'TransportService',
+                    `Tempo multiplier updated to ${targetMultiplier.toFixed(3)} (${newTempo.toFixed(2)} BPM)`,
+                    tempoDetails,
+                    'transport'
+                );
+                logTransportDebug('tempo:multiplier:update', tempoDetails);
+            }
+        } else if (Math.abs(lastAppliedTempoMultiplier - 1.0) > TEMPO_MULTIPLIER_EPSILON) {
+            Tone.Transport.bpm.value = baseTempo;
+            reapplyConfiguredLoopBounds();
+            lastAppliedTempoMultiplier = 1.0;
+            const tempoDetails = {
+                targetMultiplier: 1.0,
+                newTempo: Number(baseTempo.toFixed(3)),
+                markerCount: activeMarkers.length,
+                finalXPos: Number(finalXPos.toFixed(2))
+            };
+            logger.debug(
+                'TransportService',
+                `Tempo reset to base ${baseTempo} BPM`,
+                tempoDetails,
+                'transport'
+            );
+            logTransportDebug('tempo:multiplier:reset', tempoDetails);
         }
         
         if (finalXPos > 0) {
@@ -608,6 +704,7 @@ const TransportService = {
         
         store.on('tempoChanged', newTempo => {
             logger.event('TransportService', `tempoChanged triggered with new value: ${newTempo} BPM`, null, 'transport');
+            logTransportDebug('tempoChanged:event', { newTempo });
             
             if (Tone.Transport.state === 'started') {
                 logger.info('TransportService', 'Tempo changed WHILE PLAYING. Resynchronizing transport...', null, 'transport');
@@ -617,6 +714,7 @@ const TransportService = {
                 
                 Tone.Transport.pause();
                 logger.debug('TransportService', 'Transport paused', null, 'transport');
+                logTransportDebug('tempoChanged:paused-for-update', { currentPosition });
 
                 if (playheadAnimationFrame) {
                     cancelAnimationFrame(playheadAnimationFrame);
@@ -624,12 +722,16 @@ const TransportService = {
                 }
                 
                 Tone.Transport.bpm.value = newTempo;
+                reapplyConfiguredLoopBounds();
                 logger.debug('TransportService', `New BPM set to ${Tone.Transport.bpm.value}`, null, 'transport');
+                logTransportDebug('tempoChanged:set-bpm', { newTempo });
                 
                 scheduleNotes();
+                logTransportDebug('tempoChanged:rescheduled', { newTempo, currentPosition });
                 
                 Tone.Transport.start(undefined, currentPosition);
                 logger.debug('TransportService', `Transport restarted at musical position ${currentPosition}`, null, 'transport');
+                logTransportDebug('tempoChanged:restarted', { currentPosition });
                 
                 if (!store.state.paint.isMicPaintActive) {
                     animatePlayhead();
@@ -638,11 +740,30 @@ const TransportService = {
             } else {
                 logger.debug('TransportService', 'Tempo changed while stopped/paused. Updating BPM for next run', null, 'transport');
                 Tone.Transport.bpm.value = newTempo;
+                reapplyConfiguredLoopBounds();
                 calculateTimeMap();
+                logTransportDebug('tempoChanged:idle-update', { newTempo });
             }
         });
         
-        store.on('loopingChanged', isLooping => Tone.Transport.loop = isLooping);
+        store.on('loopingChanged', isLooping => {
+            Tone.Transport.loop = isLooping;
+            if (isLooping && Tone.Transport.loopEnd <= Tone.Transport.loopStart) {
+                Tone.Transport.loopEnd = Tone.Transport.loopStart + Math.max(getMicrobeatDuration(), 0.001);
+            }
+            if (isLooping) {
+                configuredLoopStart = Tone.Transport.loopStart;
+                configuredLoopEnd = Tone.Transport.loopEnd;
+            } else {
+                configuredLoopStart = 0;
+                configuredLoopEnd = 0;
+            }
+            logTransportDebug('loopingChanged:event', {
+                isLooping,
+                loopStart: Tone.Transport.loopStart,
+                loopEnd: Tone.Transport.loopEnd
+            });
+        });
         
         Tone.Transport.on('stop', () => {
             logger.event('TransportService', "Tone.Transport 'stop' fired. Resetting playback state", null, 'transport');
@@ -652,32 +773,52 @@ const TransportService = {
                 cancelAnimationFrame(playheadAnimationFrame);
                 playheadAnimationFrame = null;
             }
+            logTransportDebug('transport-event:stop');
         });
 
         logger.info('TransportService', 'Initialized', null, 'transport');
+        logTransportDebug('init:complete');
     },
 
     handleStateChange() {
-        if (Tone.Transport.state === 'started') {
+        const transportState = Tone.Transport.state;
+        logTransportDebug('handleStateChange', { transportState });
+
+        if (transportState === 'started') {
             logger.debug('TransportService', 'handleStateChange: Notes or rhythm changed during playback. Rescheduling', null, 'transport');
             
             const currentPosition = Tone.Transport.position;
             Tone.Transport.pause();
+            logTransportDebug('handleStateChange:paused', { position: currentPosition });
             scheduleNotes();
+            logTransportDebug('handleStateChange:rescheduled', { position: currentPosition });
             Tone.Transport.start(undefined, currentPosition);
+            logTransportDebug('handleStateChange:restart', { position: currentPosition });
 
         } else {
             calculateTimeMap();
+            logTransportDebug('handleStateChange:recalculate', { transportState });
         }
     },
 
     start() {
         logger.info('TransportService', 'Starting playback', null, 'transport');
+        logTransportDebug('start:requested', {
+            requestedTempo: store.state.tempo,
+            isLooping: store.state.isLooping,
+            placedNotes: store.state.placedNotes.length
+        });
         // Use global audio initialization to ensure user gesture compliance
         const audioInit = window.initAudio || (() => Tone.start());
         audioInit().then(() => {
             scheduleNotes();
-            const musicalDuration = timeMap[store.state.columnWidths.length - 2] || 0;
+            logTransportDebug('start:after-schedule', {
+                scheduledNotes: store.state.placedNotes.length,
+                scheduledStamps: getStampPlaybackData().length,
+                scheduledTriplets: getTripletPlaybackData().length
+            });
+            const timelineEnd = timeMap.length > 0 ? timeMap[timeMap.length - 1] : 0;
+            const musicalDuration = timeMap[store.state.columnWidths.length - 2] || timelineEnd;
             const anacrusisOffset = timeMap[2] || 0;
             const nonAnacrusisStart = findNonAnacrusisStart();
 
@@ -685,9 +826,22 @@ const TransportService = {
             Tone.Transport.loopStart = nonAnacrusisStart;
             Tone.Transport.loopEnd = musicalDuration;
             Tone.Transport.loop = store.state.isLooping;
+
+            if (Tone.Transport.loopEnd <= Tone.Transport.loopStart) {
+                Tone.Transport.loopEnd = Tone.Transport.loopStart + Math.max(getMicrobeatDuration(), 0.001);
+            }
+            configuredLoopStart = Tone.Transport.loopStart;
+            configuredLoopEnd = Tone.Transport.loopEnd;
             Tone.Transport.bpm.value = store.state.tempo;
             
             logger.debug('TransportService', `Transport configured. Loop: ${Tone.Transport.loop}, BPM: ${Tone.Transport.bpm.value}, StartOffset: ${anacrusisOffset}, LoopStart: ${nonAnacrusisStart}`, null, 'transport');
+            logTransportDebug('start:configured', {
+                loopStart: Tone.Transport.loopStart,
+                loopEnd: Tone.Transport.loopEnd,
+                anacrusisOffset,
+                timelineEnd,
+                musicalDuration
+            });
             
             // Log modulation setup
             if (store.state.modulationMarkers && store.state.modulationMarkers.length > 0) {
@@ -695,6 +849,7 @@ const TransportService = {
             
             // Always start from anacrusis (pickup) on first play, but loops will skip anacrusis
             Tone.Transport.start(Tone.now(), anacrusisOffset); 
+            logTransportDebug('start:transport-started', { anacrusisOffset });
             
             // Initialize paint playback if enabled
             if (window.PaintPlaybackService && window.PaintPlaybackService.onTransportStart) {
@@ -710,15 +865,18 @@ const TransportService = {
             
             // Emit playback events for animation service
             store.emit('playbackStarted');
+            logTransportDebug('start:playback-started');
         });
     },
 
     resume() {
         logger.info('TransportService', 'Resuming playback', null, 'transport');
+        logTransportDebug('resume:requested');
         // Use global audio initialization to ensure user gesture compliance
         const audioInit = window.initAudio || (() => Tone.start());
         audioInit().then(() => {
             Tone.Transport.start();
+            logTransportDebug('resume:transport-started');
             
             // Initialize paint playback if enabled
             if (window.PaintPlaybackService && window.PaintPlaybackService.onTransportStart) {
@@ -731,12 +889,15 @@ const TransportService = {
             
             // Emit playback events for animation service
             store.emit('playbackResumed');
+            logTransportDebug('resume:playback-resumed');
         });
     },
 
     pause() {
         logger.info('TransportService', 'Pausing playback', null, 'transport');
+        logTransportDebug('pause:requested');
         Tone.Transport.pause();
+        logTransportDebug('pause:transport-paused');
         if (playheadAnimationFrame) {
             cancelAnimationFrame(playheadAnimationFrame);
             playheadAnimationFrame = null;
@@ -744,11 +905,14 @@ const TransportService = {
         
         // Emit playback events for animation service
         store.emit('playbackPaused');
+        logTransportDebug('pause:playback-paused');
     },
 
     stop() {
         logger.info('TransportService', 'Stopping playback and clearing visuals', null, 'transport');
+        logTransportDebug('stop:requested');
         Tone.Transport.stop(); 
+        logTransportDebug('stop:transport-stopped');
         
         // Clear paint playback events if enabled
         if (window.PaintPlaybackService && window.PaintPlaybackService.onTransportStop) {
@@ -756,6 +920,9 @@ const TransportService = {
         }
         
         Tone.Transport.cancel();
+        Tone.Transport.bpm.value = store.state.tempo;
+        reapplyConfiguredLoopBounds();
+        logTransportDebug('stop:transport-reset', { tempoResetTo: store.state.tempo });
         SynthEngine.releaseAll();
 
         const playheadCanvas = domCache.get('playheadCanvas');
@@ -770,7 +937,9 @@ const TransportService = {
         
         // Emit playback events for animation service
         store.emit('playbackStopped');
+        logTransportDebug('stop:playback-stopped');
     }
 };
 
 export default TransportService;
+

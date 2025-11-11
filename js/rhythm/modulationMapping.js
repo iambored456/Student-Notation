@@ -1,6 +1,12 @@
-// js/rhythm/modulationMapping.js
+﻿// js/rhythm/modulationMapping.js
 
-import { getMacrobeatInfo } from '../state/selectors.js';
+import { getMacrobeatInfo } from '@state/selectors.js';
+
+const modulationDebugMessages = [];
+
+function recordModulationDebug(level, ...args) {
+    modulationDebugMessages.push({ level, args });
+}
 
 // Modulation ratio constants
 export const MODULATION_RATIOS = {
@@ -15,48 +21,48 @@ export const MODULATION_RATIOS = {
  * @returns {number} Canvas X position
  */
 function measureIndexToCanvasX(measureIndex, state) {
-    console.log('[MODULATION] measureIndexToCanvasX called:', {
+    recordModulationDebug('log', '[MODULATION] measureIndexToCanvasX called:', {
         measureIndex,
         hasState: !!state,
         cellWidth: state ? state.cellWidth : 'N/A'
     });
     
     if (!state) {
-        console.warn('[MODULATION] No state provided for measure conversion');
+        recordModulationDebug('warn', '[MODULATION] No state provided for measure conversion');
         const fallbackX = measureIndex * 200;
-        console.log('[MODULATION] Using fallback calculation:', fallbackX);
+        recordModulationDebug('log', '[MODULATION] Using fallback calculation:', fallbackX);
         return fallbackX;
     }
     
     // Simple conversion using cellWidth for now (avoiding circular imports)
     const cellWidth = state.cellWidth || 40;
-    console.log('[MODULATION] Using cellWidth:', cellWidth);
+    recordModulationDebug('log', '[MODULATION] Using cellWidth:', cellWidth);
     
     if (measureIndex === 0) {
         // Start of first measure (column 2)
         const result = 2 * cellWidth;
-        console.log('[MODULATION] Measure 0 → column 2 →', result);
+        recordModulationDebug('log', '[MODULATION] Measure 0 â†’ column 2 â†’', result);
         return result;
     }
     
     // Find the macrobeat that corresponds to this measure
     const macrobeatIndex = measureIndex - 1;
-    console.log('[MODULATION] Looking for macrobeat index:', macrobeatIndex);
+    recordModulationDebug('log', '[MODULATION] Looking for macrobeat index:', macrobeatIndex);
     
     const measureInfo = getMacrobeatInfo(state, macrobeatIndex);
-    console.log('[MODULATION] getMacrobeatInfo result:', measureInfo);
+    recordModulationDebug('log', '[MODULATION] getMacrobeatInfo result:', measureInfo);
     
     if (measureInfo) {
         // Position at end of this measure
         const result = (measureInfo.endColumn + 1) * cellWidth;
-        console.log('[MODULATION] Found measure info, calculated position:', result);
+        recordModulationDebug('log', '[MODULATION] Found measure info, calculated position:', result);
         return result;
     }
     
-    console.warn('[MODULATION] Could not find measure info for index:', measureIndex);
+    recordModulationDebug('warn', '[MODULATION] Could not find measure info for index:', measureIndex);
     // Use a more reasonable fallback based on average column width
     const fallbackX = measureIndex * cellWidth * 4; // Assume ~4 columns per measure
-    console.log('[MODULATION] Using improved fallback calculation:', fallbackX);
+    recordModulationDebug('log', '[MODULATION] Using improved fallback calculation:', fallbackX);
     return fallbackX;
 }
 
@@ -162,7 +168,7 @@ export function createCoordinateMapping(markers, baseMicrobeatPx, state = null) 
         return createEmptyMapping(baseMicrobeatPx);
     }
     
-    console.log('[MODULATION] Creating coordinate mapping for markers:', sortedMarkers);
+    recordModulationDebug('log', '[MODULATION] Creating coordinate mapping for markers:', sortedMarkers);
     
     // Convert measure-based markers to canvas positions using state info
     const markersWithCanvasX = sortedMarkers.map(marker => {
@@ -170,13 +176,13 @@ export function createCoordinateMapping(markers, baseMicrobeatPx, state = null) 
         let canvasX;
         if (marker.xPosition !== null && marker.xPosition !== undefined) {
             canvasX = marker.xPosition;
-            console.log(`[MODULATION] Marker at measure ${marker.measureIndex} → using stored x=${canvasX}`);
+            recordModulationDebug('log', `[MODULATION] Marker at measure ${marker.measureIndex} â†’ using stored x=${canvasX}`);
         } else {
             canvasX = measureIndexToCanvasX(marker.measureIndex, state);
-            console.log(`[MODULATION] Marker at measure ${marker.measureIndex} → calculated x=${canvasX}`);
+            recordModulationDebug('log', `[MODULATION] Marker at measure ${marker.measureIndex} â†’ calculated x=${canvasX}`);
         }
         
-        console.log(`[MODULATION] Final marker position:`, {
+        recordModulationDebug('log', `[MODULATION] Final marker position:`, {
             id: marker.id,
             measureIndex: marker.measureIndex,
             canvasX,
@@ -291,26 +297,26 @@ export function createCoordinateMapping(markers, baseMicrobeatPx, state = null) 
          * @returns {Array} Array of x positions for ghost grid lines
          */
         getGhostGridPositions(segment, options) {
-            console.log('[GHOST-CALC] getGhostGridPositions called with:', {
+            recordModulationDebug('log', '[GHOST-CALC] getGhostGridPositions called with:', {
                 segment,
                 hasMarker: !!segment.marker,
                 hasOptions: !!options
             });
             
             if (!segment.marker) {
-                console.log('[GHOST-CALC] No marker on segment, returning empty array');
+                recordModulationDebug('log', '[GHOST-CALC] No marker on segment, returning empty array');
                 return []; // No ghost grid for base segment
             }
             
             if (!options || !options.columnWidths) {
-                console.warn('[GHOST-CALC] No grid options provided');
+                recordModulationDebug('warn', '[GHOST-CALC] No grid options provided');
                 return [];
             }
             
             const ghostPositions = [];
             const { columnWidths, cellWidth } = options;
             
-            console.log('[GHOST-CALC] Options check:', { 
+            recordModulationDebug('log', '[GHOST-CALC] Options check:', { 
                 hasColumnWidths: !!columnWidths, 
                 columnCount: columnWidths ? columnWidths.length : 0,
                 cellWidth,
@@ -320,7 +326,7 @@ export function createCoordinateMapping(markers, baseMicrobeatPx, state = null) 
             });
             
             if (!columnWidths || !cellWidth || cellWidth === 0) {
-                console.warn('[GHOST-CALC] Missing grid data');
+                recordModulationDebug('warn', '[GHOST-CALC] Missing grid data');
                 return [];
             }
             
@@ -445,11 +451,16 @@ export function secondsToCanvasX(seconds, coordinateMapping, baseMicrobeatDurati
 export function columnToRegularTime(columnIndex, regularTimeMap) {
     if (columnIndex >= 0 && columnIndex < regularTimeMap.length) {
         const regularTime = regularTimeMap[columnIndex];
-        console.log(`[TIME-CONVERSION] Column ${columnIndex} → regular=${regularTime.toFixed(4)}s`);
+        recordModulationDebug('log', `[TIME-CONVERSION] Column ${columnIndex} â†’ regular=${regularTime.toFixed(4)}s`);
         return regularTime;
     }
     
     // Fallback: return a reasonable approximation
-    console.warn(`[TIME-CONVERSION] Column ${columnIndex} out of range, using fallback`);
+    recordModulationDebug('warn', `[TIME-CONVERSION] Column ${columnIndex} out of range, using fallback`);
     return columnIndex * 0.333; // Rough approximation
 }
+
+export function getModulationDebugMessages() {
+    return modulationDebugMessages.slice();
+}
+

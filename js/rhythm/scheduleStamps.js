@@ -1,7 +1,7 @@
 // js/rhythm/scheduleStamps.js
 import * as Tone from 'tone';
 import { SIXTEENTH_STAMPS, getStampById } from './stamps.js';
-import logger from '../utils/logger.js';
+import logger from '@utils/logger.js';
 
 logger.moduleLoaded('StampScheduler', 'stamps');
 
@@ -37,7 +37,6 @@ export function getStampScheduleEvents(stampId, placement = null) {
       shapeKey,
       rowOffset  // Pitch offset from base row
     });
-    console.log(`[STAMP DEBUG] Stamp ${stampId} oval at slot ${start} with offset "${SLOT_OFFSETS[start]}", rowOffset: ${rowOffset}`);
   });
 
   // Add diamonds (16th notes) with per-shape pitch offsets
@@ -53,10 +52,8 @@ export function getStampScheduleEvents(stampId, placement = null) {
       shapeKey,
       rowOffset  // Pitch offset from base row
     });
-    console.log(`[STAMP DEBUG] Stamp ${stampId} diamond at slot ${slot} with offset "${SLOT_OFFSETS[slot]}", rowOffset: ${rowOffset}`);
   });
 
-  console.log(`[STAMP DEBUG] Total events for stamp ${stampId}:`, events.length, events);
   return events;
 }
 

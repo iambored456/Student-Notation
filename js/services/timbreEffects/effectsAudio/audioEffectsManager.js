@@ -1,6 +1,6 @@
-// js/services/timbreEffects/effectsAudio/audioEffectsManager.js
-import store from '../../../state/index.js';
-import logger from '../../../utils/logger.js';
+﻿// js/services/timbreEffects/effectsAudio/audioEffectsManager.js
+import store from '@state/index.js';
+import logger from '@utils/logger.js';
 import VibratoAudioEffect from './vibratoAudioEffect.js';
 import TremoloAudioEffect from './tremoloAudioEffect.js';
 import ReverbAudioEffect from './reverbAudioEffect.js';
@@ -14,7 +14,7 @@ logger.moduleLoaded('AudioEffectsManager');
  * Handles integration with Tone.js and synthEngine
  * 
  * Data Flow:
- * EffectsCoordinator → AudioEffectsManager → Specific Audio Effects (vibrato, tremolo, etc.)
+ * EffectsCoordinator â†’ AudioEffectsManager â†’ Specific Audio Effects (vibrato, tremolo, etc.)
  */
 class AudioEffectsManager {
     constructor() {
@@ -114,7 +114,7 @@ class AudioEffectsManager {
             // Error disconnecting synth
         }
 
-        // Create effects chain: Synth → Reverb → Delay → MasterGain
+        // Create effects chain: Synth â†’ Reverb â†’ Delay â†’ MasterGain
         let currentOutput = synth;
 
         if (reverbInstance) {

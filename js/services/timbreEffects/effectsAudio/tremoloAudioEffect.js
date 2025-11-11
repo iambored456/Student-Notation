@@ -1,5 +1,5 @@
-// js/services/timbreEffects/effectsAudio/tremoloAudioEffect.js
-import logger from '../../../utils/logger.js';
+﻿// js/services/timbreEffects/effectsAudio/tremoloAudioEffect.js
+import logger from '@utils/logger.js';
 import * as Tone from 'tone';
 
 logger.moduleLoaded('TremoloAudioEffect');
@@ -89,8 +89,8 @@ class TremoloAudioEffect {
         }
 
         // Convert percentage values to Tone.js parameters
-        const frequencyHz = (speed / 100) * 16; // 0-100% → 0-16 Hz
-        const depthPercentage = span / 100; // 0-100% → 0-1
+        const frequencyHz = (speed / 100) * 16; // 0-100% â†’ 0-16 Hz
+        const depthPercentage = span / 100; // 0-100% â†’ 0-1
         
         return {
             frequency: frequencyHz,

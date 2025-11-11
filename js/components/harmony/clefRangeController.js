@@ -1,9 +1,12 @@
-// js/components/harmony/clefRangeController.js
-import store from '../../state/index.js';
-import { fullRowData as masterRowData } from '../../state/pitchData.js';
-import LayoutService from '../../services/layoutService.js';
-import logger from '../../utils/logger.js';
+﻿// js/components/harmony/clefRangeController.js
+import store from '@state/index.js';
+import { fullRowData as masterRowData } from '@state/pitchData.js';
+import LayoutService from '@services/layoutService.js';
+const clefRangeDebugMessages = [];
 
+function recordClefRangeDebug(level, ...args) {
+    clefRangeDebugMessages.push({ level, args, timestamp: Date.now() });
+}
 const OPTION_HEIGHT = 40;
 const SCROLL_STEP = OPTION_HEIGHT;
 
@@ -328,19 +331,19 @@ class ClefRangeController {
     }
 
     commitRangeChange(topIndex, bottomIndex) {
-        console.log(`[CommitRange] Called with top=${topIndex}, bottom=${bottomIndex}`);
+        recordClefRangeDebug('log', `[CommitRange] Called with top=${topIndex}, bottom=${bottomIndex}`);
 
         const previousRange = this.currentRange || store.state.pitchRange || { topIndex: 0 };
         const normalisedTop = Math.max(0, Math.min(this.masterOptions.length - 1, topIndex));
         const normalisedBottom = Math.max(normalisedTop, Math.min(this.masterOptions.length - 1, bottomIndex));
 
-        console.log(`[CommitRange] Normalized to top=${normalisedTop}, bottom=${normalisedBottom}`);
-        console.log(`[CommitRange] Current range:`, this.currentRange);
+        recordClefRangeDebug('log', `[CommitRange] Normalized to top=${normalisedTop}, bottom=${normalisedBottom}`);
+        recordClefRangeDebug('log', `[CommitRange] Current range:`, this.currentRange);
 
         if (this.currentRange &&
             this.currentRange.topIndex === normalisedTop &&
             this.currentRange.bottomIndex === normalisedBottom) {
-            console.log(`[CommitRange] Range unchanged, skipping commit`);
+            recordClefRangeDebug('log', `[CommitRange] Range unchanged, skipping commit`);
             return;
         }
 
@@ -358,29 +361,29 @@ class ClefRangeController {
         this.lastBottomIndex = normalisedBottom;
         this.updateSummary();
 
-        console.log(`[CommitRange] Setting pitch range in store`);
+        recordClefRangeDebug('log', `[CommitRange] Setting pitch range in store`);
         store.setPitchRange({
             topIndex: normalisedTop,
             bottomIndex: normalisedBottom
         }, { maintainGlobalStart });
 
         // Auto-enable snap zoom when user interacts with range controls
-        console.log(`[CommitRange] Snap zoom currently: ${store.state.snapZoomToRange}`);
+        recordClefRangeDebug('log', `[CommitRange] Snap zoom currently: ${store.state.snapZoomToRange}`);
         if (!store.state.snapZoomToRange) {
-            console.log(`[CommitRange] Enabling snap zoom`);
+            recordClefRangeDebug('log', `[CommitRange] Enabling snap zoom`);
             store.setSnapZoomToRange(true);
         }
 
-        console.log(`[CommitRange] Snap zoom now: ${store.state.snapZoomToRange}`);
+        recordClefRangeDebug('log', `[CommitRange] Snap zoom now: ${store.state.snapZoomToRange}`);
         if (LayoutService && typeof LayoutService.snapZoomToCurrentRange === 'function' && store.state.snapZoomToRange) {
-            console.log(`[CommitRange] Calling snapZoomToCurrentRange`);
+            recordClefRangeDebug('log', `[CommitRange] Calling snapZoomToCurrentRange`);
             LayoutService.snapZoomToCurrentRange();
         } else if (LayoutService && typeof LayoutService.recalculateLayout === 'function') {
-            console.log(`[CommitRange] Calling recalculateLayout (snap zoom not enabled)`);
+            recordClefRangeDebug('log', `[CommitRange] Calling recalculateLayout (snap zoom not enabled)`);
             LayoutService.recalculateLayout();
         }
 
-        console.log(`[CommitRange] Complete`);
+        recordClefRangeDebug('log', `[CommitRange] Complete`);
     }
 
     syncFromStore(range) {
@@ -408,7 +411,7 @@ class ClefRangeController {
         const count = (this.currentRange.bottomIndex - this.currentRange.topIndex) + 1;
 
         if (this.rangeLabel) {
-            this.rangeLabel.textContent = `${topRow.label} – ${bottomRow.label}`;
+            this.rangeLabel.textContent = `${topRow.label} â€“ ${bottomRow.label}`;
         }
         if (this.rangeCount) {
             this.rangeCount.textContent = `${count} ${count === 1 ? 'pitch' : 'pitches'}`;
@@ -476,19 +479,19 @@ class ClefRangeController {
 
             case 'treble':
                 // Treble: C4 to G5
-                topNote = 'A♭/G♯5';
+                topNote = 'Aâ™­/Gâ™¯5';
                 bottomNote = 'C4';
                 break;
 
             case 'alto':
                 // Alto: E3 to A4
-                topNote = 'B♭/A♯4';
+                topNote = 'Bâ™­/Aâ™¯4';
                 bottomNote = 'D3';
                 break;
 
             case 'bass':
                 // Bass: F2 to C4
-                topNote = 'D♭/C♯4';
+                topNote = 'Dâ™­/Câ™¯4';
                 bottomNote = 'F2';
                 break;
 
@@ -515,7 +518,7 @@ class ClefRangeController {
         const bottomDistance = targetBottomIndex - startBottomIndex;
         const startTime = performance.now();
 
-        console.log(`[AnimateRange] Starting animation:`, {
+        recordClefRangeDebug('log', `[AnimateRange] Starting animation:`, {
             startTop: startTopIndex,
             targetTop: targetTopIndex,
             startBottom: startBottomIndex,
@@ -525,7 +528,7 @@ class ClefRangeController {
 
         // Temporarily disable snap zoom during animation
         const wasSnapEnabled = store.state.snapZoomToRange;
-        console.log(`[AnimateRange] Snap zoom was ${wasSnapEnabled ? 'enabled' : 'disabled'}, disabling for animation`);
+        recordClefRangeDebug('log', `[AnimateRange] Snap zoom was ${wasSnapEnabled ? 'enabled' : 'disabled'}, disabling for animation`);
         if (wasSnapEnabled) {
             store.setSnapZoomToRange(false);
         }
@@ -535,7 +538,7 @@ class ClefRangeController {
         const targetZoom = this.calculateTargetZoom(targetTopIndex, targetBottomIndex);
         const zoomDistance = targetZoom - startZoom;
 
-        console.log(`[AnimateRange] Zoom animation: ${Math.round(startZoom * 100)}% -> ${Math.round(targetZoom * 100)}%`);
+        recordClefRangeDebug('log', `[AnimateRange] Zoom animation: ${Math.round(startZoom * 100)}% -> ${Math.round(targetZoom * 100)}%`);
 
         let frameCount = 0;
 
@@ -557,7 +560,7 @@ class ClefRangeController {
 
             frameCount++;
             if (frameCount % 10 === 0 || progress === 1) {
-                console.log(`[AnimateRange] Frame ${frameCount}: progress=${(progress * 100).toFixed(1)}%, top=${currentTopIndex}, bottom=${currentBottomIndex}, zoom=${Math.round(currentZoom * 100)}%`);
+                recordClefRangeDebug('log', `[AnimateRange] Frame ${frameCount}: progress=${(progress * 100).toFixed(1)}%, top=${currentTopIndex}, bottom=${currentBottomIndex}, zoom=${Math.round(currentZoom * 100)}%`);
             }
 
             // Update wheel visuals silently
@@ -588,7 +591,7 @@ class ClefRangeController {
                 requestAnimationFrame(animate);
             } else {
                 // Animation complete - finalize everything properly
-                console.log(`[AnimateRange] Animation complete, finalizing at top=${targetTopIndex}, bottom=${targetBottomIndex}`);
+                recordClefRangeDebug('log', `[AnimateRange] Animation complete, finalizing at top=${targetTopIndex}, bottom=${targetBottomIndex}`);
 
                 // Force final positions
                 this.topPicker.selectedIndex = targetTopIndex;
@@ -603,17 +606,17 @@ class ClefRangeController {
                 this.updateSummary();
 
                 // Now properly commit the range change through the normal flow
-                console.log(`[AnimateRange] Committing final range change through setPitchRange`);
+                recordClefRangeDebug('log', `[AnimateRange] Committing final range change through setPitchRange`);
                 store.setPitchRange({
                     topIndex: targetTopIndex,
                     bottomIndex: targetBottomIndex
                 });
 
                 // Re-enable snap zoom (but don't trigger it since we already animated to the target)
-                console.log(`[AnimateRange] Re-enabling snap zoom`);
+                recordClefRangeDebug('log', `[AnimateRange] Re-enabling snap zoom`);
                 store.setSnapZoomToRange(true);
 
-                console.log(`[AnimateRange] Animation fully complete`);
+                recordClefRangeDebug('log', `[AnimateRange] Animation fully complete`);
             }
         };
 
@@ -642,3 +645,8 @@ class ClefRangeController {
 
 const controller = new ClefRangeController();
 export default controller;
+
+
+export function getClefRangeDebugMessages() {
+    return clefRangeDebugMessages.slice();
+}

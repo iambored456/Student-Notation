@@ -1,5 +1,5 @@
 // js/services/spacebarHandler.js
-import store from '../state/index.js'; 
+import store from '@state/index.js'; 
 import SynthEngine from './synthEngine.js';
 import GlobalService from './globalService.js';
 import { Note } from 'tonal'; 

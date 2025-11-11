@@ -1,8 +1,8 @@
 // js/services/rhythmService.js
-import store from '../state/index.js';
-import { getMacrobeatInfo } from '../state/selectors.js';
+import store from '@state/index.js';
+import { getMacrobeatInfo } from '@state/selectors.js';
 import LayoutService from './layoutService.js';
-import { getColumnX } from '../components/Canvas/PitchGrid/renderers/rendererUtils.js';
+import { getColumnX } from '@components/canvas/pitchGrid/renderers/rendererUtils.js';
 
 
 const RhythmService = {
@@ -97,18 +97,25 @@ const RhythmService = {
                 LayoutService.getColumnX(endColumn + 1);
             const centerX = (startX + endX) / 2;
 
+            const boundaryStyle = store.state.macrobeatBoundaryStyles[index] ?? null;
 
-            buttons.push({ type: 'grouping', content: group, x: centerX, y: 20, index });
+            buttons.push({
+                type: 'grouping',
+                content: group,
+                x: centerX,
+                startX,
+                endX,
+                index,
+                nextBoundaryStyle: boundaryStyle
+            });
 
             if (index < store.state.macrobeatGroupings.length - 1) {
-                const style = store.state.macrobeatBoundaryStyles[index];
-                let content;
-                switch (style) {
-                    case 'solid': content = '●'; break;
-                    case 'anacrusis': content = 'x'; break;
-                    default: content = '○'; break;
-                }
-                buttons.push({ type: 'boundary', content, x: endX, y: 35, index });
+                buttons.push({
+                    type: 'boundary',
+                    boundaryStyle,
+                    x: endX,
+                    index
+                });
             }
         });
         
@@ -117,3 +124,4 @@ const RhythmService = {
 };
 
 export default RhythmService;
+

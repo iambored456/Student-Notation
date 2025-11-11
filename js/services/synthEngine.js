@@ -1,15 +1,15 @@
-// js/services/synthEngine.js
+﻿// js/services/synthEngine.js
 import * as Tone from 'tone';
-import store from '../state/index.js';
+import store from '@state/index.js';
 import { PRESETS } from './presetData.js';
-import logger from '../utils/logger.js';
-import { getFilteredCoefficients } from '../components/audio/HarmonicsFilter/harmonicBins.js';
+import logger from '@utils/logger.js';
+import { getFilteredCoefficients } from '@components/audio/harmonicsFilter/harmonicBins.js';
 
 logger.moduleLoaded('SynthEngine');
 
 // === Gain Staging Constants ===
 const POLYPHONY_CEILING = 8; // Maximum expected simultaneous voices
-const PER_VOICE_BASELINE_GAIN = 1.0 / Math.sqrt(POLYPHONY_CEILING); // ≈0.354 linear amplitude
+const PER_VOICE_BASELINE_GAIN = 1.0 / Math.sqrt(POLYPHONY_CEILING); // â‰ˆ0.354 linear amplitude
 const SMOOTHING_TAU_MS = 200; // Smoothing window duration
 const MASTER_GAIN_RAMP_MS = 50; // Ramp time for gain changes to avoid zipper noise
 const GAIN_UPDATE_INTERVAL = "32n"; // Update master gain every 32nd note (~realistic for musical changes)
@@ -43,7 +43,7 @@ function updateMasterGain() {
     }
 
     // Calculate exponential moving average (EMA) smoothing factor
-    // α = 1 - e^(-ΔT/τ), where ΔT is update interval (16ms), τ is time constant (200ms)
+    // Î± = 1 - e^(-Î”T/Ï„), where Î”T is update interval (16ms), Ï„ is time constant (200ms)
     const deltaT = 0.016; // 16ms update interval
     const alpha = 1 - Math.exp(-deltaT / (SMOOTHING_TAU_MS / 1000));
 
@@ -52,8 +52,8 @@ function updateMasterGain() {
     smoothedVoiceCount = alpha * currentVoices + (1 - alpha) * smoothedVoiceCount;
 
     // Calculate master gain: reduce gain as voice count increases
-    // At 1 voice: gain = baseline × (ceiling/1) = baseline × 8 (boost solo notes)
-    // At ceiling voices: gain = baseline × (ceiling/ceiling) = baseline × 1 (no extra boost)
+    // At 1 voice: gain = baseline Ã— (ceiling/1) = baseline Ã— 8 (boost solo notes)
+    // At ceiling voices: gain = baseline Ã— (ceiling/ceiling) = baseline Ã— 1 (no extra boost)
     const scaleFactor = Math.sqrt(POLYPHONY_CEILING / smoothedVoiceCount);
     const targetGain = PER_VOICE_BASELINE_GAIN * scaleFactor;
 
@@ -190,15 +190,15 @@ class FilteredVoice extends Tone.Synth {
             this.vibratoLFO.frequency.value = speedHz;
             
             // Convert 0-100% span to proper Hz deviation
-            // 100% span = ±50 cents maximum deviation
-            const maxCents = 50; // Maximum ±50 cents for 100% span
+            // 100% span = Â±50 cents maximum deviation
+            const maxCents = 50; // Maximum Â±50 cents for 100% span
             const centsAmplitude = (params.span / 100) * maxCents;
             
             // Convert cents to Hz deviation for frequency modulation
             // For a note at frequency f, n cents deviation = f * (2^(n/1200) - 1)
             // Since we don't know the exact frequency, we'll use a scaling factor
-            // 1 cent ≈ 0.0578% frequency change, so 50 cents ≈ 2.89% 
-            // For a 440Hz note: 50 cents ≈ 12.7 Hz deviation
+            // 1 cent â‰ˆ 0.0578% frequency change, so 50 cents â‰ˆ 2.89% 
+            // For a 440Hz note: 50 cents â‰ˆ 12.7 Hz deviation
             // We'll use a ratio-based approach: cents/1200 gives us the semitone fraction
             const centRatio = centsAmplitude / 1200; // Convert cents to semitone fraction
             const hzDeviationFactor = Math.pow(2, centRatio) - 1; // Frequency multiplier for the cents
@@ -208,7 +208,7 @@ class FilteredVoice extends Tone.Synth {
             const hzDeviation = referenceFreq * hzDeviationFactor;
             
             this.vibratoGain.gain.value = hzDeviation;
-            console.log('Audio vibrato gain set to:', hzDeviation, 'Hz (for', centsAmplitude, 'cents)');
+            logger.debug('SynthEngine', 'Audio vibrato gain set', { hzDeviation, centsAmplitude }, 'audio');
             
         }
     }
@@ -281,7 +281,7 @@ class FilteredVoice extends Tone.Synth {
 const SynthEngine = {
     init() {
         // === Build Master Audio Chain ===
-        // Signal flow: synths → masterGain → volumeControl → compressor → limiter → destination
+        // Signal flow: synths â†’ masterGain â†’ volumeControl â†’ compressor â†’ limiter â†’ destination
 
         // 1. Master gain node (polyphony-aware scaling with smoothing)
         masterGain = new Tone.Gain(PER_VOICE_BASELINE_GAIN);
@@ -304,7 +304,7 @@ const SynthEngine = {
         // 5. Clipping detection meter
         clippingMeter = new Tone.Meter();
 
-        // Connect chain: masterGain → volumeControl → compressor → limiter → destination → meter
+        // Connect chain: masterGain â†’ volumeControl â†’ compressor â†’ limiter â†’ destination â†’ meter
         masterGain.connect(volumeControl);
         volumeControl.connect(compressor);
         compressor.connect(limiter);
@@ -325,7 +325,7 @@ const SynthEngine = {
             // Use filtered coefficients instead of raw store coefficients
             const filteredCoeffs = getFilteredCoefficients(color);
 
-            // Dynamic amplitude scaling: use direct sum if ≤ 1.0, normalize if > 1.0
+            // Dynamic amplitude scaling: use direct sum if â‰¤ 1.0, normalize if > 1.0
             const totalAmplitude = filteredCoeffs.reduce((sum, coeff) => sum + Math.abs(coeff), 0);
 
             // Apply normalization to coefficients if total > 1.0
@@ -487,7 +487,7 @@ const SynthEngine = {
         // Use filtered coefficients instead of raw store coefficients
         const filteredCoeffs = getFilteredCoefficients(color);
         
-        // Dynamic amplitude scaling: use direct sum if ≤ 1.0, normalize if > 1.0
+        // Dynamic amplitude scaling: use direct sum if â‰¤ 1.0, normalize if > 1.0
         const totalAmplitude = filteredCoeffs.reduce((sum, coeff) => sum + Math.abs(coeff), 0);
         const dynamicGain = totalAmplitude <= 1.0 ? totalAmplitude : 1.0;
 
@@ -733,3 +733,4 @@ const SynthEngine = {
 };
 
 export default SynthEngine;
+

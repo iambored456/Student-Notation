@@ -5,6 +5,7 @@
 :root {
   --rhythm-ui-button-size: 1.25rem;
   --rhythm-ui-button-font-size: var(--font-size-sm);
+  --rhythm-boundary-color: #3a3a3a;
 }
 
 #canvas-macrobeat-tools {
@@ -64,8 +65,8 @@
     transform 0.1s ease;
 }
 
-.rhythm-ui-button:hover,
-.rhythm-ui-button:focus-visible {
+.rhythm-ui-button:not(.rhythm-ui-button--boundary):hover,
+.rhythm-ui-button:not(.rhythm-ui-button--boundary):focus-visible {
   background-color: var(--c-surface);
   border-color: var(--c-text);
   color: var(--c-text);
@@ -76,34 +77,97 @@
   transform: translateX(-50%) scale(0.95);
 }
 
-.rhythm-ui-button--group {
-  background-color: var(--c-accent-light);
-  border-color: rgba(var(--c-accent-rgb), 0.55);
-  color: var(--c-surface);
-  box-shadow: var(--box-shadow-sm);
-}
-
-.rhythm-ui-button--group:hover,
-.rhythm-ui-button--group:focus-visible {
-  background-color: var(--c-accent);
-  border-color: var(--c-accent-hover);
-  color: var(--c-surface);
-}
-
 .rhythm-ui-button--boundary {
-  --rhythm-ui-button-width: auto;
-  --rhythm-ui-button-height: calc(var(--rhythm-ui-button-size) * 0.85);
-  --rhythm-ui-button-radius: var(--border-radius-sm);
-  padding-inline: var(--space-025);
-  font-weight: 500;
-  background-color: var(--c-surface);
-  white-space: nowrap;
+  background-color: transparent;
+  border: none;
+  padding: 0;
+  width: auto;
+  height: auto;
+  align-items: flex-end;
+  justify-content: center;
+  pointer-events: auto;
+  backdrop-filter: none;
 }
 
 .rhythm-ui-button--boundary:hover,
 .rhythm-ui-button--boundary:focus-visible {
-  background-color: var(--c-border);
-  border-color: var(--c-border-strong);
+  background-color: transparent;
+  border: none;
+  color: inherit;
+}
+
+.rhythm-ui-button--boundary:focus-visible {
+  outline: 2px solid var(--c-accent);
+  outline-offset: 2px;
+}
+
+.boundary-diamond {
+  width: 100%;
+  aspect-ratio: 1;
+  display: block;
+  transform: rotate(45deg);
+  border: 2px solid var(--rhythm-boundary-color);
+  border-radius: 2px;
+  box-sizing: border-box;
+  background-color: transparent;
+  transition: border-color 0.2s ease, background-color 0.2s ease;
+}
+
+.boundary-diamond[data-style='solid'] {
+  background-color: var(--rhythm-boundary-color);
+  border-color: var(--rhythm-boundary-color);
+}
+
+.boundary-diamond[data-style='dashed'],
+.boundary-diamond[data-style='anacrusis'] {
+  background-color: transparent;
+}
+
+.rhythm-ui-button--boundary:hover .boundary-diamond,
+.rhythm-ui-button--boundary:focus-visible .boundary-diamond {
+  border-color: var(--c-accent);
+}
+
+.grouping-segment {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background-color: transparent;
+  color: var(--c-text);
+  font-weight: 600;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.grouping-segment:hover,
+.grouping-segment:focus-visible {
+  background-color: var(--c-surface-overlay);
+  color: var(--c-text);
+  outline: none;
+}
+
+.grouping-segment:focus-visible {
+  box-shadow: 0 0 0 2px rgba(var(--c-accent-rgb), 0.35);
+}
+
+.grouping-segment[data-next-boundary-style='solid']::after,
+.grouping-segment[data-next-boundary-style='dashed']::after {
+  content: '';
+  position: absolute;
+  top: 15%;
+  bottom: 15%;
+  right: 0;
+  border-right: 2px solid var(--rhythm-boundary-color);
+}
+
+.grouping-segment[data-next-boundary-style='dashed']::after {
+  border-right-style: dashed;
 }
 
 .macrobeat-adjust-group {

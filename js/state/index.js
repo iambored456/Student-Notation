@@ -10,7 +10,7 @@ import { harmonyActions } from './actions/harmonyActions.js';
 import { paintActions } from './actions/paintActions.js';
 import { stampActions } from './actions/stampActions.js';
 import { tripletActions } from './actions/tripletActions.js';
-import logger from '../utils/logger.js';
+import logger from '@utils/logger.js';
 
 logger.moduleLoaded('Store', 'general');
 

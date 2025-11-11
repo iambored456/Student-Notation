@@ -25,7 +25,7 @@ export const defaultColorPalette = {
     '#2d2d2d': { primary: '#2d2d2d', light: '#424242' }
 };
 
-import { HARMONIC_BINS } from '../../core/constants.js';
+import { HARMONIC_BINS } from '@/core/constants.js';
 
 export function getInitialTimbresState() {
     /**

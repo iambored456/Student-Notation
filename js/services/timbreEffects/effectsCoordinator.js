@@ -1,6 +1,6 @@
 // js/services/timbreEffects/effectsCoordinator.js
-import store from '../../state/index.js';
-import logger from '../../utils/logger.js';
+import store from '@state/index.js';
+import logger from '@utils/logger.js';
 
 logger.moduleLoaded('EffectsCoordinator');
 

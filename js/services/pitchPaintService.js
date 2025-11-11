@@ -1,7 +1,8 @@
-// js/services/pitchPaintService.js
+﻿// js/services/pitchPaintService.js
 import * as Tone from 'tone';
 import { PitchDetector } from 'pitchy';
-import store from '../state/index.js';
+import store from '@state/index.js';
+import logger from '@utils/logger.js';
 import { Note } from 'tonal';
 
 class PitchPaintService {
@@ -59,7 +60,7 @@ class PitchPaintService {
       
       this.isInitialized = true;
     } catch (error) {
-      console.error('PitchPaintService: Failed to initialize microphone:', error);
+      logger.error('PitchPaintService', 'Failed to initialize microphone', error, 'paint');
       store.setMicPaintActive(false);
       throw error;
     }
@@ -67,14 +68,14 @@ class PitchPaintService {
 
   startDetection() {
     if (!this.isInitialized || store.state.paint.isDetecting) return;
-    // ✅ FIXED: Use proper action instead of direct state mutation
+    // âœ… FIXED: Use proper action instead of direct state mutation
     store.setPaintDetectionState(true);
     this.animationLoop();
   }
 
   stopDetection() {
     if (!store.state.paint.isDetecting) return;
-    // ✅ FIXED: Use proper action instead of direct state mutation
+    // âœ… FIXED: Use proper action instead of direct state mutation
     store.setPaintDetectionState(false);
     if (this.animationFrameId) {
       cancelAnimationFrame(this.animationFrameId);
@@ -191,8 +192,7 @@ class PitchPaintService {
     
     // Reject jumps that are too large in too short a time
     if (semitoneDiff > this.maxPitchJumpSemitones) {
-      console.log('🚫 [Filter] Pitch jump rejected:', 
-                  semitoneDiff.toFixed(1), 'semitones in', timeDiff.toFixed(0) + 'ms');
+      logger.debug('PitchPaintService', 'Pitch jump rejected', { semitoneDiff: semitoneDiff.toFixed(1), timeDiff: timeDiff.toFixed(0) }, 'paint');
       return false;
     }
     

@@ -1,5 +1,5 @@
 // js/state/actions/stampActions.js
-import logger from '../../utils/logger.js';
+import logger from '@utils/logger.js';
 
 logger.moduleLoaded('StampActions', 'stamps');
 
@@ -173,7 +173,7 @@ export const stampActions = {
     updateStampShapeOffset(placementId, shapeKey, rowOffset) {
         const placement = this.state.stampPlacements.find(p => p.id === placementId);
         if (!placement) {
-            console.warn('[STAMP SHAPE OFFSET] Placement not found:', placementId);
+            logger.warn('StampActions', '[STAMP SHAPE OFFSET] Placement not found', { placementId }, 'stamps');
             return;
         }
 
@@ -182,14 +182,14 @@ export const stampActions = {
             placement.shapeOffsets = {};
         }
 
-        console.log('[STAMP SHAPE OFFSET] Updating shape offset:', {
+        logger.debug('StampActions', '[STAMP SHAPE OFFSET] Updating shape offset', {
             placementId,
             shapeKey,
             oldOffset: placement.shapeOffsets[shapeKey] || 0,
             newOffset: rowOffset,
             baseRow: placement.row,
             targetRow: placement.row + rowOffset
-        });
+        }, 'stamps');
 
         placement.shapeOffsets[shapeKey] = rowOffset;
         this.emit('stampPlacementsChanged');

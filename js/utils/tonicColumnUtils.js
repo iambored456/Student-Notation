@@ -4,7 +4,7 @@
  * Provides consistent logic for tonic column identification and validation
  */
 
-import { getPlacedTonicSigns } from '../state/selectors.js';
+import { getPlacedTonicSigns } from '@state/selectors.js';
 
 /**
  * Check if a column index is a tonic column (where tonic shapes are placed)

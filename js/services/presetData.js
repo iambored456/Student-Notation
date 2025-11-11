@@ -2,7 +2,7 @@
 // ------------------------------------------------------------
 // Preset spectra and ADSR data for Student Notation
 // ------------------------------------------------------------
-import { HARMONIC_BINS } from '../core/constants.js';
+import { HARMONIC_BINS } from '@/core/constants.js';
 
 const BINS = HARMONIC_BINS;
 

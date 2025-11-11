@@ -1,16 +1,22 @@
-// js/services/effectsCoordinator.js
-import store from '../state/index.js';
-import logger from '../utils/logger.js';
+﻿// js/services/effectsCoordinator.js
+import store from '@state/index.js';
+import logger from '@utils/logger.js';
 
 logger.moduleLoaded('EffectsCoordinator');
+
+const effectsCoordinatorDebug = [];
+
+function recordCoordinatorDebug(level, ...args) {
+    effectsCoordinatorDebug.push({ level, args, timestamp: Date.now() });
+}
 
 /**
  * Effects Coordinator Service
  * Central hub for managing effect parameters and distributing them to audio and visual systems
  * 
  * Data Flow:
- * UI Dials → EffectsCoordinator → Audio Engine (for sound effects)
- *                               → Animation Engine (for visual effects)
+ * UI Dials â†’ EffectsCoordinator â†’ Audio Engine (for sound effects)
+ *                               â†’ Animation Engine (for visual effects)
  */
 class EffectsCoordinator {
     constructor() {
@@ -83,7 +89,7 @@ class EffectsCoordinator {
      * This is the single entry point for all effect parameter changes
      */
     updateParameter(effectType, parameter, value, color) {
-        console.log(`🎛️ [COORDINATOR DEBUG] updateParameter called:`, { effectType, parameter, value, color });
+        recordCoordinatorDebug('log', `ðŸŽ›ï¸ [COORDINATOR DEBUG] updateParameter called:`, { effectType, parameter, value, color });
         
         if (!color) {
             logger.warn('EffectsCoordinator', 'Cannot update parameter: no color provided', { effectType, parameter, value }, 'effects');
@@ -102,7 +108,7 @@ class EffectsCoordinator {
         const oldValue = colorEffects[effectType][parameter];
         colorEffects[effectType][parameter] = value;
         
-        console.log(`🎛️ [COORDINATOR DEBUG] Parameter updated: ${effectType}.${parameter} from ${oldValue} to ${value} for ${color}`);
+        recordCoordinatorDebug('log', `ðŸŽ›ï¸ [COORDINATOR DEBUG] Parameter updated: ${effectType}.${parameter} from ${oldValue} to ${value} for ${color}`);
         
         // Distribute to consumers with separate events
         this.notifyAudioEngine(effectType, parameter, value, color, colorEffects[effectType]);
@@ -116,7 +122,7 @@ class EffectsCoordinator {
      * Notify the audio engine of effect changes
      */
     notifyAudioEngine(effectType, parameter, value, color, fullEffectParams) {
-        console.log(`🎛️ [COORDINATOR DEBUG] Notifying audio engine:`, { effectType, parameter, value, color, fullEffectParams });
+        recordCoordinatorDebug('log', `ðŸŽ›ï¸ [COORDINATOR DEBUG] Notifying audio engine:`, { effectType, parameter, value, color, fullEffectParams });
         
         store.emit('audioEffectChanged', {
             effectType,
@@ -126,7 +132,7 @@ class EffectsCoordinator {
             effectParams: { ...fullEffectParams } // Send full effect parameters
         });
         
-        console.log(`🎛️ [COORDINATOR DEBUG] audioEffectChanged event emitted for ${effectType}.${parameter} = ${value} for ${color}`);
+        recordCoordinatorDebug('log', `ðŸŽ›ï¸ [COORDINATOR DEBUG] audioEffectChanged event emitted for ${effectType}.${parameter} = ${value} for ${color}`);
         logger.debug('EffectsCoordinator', `Notified audio engine: ${effectType}.${parameter} = ${value} for ${color}`, null, 'effects');
     }
 
@@ -233,4 +239,10 @@ class EffectsCoordinator {
 
 // Create and export singleton
 const effectsCoordinator = new EffectsCoordinator();
+
+export function getEffectsCoordinatorDebugMessages() {
+    return effectsCoordinatorDebug.slice();
+}
+
 export default effectsCoordinator;
+

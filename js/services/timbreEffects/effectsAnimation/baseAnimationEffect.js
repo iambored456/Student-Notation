@@ -1,6 +1,6 @@
-// js/services/timbreEffects/effectsAnimation/baseAnimationEffect.js
-import store from '../../../state/index.js';
-import logger from '../../../utils/logger.js';
+﻿// js/services/timbreEffects/effectsAnimation/baseAnimationEffect.js
+import store from '@state/index.js';
+import logger from '@utils/logger.js';
 
 /**
  * Base Animation Effect

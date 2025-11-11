@@ -1,5 +1,5 @@
-// js/services/timbreEffects/effectsAudio/vibratoAudioEffect.js
-import logger from '../../../utils/logger.js';
+﻿// js/services/timbreEffects/effectsAudio/vibratoAudioEffect.js
+import logger from '@utils/logger.js';
 import * as Tone from 'tone';
 
 logger.moduleLoaded('VibratoAudioEffect');
@@ -89,8 +89,8 @@ class VibratoAudioEffect {
         }
 
         // Convert percentage values to Tone.js parameters
-        const frequencyHz = (speed / 100) * 16; // 0-100% → 0-16 Hz
-        const depthCents = (span / 100) * 50; // 0-100% → 0-50 cents
+        const frequencyHz = (speed / 100) * 16; // 0-100% â†’ 0-16 Hz
+        const depthCents = (span / 100) * 50; // 0-100% â†’ 0-50 cents
         
         return {
             frequency: frequencyHz,

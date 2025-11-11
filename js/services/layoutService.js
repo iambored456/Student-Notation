@@ -1,10 +1,11 @@
-// js/services/layoutService.js
-import store from '../state/index.js';
+﻿// js/services/layoutService.js
+import store from '@state/index.js';
+import logger from '@utils/logger.js';
 import {
     DEFAULT_SCROLL_POSITION, GRID_WIDTH_RATIO,  BASE_DRUM_ROW_HEIGHT,
     DRUM_HEIGHT_SCALE_FACTOR, DRUM_ROW_COUNT, 
     MAX_ZOOM_LEVEL, MIN_ZOOM_LEVEL, ZOOM_IN_FACTOR, ZOOM_OUT_FACTOR, RESIZE_DEBOUNCE_DELAY
-} from '../core/constants.js';
+} from '@/core/constants.js';
 import { calculateColumnWidths, getColumnX as getColumnXFromColumns, getCanvasWidth as getCanvasWidthFromColumns } from './columnsLayout.js';
 
 // Pure abstract units - independent of container size
@@ -14,12 +15,13 @@ let currentZoomLevel = 1.0;
 let currentScrollPosition = DEFAULT_SCROLL_POSITION;
 
 let viewportHeight = 0;
-let /* gridContainer, */ pitchGridWrapper, canvas, ctx, drumGridWrapper, drumCanvas, drumCtx, drumPlayheadCanvas, playheadCanvas, hoverCanvas, drumHoverCanvas, pitchPaintCanvas, macrobeatToolsWrapper;
+let /* gridContainer, */ pitchGridWrapper, canvas, ctx, drumGridWrapper, drumCanvas, drumCtx, drumPlayheadCanvas, playheadCanvas, hoverCanvas, drumHoverCanvas, pitchPaintCanvas, buttonGridWrapper;
 let resizeTimeout;
 let isRecalculating = false;
 let isZooming = false;
 // let lastCalculatedWidth = 0;  // Unused variable
 let lastCalculatedDrumHeight = 0;
+let lastCalculatedButtonGridHeight = 0;
 let pendingSnapToRange = false;
 let pendingStartRow = null;
 
@@ -43,7 +45,7 @@ function getDynamicMinZoomLevel() {
 
 function initDOMElements() {
     // gridContainer = document.getElementById('grid-container');  // Unused variable
-    pitchGridWrapper = document.getElementById('pitch-grid-wrapper'); 
+    pitchGridWrapper = document.getElementById('pitch-grid-wrapper');
     canvas = document.getElementById('notation-grid');
     drumGridWrapper = document.getElementById('drum-grid-wrapper');
     drumCanvas = document.getElementById('drum-grid');
@@ -52,7 +54,7 @@ function initDOMElements() {
     hoverCanvas = document.getElementById('hover-canvas');
     drumHoverCanvas = document.getElementById('drum-hover-canvas');
     pitchPaintCanvas = document.getElementById('pitch-paint-canvas');
-    macrobeatToolsWrapper = document.getElementById('canvas-macrobeat-tools');
+    buttonGridWrapper = document.getElementById('button-grid');
     
     const canvasContainer = document.getElementById('canvas-container');
     
@@ -89,7 +91,7 @@ function recalcAndApplyLayout() {
     const enforcedMinZoom = getDynamicMinZoomLevel();
     if (currentZoomLevel < enforcedMinZoom) {
         currentZoomLevel = enforcedMinZoom;
-        console.log(`[Zoom] Enforcing minimum zoom to maintain grid height: ${Math.round(currentZoomLevel * 100)}%`);
+        logger.debug('LayoutService', `[Zoom] Enforcing minimum zoom to maintain grid height: ${Math.round(currentZoomLevel * 100)}%`, null, 'layout');
     }
     
     // const availableHeight = pitchGridContainer.clientHeight || (windowHeight * 0.7);  // Unused variable
@@ -99,7 +101,7 @@ function recalcAndApplyLayout() {
     const baseCellWidth = baseCellHeight * GRID_WIDTH_RATIO;
     const newCellHeight = baseCellHeight * currentZoomLevel;
     const newCellWidth = baseCellWidth * currentZoomLevel;
-    
+
     store.setLayoutConfig({
         cellHeight: newCellHeight,
         cellWidth: newCellWidth
@@ -118,52 +120,82 @@ function recalcAndApplyLayout() {
     const totalCanvasWidthPx = Math.round(finalCanvasWidth);
     
     const drumGridWrapper = document.getElementById('drum-grid-wrapper');
+    const gridsWrapper = document.getElementById('grids-wrapper');
     const targetWidth = totalCanvasWidthPx + 'px';
-    
+
+    // Both pitch grid and drum grid now use the same total width (unified grid system)
     if (pitchGridContainer) {
         pitchGridContainer.style.width = targetWidth;
     }
-    
+
     if (pitchGridWrapper) {
         pitchGridWrapper.style.width = targetWidth;
     }
-    
-    const drumAreaEnd = store.state.columnWidths.length - 2;
-    let drumGridWidth = 0;
-    for (let i = 0; i < drumAreaEnd; i++) {
-        drumGridWidth += (store.state.columnWidths[i] || 0) * store.state.cellWidth;
-    }
-    
-    // Calculate macrobeat tools width (excluding left side columns)
-    const macrobeatToolsStart = 2; // Skip first 2 side columns
-    const macrobeatToolsEnd = store.state.columnWidths.length - 2; // Exclude right legend columns
-    let macrobeatToolsWidth = 0;
-    for (let i = macrobeatToolsStart; i < macrobeatToolsEnd; i++) {
-        macrobeatToolsWidth += (store.state.columnWidths[i] || 0) * store.state.cellWidth;
-    }
-    
-    
+
     if (drumGridWrapper) {
-        drumGridWrapper.style.width = `${drumGridWidth}px`;
+        drumGridWrapper.style.width = targetWidth;
     }
-    
-    if (macrobeatToolsWrapper) {
-        macrobeatToolsWrapper.style.width = `${macrobeatToolsWidth}px`;
-        // Calculate the left offset to align with content columns (skip first 2 side columns)
-        const leftOffset = store.state.columnWidths.slice(0, macrobeatToolsStart).reduce((sum, w) => sum + w * store.state.cellWidth, 0);
-        macrobeatToolsWrapper.style.marginLeft = `${leftOffset}px`;
+
+    // Calculate button grid height (same as drum grid for visual consistency)
+    const buttonRowHeight = Math.max(BASE_DRUM_ROW_HEIGHT, DRUM_HEIGHT_SCALE_FACTOR * store.state.cellHeight);
+    const buttonGridHeight = DRUM_ROW_COUNT * buttonRowHeight;
+    const buttonGridHeightPx = `${buttonGridHeight}px`;
+
+    // Calculate middle cell width (excluding left and right legend columns)
+    const middleCellStart = 2; // Skip first 2 legend columns on left
+    const middleCellEnd = store.state.columnWidths.length - 2; // Exclude right legend columns
+    let middleCellWidth = 0;
+    for (let i = middleCellStart; i < middleCellEnd; i++) {
+        middleCellWidth += (store.state.columnWidths[i] || 0) * store.state.cellWidth;
     }
-    
-    
-    [canvas, playheadCanvas, hoverCanvas, pitchPaintCanvas].forEach(c => { 
-        if(c && Math.abs(c.width - totalCanvasWidthPx) > 1) { 
-            c.width = totalCanvasWidthPx; 
+
+    // Set widths and heights for the three-cell button grid structure
+    if (buttonGridWrapper) {
+        const leftCell = buttonGridWrapper.querySelector('.button-grid-left-cell');
+        const middleCell = buttonGridWrapper.querySelector('.button-grid-middle-cell');
+        const rightCell = buttonGridWrapper.querySelector('.button-grid-right-cell');
+
+        // Calculate left legend width (first 2 columns)
+        const leftCellWidth = store.state.columnWidths.slice(0, 2).reduce((sum, w) => sum + w * store.state.cellWidth, 0);
+
+        // Calculate right legend width (last 2 columns)
+        const rightCellWidth = store.state.columnWidths.slice(-2).reduce((sum, w) => sum + w * store.state.cellWidth, 0);
+
+        const buttonGridHeightChanged = Math.abs(lastCalculatedButtonGridHeight - buttonGridHeight) > 5;
+        const shouldUpdateButtonGridHeight = buttonGridHeightChanged || lastCalculatedButtonGridHeight === 0;
+
+        if (shouldUpdateButtonGridHeight) {
+            buttonGridWrapper.style.height = buttonGridHeightPx;
+            lastCalculatedButtonGridHeight = buttonGridHeight;
+        }
+
+        if (leftCell) {
+            leftCell.style.width = `${leftCellWidth}px`;
+            leftCell.style.height = buttonGridHeightPx;
+        }
+
+        if (middleCell) {
+            middleCell.style.width = `${middleCellWidth}px`;
+            middleCell.style.height = buttonGridHeightPx;
+        }
+
+        if (rightCell) {
+            rightCell.style.width = `${rightCellWidth}px`;
+            rightCell.style.height = buttonGridHeightPx;
+        }
+
+    }
+
+    // Both pitch and drum canvases now use the same unified width
+    [canvas, playheadCanvas, hoverCanvas, pitchPaintCanvas].forEach(c => {
+        if(c && Math.abs(c.width - totalCanvasWidthPx) > 1) {
+            c.width = totalCanvasWidthPx;
         }
     });
-    
-    [drumCanvas, drumPlayheadCanvas, drumHoverCanvas].forEach(c => { 
-        if(c && Math.abs(c.width - drumGridWidth) > 1) { 
-            c.width = drumGridWidth; 
+
+    [drumCanvas, drumPlayheadCanvas, drumHoverCanvas].forEach(c => {
+        if(c && Math.abs(c.width - totalCanvasWidthPx) > 1) {
+            c.width = totalCanvasWidthPx;
         }
     });
     
@@ -295,7 +327,7 @@ const LayoutService = {
         }
         isZooming = true;
         currentZoomLevel = Math.min(MAX_ZOOM_LEVEL, currentZoomLevel * ZOOM_IN_FACTOR);
-        console.log(`[Zoom] Zoom level: ${Math.round(currentZoomLevel * 100)}%`);
+        logger.debug('LayoutService', `[Zoom] Zoom level: ${Math.round(currentZoomLevel * 100)}%`, null, 'layout');
         
         // Double RAF to ensure DOM has settled after zoom
         requestAnimationFrame(() => {
@@ -317,10 +349,10 @@ const LayoutService = {
         const targetZoom = Math.max(MIN_ZOOM_LEVEL, currentZoomLevel * ZOOM_OUT_FACTOR);
         const clampedZoom = Math.max(minZoomLevel, targetZoom);
         if (clampedZoom !== targetZoom) {
-            console.log(`[Zoom] Minimum zoom reached; clamping to ${Math.round(clampedZoom * 100)}%`);
+            logger.debug('LayoutService', `[Zoom] Minimum zoom reached; clamping to ${Math.round(clampedZoom * 100)}%`, null, 'layout');
         }
         currentZoomLevel = clampedZoom;
-        console.log(`[Zoom] Zoom level: ${Math.round(currentZoomLevel * 100)}%`);
+        logger.debug('LayoutService', `[Zoom] Zoom level: ${Math.round(currentZoomLevel * 100)}%`, null, 'layout');
         
         // Double RAF to ensure DOM has settled after zoom
         requestAnimationFrame(() => {
@@ -338,7 +370,7 @@ const LayoutService = {
         }
         isZooming = true;
         currentZoomLevel = 1.0;
-        console.log('[Zoom] Zoom level reset to 100%');
+        logger.debug('LayoutService', '[Zoom] Zoom level reset to 100%', null, 'layout');
         
         // Double RAF to ensure DOM has settled after zoom
         requestAnimationFrame(() => {
@@ -365,9 +397,9 @@ const LayoutService = {
         isZooming = true;
         currentZoomLevel = targetZoom;
         if (enforcedMinZoom > MAX_ZOOM_LEVEL + 0.0001) {
-            console.log(`[Zoom] Snap zoom limited by MAX_ZOOM_LEVEL (${Math.round(MAX_ZOOM_LEVEL * 100)}%)`);
+            logger.debug('LayoutService', `[Zoom] Snap zoom limited by MAX_ZOOM_LEVEL (${Math.round(MAX_ZOOM_LEVEL * 100)}%)`, null, 'layout');
         } else if (zoomChanged) {
-            console.log(`[Zoom] Snap zoom to range: ${Math.round(currentZoomLevel * 100)}%`);
+            logger.debug('LayoutService', `[Zoom] Snap zoom to range: ${Math.round(currentZoomLevel * 100)}%`, null, 'layout');
         }
 
         requestAnimationFrame(() => {
@@ -504,3 +536,5 @@ const LayoutService = {
 };
 
 export default LayoutService;
+
+

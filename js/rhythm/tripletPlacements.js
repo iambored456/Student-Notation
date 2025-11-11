@@ -1,7 +1,7 @@
 // js/rhythm/tripletPlacements.js
 import { getTripletStampById, GROUP_WIDTH_CELLS } from './triplets.js';
-import store from '../state/index.js';
-import logger from '../utils/logger.js';
+import store from '@state/index.js';
+import logger from '@utils/logger.js';
 
 logger.moduleLoaded('TripletPlacements', 'triplets');
 

@@ -1,9 +1,9 @@
 // js/services/columnsLayout.js
 import {
     SIDE_COLUMN_WIDTH, BEAT_COLUMN_WIDTH
-} from '../core/constants.js';
-import { getPlacedTonicSigns } from '../state/selectors.js';
-import logger from '../utils/logger.js';
+} from '@/core/constants.js';
+import { getPlacedTonicSigns } from '@state/selectors.js';
+import logger from '@utils/logger.js';
 
 /**
  * Calculates column widths dynamically based on tonic signs placement and macrobeat groupings

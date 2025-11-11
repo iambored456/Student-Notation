@@ -1,5 +1,5 @@
-// js/services/timbreEffects/effectsAudio/delayAudioEffect.js
-import logger from '../../../utils/logger.js';
+﻿// js/services/timbreEffects/effectsAudio/delayAudioEffect.js
+import logger from '@utils/logger.js';
 import * as Tone from 'tone';
 
 logger.moduleLoaded('DelayAudioEffect');
@@ -128,9 +128,9 @@ class DelayAudioEffect {
         }
 
         // Convert percentage values to Tone.js parameters
-        const delayTime = Math.max(0.01, (time / 100) * 0.5); // 0-100% → 0.01-0.5 seconds (min 0.01 to avoid issues)
-        const feedbackAmount = Math.min(0.95, feedback / 100); // 0-100% → 0-0.95 (max 0.95 to avoid feedback loops)
-        const wetAmount = wet / 100; // 0-100% → 0-1
+        const delayTime = Math.max(0.01, (time / 100) * 0.5); // 0-100% â†’ 0.01-0.5 seconds (min 0.01 to avoid issues)
+        const feedbackAmount = Math.min(0.95, feedback / 100); // 0-100% â†’ 0-0.95 (max 0.95 to avoid feedback loops)
+        const wetAmount = wet / 100; // 0-100% â†’ 0-1
         
         // Use Tone.FeedbackDelay's built-in wet/dry mixing (same as Tone.Reverb)
         // DO NOT connect here - audioEffectsManager will connect it in the effects chain
@@ -183,9 +183,9 @@ class DelayAudioEffect {
             return null;
         }
 
-        const delayTime = Math.max(0.01, (time / 100) * 0.5); // 0-100% → 0.01-0.5 seconds
-        const feedbackAmount = Math.min(0.95, feedback / 100); // 0-100% → 0-0.95
-        const wetAmount = wet / 100; // 0-100% → 0-1
+        const delayTime = Math.max(0.01, (time / 100) * 0.5); // 0-100% â†’ 0.01-0.5 seconds
+        const feedbackAmount = Math.min(0.95, feedback / 100); // 0-100% â†’ 0-0.95
+        const wetAmount = wet / 100; // 0-100% â†’ 0-1
         
         return {
             delayTime: delayTime,

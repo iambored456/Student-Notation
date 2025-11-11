@@ -1,8 +1,9 @@
 // js/services/printService.js
-import store from '../state/index.js';
-import { getPlacedTonicSigns } from '../state/selectors.js';
-import { drawPitchGrid } from '../components/Canvas/PitchGrid/renderers/pitchGridRenderer.js';
-import { drawDrumGrid } from '../components/Canvas/DrumGrid/drumGridRenderer.js';
+import store from '@state/index.js';
+import { getPlacedTonicSigns } from '@state/selectors.js';
+import { drawPitchGrid } from '@components/canvas/pitchGrid/renderers/pitchGridRenderer.js';
+import { drawDrumGrid } from '@components/canvas/drumGrid/drumGridRenderer.js';
+import logger from '@utils/logger.js';
 
 
 // NEW HELPER FUNCTION FOR RENDERING PAINT TRAILS
@@ -97,7 +98,7 @@ function generateScoreCanvas(printOptions, targetDimensions) {
 
     // MODIFICATION: Render Paint Layer
     if (mainState.paint && mainState.paint.paintHistory.length > 0) {
-        console.log(`[PrintService] Found ${mainState.paint.paintHistory.length} paint points to print.`);
+        logger.debug('PrintService', `Found ${mainState.paint.paintHistory.length} paint points to print.`, null, 'print');
         
         const paintCanvasForPrint = document.createElement('canvas');
         paintCanvasForPrint.width = contentWidth;
@@ -123,7 +124,7 @@ function generateScoreCanvas(printOptions, targetDimensions) {
         });
         
         ctx.drawImage(paintCanvasForPrint, 0, 0);
-        console.log('[PrintService] Paint trail has been rendered for printing.');
+        logger.debug('PrintService', 'Paint trail rendered for printing.', null, 'print');
     }
 
     if (printOptions.includeDrums) {

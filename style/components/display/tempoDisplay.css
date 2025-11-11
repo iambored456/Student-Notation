@@ -25,9 +25,9 @@
 
 .tempo-container {
     display: grid;
-    grid-template-columns: 1fr auto;
+    grid-template-columns: minmax(0, 1fr) auto;
     grid-template-rows: 1fr;
-    gap: var(--space-0);
+    gap: var(--space-035);
     background-color: transparent;
     border: none;
     padding: 0 var(--space-015);
@@ -40,20 +40,34 @@
     align-items: stretch;
 }
 
-.tempo-column {
+.tempo-boxes-container {
     display: flex;
-    flex-direction: row;
+    flex-direction: column;
     justify-content: flex-start;
-    align-items: center;
-    gap: var(--space-035);
+    gap: var(--space-020);
     grid-column: 1;
     grid-row: 1;
     height: 100%;
     max-height: 100%;
+    padding: var(--space-010) 0;
+}
+
+.tempo-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-015);
+    width: 100%;
+    padding: var(--space-015);
+    background-color: var(--c-surface-muted);
+    border: 1px solid var(--c-border);
+    border-radius: var(--border-radius-sm);
+    box-shadow: var(--box-shadow-sm);
 }
 
 .tempo-column-2 {
     display: flex;
+    flex-direction: column;
     justify-content: center;
     align-items: stretch;
     grid-column: 2;
@@ -64,7 +78,7 @@
     max-height: 100%;
     min-height: 0;
     overflow: hidden;
-    padding: 0rem;
+    padding: var(--space-010) 0;
 }
 
 .tempo-input-group {
@@ -72,6 +86,8 @@
     flex-direction: row;
     align-items: center;
     gap: var(--space-015);
+    width: 100%;
+    justify-content: space-between;
 }
 
 .tempo-tab-panel .tempo-content-box {

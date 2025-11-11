@@ -1,5 +1,6 @@
 // js/services/canvasContextService.js
 
+import logger from '@utils/logger.js';
 
 let pitchContext = null;
 let drumContext = null;
@@ -23,7 +24,7 @@ const CanvasContextService = {
      */
     getPitchContext() {
         if (!pitchContext) {
-            console.error("CanvasContextService: Pitch context requested before it was set.");
+            logger.error('CanvasContextService', 'Pitch context requested before it was set.', null, 'canvas');
         }
         return pitchContext;
     },
@@ -34,7 +35,7 @@ const CanvasContextService = {
      */
     getDrumContext() {
         if (!drumContext) {
-            console.error("CanvasContextService: Drum context requested before it was set.");
+            logger.error('CanvasContextService', 'Drum context requested before it was set.', null, 'canvas');
         }
         return drumContext;
     }

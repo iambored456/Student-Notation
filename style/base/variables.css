@@ -18,6 +18,7 @@
   --c-accent-hover: #3b78bb;    /* Accent hover / pressed */
   --c-accent-light: #63a9fd;    /* Subtle accent highlight */
   --c-accent-rgb: 74, 144, 226; /* Accent in rgb for box-shadows */
+  --c-accent-general: #ffc107;  /* General accent for toggleable UI elements */
 
   /* Spacing Scale */
   --space-0: 0rem;

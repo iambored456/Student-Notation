@@ -23,6 +23,7 @@ class LoadingManager {
             icons: new Map(),
             modules: new Map()
         };
+        this.diagnostics = [];
     }
 
     /**
@@ -101,6 +102,22 @@ class LoadingManager {
     }
 
     /**
+     * Record a diagnostic message for later inspection
+     */
+    recordDiagnostic(level, message, data = null) {
+        this.diagnostics.push({
+            level,
+            message,
+            data,
+            timestamp: Date.now()
+        });
+    }
+
+    getDiagnostics() {
+        return [...this.diagnostics];
+    }
+
+    /**
      * Preload font
      */
     async preloadFont(fontFamily, url, weight = 'normal', style = 'normal') {
@@ -117,7 +134,7 @@ class LoadingManager {
             this.cache.fonts.set(cacheKey, loadedFont);
             return loadedFont;
         } catch (error) {
-            console.warn(`Failed to preload font ${fontFamily}:`, error);
+            this.recordDiagnostic('warn', `Failed to preload font ${fontFamily}`, error);
             return null;
         }
     }
@@ -137,7 +154,7 @@ class LoadingManager {
                 resolve(img);
             };
             img.onerror = () => {
-                console.warn(`Failed to preload image: ${url}`);
+                this.recordDiagnostic('warn', `Failed to preload image: ${url}`);
                 resolve(null); // Don't reject, just continue
             };
             img.src = url;
@@ -154,17 +171,17 @@ class LoadingManager {
         resources.push(
             this.preloadFont(
                 'Atkinson Hyperlegible',
-                '../../fonts/AtkinsonHyperlegibleNext-Regular.otf'
+                '../../fonts/atkinsonHyperlegibleNextRegular.otf'
             )
         );
 
         // Preload critical icons
         const criticalIcons = [
-            '/assets/icons/Play.svg',
-            '/assets/icons/Pause.svg',
-            '/assets/icons/Stop.svg',
-            '/assets/icons/Settings_optimized.svg',
-            '/assets/icons/Volume_optimized.svg'
+            '/assets/icons/play.svg',
+            '/assets/icons/pause.svg',
+            '/assets/icons/stop.svg',
+            '/assets/icons/settings.svg',
+            '/assets/icons/volume.svg'
         ];
 
         resources.push(...criticalIcons.map(url => this.preloadImage(url)));
@@ -176,7 +193,7 @@ class LoadingManager {
                 new Promise(resolve => setTimeout(resolve, 3000)) // 3s timeout
             ]);
         } catch (error) {
-            console.warn('Some resources failed to preload:', error);
+            this.recordDiagnostic('warn', 'Some resources failed to preload', error);
         }
     }
 
@@ -194,7 +211,7 @@ class LoadingManager {
 
             return Tone;
         } catch (error) {
-            console.error('Failed to initialize audio context:', error);
+            this.recordDiagnostic('error', 'Failed to initialize audio context', error);
             throw error;
         }
     }
@@ -225,7 +242,7 @@ class LoadingManager {
             this.initialized = true;
 
         } catch (error) {
-            console.error('[LOADING] Resource preloading failed:', error);
+            this.recordDiagnostic('error', '[LOADING] Resource preloading failed', error);
             this.showError(error);
             throw error;
         }

@@ -1,4 +1,4 @@
-
+﻿
 /**
  * Centralized logging system for Student Notation
  * 
@@ -64,7 +64,6 @@ class Logger {
         categoryNames.forEach(name => {
             if (this.categories.hasOwnProperty(name)) {
                 this.categories[name] = true;
-                console.log(`[Logger] Enabled category: ${name}`);
             }
         });
     }
@@ -77,7 +76,6 @@ class Logger {
         categoryNames.forEach(name => {
             if (this.categories.hasOwnProperty(name)) {
                 this.categories[name] = false;
-                console.log(`[Logger] Disabled category: ${name}`);
             }
         });
     }
@@ -90,7 +88,6 @@ class Logger {
             this.categories[key] = true;
         });
         this.setLevel('DEBUG');
-        console.log(`[Logger] All categories enabled`);
     }
 
     /**
@@ -101,7 +98,6 @@ class Logger {
             this.categories[key] = false;
         });
         this.setLevel('ERROR');
-        console.log(`[Logger] All categories disabled`);
     }
 
     /**
@@ -146,7 +142,6 @@ class Logger {
      */
     moduleLoaded(componentName, category = 'general') {
         if (!this.enabledLevels.INFO || !this.isCategoryEnabled(category)) return;
-        console.log(`${componentName}: Module loaded.`);
     }
 
     /**
@@ -156,7 +151,6 @@ class Logger {
      */
     initStart(componentName, category = 'initialization') {
         if (!this.enabledLevels.INFO || !this.isCategoryEnabled(category)) return;
-        console.log(`Main.js: Initializing ${componentName}...`);
     }
 
     /**
@@ -166,7 +160,6 @@ class Logger {
      */
     initSuccess(componentName, category = 'initialization') {
         if (!this.enabledLevels.INFO || !this.isCategoryEnabled(category)) return;
-        console.log(`Main.js: ${componentName} initialized successfully.`);
     }
 
     /**
@@ -178,7 +171,6 @@ class Logger {
     initFailed(componentName, reason = '', category = 'initialization') {
         if (!this.enabledLevels.WARN || !this.isCategoryEnabled(category)) return;
         const message = reason ? ` (${reason})` : '';
-        console.warn(`Main.js: ${componentName} failed to initialize${message}.`);
     }
 
     /**
@@ -188,9 +180,6 @@ class Logger {
      */
     section(title, category = 'general') {
         if (!this.enabledLevels.INFO || !this.isCategoryEnabled(category)) return;
-        console.log('========================================');
-        console.log(title);
-        console.log('========================================');
     }
 
     /**
@@ -204,7 +193,6 @@ class Logger {
         if (!this.enabledLevels.INFO || !this.isCategoryEnabled(category)) return;
         const formattedComponent = this.formatComponent(component);
         const message = details ? `${event}. ${details}` : event;
-        console.log(`${formattedComponent} ${message}`);
     }
 
     /**
@@ -219,9 +207,7 @@ class Logger {
         const formattedComponent = this.formatComponent(component);
         if (data) {
             const dataStr = typeof data === 'object' ? JSON.stringify(data) : String(data);
-            console.log(`${formattedComponent} ${description}: ${dataStr}`);
         } else {
-            console.log(`${formattedComponent} ${description}`);
         }
     }
 
@@ -237,9 +223,7 @@ class Logger {
         const formattedComponent = this.formatComponent(component);
         if (data) {
             const dataStr = typeof data === 'object' ? JSON.stringify(data) : String(data);
-            console.log(`${formattedComponent} ${action}: ${dataStr}`);
         } else {
-            console.log(`${formattedComponent} ${action}`);
         }
     }
 
@@ -261,7 +245,6 @@ class Logger {
                 return `${key}=${value}`;
             })
             .join(', ');
-        console.log(`${formattedComponent} ${operation}: ${metricsStr}`);
     }
 
     /**
@@ -275,9 +258,7 @@ class Logger {
         if (!this.enabledLevels.WARN || !this.isCategoryEnabled(category)) return;
         const formattedComponent = this.formatComponent(component);
         if (data) {
-            console.warn(`${formattedComponent} ${message}`, data);
         } else {
-            console.warn(`${formattedComponent} ${message}`);
         }
     }
 
@@ -292,9 +273,7 @@ class Logger {
         if (!this.enabledLevels.ERROR) return;
         const formattedComponent = this.formatComponent(component);
         if (error) {
-            console.error(`${formattedComponent} ${message}`, error);
         } else {
-            console.error(`${formattedComponent} ${message}`);
         }
     }
 
@@ -309,9 +288,7 @@ class Logger {
         if (!this.enabledLevels.INFO || !this.isCategoryEnabled(category)) return;
         const formattedComponent = this.formatComponent(component);
         if (data) {
-            console.log(`${formattedComponent} ${message}`, data);
         } else {
-            console.log(`${formattedComponent} ${message}`);
         }
     }
 

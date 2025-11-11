@@ -1,0 +1,42 @@
+/* Button-grid accidental buttons (♭, ♯, Hz) - overrides harmonyButtons.css */
+/* These buttons are in the button-grid's left cell, distinct from harmony panel buttons */
+
+.button-grid-left-cell .accidental-button,
+#button-grid .accidental-button,
+#accidental-controls-container-v2 .accidental-button {
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
+  color: var(--c-text);
+  font-size: var(--font-size-base);
+  padding: var(--space-020) var(--space-035);
+  border-radius: var(--border-radius-sm);
+  cursor: pointer;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--box-shadow-sm);
+  transition: background-color 0.2s ease;
+  flex: 1 1 0;
+  min-width: 50px;
+  min-height: 0;
+  width: auto;
+  height: auto;
+  opacity: 0.6;
+}
+
+.button-grid-left-cell .accidental-button:hover,
+#button-grid .accidental-button:hover,
+#accidental-controls-container-v2 .accidental-button:hover {
+  background-color: var(--c-surface-muted);
+  opacity: 0.8;
+}
+
+.button-grid-left-cell .accidental-button.active,
+#button-grid .accidental-button.active,
+#accidental-controls-container-v2 .accidental-button.active {
+  background-color: var(--c-accent-general);
+  color: var(--c-text);
+  border-color: var(--c-accent-general);
+  opacity: 1.0;
+}

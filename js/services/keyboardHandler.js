@@ -1,6 +1,6 @@
 // js/services/keyboardHandler.js
-import store from '../state/index.js';
-import logger from '../utils/logger.js';
+import store from '@state/index.js';
+import logger from '@utils/logger.js';
 
 logger.moduleLoaded('KeyboardHandler', 'keyboard');
 export function initKeyboardHandler() {

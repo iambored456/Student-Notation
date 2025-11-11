@@ -1,6 +1,6 @@
-// js/services/timbreEffects/effectsAnimation/tremoloWaveformEffect.js
+﻿// js/services/timbreEffects/effectsAnimation/tremoloWaveformEffect.js
 import BaseAnimationEffect from './baseAnimationEffect.js';
-import logger from '../../../utils/logger.js';
+import logger from '@utils/logger.js';
 
 logger.moduleLoaded('TremoloWaveformEffect');
 
@@ -11,8 +11,8 @@ logger.moduleLoaded('TremoloWaveformEffect');
  * - ADSR Attack and Sustain nodes (amplitude-based nodes)
  * 
  * Tremolo Behavior:
- * - Speed: 0-100% → 0-16 Hz oscillation frequency
- * - Span: 0-100% → amplitude reduction from full (1.0) to zero (0.0)
+ * - Speed: 0-100% â†’ 0-16 Hz oscillation frequency
+ * - Span: 0-100% â†’ amplitude reduction from full (1.0) to zero (0.0)
  * - Triggers: Only during spacebar, note placement, transport playback
  * - Independent per color with synchronized start
  * 
@@ -80,7 +80,7 @@ class TremoloWaveformEffect extends BaseAnimationEffect {
         this.animations.forEach((animation, color) => {
             const deltaTime = (toneTime - animation.lastUpdate) / 1000; // Convert to seconds
             const oldPhase = animation.phase;
-            animation.phase += animation.frequency * deltaTime * 2 * Math.PI; // 2π for full cycle
+            animation.phase += animation.frequency * deltaTime * 2 * Math.PI; // 2Ï€ for full cycle
             animation.lastUpdate = toneTime;
             updatedCount++;
             
@@ -115,14 +115,14 @@ class TremoloWaveformEffect extends BaseAnimationEffect {
      * Get the current amplitude multiplier for a note based on tremolo animation
      *
      * Tremolo oscillates amplitude reduction:
-     * - Span = 0% → No reduction (multiplier stays at 1.0)
-     * - Span = 100% → Full reduction (multiplier oscillates 1.0 to 0.0)
+     * - Span = 0% â†’ No reduction (multiplier stays at 1.0)
+     * - Span = 100% â†’ Full reduction (multiplier oscillates 1.0 to 0.0)
      * - The oscillation range is proportional to span
      *
      * Example: Span = 50%
      * - Center = 0.75 (midpoint between 1.0 and 0.5)
      * - Range = 0.25 (half of the reduction)
-     * - Oscillation = 0.75 ± 0.25 = 0.5 to 1.0
+     * - Oscillation = 0.75 Â± 0.25 = 0.5 to 1.0
      */
     getTremoloAmplitudeMultiplier(color) {
         const animation = this.animations.get(color);
@@ -144,14 +144,14 @@ class TremoloWaveformEffect extends BaseAnimationEffect {
 
         // Tremolo amplitude calculation (fixed direction):
         // maxima = originalAmplitude (full amplitude)
-        // minima = originalAmplitude × (1 - depthPercentage) (reduced by span)
+        // minima = originalAmplitude Ã— (1 - depthPercentage) (reduced by span)
         // centroid = (maxima + minima) / 2
         const maxima = originalAmplitude;
         const minima = originalAmplitude * (1.0 - depthPercentage); // Fixed: span reduces amplitude
         const centroid = (maxima + minima) / 2;
         const oscillationRange = (maxima - minima) / 2;
 
-        // Current oscillated amplitude: centroid ± oscillationRange
+        // Current oscillated amplitude: centroid Â± oscillationRange
         const currentAmplitude = centroid + (oscillation * oscillationRange);
 
         // Return multiplier relative to original amplitude

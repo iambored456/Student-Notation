@@ -12,9 +12,9 @@ export const ANACRUSIS_OFF_STYLES = [
 
 export function getInitialRhythmState() {
     return {
-        hasAnacrusis: true,
-        macrobeatGroupings: [...ANACRUSIS_ON_GROUPINGS],
-        macrobeatBoundaryStyles: [...ANACRUSIS_ON_STYLES],
+        hasAnacrusis: false,
+        macrobeatGroupings: [...ANACRUSIS_OFF_GROUPINGS],
+        macrobeatBoundaryStyles: [...ANACRUSIS_OFF_STYLES],
         baseMicrobeatPx: 40, // Base pixels per microbeat (will be calculated from cellWidth)
         modulationMarkers: [], // Array of ModulationMarker objects
     };

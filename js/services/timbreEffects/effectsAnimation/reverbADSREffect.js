@@ -1,6 +1,6 @@
-// js/services/timbreEffects/effectsAnimation/reverbADSREffect.js
+﻿// js/services/timbreEffects/effectsAnimation/reverbADSREffect.js
 import BaseAnimationEffect from './baseAnimationEffect.js';
-import logger from '../../../utils/logger.js';
+import logger from '@utils/logger.js';
 
 logger.moduleLoaded('ReverbADSREffect');
 

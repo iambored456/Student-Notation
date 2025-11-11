@@ -1,8 +1,14 @@
-// js/rhythm/modulationTest.js
+﻿// js/rhythm/modulationTest.js
 // Simple test functions for modulation feature
 
-import store from '../state/index.js';
+import store from '@state/index.js';
 import { MODULATION_RATIOS } from './modulationMapping.js';
+
+const modulationTestMessages = [];
+
+function recordDebug(...args) {
+    modulationTestMessages.push(args);
+}
 
 // Test functions for modulation markers
 export const ModulationTest = {
@@ -11,9 +17,9 @@ export const ModulationTest = {
      */
     enableModulationTool() {
         store.setSelectedTool('modulation');
-        console.log('[MODULATION TEST] Modulation tool enabled. Click on the grid to place markers.');
-        console.log('[MODULATION TEST] Click marker labels to toggle 2:3 ↔ 3:2');
-        console.log('[MODULATION TEST] Drag marker barlines to move them');
+        recordDebug('[MODULATION TEST] Modulation tool enabled. Click on the grid to place markers.');
+        recordDebug('[MODULATION TEST] Click marker labels to toggle 2:3 â†” 3:2');
+        recordDebug('[MODULATION TEST] Drag marker barlines to move them');
     },
 
     /**
@@ -26,7 +32,7 @@ export const ModulationTest = {
         const measureIndex = this.findMeasureIndexForX(gridInfo.x);
         
         const markerId = store.addModulationMarker(measureIndex, MODULATION_RATIOS.COMPRESSION_2_3, gridInfo.x, gridInfo.columnIndex);
-        console.log('[MODULATION TEST] Added test marker at measure', measureIndex, 'columnIndex=', gridInfo.columnIndex, 'x=', gridInfo.x, '(snapped from', targetX, ')');
+        recordDebug('[MODULATION TEST] Added test marker at measure', measureIndex, 'columnIndex=', gridInfo.columnIndex, 'x=', gridInfo.x, '(snapped from', targetX, ')');
         return markerId;
     },
 
@@ -40,7 +46,7 @@ export const ModulationTest = {
         const measureIndex = this.findMeasureIndexForX(gridInfo.x);
         
         const markerId = store.addModulationMarker(measureIndex, MODULATION_RATIOS.EXPANSION_3_2, gridInfo.x, gridInfo.columnIndex);
-        console.log('[MODULATION TEST] Added test marker 2 at measure', measureIndex, 'columnIndex=', gridInfo.columnIndex, 'x=', gridInfo.x, '(snapped from', targetX, ')');
+        recordDebug('[MODULATION TEST] Added test marker 2 at measure', measureIndex, 'columnIndex=', gridInfo.columnIndex, 'x=', gridInfo.x, '(snapped from', targetX, ')');
         return markerId;
     },
 
@@ -67,7 +73,7 @@ export const ModulationTest = {
             currentX += columnWidth * state.cellWidth;
         }
         
-        console.log('[MODULATION TEST] findNearestGridLine:', {
+        recordDebug('[MODULATION TEST] findNearestGridLine:', {
             targetX,
             closestColumnIndex,
             closestX,
@@ -96,7 +102,7 @@ export const ModulationTest = {
         markers.forEach(marker => {
             store.removeModulationMarker(marker.id);
         });
-        console.log('[MODULATION TEST] Cleared all markers');
+        recordDebug('[MODULATION TEST] Cleared all markers');
     },
 
     /**
@@ -104,20 +110,20 @@ export const ModulationTest = {
      */
     testMapping() {
         const basePx = store.state.baseMicrobeatPx || store.state.cellWidth || 40;
-        console.log('[MODULATION TEST] Base microbeat pixels:', basePx);
-        console.log('[MODULATION TEST] Modulation markers:', store.state.modulationMarkers);
+        recordDebug('[MODULATION TEST] Base microbeat pixels:', basePx);
+        recordDebug('[MODULATION TEST] Modulation markers:', store.state.modulationMarkers);
         
         // Test some coordinate conversions
         if (window.getModulationMapping) {
             const mapping = window.getModulationMapping();
-            console.log('[MODULATION TEST] Coordinate mapping:', mapping);
+            recordDebug('[MODULATION TEST] Coordinate mapping:', mapping);
             
             // Test specific coordinates
             const testPoints = [0, 100, 200, 300, 400, 500];
             testPoints.forEach(x => {
                 const microbeat = mapping.canvasXToMicrobeat(x);
                 const backToX = mapping.microbeatToCanvasX(microbeat);
-                console.log(`[MODULATION TEST] x=${x} → microbeat=${microbeat.toFixed(3)} → x=${backToX.toFixed(1)}`);
+                recordDebug(`[MODULATION TEST] x=${x} â†’ microbeat=${microbeat.toFixed(3)} â†’ x=${backToX.toFixed(1)}`);
             });
         }
     },
@@ -126,25 +132,25 @@ export const ModulationTest = {
      * Test visual grid expansion after adding markers
      */
     testVisualExpansion() {
-        console.log('[MODULATION TEST] Testing visual grid expansion...');
+        recordDebug('[MODULATION TEST] Testing visual grid expansion...');
         
         // Clear any existing markers
         this.clearAllMarkers();
         
         // Add a 3:2 expansion marker at x=400
         const marker1 = this.addTestMarker2(); // 3:2 at x=400
-        console.log('[MODULATION TEST] Added 3:2 expansion marker:', marker1);
+        recordDebug('[MODULATION TEST] Added 3:2 expansion marker:', marker1);
         
         // Force layout recalculation and re-render
         if (typeof window !== 'undefined' && window.LayoutService) {
-            console.log('[MODULATION TEST] Manually triggering layout recalculation...');
+            recordDebug('[MODULATION TEST] Manually triggering layout recalculation...');
             window.LayoutService.recalculateLayout();
         }
         
         setTimeout(() => {
-            console.log('[MODULATION TEST] Grid should now show expansion after x=400');
-            console.log('[MODULATION TEST] Container should be wider to accommodate expansion');
-            console.log('[MODULATION TEST] Check console for [LAYOUT], [GETCOLX], [GRIDLINES], and [NOTES] logs');
+            recordDebug('[MODULATION TEST] Grid should now show expansion after x=400');
+            recordDebug('[MODULATION TEST] Container should be wider to accommodate expansion');
+            recordDebug('[MODULATION TEST] Check console for [LAYOUT], [GETCOLX], [GRIDLINES], and [NOTES] logs');
         }, 100);
     },
 
@@ -152,25 +158,25 @@ export const ModulationTest = {
      * Test visual grid compression after adding markers
      */
     testVisualCompression() {
-        console.log('[MODULATION TEST] Testing visual grid compression...');
+        recordDebug('[MODULATION TEST] Testing visual grid compression...');
         
         // Clear any existing markers
         this.clearAllMarkers();
         
         // Add a 2:3 compression marker at x=200
         const marker1 = this.addTestMarker(); // 2:3 at x=200
-        console.log('[MODULATION TEST] Added 2:3 compression marker:', marker1);
+        recordDebug('[MODULATION TEST] Added 2:3 compression marker:', marker1);
         
         // Force layout recalculation and re-render
         if (typeof window !== 'undefined' && window.LayoutService) {
-            console.log('[MODULATION TEST] Manually triggering layout recalculation...');
+            recordDebug('[MODULATION TEST] Manually triggering layout recalculation...');
             window.LayoutService.recalculateLayout();
         }
         
         setTimeout(() => {
-            console.log('[MODULATION TEST] Grid should now show compression after x=200');
-            console.log('[MODULATION TEST] Container should adjust to accommodate compression');
-            console.log('[MODULATION TEST] Check console for [LAYOUT], [GETCOLX], [GRIDLINES], and [NOTES] logs');
+            recordDebug('[MODULATION TEST] Grid should now show compression after x=200');
+            recordDebug('[MODULATION TEST] Container should adjust to accommodate compression');
+            recordDebug('[MODULATION TEST] Check console for [LAYOUT], [GETCOLX], [GRIDLINES], and [NOTES] logs');
         }, 100);
     },
 
@@ -178,7 +184,7 @@ export const ModulationTest = {
      * Log current state for debugging
      */
     logState() {
-        console.log('[MODULATION TEST] Current state:', {
+        recordDebug('[MODULATION TEST] Current state:', {
             selectedTool: store.state.selectedTool,
             modulationMarkers: store.state.modulationMarkers,
             baseMicrobeatPx: store.state.baseMicrobeatPx,
@@ -190,6 +196,8 @@ export const ModulationTest = {
 // Expose to global for console access
 if (typeof window !== 'undefined') {
     window.ModulationTest = ModulationTest;
+    window.ModulationTestLogs = modulationTestMessages;
 }
 
 export default ModulationTest;
+

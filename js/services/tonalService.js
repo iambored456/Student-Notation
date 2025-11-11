@@ -1,6 +1,6 @@
-// js/services/tonalService.js
+﻿// js/services/tonalService.js
 import { Note, Interval, Scale, Chord, RomanNumeral, Progression } from 'tonal';
-import { getKeyContextForColumn } from '../state/selectors.js';
+import { getKeyContextForColumn } from '@state/selectors.js';
 
 
 function formatInterval(interval) {
@@ -10,8 +10,8 @@ function formatInterval(interval) {
     let prefix = '';
     const alt = details.alt;
     const num = Math.abs(details.num);
-    if (alt < 0) prefix = '♭'.repeat(Math.abs(alt));
-    else if (alt > 0) prefix = '♯'.repeat(alt);
+    if (alt < 0) prefix = 'â™­'.repeat(Math.abs(alt));
+    else if (alt > 0) prefix = 'â™¯'.repeat(alt);
     return `${prefix}${num}`;
 }
 
@@ -21,16 +21,16 @@ function getEnharmonicDegree(degreeStr) {
     
     // Mapping of enharmonic equivalents for scale degrees
     const enharmonicMap = {
-        '♯1': '♭2',
-        '♭2': '♯1',
-        '♯2': '♭3',
-        '♭3': '♯2',
-        '♯4': '♭5',
-        '♭5': '♯4',
-        '♯5': '♭6',
-        '♭6': '♯5',
-        '♯6': '♭7',
-        '♭7': '♯6'
+        'â™¯1': 'â™­2',
+        'â™­2': 'â™¯1',
+        'â™¯2': 'â™­3',
+        'â™­3': 'â™¯2',
+        'â™¯4': 'â™­5',
+        'â™­5': 'â™¯4',
+        'â™¯5': 'â™­6',
+        'â™­6': 'â™¯5',
+        'â™¯6': 'â™­7',
+        'â™­7': 'â™¯6'
     };
     
     return enharmonicMap[degreeStr] || null;
@@ -38,7 +38,7 @@ function getEnharmonicDegree(degreeStr) {
 
 // Helper function to check if a degree has an accidental
 function hasAccidental(degreeStr) {
-    return degreeStr && (degreeStr.includes('♯') || degreeStr.includes('♭'));
+    return degreeStr && (degreeStr.includes('â™¯') || degreeStr.includes('â™­'));
 }
 
 const TonalService = {
@@ -46,75 +46,41 @@ const TonalService = {
     getEnharmonicDegree,
     hasAccidental,
     getDegreeForNote(note, state) {
-        console.log(`🎵 [TONAL] getDegreeForNote called:`, {
-            degreeDisplayMode: state.degreeDisplayMode,
-            noteRow: note.row,
-            noteStartCol: note.startColumnIndex
-        });
-        
+        if (!note || !state) return null;
+
         const { keyTonic, keyMode } = getKeyContextForColumn(state, note.startColumnIndex);
-        console.log(`🎵 [TONAL] Key context:`, { keyTonic, keyMode });
-        
         if (!keyTonic) return null;
-        
+
         const notePitch = state.fullRowData[note.row]?.toneNote;
-        console.log(`🎵 [TONAL] Note pitch:`, { notePitch });
-        
         if (!notePitch) return null;
-        
+
         const notePitchClass = Note.pitchClass(notePitch);
-        let referenceTonic, interval, formattedInterval;
-        
-        if (state.degreeDisplayMode === 'modal') {
-            // Modal mode: degrees relative to the modal tonic (e.g., G Dorian with G as 1)
-            referenceTonic = keyTonic;
-            interval = Interval.distance(referenceTonic, notePitchClass);
-            formattedInterval = formatInterval(interval);
-        } else {
-            // Diatonic mode: degrees relative to parent major scale
-            // E.g., G Dorian viewed through F major (F is 1, G is 2)
-            
-            if (keyMode === 'major') {
-                // If already in major mode, just use the tonic
-                referenceTonic = keyTonic;
-            } else {
-                // Find the parent major scale tonic
-                // For modes: Dorian is 2nd, Phrygian is 3rd, etc.
-                const modeIndex = ['major', 'dorian', 'phrygian', 'lydian', 'mixolydian', 'minor', 'locrian'].indexOf(keyMode);
+        let referenceTonic = keyTonic;
+
+        if (state.degreeDisplayMode !== 'modal') {
+            // Diatonic mode: determine the parent major tonic when viewing modal keys
+            if (keyMode !== 'major') {
+                const modes = ['major', 'dorian', 'phrygian', 'lydian', 'mixolydian', 'minor', 'locrian'];
+                const modeIndex = modes.indexOf(keyMode);
+
                 if (modeIndex > 0) {
-                    // Calculate parent major key by going back the modal steps
                     const intervalsFromMajor = ['1P', '2M', '3M', '4P', '5P', '6M', '7M'];
                     const modalInterval = intervalsFromMajor[modeIndex];
                     referenceTonic = Note.transpose(keyTonic, Interval.invert(modalInterval));
-                } else {
-                    referenceTonic = keyTonic;
                 }
             }
-            
-            interval = Interval.distance(referenceTonic, notePitchClass);
-            formattedInterval = formatInterval(interval);
         }
-        
-        console.log(`🎵 [TONAL] Calculation:`, {
-            keyTonic,
-            keyMode,
-            referenceTonic,
-            notePitchClass,
-            rawInterval: interval,
-            formattedInterval,
-            degreeDisplayMode: state.degreeDisplayMode,
-            enharmonicPreference: note.enharmonicPreference
-        });
-        
-        // Check if note has an enharmonic preference and we should display the enharmonic equivalent
+
+        const interval = Interval.distance(referenceTonic, notePitchClass);
+        const formattedInterval = formatInterval(interval);
+
         if (note.enharmonicPreference && hasAccidental(formattedInterval)) {
             const enharmonicEquivalent = getEnharmonicDegree(formattedInterval);
             if (enharmonicEquivalent) {
-                console.log(`🎵 [TONAL] Using enharmonic preference: ${formattedInterval} → ${enharmonicEquivalent}`);
                 return enharmonicEquivalent;
             }
         }
-        
+
         return formattedInterval;
     },
 

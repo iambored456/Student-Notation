@@ -1,5 +1,5 @@
 // js/utils/stampRenderer.js
-import { diamondPath } from '../components/Rhythm/glyphs/diamond.js';
+import { diamondPath } from '@components/rhythm/glyphs/diamond.js';
 
 /**
  * Shared stamp rendering utility for both canvas and SVG contexts
@@ -50,15 +50,6 @@ export class StampRenderer {
         const shapeRow = placement.row + rowOffset;
         ovalY = getRowY(shapeRow);
 
-        if (rowOffset !== 0) {
-          console.log('[STAMP RENDER] Drawing oval with offset:', {
-            shapeKey,
-            rowOffset,
-            baseRow: placement.row,
-            shapeRow,
-            y: ovalY
-          });
-        }
       }
 
       ctx.beginPath();
@@ -78,16 +69,6 @@ export class StampRenderer {
         const shapeRow = placement.row + rowOffset;
         diamondY = getRowY(shapeRow);
 
-        if (rowOffset !== 0) {
-          console.log('[STAMP RENDER] Drawing diamond with offset:', {
-            slot,
-            shapeKey,
-            rowOffset,
-            baseRow: placement.row,
-            shapeRow,
-            y: diamondY
-          });
-        }
       }
 
       const path = diamondPath(cx, diamondY, diamondW, diamondH);

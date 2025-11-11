@@ -1,42 +1,119 @@
 // js/state/actions/rhythmActions.js
 import { ANACRUSIS_ON_GROUPINGS, ANACRUSIS_ON_STYLES, ANACRUSIS_OFF_GROUPINGS, ANACRUSIS_OFF_STYLES } from '../initialState/rhythm.js';
-import { createModulationMarker, MODULATION_RATIOS } from '../../rhythm/modulationMapping.js';
-import logger from '../../utils/logger.js';
+import { createModulationMarker, MODULATION_RATIOS } from '@/rhythm/modulationMapping.js';
+import logger from '@utils/logger.js';
 
 export const rhythmActions = {
     setAnacrusis(enabled) {
         if (this.state.hasAnacrusis === enabled) return;
         
-        // Calculate the column shift needed
-        const oldGroupings = this.state.macrobeatGroupings;
-        const newGroupings = enabled ? ANACRUSIS_ON_GROUPINGS : ANACRUSIS_OFF_GROUPINGS;
-        
-        // Calculate total columns for old and new configurations
+        const oldGroupings = [...this.state.macrobeatGroupings];
+        const oldBoundaryStyles = [...this.state.macrobeatBoundaryStyles];
         const oldTotalColumns = oldGroupings.reduce((sum, val) => sum + val, 0);
+
+        let newGroupings;
+        let newBoundaryStyles;
+
+        if (!enabled) {
+            const firstSolidIndex = oldBoundaryStyles.findIndex(style => style === 'solid');
+            let removalCount = 0;
+
+            if (firstSolidIndex !== -1) {
+                removalCount = firstSolidIndex + 1;
+            } else {
+                while (
+                    removalCount < oldBoundaryStyles.length &&
+                    oldBoundaryStyles[removalCount] === 'anacrusis'
+                ) {
+                    removalCount++;
+                }
+            }
+
+            removalCount = Math.min(removalCount, oldGroupings.length);
+
+            const removedGroupings = oldGroupings.slice(0, removalCount);
+            const removedStyles = oldBoundaryStyles.slice(0, removalCount);
+
+            if (removalCount > 0) {
+                this._anacrusisCache = {
+                    groupings: removedGroupings,
+                    boundaryStyles: removedStyles
+                };
+            } else {
+                this._anacrusisCache = null;
+            }
+
+            newGroupings = oldGroupings.slice(removalCount);
+            newBoundaryStyles = oldBoundaryStyles
+                .slice(removalCount)
+                .map(style => (style === 'anacrusis' ? 'dashed' : style));
+
+            if (newGroupings.length === 0) {
+                newGroupings = [...ANACRUSIS_OFF_GROUPINGS];
+                newBoundaryStyles = [...ANACRUSIS_OFF_STYLES];
+            }
+
+            logger.debug(
+                'rhythmActions',
+                'Disabled anacrusis',
+                {
+                    removalCount,
+                    removedColumns: removedGroupings.reduce((sum, val) => sum + val, 0)
+                },
+                'state'
+            );
+        } else {
+            const cache = this._anacrusisCache;
+            const anacrusisLength = ANACRUSIS_ON_GROUPINGS.length - ANACRUSIS_OFF_GROUPINGS.length;
+            const defaultGroupings = ANACRUSIS_ON_GROUPINGS.slice(0, anacrusisLength);
+            const defaultStyles = ANACRUSIS_ON_STYLES.slice(0, anacrusisLength);
+
+            const groupingsToInsert = cache?.groupings?.length
+                ? [...cache.groupings]
+                : [...defaultGroupings];
+            const stylesToInsert = cache?.boundaryStyles?.length
+                ? [...cache.boundaryStyles]
+                : [...defaultStyles];
+
+            newGroupings = [...groupingsToInsert, ...oldGroupings];
+            newBoundaryStyles = [...stylesToInsert, ...oldBoundaryStyles];
+
+            if (!cache?.boundaryStyles?.length) {
+                for (let i = 0; i < stylesToInsert.length; i++) {
+                    newBoundaryStyles[i] = i < stylesToInsert.length - 1 ? 'anacrusis' : 'solid';
+                }
+            }
+
+            this._anacrusisCache = null;
+
+            logger.debug(
+                'rhythmActions',
+                'Enabled anacrusis',
+                {
+                    insertedCount: groupingsToInsert.length,
+                    insertedColumns: groupingsToInsert.reduce((sum, val) => sum + val, 0)
+                },
+                'state'
+            );
+        }
+
         const newTotalColumns = newGroupings.reduce((sum, val) => sum + val, 0);
         const columnShift = newTotalColumns - oldTotalColumns;
 
-        // Update the state
         this.state.hasAnacrusis = enabled;
         this.state.macrobeatGroupings = [...newGroupings];
-        this.state.macrobeatBoundaryStyles = enabled ? [...ANACRUSIS_ON_STYLES] : [...ANACRUSIS_OFF_STYLES];
-        
-        // Shift all existing notes if there's a column difference
+        this.state.macrobeatBoundaryStyles = [...newBoundaryStyles];
+
         if (columnShift !== 0) {
-            // Track notes that need to be removed if they fall outside valid bounds
             const notesToRemove = [];
             
             this.state.placedNotes.forEach(note => {
-                // Shift notes from the beginning of the grid (after legend columns)
-                // Legend columns are at index 0 and 1, so notes start from column 2
                 const legendColumns = 2;
                 if (note.startColumnIndex >= legendColumns) {
                     const newStartColumn = note.startColumnIndex + columnShift;
                     const newEndColumn = note.endColumnIndex + columnShift;
                     
-                    // Check bounds - ensure notes don't go before the legend columns
                     if (newStartColumn < legendColumns) {
-                        // Mark note for removal if it would go into invalid territory
                         notesToRemove.push(note);
                     } else {
                         note.startColumnIndex = newStartColumn;
@@ -45,7 +122,6 @@ export const rhythmActions = {
                 }
             });
             
-            // Remove notes that would fall outside valid bounds
             notesToRemove.forEach(noteToRemove => {
                 const index = this.state.placedNotes.indexOf(noteToRemove);
                 if (index > -1) {
@@ -53,19 +129,15 @@ export const rhythmActions = {
                 }
             });
             
-            // Also shift stamp placements (16th note stamps)
             const stampsToRemove = [];
             
             this.state.stampPlacements.forEach(stamp => {
-                // Stamps use startColumn/endColumn instead of startColumnIndex/endColumnIndex
                 const legendColumns = 2;
                 if (stamp.startColumn >= legendColumns) {
                     const newStartColumn = stamp.startColumn + columnShift;
                     const newEndColumn = stamp.endColumn + columnShift;
                     
-                    // Check bounds - ensure stamps don't go before the legend columns
                     if (newStartColumn < legendColumns) {
-                        // Mark stamp for removal if it would go into invalid territory
                         stampsToRemove.push(stamp);
                     } else {
                         stamp.startColumn = newStartColumn;
@@ -74,7 +146,6 @@ export const rhythmActions = {
                 }
             });
             
-            // Remove stamps that would fall outside valid bounds
             stampsToRemove.forEach(stampToRemove => {
                 const index = this.state.stampPlacements.indexOf(stampToRemove);
                 if (index > -1) {
@@ -82,22 +153,17 @@ export const rhythmActions = {
                 }
             });
             
-            // Also shift triplet placements
             const tripletsToRemove = [];
             
             if (this.state.tripletPlacements) {
                 this.state.tripletPlacements.forEach(triplet => {
-                    // Triplets use startCellIndex, which represents cells (each cell = 2 microbeats)
-                    // We need to convert column shift to cell shift: columnShift / 2
                     const cellShift = columnShift / 2;
-                    const legendCells = 1; // Legend takes up 2 columns = 1 cell
+                    const legendCells = 1;
                     
                     if (triplet.startCellIndex >= legendCells) {
                         const newStartCellIndex = triplet.startCellIndex + cellShift;
                         
-                        // Check bounds - ensure triplets don't go before the legend cells
                         if (newStartCellIndex < legendCells) {
-                            // Mark triplet for removal if it would go into invalid territory
                             tripletsToRemove.push(triplet);
                         } else {
                             triplet.startCellIndex = newStartCellIndex;
@@ -105,7 +171,6 @@ export const rhythmActions = {
                     }
                 });
                 
-                // Remove triplets that would fall outside valid bounds
                 tripletsToRemove.forEach(tripletToRemove => {
                     const index = this.state.tripletPlacements.indexOf(tripletToRemove);
                     if (index > -1) {
@@ -114,14 +179,9 @@ export const rhythmActions = {
                 });
             }
             
-            // Also shift any tonic signs that may have been placed
             Object.values(this.state.tonicSignGroups).flat().forEach(tonicSign => {
-                // Tonic signs are placed before macrobeats, so they need adjustment too
-                // The preMacrobeatIndex should remain the same, but we need to ensure
-                // the visual positioning accounts for the column shift
                 if (tonicSign.preMacrobeatIndex >= 0) {
-                    // The tonic sign positioning will be recalculated by the rendering system
-                    // based on the new macrobeat structure, so no direct column adjustment needed
+                    // Position recomputed during layout
                 }
             });
         }
@@ -411,10 +471,6 @@ export const rhythmActions = {
         this.recordState();
         
         logger.info('rhythmActions', `Added modulation marker ${marker.id} at measure ${measureIndex} with ratio=${ratio}, columnIndex=${columnIndex}`, null, 'state');
-        console.log('[MODULATION] State after adding marker:', {
-            markerCount: this.state.modulationMarkers.length,
-            markers: this.state.modulationMarkers
-        });
         return marker.id;
     },
 
@@ -509,8 +565,7 @@ export const rhythmActions = {
         this.state.modulationMarkers = [];
         this.emit('modulationMarkersChanged');
         this.recordState();
-        
+
         logger.info('rhythmActions', `Cleared ${removedCount} modulation markers`, null, 'state');
-        console.log('[MODULATION] All markers cleared');
     },
 };

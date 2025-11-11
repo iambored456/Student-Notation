@@ -73,12 +73,6 @@
 }
 
 /* --- Undo/Redo Button Specific Styling --- */
-#undo-button,
-#redo-button {
-    padding: var(--space-010);
-    border-radius: calc(var(--border-radius-sm) - 1px);
-}
-
 #undo-button:hover,
 #redo-button:hover,
 #undo-button:focus,

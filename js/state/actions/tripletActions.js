@@ -1,5 +1,5 @@
 // js/state/actions/tripletActions.js
-import logger from '../../utils/logger.js';
+import logger from '@utils/logger.js';
 
 logger.moduleLoaded('TripletActions', 'triplets');
 
@@ -203,7 +203,7 @@ export const tripletActions = {
     updateTripletShapeOffset(placementId, shapeKey, rowOffset) {
         const placement = this.state.tripletPlacements.find(p => p.id === placementId);
         if (!placement) {
-            console.warn('[TRIPLET SHAPE OFFSET] Placement not found:', placementId);
+            logger.warn('TripletActions', '[TRIPLET SHAPE OFFSET] Placement not found', { placementId }, 'triplets');
             return;
         }
 
@@ -211,14 +211,14 @@ export const tripletActions = {
             placement.shapeOffsets = {};
         }
 
-        console.log('[TRIPLET SHAPE OFFSET] Updating shape offset:', {
+        logger.debug('TripletActions', '[TRIPLET SHAPE OFFSET] Updating shape offset', {
             placementId,
             shapeKey,
             oldOffset: placement.shapeOffsets[shapeKey] || 0,
             newOffset: rowOffset,
             baseRow: placement.row,
             targetRow: placement.row + rowOffset
-        });
+        }, 'triplets');
 
         placement.shapeOffsets[shapeKey] = rowOffset;
         this.emit('tripletPlacementsChanged');

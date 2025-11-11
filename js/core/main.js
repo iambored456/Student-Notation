@@ -1,4 +1,4 @@
-// js/main.js
+﻿// js/main.js
 
 /**
  * DEBUGGING WITH LOGGER:
@@ -20,116 +20,39 @@
  * - logger.enable('ui', 'grid') - See UI interactions and grid events
  */
 import * as Tone from 'tone';
-import store from '../state/index.js';
-import { fullRowData } from '../state/pitchData.js';
-import LayoutService from '../services/layoutService.js';
-import CanvasContextService from '../services/canvasContextService.js';
-import SynthEngine from '../services/synthEngine.js';
-import TransportService from '../services/transportService.js';
-import domCache from '../services/domCache.js';
-import logger from '../utils/logger.js';
-import { initSpacebarHandler } from '../services/spacebarHandler.js';
-import { enableStateMutationDetection, snapshotState, checkForMutations, createProtectedStore } from '../utils/stateMutationGuard.js';
-import { initKeyboardHandler } from '../services/keyboardHandler.js';
-import scrollSyncService from '../services/scrollSyncService.js';
-import Toolbar from '../components/Toolbar/Toolbar.js';
-import GridManager from '../components/Canvas/PitchGrid/gridManager.js';
-import PitchGridController from '../components/Canvas/PitchGrid/PitchGrid.js';
-import { initHarmonicBins } from '../components/audio/HarmonicsFilter/harmonicBins.js';
-import { initAdsrComponent } from '../components/audio/ADSR/adsrComponent.js';
-import { initFilterControls } from '../components/audio/HarmonicsFilter/filterControls.js';
-import PrintPreview from '../components/UI/PrintPreview.js';
-import { initStaticWaveformVisualizer } from '../components/StaticWaveform/staticWaveformVisualizer.js';
-// NOTE: effectsController.js handles UI dials and lives in ../components/audio/Effects/
-// All effects logic has been moved to ../services/timbreEffects/ architecture
-import animationEffectsManager from '../services/timbreEffects/effectsAnimation/animationEffectsManager.js';
-import audioEffectsManager from '../services/timbreEffects/effectsAudio/audioEffectsManager.js';
-import effectsController from '../components/audio/Effects/effectsController.js';
-import positionEffectsController from '../components/ui/positionEffectsController.js';
-import { initUIDiagnostics } from '../utils/uiDiagnostics.js';
+import store from '@state/index.js';
+import { fullRowData } from '@state/pitchData.js';
+import LayoutService from '@services/layoutService.js';
+import GridManager from '@components/canvas/pitchGrid/gridManager.js';
+import PitchGridController from '@components/canvas/pitchGrid/pitchGrid.js';
+import SynthEngine from '@services/synthEngine.js';
+import TransportService from '@services/transportService.js';
+import domCache from '@services/domCache.js';
+import logger from '@utils/logger.js';
+import { enableStateMutationDetection, snapshotState, checkForMutations, createProtectedStore } from '@utils/stateMutationGuard.js';
+// NOTE: effectsController.js handles UI dials and lives in @components/audio/Effects/
+// All effects logic has been moved to @services/timbreEffects/ architecture
 
-// Paint Components
-import PaintCanvas from '../components/PitchPaint/paintCanvas.js';
-import PaintPlayheadRenderer from '../components/PitchPaint/paintPlayheadRenderer.js';
-import PaintControls from '../components/PitchPaint/paintControls.js';
-import PaintPlaybackService from '../services/paintPlaybackService.js';
-import rhythmPlaybackService from '../services/rhythmPlaybackService.js';
+import rhythmPlaybackService from '@services/rhythmPlaybackService.js';
 
-// Draw Components
-import drawToolsController from '../components/Draw/drawToolsController.js';
-import annotationService from '../services/annotationService.js';
+import annotationService from '@services/annotationService.js';
 
-// Drum Components
-import DrumPlayheadRenderer from '../components/Canvas/DrumGrid/drumPlayheadRenderer.js';
 
-// Meter Components
-import MeterController from '../components/audio/Meter/MeterController.js';
 
 // Zoom System Components
-import ZoomIndicator from '../components/UI/ZoomIndicator.js';
 
-// Stamps Toolbar Component
-import StampsToolbar from '../components/Rhythm/StampsToolbar/StampsToolbar.js';
-import TripletsToolbar from '../components/Rhythm/StampsToolbar/TripletsToolbar.js';
 
 // Modulation Testing (keep for advanced debugging)
-import ModulationTest from '../rhythm/modulationTest.js';
+import ModulationTest from '@/rhythm/modulationTest.js';
+import { initUiComponents } from '@/bootstrap/ui/initUiComponents.js';
+import { initAudioComponents } from '@/bootstrap/audio/initAudioComponents.js';
+import { initRhythmUi } from '@/bootstrap/rhythm/initRhythmUi.js';
+import { initCanvasServices } from '@/bootstrap/canvas/initCanvasServices.js';
+import { initPaintSystem } from '@/bootstrap/paint/initPaintSystem.js';
+import { initDrawSystem } from '@/bootstrap/draw/initDrawSystem.js';
+import { initInputAndDiagnostics } from '@/bootstrap/input/initInputAndDiagnostics.js';
+import { initStateSubscriptions } from '@/bootstrap/state/initStateSubscriptions.js';
 
-
-function initializeNewZoomSystem() {
-    ZoomIndicator.initialize();
-        document.addEventListener('keydown', (e) => {
-        const activeElement = document.activeElement.tagName.toLowerCase();
-        if (['input', 'textarea'].includes(activeElement)) {
-            return;
-        }
-
-        if ((e.ctrlKey || e.metaKey) && (e.key === '+' || e.key === '=')) {
-            e.preventDefault();
-            store.emit('zoomIn');
-        }
-        
-        if ((e.ctrlKey || e.metaKey) && e.key === '-') {
-            e.preventDefault();
-            store.emit('zoomOut');
-        }
-        
-        if ((e.ctrlKey || e.metaKey) && e.key === '0') {
-            e.preventDefault();
-            if (LayoutService.resetZoom) {
-                LayoutService.resetZoom();
-            }
-        }
-    });
-    
-}
-
-function setupDebugTools() {
-    window.debugZoom = {
-        info: () => LayoutService.getViewportInfo ? LayoutService.getViewportInfo() : 'Viewport info not available',
-        zoomTo: (level) => {
-            logger.debug('Debug Tools', `Setting zoom to ${level}`, null, 'zoom');
-            // This would need to be implemented in LayoutService
-        },
-        scrollTo: (position) => {
-            logger.debug('Debug Tools', `Scrolling to position ${position}`, null, 'scroll');
-            if (LayoutService.scroll) {
-                // Assuming position is a value from 0 to 1
-                const viewportInfo = LayoutService.getViewportInfo();
-                const currentScrollPixels = viewportInfo.scrollPosition * (store.state.fullRowData.length * store.state.cellHeight * 0.5);
-                const targetScrollPixels = position * (store.state.fullRowData.length * store.state.cellHeight * 0.5);
-                LayoutService.scroll(targetScrollPixels - currentScrollPixels);
-            }
-        },
-        goToNote: (noteName) => {
-            if (LayoutService.scrollToNote) {
-                LayoutService.scrollToNote(noteName);
-            } else {
-                logger.warn('Debug Tools', `scrollToNote not available. Requested: ${noteName}`, null, 'debug');
-            }
-        }
-    };
-}
 
 // Global audio initialization function
 let audioInitialized = false;
@@ -264,12 +187,9 @@ document.addEventListener("DOMContentLoaded", async () => {
     store.state.fullRowData = fullRowData.slice(clampedTop, clampedBottom + 1);
     // Allowed initialization mutation: fullRowData assignment
     
-    // Phase 2a: Initializing LayoutService
-    const contexts = LayoutService.init();
+    // Phase 2a-b: Initializing layout + canvas services
+    await initCanvasServices();
     markComponentReady('layoutService');
-
-    // Phase 2b: Initializing CanvasContextService
-    CanvasContextService.setContexts(contexts);
     markComponentReady('canvasContextService');
 
     // Phase 2c: Initializing SynthEngine
@@ -288,176 +208,33 @@ document.addEventListener("DOMContentLoaded", async () => {
     markComponentReady('transportService');
 
     // Phase 2e: Initializing input handlers
-    initSpacebarHandler();
-    initKeyboardHandler();
+    initInputAndDiagnostics();
 
-    // Wait for core services before initializing scroll sync
-    await waitForComponent('layoutService');
-    await waitForComponent('canvasContextService');
-    // Phase 2f: Initializing scroll synchronization
-    scrollSyncService.init();
-    markComponentReady('scrollSync');
-
-    // ✅ Check for unauthorized state mutations after core services
-    checkForMutations(store.state, 'core-services-initialization');
-
-    // Wait for scroll sync before UI components
-    await waitForComponent('scrollSync');
     // Phase 3: Initializing UI components
-    Toolbar.init();
-    GridManager.init();
-    PrintPreview.init();
-    
-    // Initialize Stamps Toolbar
-    StampsToolbar.init();
-    
-    // Initialize Triplets Toolbar
-    TripletsToolbar.init();
-    
+    await initUiComponents();
     markComponentReady('uiComponents');
 
     // Wait for UI components before audio components
     await waitForComponent('uiComponents');
     // Phase 4: Initializing audio components
-    initAdsrComponent();
-    initHarmonicBins();
-    initFilterControls();
-    
+    await initAudioComponents();
     markComponentReady('audioComponents');
 
     // ✅ Check for unauthorized state mutations after audio components
     checkForMutations(store.state, 'audio-components-initialization');
     
-    // Initialize Rhythm Tabs
-    initRhythmTabs();
+    // Rhythm UI interactions
+    initRhythmUi();
 
-    // Initialize Accidental Buttons (Flat, Sharp, Hz)
-    initAccidentalButtons();
-
-    // Initialize static waveform visualizer
-    logger.initStart('Static Waveform Visualizer');
-    if (initStaticWaveformVisualizer()) {
-        logger.initSuccess('Static Waveform Visualizer');
-    } else {
-        logger.initFailed('Static Waveform Visualizer');
-    }
-
-    // Initialize Effects Coordinator (must be before loading saved values)
-    const { default: effectsCoordinator } = await import('../services/timbreEffects/effectsCoordinator.js');
-    
-    // Make effectsCoordinator globally available for proper data flow
-    window.effectsCoordinator = effectsCoordinator;
-    
-    // Initialize new clean architecture effects managers FIRST (before loading saved values)
-    logger.initStart('Effects Managers');
-    animationEffectsManager.init();
-    audioEffectsManager.init();
-    
-    // NOW initialize coordinator which will load saved values and emit events to initialized listeners
-    effectsCoordinator.init();
-    
-    // Initialize effects UI controller
-    effectsController.init();
-    
-    // Initialize Position Effects Controller (2D controls)
-    positionEffectsController.init();
-    
-    // Make effects managers globally available
-    window.animationEffectsManager = animationEffectsManager;
-    window.audioEffectsManager = audioEffectsManager;
-    window.effectsController = effectsController;
-    window.positionEffectsController = positionEffectsController;
-    logger.initSuccess('Effects Managers');
-
-    // Initialize Paint components
-    logger.initStart('Paint components');
-    PaintCanvas.initialize();
-    PaintPlayheadRenderer.initialize();
-    PaintControls.initialize();
-    await PaintPlaybackService.initialize();
-    window.PaintPlaybackService = PaintPlaybackService;
-    MeterController.initialize();
-    logger.initSuccess('Paint components');
-
-    // Initialize Draw Tools
-    logger.initStart('Draw Tools');
-    annotationService.initialize();
-    drawToolsController.initialize();
-    window.drawToolsController = drawToolsController;
-    window.annotationService = annotationService;
-    logger.initSuccess('Draw Tools');
-
-    // Initialize Drum components
-    logger.initStart('Drum components');
-    DrumPlayheadRenderer.initialize();
-    logger.initSuccess('Drum components');
-    
-    // NEW: Initialize the enhanced zoom system
-    initializeNewZoomSystem();
-    setupDebugTools();
+    await initPaintSystem();
+    initDrawSystem();
     
     // Wait for all components before setting up event subscriptions
     await waitForComponent('audioComponents');
     // Phase 5: Setting up event subscriptions
     logger.section('SETTING UP STATE SUBSCRIPTIONS');
     
-    const renderAll = () => {
-        if (!componentReadiness.uiComponents) {
-            return;
-        }
-        GridManager.renderPitchGrid();
-        GridManager.renderDrumGrid();
-        annotationService.resize();
-    };
-
-    store.on('notesChanged', () => {
-        renderAll();
-    });
-    store.on('stampPlacementsChanged', () => {
-        renderAll();
-    });
-    store.on('tripletPlacementsChanged', () => {
-        renderAll();
-    });
-    store.on('modulationMarkersChanged', () => {
-        logger.event('Main', 'modulationMarkersChanged event received, recalculating layout', null, 'state');
-        if (!componentReadiness.layoutService) {
-            logger.warn('Main', 'LayoutService not ready, skipping layout recalculation');
-            return;
-        }
-        LayoutService.recalculateLayout();
-        logger.debug('Main', 'Layout recalculated for modulation, calling renderAll()', null, 'state');
-        renderAll();
-        logger.debug('Main', 'renderAll() completed, calling renderMacrobeatTools() for modulation', null, 'state');
-        PitchGridController.renderMacrobeatTools();
-        logger.debug('Main', 'modulationMarkersChanged handling complete', null, 'state');
-    });
-    
-    store.on('rhythmStructureChanged', () => {
-        logger.event('Main', 'rhythmStructureChanged event received, recalculating layout', null, 'state');
-        LayoutService.recalculateLayout();
-        logger.debug('Main', 'Layout recalculated, calling renderAll()', null, 'state');
-        renderAll();
-        logger.debug('Main', 'renderAll() completed, calling renderMacrobeatTools()', null, 'state');
-        PitchGridController.renderMacrobeatTools();
-        logger.debug('Main', 'rhythmStructureChanged handling complete', null, 'state');
-    });
-
-    store.on('layoutConfigChanged', () => {
-        renderAll();
-        PitchGridController.renderMacrobeatTools();
-    });
-
-    // NEW: Enhanced zoom event handling
-    store.on('zoomIn', () => {
-        logger.event('Main', 'Zoom in event received', null, 'zoom');
-        LayoutService.zoomIn();
-    });
-    
-    store.on('zoomOut', () => {
-        logger.event('Main', 'Zoom out event received', null, 'zoom');
-        LayoutService.zoomOut();
-    });
+    const { renderAll } = initStateSubscriptions(store, componentReadiness);
 
     logger.section('PERFORMING INITIAL RENDER');
 
@@ -470,9 +247,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     // event to be missed.
     renderAll();
     PitchGridController.renderMacrobeatTools();
-
-    // Initialize UI diagnostics logging for layout tracking
-    initUIDiagnostics();
 
     markComponentReady('initialized');
     // Initialization sequence completed successfully
@@ -514,191 +288,3 @@ document.addEventListener("DOMContentLoaded", async () => {
         document.body.appendChild(errorDiv);
     }
 });
-
-// Rhythm Tabs Functionality
-function initRhythmTabs() {
-
-    const rhythmContainer = document.querySelector('.rhythm-tabs-container');
-    const rhythmTabs = document.querySelector('.rhythm-tabs');
-    const rhythmTabContent = document.querySelector('.rhythm-tab-content');
-    const rhythmTabButtons = document.querySelectorAll('.rhythm-tab-button');
-    const rhythmTabPanels = document.querySelectorAll('.rhythm-tab-panel');
-
-
-    if (rhythmContainer) {
-        const containerStyles = window.getComputedStyle(rhythmContainer);
-
-        // Check if we have the expected classes
-    }
-
-    if (rhythmTabs) {
-        const tabsStyles = window.getComputedStyle(rhythmTabs);
-    }
-
-    console.log('[Rhythm Tabs Init]', {
-        rhythmContainer: rhythmContainer ? 'found' : 'NOT FOUND',
-        rhythmTabs: rhythmTabs ? 'found' : 'NOT FOUND',
-        rhythmTabContent: rhythmTabContent ? 'found' : 'NOT FOUND',
-        buttonsCount: rhythmTabButtons.length,
-        panelsCount: rhythmTabPanels.length,
-        buttons: Array.from(rhythmTabButtons).map(btn => ({
-            text: btn.textContent,
-            dataTab: btn.getAttribute('data-rhythm-tab')
-        })),
-        panels: Array.from(rhythmTabPanels).map(panel => ({
-            id: panel.id,
-            hasActiveClass: panel.classList.contains('active')
-        }))
-    });
-
-    if (!rhythmTabButtons.length || !rhythmTabPanels.length) {
-        console.warn('[Rhythm Tabs] No buttons or panels found, aborting');
-        return;
-    }
-
-    rhythmTabButtons.forEach((button, index) => {
-
-        button.addEventListener('click', (e) => {
-            const targetTab = button.getAttribute('data-rhythm-tab');
-
-            console.log('[Rhythm Tab Click]', {
-                clickedButton: button.textContent,
-                targetTab: targetTab,
-                targetPanelId: `${targetTab}-panel`
-            });
-
-            // Remove active class from all buttons and panels
-            rhythmTabButtons.forEach(btn => {
-                console.log('[Removing active from button]', btn.textContent);
-                btn.classList.remove('active');
-            });
-            rhythmTabPanels.forEach(panel => {
-                console.log('[Removing active from panel]', panel.id);
-                panel.classList.remove('active');
-            });
-
-            // Add active class to clicked button and corresponding panel
-            button.classList.add('active');
-            console.log('[Added active to button]', button.textContent);
-
-            const targetPanel = document.getElementById(`${targetTab}-panel`);
-
-            if (targetPanel) {
-                targetPanel.classList.add('active');
-                console.log('[Added active to panel]', targetPanel.id, {
-                    display: getComputedStyle(targetPanel).display,
-                    hasActiveClass: targetPanel.classList.contains('active')
-                });
-            } else {
-                console.warn('[Target panel NOT FOUND]', `${targetTab}-panel`);
-            }
-
-            // Log final state
-            console.log('[Final state after click]', {
-                allPanels: Array.from(rhythmTabPanels).map(p => ({
-                    id: p.id,
-                    hasActive: p.classList.contains('active'),
-                    display: getComputedStyle(p).display
-                }))
-            });
-        });
-    });
-
-}
-
-// Hz / Accidental Button Functionality
-function initAccidentalButtons() {
-    const flatBtn = document.getElementById('flat-toggle-btn');
-    const sharpBtn = document.getElementById('sharp-toggle-btn');
-    const hzBtn = document.getElementById('hz-toggle-btn');
-
-    if (!flatBtn || !sharpBtn || !hzBtn) {
-        console.warn('[Accidental Buttons] One or more buttons not found');
-        return;
-    }
-
-    // Store previous flat/sharp state before entering Hz mode
-    let savedFlatState = flatBtn.classList.contains('active');
-    let savedSharpState = sharpBtn.classList.contains('active');
-
-    // Hz button click handler
-    hzBtn.addEventListener('click', () => {
-        const isHzActive = hzBtn.classList.contains('active');
-
-        if (isHzActive) {
-            // Exiting Hz mode - restore previous flat/sharp state
-            hzBtn.classList.remove('active');
-            hzBtn.setAttribute('aria-pressed', 'false');
-
-            // Restore saved flat/sharp states
-            flatBtn.classList.toggle('active', savedFlatState);
-            flatBtn.setAttribute('aria-pressed', savedFlatState);
-            sharpBtn.classList.toggle('active', savedSharpState);
-            sharpBtn.setAttribute('aria-pressed', savedSharpState);
-
-            // Update store
-            store.state.showFrequencyLabels = false;
-            store.emit('layoutConfigChanged');
-        } else {
-            // Entering Hz mode - save current flat/sharp state
-            savedFlatState = flatBtn.classList.contains('active');
-            savedSharpState = sharpBtn.classList.contains('active');
-
-            // Activate Hz, disable flat/sharp visually
-            hzBtn.classList.add('active');
-            hzBtn.setAttribute('aria-pressed', 'true');
-            flatBtn.classList.remove('active');
-            flatBtn.setAttribute('aria-pressed', 'false');
-            sharpBtn.classList.remove('active');
-            sharpBtn.setAttribute('aria-pressed', 'false');
-
-            // Update store
-            store.state.showFrequencyLabels = true;
-            store.emit('layoutConfigChanged');
-        }
-    });
-
-    // Flat button click handler
-    flatBtn.addEventListener('click', () => {
-        const isHzActive = hzBtn.classList.contains('active');
-
-        if (isHzActive) {
-            // Exit Hz mode first
-            hzBtn.classList.remove('active');
-            hzBtn.setAttribute('aria-pressed', 'false');
-            store.state.showFrequencyLabels = false;
-        }
-
-        // Toggle flat state
-        const newFlatState = !flatBtn.classList.contains('active');
-        flatBtn.classList.toggle('active', newFlatState);
-        flatBtn.setAttribute('aria-pressed', newFlatState);
-        savedFlatState = newFlatState;
-
-        // Trigger canvas redraw
-        store.emit('layoutConfigChanged');
-    });
-
-    // Sharp button click handler
-    sharpBtn.addEventListener('click', () => {
-        const isHzActive = hzBtn.classList.contains('active');
-
-        if (isHzActive) {
-            // Exit Hz mode first
-            hzBtn.classList.remove('active');
-            hzBtn.setAttribute('aria-pressed', 'false');
-            store.state.showFrequencyLabels = false;
-        }
-
-        // Toggle sharp state
-        const newSharpState = !sharpBtn.classList.contains('active');
-        sharpBtn.classList.toggle('active', newSharpState);
-        sharpBtn.setAttribute('aria-pressed', newSharpState);
-        savedSharpState = newSharpState;
-
-        // Trigger canvas redraw
-        store.emit('layoutConfigChanged');
-    });
-
-    console.log('[Accidental Buttons] Initialized Hz, Flat, and Sharp buttons');
-}

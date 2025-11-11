@@ -75,22 +75,18 @@ function logTrackedElements(reason = 'manual') {
   attachObservers();
 
   const snapshot = [];
-
-  console.groupCollapsed(`[UI Diagnostics] ${reason}`);
   tracked.forEach(entry => {
     const nodes = Array.from(document.querySelectorAll(entry.selector));
     if (!nodes.length) {
-      console.warn(`${entry.label}: selector "${entry.selector}" not found`);
+      snapshot.push({ label: entry.label, selector: entry.selector, missing: true });
       return;
     }
     nodes.forEach((node, index) => {
       const label = nodes.length > 1 ? `${entry.label} [${index}]` : entry.label;
       const info = gatherNodeInfo(node);
-      console.log(label, info);
       snapshot.push({ label, selector: entry.selector, info });
     });
   });
-  console.groupEnd();
 
   window.__uiDiagnosticsLastSnapshot = snapshot;
   return snapshot;
@@ -183,4 +179,3 @@ export function initUIDiagnostics(options = {}) {
     window.__uiDiagnosticsAutoLog = false;
   };
 }
-

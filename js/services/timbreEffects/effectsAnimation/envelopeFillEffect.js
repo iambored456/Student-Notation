@@ -1,6 +1,6 @@
-// js/services/timbreEffects/effectsAnimation/envelopeFillEffect.js
-import store from '../../../state/index.js';
-import logger from '../../../utils/logger.js';
+﻿// js/services/timbreEffects/effectsAnimation/envelopeFillEffect.js
+import store from '@state/index.js';
+import logger from '@utils/logger.js';
 import * as Tone from 'tone';
 
 logger.moduleLoaded('EnvelopeFillEffect');
@@ -33,7 +33,7 @@ class EnvelopeFillEffect {
 
             const timbre = store.state.timbres[color];
             if (!timbre) {
-                console.warn('[ENVELOPE FILL] ⚠️ No timbre found for color:', color);
+                logger.warn('EnvelopeFillEffect', 'No timbre found for color', { color }, 'effects');
                 return;
             }
 
@@ -63,7 +63,7 @@ class EnvelopeFillEffect {
 
                 logger.debug('EnvelopeFillEffect', `Started release phase for note ${noteId}`, null, 'animation');
             } else {
-                console.warn('[ENVELOPE FILL] ⚠️ No fill data found for release:', noteId);
+                logger.warn('EnvelopeFillEffect', 'No fill data found for release', { noteId }, 'effects');
             }
         });
 
@@ -189,3 +189,5 @@ class EnvelopeFillEffect {
 }
 
 export default EnvelopeFillEffect;
+
+

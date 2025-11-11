@@ -1,5 +1,5 @@
 // js/state/actions/harmonyActions.js
-import { buildNotes } from '../../harmony/utils/build-notes.js';
+import { buildNotes } from '@/harmony/utils/build-notes.js';
 import { getMacrobeatInfo, getNotesInMacrobeat } from '../selectors.js';
 import { Chord, Note } from 'tonal';
 
