@@ -132,6 +132,7 @@ const actions = {
 
 const _subscribers = {};
 const persistedState = loadStateFromLocalStorage();
+const isColdStart = !persistedState;
 
 const safeInitialState = {
     ...initialState,
@@ -157,9 +158,16 @@ const store = {
     }
 };
 
+store.isColdStart = isColdStart;
+
 for (const key in actions) {
     store[key] = actions[key].bind(store);
 }
+
+// Persist tempo adjustments immediately so the slider matches after refresh
+store.on('tempoChanged', () => {
+    saveStateToLocalStorage(store.state);
+});
 
 const originalRecordState = store.recordState;
 store.recordState = function(...args) {

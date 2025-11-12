@@ -51,10 +51,35 @@ let isDraggingStampShape = false;
 let draggedTripletShape = null; // { type, slot, shapeKey, placement, startRow }
 let isDraggingTripletShape = false; 
 
+// --- Canvas + Mobile Interaction State ---
+let pitchCanvasElement = null;
+const MOBILE_LONG_PRESS_DELAY_MS = 275;
+const MOBILE_GHOST_HIGHLIGHT = 'rgba(74, 144, 226, 0.25)';
+let mobileLongPressTimer = null;
+let mobileTouchState = null; // { identifier, colIndex, rowIndex }
+let mobileGhostActive = false;
+
 // --- Interaction Helpers ---
 function getPitchForRow(rowIndex) {
     const rowData = store.state.fullRowData[rowIndex];
     return rowData ? rowData.toneNote : null;
+}
+
+function isPositionWithinPitchGrid(colIndex, rowIndex) {
+    const isCircleNote =
+        (store.state.selectedTool === 'note' || store.state.selectedTool === 'chord') &&
+        store.state.selectedNote &&
+        store.state.selectedNote.shape === 'circle';
+
+    const maxColumn = isCircleNote
+        ? store.state.columnWidths.length - 3
+        : store.state.columnWidths.length - 2;
+
+    if (colIndex < 2 || colIndex >= maxColumn) {
+        return false;
+    }
+
+    return getPitchForRow(rowIndex) !== null;
 }
 
 function findMeasureSnapPoint(columnIndex) {
@@ -264,6 +289,255 @@ function drawGhostNote(colIndex, rowIndex, isFaint = false) {
     pitchHoverCtx.globalAlpha = 1.0;
 }
 
+function attemptPlaceNoteAt(colIndex, rowIndex) {
+    if (store.state.selectedTool !== 'note') {
+        return false;
+    }
+
+    if (!isNotePlayableAtColumn(colIndex, store.state)) {
+        return false;
+    }
+
+    if (!store.state.selectedNote) {
+        return false;
+    }
+
+    const { shape, color } = store.state.selectedNote;
+    const newNote = {
+        row: rowIndex,
+        startColumnIndex: colIndex,
+        endColumnIndex: colIndex,
+        color,
+        shape,
+        isDrum: false
+    };
+
+    const addedNote = store.addNote(newNote);
+
+    if (!addedNote) {
+        return false;
+    }
+
+    activeNote = addedNote;
+
+    if (addedNote.uuid) {
+        store.emit('noteInteractionStart', { noteId: addedNote.uuid, color: addedNote.color });
+    }
+
+    // Enable dragging for both circle and oval notes
+    isDragging = true;
+    lastDragRow = rowIndex;
+
+    // Don't record state immediately - wait for drag to complete
+    // (state will be recorded on mouse up)
+
+    const pitch = getPitchForRow(rowIndex);
+    if (pitch) {
+        activePreviewPitches = [pitch];
+        SynthEngine.triggerAttack(pitch, activeNote.color);
+        const pitchColor = store.state.fullRowData[rowIndex]?.hex || '#888888';
+        GlobalService.adsrComponent?.playheadManager.trigger(
+            activeNote.uuid,
+            'attack',
+            pitchColor,
+            store.state.timbres[activeNote.color].adsr
+        );
+
+        const staticWaveform = window.staticWaveformVisualizer;
+        if (staticWaveform) {
+            staticWaveform.currentColor = activeNote.color;
+            staticWaveform.generateWaveform();
+            staticWaveform.startSingleNoteVisualization(activeNote.color);
+        }
+    }
+
+    return true;
+}
+
+function shouldUseMobileLongPress() {
+    if (store.state.selectedTool !== 'note') {
+        return false;
+    }
+
+    const profile = store.state.deviceProfile;
+    if (profile && typeof profile.isMobile === 'boolean') {
+        return profile.isMobile;
+    }
+
+    if (typeof window !== 'undefined' && typeof window.matchMedia === 'function') {
+        try {
+            return window.matchMedia('(pointer: coarse)').matches;
+        } catch {
+            return false;
+        }
+    }
+
+    return false;
+}
+
+function getTouchGridPosition(touch) {
+    if (!pitchCanvasElement) return null;
+
+    const rect = pitchCanvasElement.getBoundingClientRect();
+    const x = touch.clientX - rect.left;
+    const y = touch.clientY - rect.top;
+    const scrollLeft = document.getElementById('canvas-container')?.scrollLeft || 0;
+    const colIndex = GridCoordsService.getColumnIndex(x + scrollLeft);
+    const rowIndex = GridCoordsService.getPitchRowIndex(y);
+
+    return { x, y, colIndex, rowIndex };
+}
+
+function findTouchById(touchList, identifier) {
+    if (!touchList) return null;
+    for (let i = 0; i < touchList.length; i++) {
+        const touch = touchList.item(i);
+        if (touch && touch.identifier === identifier) {
+            return touch;
+        }
+    }
+    return null;
+}
+
+function renderMobileGhostPreview() {
+    if (!pitchHoverCtx || !mobileTouchState) {
+        return;
+    }
+
+    pitchHoverCtx.clearRect(0, 0, pitchHoverCtx.canvas.width, pitchHoverCtx.canvas.height);
+    drawHoverHighlight(mobileTouchState.colIndex, mobileTouchState.rowIndex, MOBILE_GHOST_HIGHLIGHT);
+    drawGhostNote(mobileTouchState.colIndex, mobileTouchState.rowIndex);
+    setGhostNotePosition(mobileTouchState.colIndex, mobileTouchState.rowIndex);
+}
+
+function activateMobileGhostPreview() {
+    if (!mobileTouchState) {
+        return;
+    }
+
+    if (!isPositionWithinPitchGrid(mobileTouchState.colIndex, mobileTouchState.rowIndex)) {
+        resetMobileTouchState({ clearOverlay: false });
+        return;
+    }
+
+    mobileGhostActive = true;
+    renderMobileGhostPreview();
+}
+
+function resetMobileTouchState({ clearOverlay = false } = {}) {
+    if (mobileLongPressTimer) {
+        clearTimeout(mobileLongPressTimer);
+        mobileLongPressTimer = null;
+    }
+
+    if (clearOverlay && mobileGhostActive) {
+        handleMouseLeave();
+    }
+
+    mobileTouchState = null;
+    mobileGhostActive = false;
+}
+
+function handleTouchStart(e) {
+    if (!shouldUseMobileLongPress()) {
+        return;
+    }
+
+    if (mobileTouchState) {
+        return;
+    }
+
+    const touch = e.changedTouches?.[0];
+    if (!touch) {
+        return;
+    }
+
+    const position = getTouchGridPosition(touch);
+    if (!position || !isPositionWithinPitchGrid(position.colIndex, position.rowIndex)) {
+        return;
+    }
+
+    e.preventDefault();
+
+    mobileTouchState = {
+        identifier: touch.identifier,
+        colIndex: position.colIndex,
+        rowIndex: position.rowIndex
+    };
+
+    mobileLongPressTimer = window.setTimeout(() => {
+        activateMobileGhostPreview();
+    }, MOBILE_LONG_PRESS_DELAY_MS);
+}
+
+function handleTouchMove(e) {
+    if (!mobileTouchState) {
+        return;
+    }
+
+    const touch =
+        findTouchById(e.changedTouches, mobileTouchState.identifier) ||
+        findTouchById(e.touches, mobileTouchState.identifier);
+
+    if (!touch) {
+        return;
+    }
+
+    const position = getTouchGridPosition(touch);
+    if (!position) {
+        resetMobileTouchState({ clearOverlay: mobileGhostActive });
+        return;
+    }
+
+    if (!isPositionWithinPitchGrid(position.colIndex, position.rowIndex)) {
+        resetMobileTouchState({ clearOverlay: mobileGhostActive });
+        return;
+    }
+
+    e.preventDefault();
+
+    mobileTouchState.colIndex = position.colIndex;
+    mobileTouchState.rowIndex = position.rowIndex;
+
+    if (mobileGhostActive) {
+        renderMobileGhostPreview();
+    }
+}
+
+function handleTouchEnd(e) {
+    if (!mobileTouchState) {
+        return;
+    }
+
+    const touch = findTouchById(e.changedTouches, mobileTouchState.identifier);
+    if (!touch) {
+        return;
+    }
+
+    e.preventDefault();
+
+    const ghostWasActive = mobileGhostActive;
+    const targetCol = mobileTouchState.colIndex;
+    const targetRow = mobileTouchState.rowIndex;
+
+    resetMobileTouchState();
+
+    if (!ghostWasActive || store.state.selectedTool !== 'note') {
+        return;
+    }
+
+    const placed = attemptPlaceNoteAt(targetCol, targetRow);
+    if (placed) {
+        handleGlobalMouseUp();
+    } else {
+        handleMouseLeave();
+    }
+}
+
+function handleTouchCancel() {
+    resetMobileTouchState({ clearOverlay: mobileGhostActive });
+}
+
 // --- Event Handlers ---
 function handleMouseDown(e) {
     const rect = e.target.getBoundingClientRect();
@@ -275,9 +549,7 @@ function handleMouseDown(e) {
     const rowIndex = GridCoordsService.getPitchRowIndex(y);
 
     // Check boundaries - circle notes need more space than other tools
-    const isCircleNote = (store.state.selectedTool === 'note' || store.state.selectedTool === 'chord') && store.state.selectedNote && store.state.selectedNote.shape === 'circle';
-    const maxColumn = isCircleNote ? store.state.columnWidths.length - 3 : store.state.columnWidths.length - 2;
-    if (colIndex < 2 || colIndex >= maxColumn || !getPitchForRow(rowIndex)) {
+    if (!isPositionWithinPitchGrid(colIndex, rowIndex)) {
         return;
     }
 
@@ -645,53 +917,7 @@ function handleMouseDown(e) {
         }
         
         if (toolType === 'note') {
-            if (!isNotePlayableAtColumn(colIndex, store.state)) {
-                return;
-            }
-
-            if (!store.state.selectedNote) {
-                return;
-            }
-
-            const { shape, color } = store.state.selectedNote;
-            const newNote = { row: rowIndex, startColumnIndex: colIndex, endColumnIndex: colIndex, color, shape, isDrum: false };
-            const addedNote = store.addNote(newNote); 
-            
-            if (!addedNote) {
-                // Note was not added due to duplicate prevention
-                return;
-            }
-            
-            activeNote = addedNote;
-
-            // Emit interaction start event for animation service
-            if (addedNote.uuid) {
-                store.emit('noteInteractionStart', { noteId: addedNote.uuid, color: addedNote.color });
-            }
-
-            isDragging = (shape === 'circle');
-            lastDragRow = rowIndex; // Initialize drag row tracking
-
-            if (!isDragging) {
-                store.recordState();
-            }
-
-            const pitch = getPitchForRow(rowIndex);
-            if (pitch) {
-                // MODIFIED: Store the pitch for unified release on mouseup
-                activePreviewPitches = [pitch]; 
-                SynthEngine.triggerAttack(pitch, activeNote.color);
-                const pitchColor = store.state.fullRowData[rowIndex]?.hex || '#888888';
-                GlobalService.adsrComponent?.playheadManager.trigger(activeNote.uuid, 'attack', pitchColor, store.state.timbres[activeNote.color].adsr);
-                
-                // Start dynamic waveform visualization for new notes
-                const staticWaveform = window.staticWaveformVisualizer;
-                if (staticWaveform) {
-                    staticWaveform.currentColor = activeNote.color;
-                    staticWaveform.generateWaveform(); // Update static waveform to match note color
-                    staticWaveform.startSingleNoteVisualization(activeNote.color);
-                }
-            }
+            attemptPlaceNoteAt(colIndex, rowIndex);
         }
     }
 }
@@ -895,76 +1121,151 @@ function handleMouseMove(e) {
             // Handle single note dragging
             let needsUpdate = false;
 
-            // Check for horizontal tail extension
-            if (newEndIndex !== activeNote.endColumnIndex) {
-                store.updateNoteTail(activeNote, newEndIndex);
-                needsUpdate = true;
-            }
-
-            // Check for vertical pitch change (discrete snap between rows)
-            if (newRow !== lastDragRow && newRow !== activeNote.row) {
-                const newPitch = getPitchForRow(newRow);
-                if (newPitch) {
-                    // Release old pitch
-                    const oldPitch = getPitchForRow(activeNote.row);
-                    if (oldPitch) {
-                        SynthEngine.triggerRelease(oldPitch, activeNote.color);
-                    }
-
-                    // Update note row
-                    store.updateNoteRow(activeNote, newRow);
-
-                    // Trigger new pitch
-                    SynthEngine.triggerAttack(newPitch, activeNote.color);
-                    activePreviewPitches = [newPitch];
-
-                    // Update ADSR visualization
-                    const pitchColor = store.state.fullRowData[newRow]?.hex || '#888888';
-                    GlobalService.adsrComponent?.playheadManager.trigger(activeNote.uuid, 'attack', pitchColor, store.state.timbres[activeNote.color].adsr);
-
-                    lastDragRow = newRow;
+            if (activeNote.shape === 'circle') {
+                // Circle notes: extend tail horizontally
+                if (newEndIndex !== activeNote.endColumnIndex) {
+                    store.updateNoteTail(activeNote, newEndIndex);
                     needsUpdate = true;
+                }
+
+                // Circle notes: change pitch vertically (only when row changes)
+                if (newRow !== lastDragRow && newRow !== activeNote.row) {
+                    const newPitch = getPitchForRow(newRow);
+                    if (newPitch) {
+                        // Release old pitch
+                        const oldPitch = getPitchForRow(activeNote.row);
+                        if (oldPitch) {
+                            SynthEngine.triggerRelease(oldPitch, activeNote.color);
+                        }
+
+                        // Update note row
+                        store.updateNoteRow(activeNote, newRow);
+
+                        // Trigger new pitch
+                        SynthEngine.triggerAttack(newPitch, activeNote.color);
+                        activePreviewPitches = [newPitch];
+
+                        // Update ADSR visualization
+                        const pitchColor = store.state.fullRowData[newRow]?.hex || '#888888';
+                        GlobalService.adsrComponent?.playheadManager.trigger(activeNote.uuid, 'attack', pitchColor, store.state.timbres[activeNote.color].adsr);
+
+                        lastDragRow = newRow;
+                        needsUpdate = true;
+                    }
+                }
+            } else if (activeNote.shape === 'oval') {
+                // Oval notes: reposition horizontally
+                const newStartIndex = colIndex;
+                if (newStartIndex !== activeNote.startColumnIndex) {
+                    store.updateNotePosition(activeNote, newStartIndex);
+                    needsUpdate = true;
+                }
+
+                // Oval notes: change pitch vertically (update on every row change)
+                if (newRow !== activeNote.row) {
+                    const newPitch = getPitchForRow(newRow);
+                    if (newPitch) {
+                        // Release old pitch
+                        const oldPitch = getPitchForRow(activeNote.row);
+                        if (oldPitch) {
+                            SynthEngine.triggerRelease(oldPitch, activeNote.color);
+                        }
+
+                        // Update note row
+                        store.updateNoteRow(activeNote, newRow);
+
+                        // Trigger new pitch
+                        SynthEngine.triggerAttack(newPitch, activeNote.color);
+                        activePreviewPitches = [newPitch];
+
+                        // Update ADSR visualization
+                        const pitchColor = store.state.fullRowData[newRow]?.hex || '#888888';
+                        GlobalService.adsrComponent?.playheadManager.trigger(activeNote.uuid, 'attack', pitchColor, store.state.timbres[activeNote.color].adsr);
+
+                        needsUpdate = true;
+                    }
                 }
             }
         } else if (activeChordNotes.length > 0) {
             // Handle chord notes dragging
             let needsUpdate = false;
+            const firstChordNote = activeChordNotes[0];
 
-            // Check for horizontal tail extension
-            const notesToUpdate = activeChordNotes.filter(note => newEndIndex !== note.endColumnIndex);
-            if (notesToUpdate.length > 0) {
-                store.updateMultipleNoteTails(notesToUpdate, newEndIndex);
-                needsUpdate = true;
-            }
-
-            // Check for vertical pitch change for entire chord
-            if (newRow !== lastDragRow) {
-                const rowOffset = newRow - lastDragRow;
-
-                // Release all old pitches
-                activePreviewPitches.forEach(pitch => {
-                    SynthEngine.triggerRelease(pitch, activeChordNotes[0].color);
-                });
-
-                // Calculate new rows for all chord notes
-                const newRows = activeChordNotes.map(note => note.row + rowOffset);
-
-                // Check if all new rows are valid
-                const allValid = newRows.every(row => getPitchForRow(row) !== null);
-
-                if (allValid) {
-                    // Update all note rows
-                    store.updateMultipleNoteRows(activeChordNotes, newRows);
-
-                    // Trigger new pitches
-                    const newPitches = newRows.map(row => getPitchForRow(row)).filter(p => p);
-                    newPitches.forEach(pitch => {
-                        SynthEngine.triggerAttack(pitch, activeChordNotes[0].color);
-                    });
-                    activePreviewPitches = newPitches;
-
-                    lastDragRow = newRow;
+            if (firstChordNote.shape === 'circle') {
+                // Circle chord notes: extend tails
+                const notesToUpdate = activeChordNotes.filter(note => newEndIndex !== note.endColumnIndex);
+                if (notesToUpdate.length > 0) {
+                    store.updateMultipleNoteTails(notesToUpdate, newEndIndex);
                     needsUpdate = true;
+                }
+
+                // Circle chord notes: change pitch vertically (only when row changes)
+                if (newRow !== lastDragRow) {
+                    const rowOffset = newRow - lastDragRow;
+
+                    // Release all old pitches
+                    activePreviewPitches.forEach(pitch => {
+                        SynthEngine.triggerRelease(pitch, activeChordNotes[0].color);
+                    });
+
+                    // Calculate new rows for all chord notes
+                    const newRows = activeChordNotes.map(note => note.row + rowOffset);
+
+                    // Check if all new rows are valid
+                    const allValid = newRows.every(row => getPitchForRow(row) !== null);
+
+                    if (allValid) {
+                        // Update all note rows
+                        store.updateMultipleNoteRows(activeChordNotes, newRows);
+
+                        // Trigger new pitches
+                        const newPitches = newRows.map(row => getPitchForRow(row)).filter(p => p);
+                        newPitches.forEach(pitch => {
+                            SynthEngine.triggerAttack(pitch, activeChordNotes[0].color);
+                        });
+                        activePreviewPitches = newPitches;
+
+                        lastDragRow = newRow;
+                        needsUpdate = true;
+                    }
+                }
+            } else if (firstChordNote.shape === 'oval') {
+                // Oval chord notes: reposition all notes together horizontally
+                const newStartIndex = colIndex;
+                const notesToUpdate = activeChordNotes.filter(note => newStartIndex !== note.startColumnIndex);
+                if (notesToUpdate.length > 0) {
+                    store.updateMultipleNotePositions(notesToUpdate, newStartIndex);
+                    needsUpdate = true;
+                }
+
+                // Oval chord notes: change pitch vertically (update on every row change)
+                const rowOffset = newRow - (lastDragRow !== null ? lastDragRow : activeChordNotes[0].row);
+                if (rowOffset !== 0) {
+                    // Release all old pitches
+                    activePreviewPitches.forEach(pitch => {
+                        SynthEngine.triggerRelease(pitch, activeChordNotes[0].color);
+                    });
+
+                    // Calculate new rows for all chord notes
+                    const newRows = activeChordNotes.map(note => note.row + rowOffset);
+
+                    // Check if all new rows are valid
+                    const allValid = newRows.every(row => getPitchForRow(row) !== null);
+
+                    if (allValid) {
+                        // Update all note rows
+                        store.updateMultipleNoteRows(activeChordNotes, newRows);
+
+                        // Trigger new pitches
+                        const newPitches = newRows.map(row => getPitchForRow(row)).filter(p => p);
+                        newPitches.forEach(pitch => {
+                            SynthEngine.triggerAttack(pitch, activeChordNotes[0].color);
+                        });
+                        activePreviewPitches = newPitches;
+
+                        lastDragRow = newRow;
+                        needsUpdate = true;
+                    }
                 }
             }
         }
@@ -1369,12 +1670,17 @@ export function initPitchGridInteraction() {
         return;
     }
     pitchHoverCtx = hoverCanvas.getContext('2d');
+    pitchCanvasElement = pitchCanvas;
 
     pitchCanvas.addEventListener('mousedown', handleMouseDown);
     pitchCanvas.addEventListener('mousemove', handleMouseMove);
     pitchCanvas.addEventListener('mouseleave', handleMouseLeave);
     pitchCanvas.addEventListener('contextmenu', e => e.preventDefault());
     
+    pitchCanvas.addEventListener('touchstart', handleTouchStart, { passive: false });
+    pitchCanvas.addEventListener('touchmove', handleTouchMove, { passive: false });
+    pitchCanvas.addEventListener('touchend', handleTouchEnd, { passive: false });
+    pitchCanvas.addEventListener('touchcancel', handleTouchCancel, { passive: false });
     window.addEventListener('mouseup', handleGlobalMouseUp);
 
 }

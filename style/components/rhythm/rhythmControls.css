@@ -58,7 +58,7 @@
   padding: 0;
   line-height: 1;
   position: absolute;
-  transform: translateX(-50%);
+  transform: translate(-50%, -50%);
   z-index: 10;
   backdrop-filter: blur(2px);
   transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease,
@@ -81,12 +81,15 @@
   background-color: transparent;
   border: none;
   padding: 0;
-  width: auto;
-  height: auto;
-  align-items: flex-end;
+  width: var(--rhythm-ui-button-width);
+  height: var(--rhythm-ui-button-height);
+  align-items: center;
   justify-content: center;
   pointer-events: auto;
   backdrop-filter: none;
+  position: absolute;
+  bottom: 0;
+  transform: translate(-50%, 0);
 }
 
 .rhythm-ui-button--boundary:hover,
@@ -103,6 +106,7 @@
 
 .boundary-diamond {
   width: 100%;
+  height: 100%; /* Explicit height for rendering/capture tools */
   aspect-ratio: 1;
   display: block;
   transform: rotate(45deg);

@@ -1,4 +1,4 @@
-﻿// js/main.js
+// js/main.js
 
 /**
  * DEBUGGING WITH LOGGER:
@@ -25,10 +25,13 @@ import { fullRowData } from '@state/pitchData.js';
 import LayoutService from '@services/layoutService.js';
 import GridManager from '@components/canvas/pitchGrid/gridManager.js';
 import PitchGridController from '@components/canvas/pitchGrid/pitchGrid.js';
+import PrintService from '@services/printService.js';
 import SynthEngine from '@services/synthEngine.js';
 import TransportService from '@services/transportService.js';
+import { initDeviceProfileService } from '@services/deviceProfileService.js';
 import domCache from '@services/domCache.js';
 import logger from '@utils/logger.js';
+import loadingManager from './loadingManager.js';
 import { enableStateMutationDetection, snapshotState, checkForMutations, createProtectedStore } from '@utils/stateMutationGuard.js';
 // NOTE: effectsController.js handles UI dials and lives in @components/audio/Effects/
 // All effects logic has been moved to @services/timbreEffects/ architecture
@@ -98,7 +101,7 @@ document.addEventListener('click', initAudioOnInteraction, true);
 document.addEventListener('keydown', initAudioOnInteraction, true);
 document.addEventListener('touchstart', initAudioOnInteraction, true);
 
-// ✅ Component readiness tracking for initialization order safeguards
+// ? Component readiness tracking for initialization order safeguards
 const componentReadiness = {
     domCache: false,
     layoutService: false,
@@ -110,6 +113,34 @@ const componentReadiness = {
     audioComponents: false,
     initialized: false
 };
+
+const TREBLE_CLEF_PRESET_TONES = {
+    top: 'Ab5',
+    bottom: 'C4'
+};
+
+function resolveRangeFromToneNotes(preset) {
+    if (!preset?.top || !preset?.bottom) {
+        return null;
+    }
+
+    const topIndex = fullRowData.findIndex(row => row.toneNote === preset.top);
+    const bottomIndex = fullRowData.findIndex(row => row.toneNote === preset.bottom);
+
+    if (topIndex === -1 || bottomIndex === -1) {
+        logger.warn('Main.js', 'Failed to resolve preset range from tone notes', preset);
+        return null;
+    }
+
+    return {
+        topIndex: Math.min(topIndex, bottomIndex),
+        bottomIndex: Math.max(topIndex, bottomIndex)
+    };
+}
+
+function getTrebleClefPresetRange() {
+    return resolveRangeFromToneNotes(TREBLE_CLEF_PRESET_TONES);
+}
 
 function markComponentReady(componentName) {
     componentReadiness[componentName] = true;
@@ -142,10 +173,21 @@ document.addEventListener("DOMContentLoaded", async () => {
     logger.info('Main.js', 'DOMContentLoaded event fired');
     logger.section('STARTING INITIALIZATION');
     // Starting initialization sequence
+    const loadingPhases = [
+        'dom-cache',
+        'core-services',
+        'ui-components',
+        'audio-components',
+        'initial-render',
+        'finalize'
+    ];
     
     try {
+        await loadingManager.init();
+        loadingPhases.forEach(phase => loadingManager.registerTask(phase));
+        initDeviceProfileService();
     
-    // ✅ Enable state mutation detection in development mode
+    // ? Enable state mutation detection in development mode
     if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
         // Enabling state mutation detection
         enableStateMutationDetection();
@@ -153,8 +195,10 @@ document.addEventListener("DOMContentLoaded", async () => {
     
     // Initialize DOM cache first
     // Phase 1: Initializing DOM cache
+    loadingManager.updateStatus('Initializing interface...');
     domCache.init();
     markComponentReady('domCache');
+    loadingManager.completeTask('dom-cache');
 
     // Setup user gesture handlers for audio initialization
     const setupAudioGesture = () => {
@@ -170,8 +214,9 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     // Initialize core data and services
     // Phase 2: Initializing core services
+    loadingManager.updateStatus('Preparing core systems...');
     
-    // ✅ Take initial state snapshot before any mutations
+    // ? Take initial state snapshot before any mutations
     snapshotState(store.state);
     
     // TEMPORARY: This is the one allowed direct state mutation during initialization
@@ -209,18 +254,23 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     // Phase 2e: Initializing input handlers
     initInputAndDiagnostics();
+    loadingManager.completeTask('core-services');
 
     // Phase 3: Initializing UI components
+    loadingManager.updateStatus('Loading interface components...');
     await initUiComponents();
     markComponentReady('uiComponents');
+    loadingManager.completeTask('ui-components');
 
     // Wait for UI components before audio components
     await waitForComponent('uiComponents');
     // Phase 4: Initializing audio components
+    loadingManager.updateStatus('Preparing audio components...');
     await initAudioComponents();
     markComponentReady('audioComponents');
+    loadingManager.completeTask('audio-components');
 
-    // ✅ Check for unauthorized state mutations after audio components
+    // ? Check for unauthorized state mutations after audio components
     checkForMutations(store.state, 'audio-components-initialization');
     
     // Rhythm UI interactions
@@ -245,13 +295,37 @@ document.addEventListener("DOMContentLoaded", async () => {
     // This is necessary because LayoutService.init() uses requestAnimationFrame which may
     // fire before event listeners are set up, causing the initial layoutConfigChanged
     // event to be missed.
+    loadingManager.updateStatus('Rendering workspace...');
     renderAll();
     PitchGridController.renderMacrobeatTools();
+    loadingManager.completeTask('initial-render');
+    PrintService.prefetchButtonGridSnapshot();
 
     markComponentReady('initialized');
     // Initialization sequence completed successfully
 
     logger.section('INITIALIZATION COMPLETE');
+    loadingManager.updateStatus('Finalizing...');
+    loadingManager.completeTask('finalize');
+
+    if (store.isColdStart) {
+        const treblePresetRange = getTrebleClefPresetRange();
+        const currentRange = store.state.pitchRange;
+        const alreadyApplied = treblePresetRange &&
+            currentRange &&
+            currentRange.topIndex === treblePresetRange.topIndex &&
+            currentRange.bottomIndex === treblePresetRange.bottomIndex;
+
+        if (treblePresetRange && !alreadyApplied) {
+            logger.info('Main.js', 'Cold start detected, applying Treble Clef preset range');
+            store.setSnapZoomToRange(true);
+            store.setPitchRange(treblePresetRange);
+        } else if (!treblePresetRange) {
+            logger.warn('Main.js', 'Treble Clef preset range could not be resolved during cold start');
+        }
+    }
+
+    await loadingManager.complete();
     
     // Initialize modulation testing (keep for advanced debugging)
     window.ModulationTest = ModulationTest;
@@ -263,10 +337,11 @@ document.addEventListener("DOMContentLoaded", async () => {
     }, 1000);
     
     } catch (error) {
-        console.error('[INIT] ❌ INITIALIZATION FAILED:', error);
+        console.error('[INIT] ? INITIALIZATION FAILED:', error);
         console.error('[INIT] Error stack:', error.stack);
         console.error('[INIT] Component readiness at failure:', componentReadiness);
         logger.error('Main.js', 'Initialization failed', error);
+        loadingManager.showError(error);
         
         // Show user-friendly error message
         const errorDiv = document.createElement('div');

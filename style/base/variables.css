@@ -56,6 +56,10 @@
   --note-size: 1rem;
   --note-margin: var(--space-1);
 
+  /* Shared component sizing */
+  --preset-tab-rail-height: calc((var(--font-size-sm) * 1.2) + (var(--space-1) * 2) + 0.125rem);
+  --preset-effects-synced-width: 100%;
+
   /* Slider dimensions */
   --slider-thumb-size: 20px; /* Base thumb diameter */
   --slider-thumb-border: 2px; /* Thumb border width */

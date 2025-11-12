@@ -39,15 +39,18 @@ export const initialState = {
     previousTool: 'note',
     selectedToolTonicNumber: 1,
     selectedNote: { shape: 'circle', color: '#4a90e2' },
+    deviceProfile: {
+        isMobile: false,
+        isTouch: false,
+        isCoarsePointer: false,
+        orientation: 'landscape',
+        width: 0,
+        height: 0
+    },
     activeChordId: null,
     activeChordIntervals: ["1P", "3M", "5P"],
     isIntervalsInverted: false,
     chordPositionState: 0, // 0 = Root, 1 = 1st Inversion, 2 = 2nd Inversion
-    
-    isChordCandidateMenuOpen: false,
-    chordCandidateMenuPosition: { x: 0, y: 0 },
-    activeMacrobeatIndex: null,
-    chordCandidates: [],
     
     gridPosition: 0,
     viewportRows: 0,
@@ -76,5 +79,14 @@ export const initialState = {
 
     // --- Print ---
     isPrintPreviewActive: false,
-    printOptions: { topRow: 0, bottomRow: 87, includeDrums: true, orientation: 'landscape', colorMode: 'color' }
+    printOptions: {
+        includeButtonGrid: true,
+        includeDrums: true,
+        orientation: 'landscape',
+        colorMode: 'color',
+        cropTop: 0,      // 0.0 to 1.0 (normalized position from top)
+        cropBottom: 1.0, // 0.0 to 1.0 (normalized position from top)
+        cropLeft: 0,     // 0.0 to 1.0 (normalized position from left)
+        cropRight: 1.0   // 0.0 to 1.0 (normalized position from left)
+    }
 };

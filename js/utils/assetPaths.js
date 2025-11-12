@@ -1,19 +1,18 @@
 // js/utils/assetPaths.js
 
+const resolveBaseUrl = () => {
+    const base = import.meta.env.BASE_URL || '/';
+    return base.endsWith('/') ? base : `${base}/`;
+};
+
+const assetBaseUrl = `${resolveBaseUrl()}assets/`;
+
 /**
- * Get the correct asset path for the current environment
- * Development: /assets/ (Vite serves public files at root)
- * Production (GitHub Pages): /Student-Notation/assets/
+ * Build a path to an entry inside /public/assets that respects Vite's base.
  */
-export function getAssetPath(relativePath) {
-    // Check if we're in development (Vite dev server)
-    const isDevelopment = import.meta.env.DEV;
-    
-    if (isDevelopment) {
-        return `/assets/${relativePath}`;
-    } else {
-        return `/Student-Notation/assets/${relativePath}`;
-    }
+export function getAssetPath(relativePath = '') {
+    const sanitized = relativePath.replace(/^\/+/, '');
+    return `${assetBaseUrl}${sanitized}`;
 }
 
 /**

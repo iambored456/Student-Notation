@@ -193,9 +193,15 @@ function drawScaleDegreeText(ctx, note, options, centerX, centerY, noteHeight) {
     ctx.fillText(degreeStr, centerX, centerY);
 }
 
+let invalidDimensionWarningShown = false;
+
+function hasRenderableDimensions(width, height) {
+    return Number.isFinite(width) && width > 0 && Number.isFinite(height) && height > 0;
+}
+
 export function drawTwoColumnOvalNote(ctx, options, note, rowIndex) {
     
-    const { cellWidth, cellHeight, zoomLevel } = options;
+    const { cellWidth, cellHeight } = options;
     const baseY = getRowY(rowIndex, options);
     const vibratoYOffset = calculateVibratoYOffset(note, options);
     const y = baseY + vibratoYOffset; // Apply vibrato animation
@@ -208,6 +214,14 @@ export function drawTwoColumnOvalNote(ctx, options, note, rowIndex) {
         actualCellWidth = nextX - xStart;
     } else {
         actualCellWidth = cellWidth;
+    }
+
+    if (!hasRenderableDimensions(actualCellWidth, cellHeight)) {
+        if (!invalidDimensionWarningShown) {
+            console.warn('[PitchGrid] Skipping note render until layout dimensions are ready.');
+            invalidDimensionWarningShown = true;
+        }
+        return;
     }
     
     // Calculate visual offset for overlapping notes
@@ -240,6 +254,10 @@ export function drawTwoColumnOvalNote(ctx, options, note, rowIndex) {
     const rx = actualCellWidth - (dynamicStrokeWidth / 2);
     const ry = (cellHeight / 2) - (dynamicStrokeWidth / 2); // Dual-parity: notes should fill the rank height
 
+    if (!hasRenderableDimensions(rx, ry)) {
+        return;
+    }
+
     // Save context state for cleaner rendering
     ctx.save();
 
@@ -271,7 +289,7 @@ export function drawTwoColumnOvalNote(ctx, options, note, rowIndex) {
 
 export function drawSingleColumnOvalNote(ctx, options, note, rowIndex) {
     
-    const { columnWidths, cellWidth, cellHeight, zoomLevel } = options;
+    const { columnWidths, cellWidth, cellHeight } = options;
     const baseY = getRowY(rowIndex, options);
     const vibratoYOffset = calculateVibratoYOffset(note, options);
     const y = baseY + vibratoYOffset; // Apply vibrato animation
@@ -283,7 +301,15 @@ export function drawSingleColumnOvalNote(ctx, options, note, rowIndex) {
         const nextX = getColumnX(note.startColumnIndex + 1, options);
         currentCellWidth = nextX - x;
     } else {
-        currentCellWidth = columnWidths[note.startColumnIndex] * cellWidth;
+        currentCellWidth = (columnWidths?.[note.startColumnIndex] || 0) * cellWidth;
+    }
+
+    if (!hasRenderableDimensions(currentCellWidth, cellHeight)) {
+        if (!invalidDimensionWarningShown) {
+            console.warn('[PitchGrid] Skipping note render until layout dimensions are ready.');
+            invalidDimensionWarningShown = true;
+        }
+        return;
     }
     
     // Calculate visual offset for overlapping notes
@@ -294,6 +320,10 @@ export function drawSingleColumnOvalNote(ctx, options, note, rowIndex) {
     const cx = x + currentCellWidth / 2 + xOffset;
     const rx = (currentCellWidth / 2) - (dynamicStrokeWidth / 2);
     const ry = (cellHeight / 2) - (dynamicStrokeWidth / 2); // Dual-parity: notes should fill the rank height
+
+    if (!hasRenderableDimensions(rx, ry)) {
+        return;
+    }
 
     // Save context state
     ctx.save();

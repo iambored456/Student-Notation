@@ -9,6 +9,9 @@ export function renderTimeSignatureDisplay() {
     const container = document.getElementById('beat-line-button-layer');
     if (!container) return;
 
+    // Prefer rendering inside the dedicated time signature row so pointer events work as expected
+    const timeSignatureRow = container.querySelector('#time-signature-row') || container;
+
     // Remove existing time signature labels (but keep rhythm UI buttons)
     const existingLabels = container.querySelectorAll('.time-signature-label');
     existingLabels.forEach(label => label.remove());
@@ -32,13 +35,14 @@ export function renderTimeSignatureDisplay() {
         labelElem.style.position = 'absolute';
         labelElem.style.left = `${offsetLeft + segment.centerX}px`;
         labelElem.style.transform = 'translateX(-50%)';
+        labelElem.style.pointerEvents = 'auto';
 
         labelElem.addEventListener('click', (event) => {
             event.stopPropagation();
             showTimeSignatureDropdown(labelElem, measureIndex);
         });
 
-        container.appendChild(labelElem);
+        timeSignatureRow.appendChild(labelElem);
     });
 
     ensureDropdownExists();

@@ -21,13 +21,13 @@
 <div class="app-title">Student Notation</div>
 </div>
 <div class="sidebar-container">
-<button class="sidebar-button" id="save-as-button" title="Save As"><img src="/assets/sidebar/saveAs.svg" alt="Save As"><span class="sidebar-button-text">Save As</span></button>
-<button class="sidebar-button" id="import-button" title="Open"><img src="/assets/sidebar/open.svg" alt="Open"><span class="sidebar-button-text">Open</span></button>
-<button class="sidebar-button" id="print-button" title="Print"><img src="/assets/sidebar/print.svg" alt="Print"><span class="sidebar-button-text">Print</span></button>
-<button class="sidebar-button" id="reset-canvas-button" title="New File"><img src="/assets/sidebar/newPage.svg" alt="New Page"><span class="sidebar-button-text">New Page</span></button>
+<button class="sidebar-button" id="save-as-button" title="Save As"><img src="%BASE_URL%assets/sidebar/saveAs.svg" alt="Save As"><span class="sidebar-button-text">Save As</span></button>
+<button class="sidebar-button" id="import-button" title="Open"><img src="%BASE_URL%assets/sidebar/open.svg" alt="Open"><span class="sidebar-button-text">Open</span></button>
+<button class="sidebar-button" id="print-button" title="Print"><img src="%BASE_URL%assets/sidebar/print.svg" alt="Print"><span class="sidebar-button-text">Print</span></button>
+<button class="sidebar-button" id="reset-canvas-button" title="New File"><img src="%BASE_URL%assets/sidebar/newPage.svg" alt="New Page"><span class="sidebar-button-text">New Page</span></button>
 </div>
 <div class="sidebar-container">
-<button class="sidebar-button" id="hide-drumgrid-toggle" title="Toggle Drum Grid"><img src="/assets/sidebar/hideDrums.svg" alt="Toggle Drum Grid"><span class="sidebar-button-text">Hide Drum Grid</span></button>
+<button class="sidebar-button" id="hide-drumgrid-toggle" title="Toggle Drum Grid"><img src="%BASE_URL%assets/sidebar/hideDrums.svg" alt="Toggle Drum Grid"><span class="sidebar-button-text">Hide Drum Grid</span></button>
 </div>
 </aside>
 <main id="app-container" role="main">
@@ -39,20 +39,20 @@
     <div id="toolbar-primary" class="toolbar-primary">
         <div class="primary-toolbar-grid">
             <div class="primary-toolbar-cell primary-toolbar-actions">
-                <button class="toolkit-icon-button" id="settings-button" title="Settings"><img src="/assets/icons/settings.svg" alt="Settings"></button>
+                <button class="toolkit-icon-button" id="settings-button" title="Settings"><img src="%BASE_URL%assets/icons/settings.svg" alt="Settings"></button>
                 <div id="volume-control-wrapper">
-                    <button class="toolkit-icon-button" id="volume-icon-button" aria-label="Volume" title="Volume"><img src="/assets/icons/volume.svg" alt="Volume"></button>
+                    <button class="toolkit-icon-button" id="volume-icon-button" aria-label="Volume" title="Volume"><img src="%BASE_URL%assets/icons/volume.svg" alt="Volume"></button>
                     <div id="volume-popup">
                         <input type="range" id="vertical-volume-slider" orient="vertical" min="0" max="100" value="70" step="1" />
                     </div>
                 </div>
-                <button class="toolkit-icon-button" id="grid-zoom-in" title="Zoom In"><img src="/assets/icons/zoomIn.svg" alt="Zoom In"></button>
-                <button class="toolkit-icon-button" id="grid-zoom-out" title="Zoom Out"><img src="/assets/icons/zoomOut.svg" alt="Zoom Out"></button>
-                <button class="toolkit-icon-button" id="redo-button" title="Redo"><img src="/assets/icons/redo.svg" alt="Redo"></button>
-                <button class="toolkit-icon-button" id="undo-button" title="Undo"><img src="/assets/icons/undo.svg" alt="Undo"></button>
-                <button class="toolkit-icon-button" id="clear-button" title="Clear"><img src="/assets/icons/clear.svg" alt="Clear"></button>
+                <button class="toolkit-icon-button" id="grid-zoom-in" title="Zoom In"><img src="%BASE_URL%assets/icons/zoomIn.svg" alt="Zoom In"></button>
+                <button class="toolkit-icon-button" id="grid-zoom-out" title="Zoom Out"><img src="%BASE_URL%assets/icons/zoomOut.svg" alt="Zoom Out"></button>
+                <button class="toolkit-icon-button" id="redo-button" title="Redo"><img src="%BASE_URL%assets/icons/redo.svg" alt="Redo"></button>
+                <button class="toolkit-icon-button" id="undo-button" title="Undo"><img src="%BASE_URL%assets/icons/undo.svg" alt="Undo"></button>
+                <button class="toolkit-icon-button" id="clear-button" title="Clear"><img src="%BASE_URL%assets/icons/clear.svg" alt="Clear"></button>
                 <button class="toolkit-icon-button eraser-button" id="eraser-tool-button" title="Eraser">
-                    <img src="/assets/icons/eraser.svg" alt="Eraser" class="eraser-icon">
+                    <img src="%BASE_URL%assets/icons/eraser.svg" alt="Eraser" class="eraser-icon">
                 </button>
             </div>
             <div class="primary-toolbar-cell primary-toolbar-notebank">
@@ -66,9 +66,9 @@
                 </div>
             </div>
             <div class="primary-toolbar-cell primary-toolbar-playback">
-                <button class="toolkit-icon-button" id="play-button" title="Play"><img src="/assets/icons/play.svg" alt="Play"></button>
-                <button class="toolkit-icon-button" id="stop-button" title="Stop"><img src="/assets/icons/stop.svg" alt="Stop"></button>
-                <button class="toolkit-icon-button" id="loop-button" title="Loop"><img src="/assets/icons/loop.svg" alt="Loop"></button>
+                <button class="toolkit-icon-button" id="play-button" title="Play"><img src="%BASE_URL%assets/icons/play.svg" alt="Play"></button>
+                <button class="toolkit-icon-button" id="stop-button" title="Stop"><img src="%BASE_URL%assets/icons/stop.svg" alt="Stop"></button>
+                <button class="toolkit-icon-button" id="loop-button" title="Loop"><img src="%BASE_URL%assets/icons/loop.svg" alt="Loop"></button>
             </div>
         </div>
     </div>
@@ -232,31 +232,31 @@
                                    <div class="tonic-modes-container">
                                        <div class="tonic-modes-grid">
                                            <button class="tonic-mode-button" data-tonic="1">
-                                               <img src="/assets/tabicons/tonicShape_1.svg" alt="Major" class="tonic-mode-icon">
+                                               <img src="%BASE_URL%assets/tabicons/tonicShape_1.svg" alt="Major" class="tonic-mode-icon">
                                                <span class="tonic-mode-label">Major</span>
                                            </button>
                                            <button class="tonic-mode-button" data-tonic="2">
-                                               <img src="/assets/tabicons/tonicShape_2.svg" alt="Dorian" class="tonic-mode-icon">
+                                               <img src="%BASE_URL%assets/tabicons/tonicShape_2.svg" alt="Dorian" class="tonic-mode-icon">
                                                <span class="tonic-mode-label">Dorian</span>
                                            </button>
                                            <button class="tonic-mode-button" data-tonic="3">
-                                               <img src="/assets/tabicons/tonicShape_3.svg" alt="Phrygian" class="tonic-mode-icon">
+                                               <img src="%BASE_URL%assets/tabicons/tonicShape_3.svg" alt="Phrygian" class="tonic-mode-icon">
                                                <span class="tonic-mode-label">Phrygian</span>
                                            </button>
                                            <button class="tonic-mode-button" data-tonic="4">
-                                               <img src="/assets/tabicons/tonicShape_4.svg" alt="Lydian" class="tonic-mode-icon">
+                                               <img src="%BASE_URL%assets/tabicons/tonicShape_4.svg" alt="Lydian" class="tonic-mode-icon">
                                                <span class="tonic-mode-label">Lydian</span>
                                            </button>
                                            <button class="tonic-mode-button" data-tonic="5">
-                                               <img src="/assets/tabicons/tonicShape_5.svg" alt="Mixolydian" class="tonic-mode-icon">
+                                               <img src="%BASE_URL%assets/tabicons/tonicShape_5.svg" alt="Mixolydian" class="tonic-mode-icon">
                                                <span class="tonic-mode-label">Mixolydian</span>
                                            </button>
                                            <button class="tonic-mode-button" data-tonic="6">
-                                               <img src="/assets/tabicons/tonicShape_6.svg" alt="Minor" class="tonic-mode-icon">
+                                               <img src="%BASE_URL%assets/tabicons/tonicShape_6.svg" alt="Minor" class="tonic-mode-icon">
                                                <span class="tonic-mode-label">Minor</span>
                                            </button>
                                            <button class="tonic-mode-button" data-tonic="7">
-                                               <img src="/assets/tabicons/tonicShape_7.svg" alt="Locrian" class="tonic-mode-icon">
+                                               <img src="%BASE_URL%assets/tabicons/tonicShape_7.svg" alt="Locrian" class="tonic-mode-icon">
                                                <span class="tonic-mode-label">Locrian</span>
                                            </button>
                                        </div>
@@ -598,15 +598,15 @@
                                 <div class="tempo-container rhythm-controls-grid">
                                     <div class="tempo-boxes-container tempo-column">
                                         <div class="tempo-input-group tempo-row">
-                                            <img src="/assets/tabicons/eigthNote.svg" alt="Eighth Note Tempo" class="tempo-label-icon">
+                                            <img src="%BASE_URL%assets/tabicons/eigthNote.svg" alt="Eighth Note Tempo" class="tempo-label-icon">
                                             <div id="eighth-note-tempo"></div>
                                         </div>
                                         <div class="tempo-input-group tempo-row">
-                                            <img src="/assets/tabicons/quarterNote.svg" alt="Quarter Note Tempo" class="tempo-label-icon">
+                                            <img src="%BASE_URL%assets/tabicons/quarterNote.svg" alt="Quarter Note Tempo" class="tempo-label-icon">
                                             <div id="quarter-note-tempo"></div>
                                         </div>
                                         <div class="tempo-input-group tempo-row">
-                                            <img src="/assets/tabicons/dottedQuarterNote.svg" alt="Dotted Quarter Note Tempo" class="tempo-label-icon">
+                                            <img src="%BASE_URL%assets/tabicons/dottedQuarterNote.svg" alt="Dotted Quarter Note Tempo" class="tempo-label-icon">
                                             <div id="dotted-quarter-tempo"></div>
                                         </div>
                                     </div>
@@ -691,6 +691,9 @@
                     </div>
                 </div>
             </div>
+            <div id="grid-scrollbar-proxy" role="scrollbar" aria-label="Horizontal scroll for notation grids" tabindex="0">
+                <div class="grid-scrollbar-inner"></div>
+            </div>
             <div id="drum-grid-wrapper">
                 <canvas id="drum-grid"></canvas>
                 <canvas id="drum-playhead-canvas"></canvas>
@@ -699,12 +702,6 @@
         </div>
     </div>
 </div>
-
-  <!-- Chord Candidate Drop-up Menu -->
-  <div id="chord-candidate-menu" class="hidden">
-      <div id="chord-candidate-list"></div>
-  </div>
-  <div id="chord-candidate-overlay" class="hidden"></div>
 
 </main>
 
@@ -732,31 +729,50 @@
         <div class="print-preview-content">
             <div class="print-preview-canvas-wrapper">
                 <canvas id="print-preview-canvas"></canvas>
+                <canvas id="print-crop-overlay"></canvas>
             </div>
             <div class="print-preview-options">
+                <div class="print-mode-toggle">
+                    <label>
+                        <input type="radio" name="print-mode" id="print-mode-autofit" value="autofit" checked>
+                        <span>Auto-fit</span>
+                    </label>
+                    <label>
+                        <input type="radio" name="print-mode" id="print-mode-custom" value="custom">
+                        <span>Custom Range</span>
+                    </label>
+                </div>
+
                 <h3>Layout</h3>
                 <div class="print-option-row">
                     <label>Orientation</label>
-                    <button id="print-orientation-toggle" class="toggle-button" colspan="2">Landscape</button>
+                    <button id="print-orientation-toggle" class="toggle-button">Landscape</button>
+                </div>
+                <div class="print-option-row">
+                    <label>Button Grid</label>
+                    <button id="print-buttons-toggle" class="toggle-button active">Include</button>
                 </div>
                 <div class="print-option-row">
                     <label>Include Drums?</label>
-                    <button id="print-drums-toggle" class="toggle-button active" colspan="2">Yes</button>
+                    <button id="print-drums-toggle" class="toggle-button active">Include</button>
                 </div>
                 <div class="print-option-row">
                     <label>Color Mode</label>
-                    <button id="print-color-mode-toggle" class="toggle-button active" colspan="2">Color</button>
+                    <button id="print-color-mode-toggle" class="toggle-button active">Color</button>
                 </div>
-                <h3>Pitch Range</h3>
-                <div class="print-option-row">
-                    <label for="print-top-row-slider">Top Row</label>
-                    <span id="print-top-row-label">C5</span>
-                    <input type="range" id="print-top-row-slider" min="0" max="87" value="36">
-                </div>
-                <div class="print-option-row">
-                    <label for="print-bottom-row-slider">Bottom Row</label>
-                    <span id="print-bottom-row-label">G3</span>
-                    <input type="range" id="print-bottom-row-slider" min="0" max="87" value="54">
+
+                <div id="custom-range-controls">
+                    <h3>Pitch Range</h3>
+                    <div class="print-option-row">
+                        <label for="print-top-row-slider">Top Row</label>
+                        <span id="print-top-row-label">C5</span>
+                        <input type="range" id="print-top-row-slider" min="0" max="87" value="36">
+                    </div>
+                    <div class="print-option-row">
+                        <label for="print-bottom-row-slider">Bottom Row</label>
+                        <span id="print-bottom-row-label">G3</span>
+                        <input type="range" id="print-bottom-row-slider" min="0" max="87" value="54">
+                    </div>
                 </div>
             </div>
         </div>
@@ -800,6 +816,212 @@
             }
         }
     }
+
+    function preMeasureEffectsWidth() {
+        const measurementPanels = Array.from(document.querySelectorAll('.preset-tab-panel'))
+            .filter(panel => panel.querySelector('.effects-content-box'));
+
+        if (!measurementPanels.length) {
+            logPresetWidth('Pre-measure skipped: no effects panels found');
+            return Promise.resolve(false);
+        }
+
+        logPresetWidth('Starting pre-measurement for effects panels');
+
+        const measurementRoot = document.createElement('div');
+        measurementRoot.className = 'preset-effects-premeasure-root';
+        measurementRoot.style.position = 'absolute';
+        measurementRoot.style.left = '-9999px';
+        measurementRoot.style.top = '-9999px';
+        measurementRoot.style.pointerEvents = 'none';
+        measurementRoot.style.visibility = 'hidden';
+        measurementRoot.style.display = 'flex';
+        measurementRoot.style.alignItems = 'stretch';
+        measurementRoot.style.gap = '0';
+        document.body.appendChild(measurementRoot);
+
+        let widest = 0;
+
+        measurementPanels.forEach(panel => {
+            const effectsBox = panel.querySelector('.effects-content-box');
+            if (!effectsBox) {
+                return;
+            }
+
+            const wrapper = document.createElement('div');
+            wrapper.className = `${panel.className} active premeasure-wrapper`.trim();
+            wrapper.style.display = 'flex';
+            wrapper.style.flex = '0 0 auto';
+            wrapper.style.alignItems = 'stretch';
+            wrapper.style.minHeight = '0';
+
+            const clone = effectsBox.cloneNode(true);
+            clone.style.flex = '1 1 auto';
+            clone.style.minWidth = 'fit-content';
+            wrapper.appendChild(clone);
+            measurementRoot.appendChild(wrapper);
+
+            const rect = clone.getBoundingClientRect();
+            const measuredWidth = rect.width || clone.scrollWidth || 0;
+
+            logPresetWidth('Pre-measure sample', {
+                panel: panel.id,
+                width: measuredWidth
+            });
+
+            if (measuredWidth > widest) {
+                widest = measuredWidth;
+            }
+
+            measurementRoot.removeChild(wrapper);
+        });
+
+        measurementRoot.remove();
+
+        if (widest > 0) {
+            setPresetWidthValue(widest, {
+                source: 'pre-measurement',
+                markAsMeasured: true
+            });
+            logPresetWidth('Pre-measured effects width established', widest);
+            return Promise.resolve(true);
+        }
+
+        logPresetWidth('Pre-measurement produced zero width');
+        return Promise.resolve(false);
+    }
+
+    const EFFECTS_WIDTH_VAR = '--preset-effects-synced-width';
+    const PRESET_WIDTH_DEBUG = true;
+    const rootStyle = document.documentElement ? document.documentElement.style : null;
+    let hasMeasuredEffectsWidth = false;
+
+    function logPresetWidth(message, details) {
+        if (!PRESET_WIDTH_DEBUG) return;
+        if (details !== undefined) {
+            console.log(`[preset-width] ${message}`, details);
+        } else {
+            console.log(`[preset-width] ${message}`);
+        }
+    }
+
+    function logPresetBoxMetrics(context) {
+        if (!PRESET_WIDTH_DEBUG) return;
+        const presetBox = document.querySelector('.preset-content-box');
+        if (!presetBox) {
+            logPresetWidth(`${context}: preset-content-box not found`);
+            return;
+        }
+        const computedWidth = window.getComputedStyle(presetBox).width;
+        const storedVar = rootStyle?.getPropertyValue(EFFECTS_WIDTH_VAR)?.trim();
+        logPresetWidth(`${context}: preset box width snapshot`, {
+            computedWidth,
+            storedVar
+        });
+    }
+
+    function setPresetWidthValue(width, options = {}) {
+        if (!rootStyle || !(width > 0)) return;
+        const { source = 'manual', markAsMeasured = false } = options;
+        rootStyle.setProperty(EFFECTS_WIDTH_VAR, `${width}px`);
+        if (markAsMeasured) {
+            hasMeasuredEffectsWidth = true;
+        }
+        logPresetWidth('CSS variable updated', { width, source });
+        logPresetBoxMetrics('After CSS variable update');
+    }
+
+    function setPresetWidthFromElement(element, options = {}) {
+        if (!rootStyle || !element) return;
+        const width = element.getBoundingClientRect().width;
+        if (width > 0) {
+            const sourceLabel = options.source || element.classList.value || 'element-measurement';
+            const shouldMark = options.markAsMeasured ?? element.classList.contains('effects-content-box');
+            setPresetWidthValue(width, { source: sourceLabel, markAsMeasured: shouldMark });
+        } else {
+            logPresetWidth('Skipped width update due to zero width measurement', element.classList.value || 'unknown');
+        }
+    }
+
+    function syncPresetBoxWidthToActiveEffects() {
+        const activeEffectsBox = document.querySelector('.preset-tab-panel.active .effects-content-box');
+        if (activeEffectsBox) {
+            logPresetWidth('Syncing from active effects box', activeEffectsBox.closest('.preset-tab-panel')?.id || 'unknown');
+            setPresetWidthFromElement(activeEffectsBox);
+            return true;
+        }
+        logPresetWidth('No active effects box found during sync');
+        logPresetBoxMetrics('Sync attempt complete (no active effects)');
+        return false;
+    }
+
+    function initPresetWidthBinding() {
+        const effectsBoxes = document.querySelectorAll('.effects-content-box');
+        if (!effectsBoxes.length || !rootStyle) {
+            logPresetWidth('Init aborted: missing effects boxes or root style');
+            return;
+        }
+
+        if ('ResizeObserver' in window) {
+            const effectsWidthObserver = new ResizeObserver(entries => {
+                entries.forEach(entry => {
+                    const panel = entry.target.closest('.preset-tab-panel');
+                    if (panel && panel.classList.contains('active')) {
+                        setPresetWidthFromElement(entry.target);
+                        logPresetWidth('ResizeObserver update', {
+                            panel: panel.id,
+                            measuredWidth: entry.target.getBoundingClientRect().width
+                        });
+                    } else {
+                        logPresetWidth('ResizeObserver entry ignored (panel inactive)', panel ? panel.id : 'unknown');
+                    }
+                });
+            });
+
+            effectsBoxes.forEach(box => {
+                effectsWidthObserver.observe(box);
+                logPresetWidth('Observing effects box for resize', box.closest('.preset-tab-panel')?.id || 'unknown');
+            });
+        } else {
+            logPresetWidth('ResizeObserver unavailable; relying on manual measurements');
+        }
+
+        window.addEventListener('resize', () => {
+            logPresetWidth('Window resize triggered manual sync');
+            if (!syncPresetBoxWidthToActiveEffects()) {
+                const contentContainer = document.querySelector('.preset-effects-content');
+                if (contentContainer) {
+                    if (!hasMeasuredEffectsWidth) {
+                        setPresetWidthFromElement(contentContainer);
+                        logPresetWidth('Resize fallback used preset-effects-content width');
+                    } else {
+                        logPresetWidth('Resize fallback skipped (using last effects width)');
+                    }
+                } else {
+                    logPresetWidth('No preset-effects-content container during resize fallback');
+                }
+                logPresetBoxMetrics('After resize fallback sync');
+            }
+        });
+
+        // Initial sync for whichever tab is active on load
+        if (!syncPresetBoxWidthToActiveEffects()) {
+            if (hasMeasuredEffectsWidth) {
+                logPresetWidth('Initial sync skipped - effects width already established');
+            } else {
+                const contentContainer = document.querySelector('.preset-effects-content');
+                if (contentContainer) {
+                    setPresetWidthFromElement(contentContainer);
+                    logPresetWidth('Initial sync fallback to preset-effects-content');
+                    logPresetBoxMetrics('After initial fallback');
+                } else {
+                    logPresetWidth('Initial sync failed: no preset-effects-content container');
+                }
+            }
+        } else {
+            logPresetWidth('Initial sync succeeded via active effects box');
+        }
+    }
     
     document.querySelectorAll('.tab-button').forEach(button => {
         button.addEventListener('click', () => {
@@ -818,12 +1040,35 @@
                     window.initTempoSliderIfNeeded();
                 }, 50); // Small delay to ensure tab content is fully visible
             }
+
+            if (tabId !== 'presets') {
+                requestAnimationFrame(() => {
+                    logPresetWidth('Tab switch (non-presets) triggering sync', tabId);
+                    syncPresetBoxWidthToActiveEffects();
+                    logPresetBoxMetrics('After tab switch sync');
+                });
+            } else {
+                logPresetWidth('Tab switch to presets (using stored width)');
+                requestAnimationFrame(() => {
+                    logPresetBoxMetrics('Preset tab visible after switch');
+                });
+            }
         });
     });
     
-    // Restore the saved tab immediately (before DOMContentLoaded)
-    // This prevents layout issues with hidden tab panels
-    restoreSavedTab();
+    function initializePresetEffectsSection() {
+        preMeasureEffectsWidth()
+            .catch(error => {
+                logPresetWidth('Pre-measurement failed', error);
+            })
+            .finally(() => {
+                // Restore the saved tab immediately (before DOMContentLoaded)
+                // This prevents layout issues with hidden tab panels
+                restoreSavedTab();
+                initPresetWidthBinding();
+            });
+    }
+    initializePresetEffectsSection();
     
     document.querySelectorAll('.preset-tab-button').forEach(button => {
         button.addEventListener('click', () => {
@@ -842,6 +1087,17 @@
                     harmonicBinsContainer.style.display = 'flex';
                 }
             }
+
+            requestAnimationFrame(() => {
+                if (tabId !== 'presets') {
+                    logPresetWidth('Preset tab button switch -> syncing from effects tab', tabId);
+                    syncPresetBoxWidthToActiveEffects();
+                    logPresetBoxMetrics('After preset button sync');
+                } else {
+                    logPresetWidth('Preset tab button switch -> staying on presets, width unchanged');
+                    logPresetBoxMetrics('Preset tab visible via preset button');
+                }
+            });
         });
     });
     

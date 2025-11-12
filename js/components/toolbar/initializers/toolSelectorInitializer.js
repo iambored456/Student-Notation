@@ -271,6 +271,14 @@ export function initToolSelectors() {
                 if (targetTab === 'chords') {
                     updateChordPositionToggleState();
                 }
+
+                // Refresh clef wheel visuals when switching to clef tab
+                if (targetTab === 'clef') {
+                    // Use setTimeout to ensure the tab is visible before updating visuals
+                    setTimeout(() => {
+                        clefRangeController.refreshWheelVisuals();
+                    }, 0);
+                }
             });
         });
     }

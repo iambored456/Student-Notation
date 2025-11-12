@@ -80,6 +80,20 @@ export const noteActions = {
         this.emit('notesChanged');
     },
 
+    updateNotePosition(note, newStartColumn) {
+        note.startColumnIndex = newStartColumn;
+        note.endColumnIndex = newStartColumn; // Oval notes have startColumn === endColumn
+        this.emit('notesChanged');
+    },
+
+    updateMultipleNotePositions(notes, newStartColumn) {
+        notes.forEach((note) => {
+            note.startColumnIndex = newStartColumn;
+            note.endColumnIndex = newStartColumn; // Oval notes have startColumn === endColumn
+        });
+        this.emit('notesChanged');
+    },
+
     eraseInPitchArea(col, row, width = 1, record = true) {
         const eraseEndCol = col + width - 1;
         const eraseStartRow = row - 1; // Eraser starts 1 row above

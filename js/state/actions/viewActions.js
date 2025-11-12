@@ -426,5 +426,27 @@ export const viewActions = {
         this.emit('annotationsChanged');
 
         this.recordState();
+    },
+
+    setDeviceProfile(profile = {}) {
+        const previous = this.state.deviceProfile || {};
+        const nextProfile = {
+            isMobile: profile.isMobile ?? previous.isMobile ?? false,
+            isTouch: profile.isTouch ?? previous.isTouch ?? false,
+            isCoarsePointer: profile.isCoarsePointer ?? previous.isCoarsePointer ?? false,
+            orientation: profile.orientation ?? previous.orientation ?? 'landscape',
+            width: profile.width ?? previous.width ?? 0,
+            height: profile.height ?? previous.height ?? 0
+        };
+
+        const hasChanged = Object.keys(nextProfile).some(
+            key => nextProfile[key] !== previous[key]
+        );
+
+        this.state.deviceProfile = nextProfile;
+
+        if (hasChanged) {
+            this.emit('deviceProfileChanged', nextProfile);
+        }
     }
 };

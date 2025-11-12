@@ -1,4 +1,5 @@
 // js/core/loadingManager.js
+import { getIconPath } from '@utils/assetPaths.js';
 
 /**
  * Loading Manager
@@ -177,11 +178,11 @@ class LoadingManager {
 
         // Preload critical icons
         const criticalIcons = [
-            '/assets/icons/play.svg',
-            '/assets/icons/pause.svg',
-            '/assets/icons/stop.svg',
-            '/assets/icons/settings.svg',
-            '/assets/icons/volume.svg'
+            getIconPath('play.svg'),
+            getIconPath('pause.svg'),
+            getIconPath('stop.svg'),
+            getIconPath('settings.svg'),
+            getIconPath('volume.svg')
         ];
 
         resources.push(...criticalIcons.map(url => this.preloadImage(url)));

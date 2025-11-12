@@ -2,6 +2,7 @@
 import LayoutService from '@services/layoutService.js';
 import GridManager from '@components/canvas/pitchGrid/gridManager.js';
 import PitchGridController from '@components/canvas/pitchGrid/pitchGrid.js';
+import PrintService from '@services/printService.js';
 
 export function initStateSubscriptions(store, componentReadiness) {
     const renderAll = () => {
@@ -19,15 +20,18 @@ export function initStateSubscriptions(store, componentReadiness) {
         LayoutService.recalculateLayout();
         renderAll();
         PitchGridController.renderMacrobeatTools();
+        PrintService.invalidateButtonGridSnapshot();
     });
     store.on('rhythmStructureChanged', () => {
         LayoutService.recalculateLayout();
         renderAll();
         PitchGridController.renderMacrobeatTools();
+        PrintService.invalidateButtonGridSnapshot();
     });
     store.on('layoutConfigChanged', () => {
         renderAll();
         PitchGridController.renderMacrobeatTools();
+        PrintService.invalidateButtonGridSnapshot();
     });
     store.on('zoomIn', () => LayoutService.zoomIn());
     store.on('zoomOut', () => LayoutService.zoomOut());

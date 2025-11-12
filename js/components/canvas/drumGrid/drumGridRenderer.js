@@ -6,13 +6,14 @@ import LayoutService from '../../../services/layoutService.js';
 import { getColumnX as getModulatedColumnX } from '@components/canvas/pitchGrid/renderers/rendererUtils.js';
 import { renderModulationMarkers } from '@components/canvas/pitchGrid/renderers/modulationRenderer.js';
 import DrumPlayheadRenderer from './drumPlayheadRenderer.js';
+import { getIconPath } from '@utils/assetPaths.js';
 
 // Pre-load the volume icon
 let volumeIconImage = null;
 const loadVolumeIcon = () => {
     if (!volumeIconImage) {
         volumeIconImage = new Image();
-        volumeIconImage.src = '/assets/icons/volume.svg';
+        volumeIconImage.src = getIconPath('volume.svg');
     }
     return volumeIconImage;
 };

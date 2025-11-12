@@ -123,6 +123,7 @@
     flex-direction: column;
     background-color: var(--c-surface-muted);
     border-right: 1px solid var(--c-border-strong);
+    padding-top: var(--preset-tab-rail-height);
 }
 
 .tab-content {

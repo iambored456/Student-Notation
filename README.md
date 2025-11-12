@@ -26,6 +26,28 @@ When files move into a future `src/` directory, update the alias targets in `vit
 - New functionality (e.g., future tutorial engines) should add a new initializer rather than expanding `main.js` directly.
 - Document cross-feature dependencies inside each initializer so they remain loosely coupled and testable.
 
+## Mobile-Only Interactions
+- `initDeviceProfileService()` now runs during bootstrap and keeps `store.state.deviceProfile` in sync with the current viewport (`isMobile`, `isTouch`, `orientation`, `width`, `height`).
+- The `<html>` and `<body>` tags automatically toggle the CSS classes `is-mobile`, `is-touch`, `orientation-portrait`, and `orientation-landscape`, so pure-style tweaks can rely on media-query like hooks without duplicating logic.
+- On touch devices, placing a pitch-grid note now follows a “tap, hold for ~0.3s, release to commit” flow. The hold draws the same ghost-note overlay you’d get from mouse hover, preventing accidental taps while still keeping the drag-to-resize behavior once the note exists.
+- Utilities exported from `@services/deviceProfileService.js` simplify runtime checks:
+  ```js
+  import { isMobileSession, onDeviceProfileChange } from '@services/deviceProfileService.js';
+
+  if (isMobileSession()) {
+      enableMobileGestures();
+  }
+
+  onDeviceProfileChange(profile => {
+      if (profile.isMobile) {
+          showTapHint();
+      } else {
+          hideTapHint();
+      }
+  });
+  ```
+- Prefer gating new interactions with `store.state.deviceProfile.isMobile` or the helper above so there is a single source of truth (vs. scattering `matchMedia` checks across components).
+
 ## Environment Variables
 - Vite reads `.env` files and only exposes variables prefixed with `VITE_` to browser code via `import.meta.env`.
 - No env files are required today, but when lessons or tutorials need configurable behavior you can add, for example, `VITE_LESSON_MODE=voice` in `.env` and read it where voice playback is initialized:

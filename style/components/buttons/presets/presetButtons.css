@@ -68,6 +68,8 @@
     display: flex;
     gap: 0;
     margin-bottom: 0;
+    min-height: var(--preset-tab-rail-height);
+    align-items: stretch;
 }
 
 .preset-tab-button {
@@ -87,6 +89,11 @@
     border-top-right-radius: var(--border-radius-md);
     border-bottom-left-radius: 0;
     border-bottom-right-radius: 0;
+    height: var(--preset-tab-rail-height);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1.2;
 }
 
 .preset-tab-button:not(:last-child) {
@@ -140,8 +147,6 @@
     box-shadow: var(--box-shadow-sm);
     position: relative;
     z-index: 1;
-    width: 100%;
-    max-width: 100%;
     min-width: fit-content;
     overflow: visible;
     flex: 1;
@@ -150,6 +155,11 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
+}
+
+.preset-content-box {
+    width: var(--preset-effects-synced-width, 100%);
+    max-width: var(--preset-effects-synced-width, 100%);
 }
 
 .waveform-content-box {
@@ -192,6 +202,8 @@
 }
 
 .effects-content-box {
+    width: 100%;
+    max-width: 100%;
     height: fit-content;
 }
 

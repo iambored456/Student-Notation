@@ -8,8 +8,8 @@ import { getFilteredCoefficients } from '@components/audio/harmonicsFilter/harmo
 logger.moduleLoaded('SynthEngine');
 
 // === Gain Staging Constants ===
-const POLYPHONY_CEILING = 8; // Maximum expected simultaneous voices
-const PER_VOICE_BASELINE_GAIN = 1.0 / Math.sqrt(POLYPHONY_CEILING); // â‰ˆ0.354 linear amplitude
+const POLYPHONY_REFERENCE = 32; // Reference voice count for gain normalization (no enforced ceiling)
+const PER_VOICE_BASELINE_GAIN = 1.0 / Math.sqrt(POLYPHONY_REFERENCE); // ~0.177 linear amplitude (1/sqrt(32))
 const SMOOTHING_TAU_MS = 200; // Smoothing window duration
 const MASTER_GAIN_RAMP_MS = 50; // Ramp time for gain changes to avoid zipper noise
 const GAIN_UPDATE_INTERVAL = "32n"; // Update master gain every 32nd note (~realistic for musical changes)
@@ -22,7 +22,7 @@ let limiter; // Final safety limiter
 let clippingMeter; // Meter for detecting near-clipping levels
 let waveformAnalyzers = {}; // Store analyzers for waveform visualization
 let activeVoiceCount = 0; // Track total active voices across all synths (instantaneous)
-let smoothedVoiceCount = POLYPHONY_CEILING; // Initialize to ceiling to avoid initial boost
+let smoothedVoiceCount = POLYPHONY_REFERENCE; // Initialize to reference to avoid initial boost
 let gainUpdateLoopId = null; // ID for scheduled gain updates
 
 /**
@@ -36,9 +36,9 @@ function updateMasterGain() {
 
     // If no voices are active, don't update (keep current gain to avoid pumping on silence)
     if (activeVoiceCount === 0) {
-        // Slowly decay smoothed count back toward ceiling for next note
+        // Slowly decay smoothed count back toward the reference value for the next note
         const alpha = 0.01; // Very slow decay
-        smoothedVoiceCount = alpha * POLYPHONY_CEILING + (1 - alpha) * smoothedVoiceCount;
+        smoothedVoiceCount = alpha * POLYPHONY_REFERENCE + (1 - alpha) * smoothedVoiceCount;
         return;
     }
 
@@ -47,14 +47,14 @@ function updateMasterGain() {
     const deltaT = 0.016; // 16ms update interval
     const alpha = 1 - Math.exp(-deltaT / (SMOOTHING_TAU_MS / 1000));
 
-    // Smooth the voice count (clamp between 1 and ceiling)
-    const currentVoices = Math.max(1, Math.min(POLYPHONY_CEILING, activeVoiceCount));
+    // Smooth the voice count (never let it drop below 1 to avoid divide-by-zero)
+    const currentVoices = Math.max(1, activeVoiceCount);
     smoothedVoiceCount = alpha * currentVoices + (1 - alpha) * smoothedVoiceCount;
 
     // Calculate master gain: reduce gain as voice count increases
-    // At 1 voice: gain = baseline Ã— (ceiling/1) = baseline Ã— 8 (boost solo notes)
-    // At ceiling voices: gain = baseline Ã— (ceiling/ceiling) = baseline Ã— 1 (no extra boost)
-    const scaleFactor = Math.sqrt(POLYPHONY_CEILING / smoothedVoiceCount);
+    // At 1 voice: gain = baseline * (reference/1) = baseline * 32 (boost solo notes)
+    // As voices rise beyond the reference count, gain approaches baseline * (reference/current)
+    const scaleFactor = Math.sqrt(POLYPHONY_REFERENCE / smoothedVoiceCount);
     const targetGain = PER_VOICE_BASELINE_GAIN * scaleFactor;
 
     // Ramp to new gain to avoid zipper noise and abrupt level changes
@@ -337,7 +337,7 @@ const SynthEngine = {
             const presetGain = timbre.gain || 1.0;
 
             const synth = new Tone.PolySynth({
-                polyphony: 8,
+                maxPolyphony: Number.MAX_SAFE_INTEGER, // disable Tone's max-voice guard per user preference
                 voice: FilteredVoice,
                 options: {
                     oscillator: { type: 'custom', partials: Array.from(normalizedCoeffs) },

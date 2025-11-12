@@ -411,7 +411,7 @@ class ClefRangeController {
         const count = (this.currentRange.bottomIndex - this.currentRange.topIndex) + 1;
 
         if (this.rangeLabel) {
-            this.rangeLabel.textContent = `${topRow.label} â€“ ${bottomRow.label}`;
+            this.rangeLabel.textContent = `${topRow.label} — ${bottomRow.label}`;
         }
         if (this.rangeCount) {
             this.rangeCount.textContent = `${count} ${count === 1 ? 'pitch' : 'pitches'}`;
@@ -479,19 +479,19 @@ class ClefRangeController {
 
             case 'treble':
                 // Treble: C4 to G5
-                topNote = 'Aâ™­/Gâ™¯5';
+                topNote = 'A♭/G♯5';
                 bottomNote = 'C4';
                 break;
 
             case 'alto':
                 // Alto: E3 to A4
-                topNote = 'Bâ™­/Aâ™¯4';
+                topNote = 'B♭/A♯4';
                 bottomNote = 'D3';
                 break;
 
             case 'bass':
                 // Bass: F2 to C4
-                topNote = 'Dâ™­/Câ™¯4';
+                topNote = 'D♭/C♯4';
                 bottomNote = 'F2';
                 break;
 
@@ -577,6 +577,10 @@ class ClefRangeController {
                 store.state.fullRowData = masterRowData.slice(currentTopIndex, currentBottomIndex + 1);
             }
 
+            // Update the controller's internal range tracking and summary display during animation
+            this.currentRange = { topIndex: currentTopIndex, bottomIndex: currentBottomIndex };
+            this.updateSummary();
+
             // Update zoom level directly
             if (LayoutService.setZoomLevel) {
                 LayoutService.setZoomLevel(currentZoom);
@@ -640,6 +644,17 @@ class ClefRangeController {
         const MIN_ZOOM = 0.1;
         const MAX_ZOOM = 5.0;
         return Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, requiredZoom));
+    }
+
+    refreshWheelVisuals() {
+        // Force wheel pickers to update their visuals
+        // This is useful when the tab becomes visible after being hidden
+        if (this.topPicker) {
+            this.topPicker.updateVisuals();
+        }
+        if (this.bottomPicker) {
+            this.bottomPicker.updateVisuals();
+        }
     }
 }
 

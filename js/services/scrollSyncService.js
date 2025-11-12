@@ -9,12 +9,12 @@ class ScrollSyncService {
         this.gridsWrapper = null;
         this.pitchGridWrapper = null;
         this.drumGridWrapper = null;
+        this.gridScrollbarProxy = null;
         this.isInitialized = false;
 
-        // Prevent infinite scroll loops
-        this.isScrolling = false;
         this.lastScrollTime = 0;
-        this.pendingSync = null;
+        this.isSyncingFromProxy = false;
+        this.isSyncingFromWrapper = false;
     }
 
     init() {
@@ -22,6 +22,7 @@ class ScrollSyncService {
         this.gridsWrapper = document.getElementById('grids-wrapper');
         this.pitchGridWrapper = document.getElementById('pitch-grid-wrapper');
         this.drumGridWrapper = document.getElementById('drum-grid-wrapper');
+        this.gridScrollbarProxy = document.getElementById('grid-scrollbar-proxy');
 
         if (!this.gridsWrapper || !this.pitchGridWrapper || !this.drumGridWrapper) {
             logger.error('ScrollSyncService', 'Required elements not found for scroll sync', null, 'scroll');
@@ -34,37 +35,69 @@ class ScrollSyncService {
     }
 
     setupScrollSynchronization() {
-        // With unified structure, grids-wrapper is the primary scroll container
-        // Both pitch and drum grids are children and scroll together automatically
-        // No manual sync needed, but we keep the service for potential future use
+        this.handleWrapperScroll = this.handleWrapperScroll.bind(this);
+        this.handleProxyScroll = this.handleProxyScroll.bind(this);
 
-        // Listen to scroll on grids-wrapper for debugging/monitoring
-        this.gridsWrapper.addEventListener('scroll', (e) => {
-            const now = Date.now();
+        this.gridsWrapper.addEventListener('scroll', this.handleWrapperScroll, { passive: true });
 
-            // Debounce rapid scroll events
-            if (now - this.lastScrollTime < 10) {
-                return;
+        if (this.gridScrollbarProxy) {
+            this.gridScrollbarProxy.addEventListener('scroll', this.handleProxyScroll, { passive: true });
+        } else {
+            logger.warn('ScrollSyncService', 'Grid scrollbar proxy not found; falling back to native scrollbars.', null, 'scroll');
+        }
+    }
+
+    handleWrapperScroll(event) {
+        if (this.isSyncingFromProxy) {
+            return;
+        }
+
+        const now = Date.now();
+        this.lastScrollTime = now;
+
+        if (this.gridScrollbarProxy) {
+            const wrapperScrollLeft = this.gridsWrapper.scrollLeft;
+            if (Math.abs(this.gridScrollbarProxy.scrollLeft - wrapperScrollLeft) > 0.5) {
+                this.isSyncingFromWrapper = true;
+                this.gridScrollbarProxy.scrollLeft = wrapperScrollLeft;
+                this.isSyncingFromWrapper = false;
             }
-            this.lastScrollTime = now;
+        }
 
-            // Both grids scroll together via parent container - no manual sync needed
-            logger.debug('ScrollSyncService', `Unified scroll: ${e.target.scrollLeft}px`, null, 'scroll');
-        });
+        logger.debug('ScrollSyncService', `Unified scroll: ${event.target.scrollLeft}px`, null, 'scroll');
+    }
+
+    handleProxyScroll() {
+        if (this.isSyncingFromWrapper || !this.gridScrollbarProxy) {
+            return;
+        }
+
+        const proxyScrollLeft = this.gridScrollbarProxy.scrollLeft;
+        if (!this.gridsWrapper) {
+            return;
+        }
+
+        if (Math.abs(this.gridsWrapper.scrollLeft - proxyScrollLeft) > 0.5) {
+            this.isSyncingFromProxy = true;
+            this.gridsWrapper.scrollLeft = proxyScrollLeft;
+            this.isSyncingFromProxy = false;
+        }
     }
 
     // Manual sync method for programmatic scrolling
     syncScrollTo(scrollLeft) {
         if (!this.isInitialized || !this.gridsWrapper) return;
 
-        this.isScrolling = true;
+        this.isSyncingFromProxy = true;
+        this.isSyncingFromWrapper = true;
 
-        // With unified structure, just set scroll on the parent grids-wrapper
         this.gridsWrapper.scrollLeft = scrollLeft;
+        if (this.gridScrollbarProxy) {
+            this.gridScrollbarProxy.scrollLeft = scrollLeft;
+        }
 
-        setTimeout(() => {
-            this.isScrolling = false;
-        }, 10);
+        this.isSyncingFromProxy = false;
+        this.isSyncingFromWrapper = false;
     }
 }
 

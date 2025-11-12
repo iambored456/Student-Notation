@@ -3,10 +3,11 @@ import store from '@state/index.js';
 import logger from '@utils/logger.js';
 import {
     DEFAULT_SCROLL_POSITION, GRID_WIDTH_RATIO,  BASE_DRUM_ROW_HEIGHT,
-    DRUM_HEIGHT_SCALE_FACTOR, DRUM_ROW_COUNT, 
+    DRUM_HEIGHT_SCALE_FACTOR, DRUM_ROW_COUNT,
     MAX_ZOOM_LEVEL, MIN_ZOOM_LEVEL, ZOOM_IN_FACTOR, ZOOM_OUT_FACTOR, RESIZE_DEBOUNCE_DELAY
 } from '@/core/constants.js';
 import { calculateColumnWidths, getColumnX as getColumnXFromColumns, getCanvasWidth as getCanvasWidthFromColumns } from './columnsLayout.js';
+import { fullRowData as masterRowData } from '@state/pitchData.js';
 
 // Pure abstract units - independent of container size
 const BASE_ABSTRACT_UNIT = 30;  // Fixed abstract unit size in pixels
@@ -15,7 +16,7 @@ let currentZoomLevel = 1.0;
 let currentScrollPosition = DEFAULT_SCROLL_POSITION;
 
 let viewportHeight = 0;
-let /* gridContainer, */ pitchGridWrapper, canvas, ctx, drumGridWrapper, drumCanvas, drumCtx, drumPlayheadCanvas, playheadCanvas, hoverCanvas, drumHoverCanvas, pitchPaintCanvas, buttonGridWrapper;
+let /* gridContainer, */ pitchGridWrapper, canvas, ctx, drumGridWrapper, drumCanvas, drumCtx, drumPlayheadCanvas, playheadCanvas, hoverCanvas, drumHoverCanvas, pitchPaintCanvas, buttonGridWrapper, gridScrollbarProxy, gridScrollbarInner;
 let resizeTimeout;
 let isRecalculating = false;
 let isZooming = false;
@@ -24,6 +25,8 @@ let lastCalculatedDrumHeight = 0;
 let lastCalculatedButtonGridHeight = 0;
 let pendingSnapToRange = false;
 let pendingStartRow = null;
+let pitchGridNotReadyLogged = false;
+let beatLineWidthWarningShown = false;
 
 function getDynamicMinZoomLevel() {
     const totalRanks = store.state.fullRowData?.length || 0;
@@ -55,9 +58,11 @@ function initDOMElements() {
     drumHoverCanvas = document.getElementById('drum-hover-canvas');
     pitchPaintCanvas = document.getElementById('pitch-paint-canvas');
     buttonGridWrapper = document.getElementById('button-grid');
-    
+    gridScrollbarProxy = document.getElementById('grid-scrollbar-proxy');
+    gridScrollbarInner = gridScrollbarProxy?.querySelector('.grid-scrollbar-inner') || null;
+
     const canvasContainer = document.getElementById('canvas-container');
-    
+
     if (!pitchGridWrapper || !canvas || !canvasContainer) {
         return {};
     }
@@ -69,9 +74,14 @@ function initDOMElements() {
 
 function recalcAndApplyLayout() {
     if (!pitchGridWrapper || pitchGridWrapper.clientHeight === 0) {
+        if (!pitchGridNotReadyLogged) {
+            console.warn('[LayoutService] Pitch grid wrapper not ready for layout (height=0). Retrying on next frame.');
+            pitchGridNotReadyLogged = true;
+        }
         requestAnimationFrame(recalcAndApplyLayout);
         return;
     }
+    pitchGridNotReadyLogged = false;
     
     if (isRecalculating) {
         return;
@@ -113,6 +123,13 @@ function recalcAndApplyLayout() {
         columnWidths: newColumnWidths
     });
 
+    if (!store.state.cellWidth || !newColumnWidths.length) {
+        console.warn('[LayoutService] Unexpected layout configuration', {
+            cellWidth: store.state.cellWidth,
+            columnCount: newColumnWidths.length
+        });
+    }
+
     const totalWidthUnits = newColumnWidths.reduce((sum, w) => sum + w, 0);
     const totalCanvasWidth = totalWidthUnits * store.state.cellWidth;
     const modulatedCanvasWidth = LayoutService.getModulatedCanvasWidth();
@@ -136,17 +153,36 @@ function recalcAndApplyLayout() {
         drumGridWrapper.style.width = targetWidth;
     }
 
+    if (gridScrollbarInner) {
+        gridScrollbarInner.style.width = targetWidth;
+    }
+
     // Calculate button grid height (same as drum grid for visual consistency)
     const buttonRowHeight = Math.max(BASE_DRUM_ROW_HEIGHT, DRUM_HEIGHT_SCALE_FACTOR * store.state.cellHeight);
     const buttonGridHeight = DRUM_ROW_COUNT * buttonRowHeight;
-    const buttonGridHeightPx = `${buttonGridHeight}px`;
+        const buttonGridHeightPx = `${buttonGridHeight}px`;
 
     // Calculate middle cell width (excluding left and right legend columns)
+    const columnWidthsCount = store.state.columnWidths?.length ?? 0;
     const middleCellStart = 2; // Skip first 2 legend columns on left
-    const middleCellEnd = store.state.columnWidths.length - 2; // Exclude right legend columns
+    const middleCellEnd = columnWidthsCount - 2; // Exclude right legend columns
     let middleCellWidth = 0;
     for (let i = middleCellStart; i < middleCellEnd; i++) {
         middleCellWidth += (store.state.columnWidths[i] || 0) * store.state.cellWidth;
+    }
+    if (columnWidthsCount <= 4) {
+        console.warn('[LayoutService] Column widths array does not contain interior columns.', {
+            columnWidthsCount,
+            columnWidths: store.state.columnWidths
+        });
+    }
+    if (middleCellWidth < 50 && columnWidthsCount > 4) {
+        console.warn('[LayoutService] Computed button-grid middle cell width is unexpectedly small.', {
+            middleCellWidth,
+            columnWidthsSample: store.state.columnWidths?.slice(0, 10),
+            cellWidth: store.state.cellWidth,
+            macrobeatGroupings: store.state.macrobeatGroupings
+        });
     }
 
     // Set widths and heights for the three-cell button grid structure
@@ -169,19 +205,125 @@ function recalcAndApplyLayout() {
             lastCalculatedButtonGridHeight = buttonGridHeight;
         }
 
+        const applyCellSizing = (cell, widthPx) => {
+            if (!cell) return;
+            const widthValue = `${Math.max(0, widthPx)}px`;
+            cell.style.width = widthValue;
+            cell.style.flex = `0 0 ${widthValue}`;
+            cell.style.maxWidth = widthValue;
+            cell.style.minWidth = widthValue;
+            cell.style.height = buttonGridHeightPx;
+        };
+
         if (leftCell) {
-            leftCell.style.width = `${leftCellWidth}px`;
-            leftCell.style.height = buttonGridHeightPx;
+            applyCellSizing(leftCell, leftCellWidth);
+            const leftRect = leftCell.getBoundingClientRect();
+            if (leftCellWidth > 0 && leftRect.width === 0) {
+                console.warn('[LayoutService] Left button-grid cell measured width is 0 after assignment.', {
+                    assignedWidth: leftCellWidth,
+                    measuredWidth: leftRect.width,
+                    computedDisplay: window.getComputedStyle(leftCell).display
+                });
+            }
         }
 
         if (middleCell) {
-            middleCell.style.width = `${middleCellWidth}px`;
-            middleCell.style.height = buttonGridHeightPx;
+            if (middleCellWidth === 0) {
+                console.warn('[LayoutService] Calculated middle button-grid width is 0. Check column width data.', {
+                    columnWidths: store.state.columnWidths,
+                    cellWidth: store.state.cellWidth
+                });
+            }
+            applyCellSizing(middleCell, middleCellWidth);
+            const middleRect = middleCell.getBoundingClientRect();
+            if (middleCellWidth > 0 && middleRect.width === 0) {
+                console.warn('[LayoutService] Middle button-grid cell assigned width but still measures 0.', {
+                    assignedWidth: middleCellWidth,
+                    measuredWidth: middleRect.width,
+                    computedStyles: window.getComputedStyle(middleCell)
+                });
+            }
+            if (Math.abs(middleRect.width - middleCellWidth) > 5) {
+                console.warn('[LayoutService] Middle cell measured width does not match assigned width.', {
+                    assignedWidth: middleCellWidth,
+                    measuredWidth: middleRect.width,
+                    styleWidth: middleCell.style.width,
+                    cellWidth: store.state.cellWidth
+                });
+                requestAnimationFrame(() => {
+                    const postRect = middleCell.getBoundingClientRect();
+                    if (Math.abs(postRect.width - middleCellWidth) > 5) {
+                        console.warn('[LayoutService] Middle cell still mismatched after RAF.', {
+                            assignedWidth: middleCellWidth,
+                            measuredWidth: postRect.width,
+                            delta: postRect.width - middleCellWidth,
+                            computedStyles: window.getComputedStyle(middleCell)
+                        });
+                    }
+                });
+            }
+
+            if (!beatLineWidthWarningShown) {
+                const beatLineLayer = middleCell.querySelector('#beat-line-button-layer');
+                if (beatLineLayer) {
+                    const beatLineRect = beatLineLayer.getBoundingClientRect();
+                    if (beatLineRect.width === 0) {
+                        const beatLineStyles = window.getComputedStyle(beatLineLayer);
+                        console.warn('[LayoutService] #beat-line-button-layer width is 0 despite middle cell sizing.', {
+                            beatLineRect,
+                            beatLineStyles: {
+                                display: beatLineStyles.display,
+                                position: beatLineStyles.position,
+                                flex: {
+                                    direction: beatLineStyles.flexDirection,
+                                    grow: beatLineStyles.flexGrow,
+                                    shrink: beatLineStyles.flexShrink,
+                                    basis: beatLineStyles.flexBasis
+                                },
+                                width: beatLineStyles.width,
+                                minWidth: beatLineStyles.minWidth,
+                                maxWidth: beatLineStyles.maxWidth
+                            },
+                            middleRect,
+                            middleCellComputedWidth: beatLineStyles.width
+                        });
+                        beatLineWidthWarningShown = true;
+                    }
+                } else {
+                    console.warn('[LayoutService] Could not find #beat-line-button-layer inside middle cell to measure.');
+                    beatLineWidthWarningShown = true;
+                }
+            }
         }
 
         if (rightCell) {
-            rightCell.style.width = `${rightCellWidth}px`;
-            rightCell.style.height = buttonGridHeightPx;
+            applyCellSizing(rightCell, rightCellWidth);
+            const rightRect = rightCell.getBoundingClientRect();
+            if (rightCellWidth > 0 && rightRect.width === 0) {
+                console.warn('[LayoutService] Right button-grid cell measured width is 0 after assignment.', {
+                    assignedWidth: rightCellWidth,
+                    measuredWidth: rightRect.width,
+                    computedDisplay: window.getComputedStyle(rightCell).display
+                });
+            }
+        }
+
+        const totalButtonGridWidth = leftCellWidth + middleCellWidth + rightCellWidth;
+        if (Number.isFinite(totalButtonGridWidth) && totalButtonGridWidth > 0) {
+            const widthValue = `${totalButtonGridWidth}px`;
+            buttonGridWrapper.style.width = widthValue;
+            buttonGridWrapper.style.maxWidth = widthValue;
+            buttonGridWrapper.style.minWidth = widthValue;
+        }
+
+        const buttonGridRect = buttonGridWrapper.getBoundingClientRect();
+        if (buttonGridRect.width === 0) {
+            console.warn('[LayoutService] Entire button grid wrapper width is 0 after layout pass.', {
+                leftCellWidth,
+                middleCellWidth,
+                rightCellWidth,
+                wrapperStyles: window.getComputedStyle(buttonGridWrapper)
+            });
         }
 
     }
@@ -429,21 +571,25 @@ const LayoutService = {
     },
     
     scrollByUnits(direction) {
-        const totalRanks = store.state.fullRowData.length;
-        const cellHeight = store.state.cellHeight || BASE_ABSTRACT_UNIT;
-        const halfUnit = cellHeight / 2;
-        const fullVirtualHeight = totalRanks * halfUnit;
-        const paddedVirtualHeight = fullVirtualHeight;
-        
-        const pitchGridContainer = document.getElementById('pitch-grid-container');
-        const containerHeight = pitchGridContainer?.clientHeight || (viewportHeight * 0.7);
-        const scrollableDist = Math.max(0, paddedVirtualHeight - containerHeight);
-        
-        if (scrollableDist > 0) {
-            const unitScrollDelta = (direction * halfUnit) / scrollableDist;
-            currentScrollPosition = Math.max(0, Math.min(1, currentScrollPosition + unitScrollDelta));
-            store.emit('layoutConfigChanged');
+        // Shift the pitch range by moving topIndex and bottomIndex
+        // This scrolls through the master pitch data
+        const currentRange = store.state.pitchRange;
+        if (!currentRange || !masterRowData || masterRowData.length === 0) return;
+
+        const newTopIndex = currentRange.topIndex + direction;
+        const newBottomIndex = currentRange.bottomIndex + direction;
+        const maxMasterIndex = masterRowData.length - 1;
+
+        // Clamp to valid range in master data
+        if (newTopIndex < 0 || newBottomIndex > maxMasterIndex) {
+            return; // Can't scroll further
         }
+
+        // Update pitch range while maintaining the same range size
+        store.setPitchRange({
+            topIndex: newTopIndex,
+            bottomIndex: newBottomIndex
+        });
     },
     
     scrollByPixels(deltaY, deltaX = 0) {

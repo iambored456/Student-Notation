@@ -48,11 +48,28 @@
 .print-preview-canvas-wrapper {
   flex-grow: 1;
   border: 1px dashed var(--c-border);
-  background-color: var(--c-bg);
+  background-color: #808080;
   overflow: auto;
-  padding: 10px;
+  padding: 12px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
 }
-#print-preview-canvas { display: block; background-color: white; }
+#print-preview-canvas {
+  display: block;
+  background-color: white;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+#print-crop-overlay {
+  position: absolute;
+  pointer-events: none;
+  cursor: default;
+}
+
+#print-preview-overlay:not(.hidden) #print-crop-overlay {
+  pointer-events: auto;
+}
 .print-preview-options {
   flex-basis: 280px; flex-shrink: 0; display: flex;
   flex-direction: column; gap: 15px;
@@ -80,3 +97,23 @@
 .toggle-button { width: 100%; grid-column: 2 / -1; }
 .toggle-button.active { background-color: var(--c-accent); }
 .toggle-button:not(.active) { background-color: var(--c-gridline); color: var(--c-text); }
+
+/* Print info box */
+.print-info-box {
+  background-color: var(--c-bg);
+  border: 1px solid var(--c-border);
+  border-radius: 4px;
+  padding: 12px;
+  font-size: 13px;
+  line-height: 1.5;
+}
+.print-info-box p {
+  margin: 0 0 8px 0;
+}
+.print-info-box p:last-child {
+  margin-bottom: 0;
+}
+.print-info-box small {
+  font-size: 11px;
+  color: var(--c-text-muted);
+}
