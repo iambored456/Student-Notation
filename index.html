@@ -21,13 +21,13 @@
 <div class="app-title">Student Notation</div>
 </div>
 <div class="sidebar-container">
-<button class="sidebar-button" id="save-as-button" title="Save As"><img src="%BASE_URL%assets/sidebar/saveAs.svg" alt="Save As"><span class="sidebar-button-text">Save As</span></button>
-<button class="sidebar-button" id="import-button" title="Open"><img src="%BASE_URL%assets/sidebar/open.svg" alt="Open"><span class="sidebar-button-text">Open</span></button>
-<button class="sidebar-button" id="print-button" title="Print"><img src="%BASE_URL%assets/sidebar/print.svg" alt="Print"><span class="sidebar-button-text">Print</span></button>
-<button class="sidebar-button" id="reset-canvas-button" title="New File"><img src="%BASE_URL%assets/sidebar/newPage.svg" alt="New Page"><span class="sidebar-button-text">New Page</span></button>
+<button class="sidebar-button" id="save-as-button" title="Save As"><img src="assets/sidebar/saveAs.svg" alt="Save As"><span class="sidebar-button-text">Save As</span></button>
+<button class="sidebar-button" id="import-button" title="Open"><img src="assets/sidebar/open.svg" alt="Open"><span class="sidebar-button-text">Open</span></button>
+<button class="sidebar-button" id="print-button" title="Print"><img src="assets/sidebar/print.svg" alt="Print"><span class="sidebar-button-text">Print</span></button>
+<button class="sidebar-button" id="reset-canvas-button" title="New File"><img src="assets/sidebar/newPage.svg" alt="New Page"><span class="sidebar-button-text">New Page</span></button>
 </div>
 <div class="sidebar-container">
-<button class="sidebar-button" id="hide-drumgrid-toggle" title="Toggle Drum Grid"><img src="%BASE_URL%assets/sidebar/hideDrums.svg" alt="Toggle Drum Grid"><span class="sidebar-button-text">Hide Drum Grid</span></button>
+<button class="sidebar-button" id="hide-drumgrid-toggle" title="Toggle Drum Grid"><img src="assets/sidebar/hideDrums.svg" alt="Toggle Drum Grid"><span class="sidebar-button-text">Hide Drum Grid</span></button>
 </div>
 </aside>
 <main id="app-container" role="main">
@@ -39,20 +39,20 @@
     <div id="toolbar-primary" class="toolbar-primary">
         <div class="primary-toolbar-grid">
             <div class="primary-toolbar-cell primary-toolbar-actions">
-                <button class="toolkit-icon-button" id="settings-button" title="Settings"><img src="%BASE_URL%assets/icons/settings.svg" alt="Settings"></button>
+                <button class="toolkit-icon-button" id="settings-button" title="Settings"><img src="assets/icons/settings.svg" alt="Settings"></button>
                 <div id="volume-control-wrapper">
-                    <button class="toolkit-icon-button" id="volume-icon-button" aria-label="Volume" title="Volume"><img src="%BASE_URL%assets/icons/volume.svg" alt="Volume"></button>
+                    <button class="toolkit-icon-button" id="volume-icon-button" aria-label="Volume" title="Volume"><img src="assets/icons/volume.svg" alt="Volume"></button>
                     <div id="volume-popup">
                         <input type="range" id="vertical-volume-slider" orient="vertical" min="0" max="100" value="70" step="1" />
                     </div>
                 </div>
-                <button class="toolkit-icon-button" id="grid-zoom-in" title="Zoom In"><img src="%BASE_URL%assets/icons/zoomIn.svg" alt="Zoom In"></button>
-                <button class="toolkit-icon-button" id="grid-zoom-out" title="Zoom Out"><img src="%BASE_URL%assets/icons/zoomOut.svg" alt="Zoom Out"></button>
-                <button class="toolkit-icon-button" id="redo-button" title="Redo"><img src="%BASE_URL%assets/icons/redo.svg" alt="Redo"></button>
-                <button class="toolkit-icon-button" id="undo-button" title="Undo"><img src="%BASE_URL%assets/icons/undo.svg" alt="Undo"></button>
-                <button class="toolkit-icon-button" id="clear-button" title="Clear"><img src="%BASE_URL%assets/icons/clear.svg" alt="Clear"></button>
+                <button class="toolkit-icon-button" id="grid-zoom-in" title="Zoom In"><img src="assets/icons/zoomIn.svg" alt="Zoom In"></button>
+                <button class="toolkit-icon-button" id="grid-zoom-out" title="Zoom Out"><img src="assets/icons/zoomOut.svg" alt="Zoom Out"></button>
+                <button class="toolkit-icon-button" id="redo-button" title="Redo"><img src="assets/icons/redo.svg" alt="Redo"></button>
+                <button class="toolkit-icon-button" id="undo-button" title="Undo"><img src="assets/icons/undo.svg" alt="Undo"></button>
+                <button class="toolkit-icon-button" id="clear-button" title="Clear"><img src="assets/icons/clear.svg" alt="Clear"></button>
                 <button class="toolkit-icon-button eraser-button" id="eraser-tool-button" title="Eraser">
-                    <img src="%BASE_URL%assets/icons/eraser.svg" alt="Eraser" class="eraser-icon">
+                    <img src="assets/icons/eraser.svg" alt="Eraser" class="eraser-icon">
                 </button>
             </div>
             <div class="primary-toolbar-cell primary-toolbar-notebank">
@@ -66,9 +66,9 @@
                 </div>
             </div>
             <div class="primary-toolbar-cell primary-toolbar-playback">
-                <button class="toolkit-icon-button" id="play-button" title="Play"><img src="%BASE_URL%assets/icons/play.svg" alt="Play"></button>
-                <button class="toolkit-icon-button" id="stop-button" title="Stop"><img src="%BASE_URL%assets/icons/stop.svg" alt="Stop"></button>
-                <button class="toolkit-icon-button" id="loop-button" title="Loop"><img src="%BASE_URL%assets/icons/loop.svg" alt="Loop"></button>
+                <button class="toolkit-icon-button" id="play-button" title="Play"><img src="assets/icons/play.svg" alt="Play"></button>
+                <button class="toolkit-icon-button" id="stop-button" title="Stop"><img src="assets/icons/stop.svg" alt="Stop"></button>
+                <button class="toolkit-icon-button" id="loop-button" title="Loop"><img src="assets/icons/loop.svg" alt="Loop"></button>
             </div>
         </div>
     </div>
@@ -232,31 +232,31 @@
                                    <div class="tonic-modes-container">
                                        <div class="tonic-modes-grid">
                                            <button class="tonic-mode-button" data-tonic="1">
-                                               <img src="%BASE_URL%assets/tabicons/tonicShape_1.svg" alt="Major" class="tonic-mode-icon">
+                                               <img src="assets/tabicons/tonicShape_1.svg" alt="Major" class="tonic-mode-icon">
                                                <span class="tonic-mode-label">Major</span>
                                            </button>
                                            <button class="tonic-mode-button" data-tonic="2">
-                                               <img src="%BASE_URL%assets/tabicons/tonicShape_2.svg" alt="Dorian" class="tonic-mode-icon">
+                                               <img src="assets/tabicons/tonicShape_2.svg" alt="Dorian" class="tonic-mode-icon">
                                                <span class="tonic-mode-label">Dorian</span>
                                            </button>
                                            <button class="tonic-mode-button" data-tonic="3">
-                                               <img src="%BASE_URL%assets/tabicons/tonicShape_3.svg" alt="Phrygian" class="tonic-mode-icon">
+                                               <img src="assets/tabicons/tonicShape_3.svg" alt="Phrygian" class="tonic-mode-icon">
                                                <span class="tonic-mode-label">Phrygian</span>
                                            </button>
                                            <button class="tonic-mode-button" data-tonic="4">
-                                               <img src="%BASE_URL%assets/tabicons/tonicShape_4.svg" alt="Lydian" class="tonic-mode-icon">
+                                               <img src="assets/tabicons/tonicShape_4.svg" alt="Lydian" class="tonic-mode-icon">
                                                <span class="tonic-mode-label">Lydian</span>
                                            </button>
                                            <button class="tonic-mode-button" data-tonic="5">
-                                               <img src="%BASE_URL%assets/tabicons/tonicShape_5.svg" alt="Mixolydian" class="tonic-mode-icon">
+                                               <img src="assets/tabicons/tonicShape_5.svg" alt="Mixolydian" class="tonic-mode-icon">
                                                <span class="tonic-mode-label">Mixolydian</span>
                                            </button>
                                            <button class="tonic-mode-button" data-tonic="6">
-                                               <img src="%BASE_URL%assets/tabicons/tonicShape_6.svg" alt="Minor" class="tonic-mode-icon">
+                                               <img src="assets/tabicons/tonicShape_6.svg" alt="Minor" class="tonic-mode-icon">
                                                <span class="tonic-mode-label">Minor</span>
                                            </button>
                                            <button class="tonic-mode-button" data-tonic="7">
-                                               <img src="%BASE_URL%assets/tabicons/tonicShape_7.svg" alt="Locrian" class="tonic-mode-icon">
+                                               <img src="assets/tabicons/tonicShape_7.svg" alt="Locrian" class="tonic-mode-icon">
                                                <span class="tonic-mode-label">Locrian</span>
                                            </button>
                                        </div>
@@ -598,15 +598,15 @@
                                 <div class="tempo-container rhythm-controls-grid">
                                     <div class="tempo-boxes-container tempo-column">
                                         <div class="tempo-input-group tempo-row">
-                                            <img src="%BASE_URL%assets/tabicons/eigthNote.svg" alt="Eighth Note Tempo" class="tempo-label-icon">
+                                            <img src="assets/tabicons/eigthNote.svg" alt="Eighth Note Tempo" class="tempo-label-icon">
                                             <div id="eighth-note-tempo"></div>
                                         </div>
                                         <div class="tempo-input-group tempo-row">
-                                            <img src="%BASE_URL%assets/tabicons/quarterNote.svg" alt="Quarter Note Tempo" class="tempo-label-icon">
+                                            <img src="assets/tabicons/quarterNote.svg" alt="Quarter Note Tempo" class="tempo-label-icon">
                                             <div id="quarter-note-tempo"></div>
                                         </div>
                                         <div class="tempo-input-group tempo-row">
-                                            <img src="%BASE_URL%assets/tabicons/dottedQuarterNote.svg" alt="Dotted Quarter Note Tempo" class="tempo-label-icon">
+                                            <img src="assets/tabicons/dottedQuarterNote.svg" alt="Dotted Quarter Note Tempo" class="tempo-label-icon">
                                             <div id="dotted-quarter-tempo"></div>
                                         </div>
                                     </div>
