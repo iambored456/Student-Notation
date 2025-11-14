@@ -16,6 +16,8 @@ function renderPitchGrid() {
         logger.error('PitchGridController', 'Pitch grid context not available for rendering', null, 'grid');
         return;
     }
+
+    const viewportInfo = LayoutService.getViewportInfo();
     
     const renderOptions = {
         placedNotes: getPitchNotes(store.state),
@@ -29,8 +31,8 @@ function renderPitchGrid() {
         macrobeatBoundaryStyles: store.state.macrobeatBoundaryStyles,
         colorMode: 'color',
         degreeDisplayMode: store.state.degreeDisplayMode,
-        zoomLevel: LayoutService.getViewportInfo().zoomLevel,
-        viewportHeight: ctx.canvas.height
+        zoomLevel: viewportInfo.zoomLevel,
+        viewportHeight: viewportInfo.containerHeight
     };
     
     drawPitchGrid(ctx, renderOptions);

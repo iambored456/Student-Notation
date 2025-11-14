@@ -3,6 +3,7 @@ import { getColumnX, getRowY, getPitchClass, getLineStyleFromPitchClass, getCurr
 import { shouldDrawVerticalLineAtColumn, isTonicColumn } from '../../../../utils/tonicColumnUtils.js';
 import { fullRowData } from '../../../../state/pitchData.js';
 import logger from '@utils/logger.js';
+import { getLogicalCanvasWidth, getLogicalCanvasHeight } from '@utils/canvasDimensions.js';
 
 function drawHorizontalMusicLines(ctx, options, startRow, endRow) {
     // Access accidental button states
@@ -287,7 +288,7 @@ function drawRegularVerticalLines(ctx, options) {
         
         ctx.beginPath();
         ctx.moveTo(x, 0);
-        ctx.lineTo(x, ctx.canvas.height);
+        ctx.lineTo(x, getLogicalCanvasHeight(ctx.canvas));
         ctx.lineWidth = style.lineWidth;
         ctx.strokeStyle = style.strokeStyle;
         ctx.setLineDash(style.dash);
@@ -322,7 +323,7 @@ function drawGhostLines(ctx, options) {
         logger.debug('GridLines', 'Ghost line boundary calculation', {
             rightLegendColumnIndex,
             rightBoundary,
-            canvasWidth: ctx.canvas.width
+            canvasWidth: getLogicalCanvasWidth(ctx.canvas)
         }, 'grid');
         
         ghostPositions.forEach((x, posIndex) => {
@@ -347,7 +348,7 @@ function drawGhostLine(ctx, x) {
     // Ghost line style: dashed, lighter color, reduced opacity
     ctx.beginPath();
     ctx.moveTo(x, 0);
-    ctx.lineTo(x, ctx.canvas.height);
+    ctx.lineTo(x, getLogicalCanvasHeight(ctx.canvas));
     ctx.lineWidth = 1;
     ctx.strokeStyle = 'rgba(173, 181, 189, 0.4)'; // 40% opacity of regular grid color
     ctx.setLineDash([4, 3]); // 4px dash, 3px gap

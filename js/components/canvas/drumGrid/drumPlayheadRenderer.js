@@ -8,6 +8,7 @@ import {
   getColumnWidth,
   getCachedMusicalEndTime
 } from '@services/playheadModel.js';
+import { getLogicalCanvasWidth, getLogicalCanvasHeight } from '@utils/canvasDimensions.js';
 
 class DrumPlayheadRenderer {
   constructor() {
@@ -63,7 +64,7 @@ class DrumPlayheadRenderer {
     }
     
     if (this.ctx) {
-      this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+      this.ctx.clearRect(0, 0, getLogicalCanvasWidth(this.canvas), getLogicalCanvasHeight(this.canvas));
     }
   }
 
@@ -73,7 +74,7 @@ class DrumPlayheadRenderer {
       return;
     }
 
-    this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+    this.ctx.clearRect(0, 0, getLogicalCanvasWidth(this.canvas), getLogicalCanvasHeight(this.canvas));
 
     const xPos = this.calculateXFromTime(Tone.Transport.seconds);
     if (xPos === null) {
@@ -88,7 +89,7 @@ class DrumPlayheadRenderer {
     this.ctx.shadowBlur = 6;
     this.ctx.beginPath();
     this.ctx.moveTo(xPos, 0);
-    this.ctx.lineTo(xPos, this.canvas.height);
+    this.ctx.lineTo(xPos, getLogicalCanvasHeight(this.canvas));
     this.ctx.stroke();
     this.ctx.shadowBlur = 0;
 

@@ -4,6 +4,7 @@ import { getModulationDisplayText, getModulationColor } from '../../../../rhythm
 import { getMacrobeatInfo } from '../../../../state/selectors.js';
 import { getColumnX } from './rendererUtils.js';
 import logger from '@utils/logger.js';
+import { getLogicalCanvasHeight } from '@utils/canvasDimensions.js';
 
 /**
  * Converts a measure index to canvas X position for rendering
@@ -127,7 +128,7 @@ function renderSingleMarker(ctx, marker, options) {
  */
 function drawBarline(ctx, xCanvas, color, options) {
     const lineWidth = 3; // Thick barline as specified
-    const canvasHeight = ctx.canvas.height;
+    const canvasHeight = getLogicalCanvasHeight(ctx.canvas);
     
     ctx.beginPath();
     ctx.moveTo(xCanvas, 0);

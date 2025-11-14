@@ -24,6 +24,7 @@ import { hitTestAnyTripletShape } from '../../../../utils/tripletHitTest.js';
 // import { hitTestModulationMarker, getModulationMarkerCursor } from '../renderers/modulationRenderer.js'; // Temporarily commented out
 import { getModulationDisplayText, getModulationColor, MODULATION_RATIOS } from '../../../../rhythm/modulationMapping.js';
 import logger from '@utils/logger.js';
+import { getLogicalCanvasWidth, getLogicalCanvasHeight } from '@utils/canvasDimensions.js';
 
 // --- Interaction State ---
 let pitchHoverCtx;
@@ -407,7 +408,7 @@ function renderMobileGhostPreview() {
         return;
     }
 
-    pitchHoverCtx.clearRect(0, 0, pitchHoverCtx.canvas.width, pitchHoverCtx.canvas.height);
+    pitchHoverCtx.clearRect(0, 0, getLogicalCanvasWidth(pitchHoverCtx.canvas), getLogicalCanvasHeight(pitchHoverCtx.canvas));
     drawHoverHighlight(mobileTouchState.colIndex, mobileTouchState.rowIndex, MOBILE_GHOST_HIGHLIGHT);
     drawGhostNote(mobileTouchState.colIndex, mobileTouchState.rowIndex);
     setGhostNotePosition(mobileTouchState.colIndex, mobileTouchState.rowIndex);
@@ -584,7 +585,7 @@ function handleMouseDown(e) {
         const canvasY = e.clientY - rect.top;
         if (annotationService.eraseAtPoint(canvasX, canvasY)) rightClickActionTaken = true;
         
-        pitchHoverCtx.clearRect(0, 0, pitchHoverCtx.canvas.width, pitchHoverCtx.canvas.height);
+        pitchHoverCtx.clearRect(0, 0, getLogicalCanvasWidth(pitchHoverCtx.canvas), getLogicalCanvasHeight(pitchHoverCtx.canvas));
         drawHoverHighlight(colIndex, rowIndex, 'rgba(220, 53, 69, 0.3)');
         return;
     }
@@ -922,7 +923,7 @@ function handleMouseMove(e) {
     const rowIndex = GridCoordsService.getPitchRowIndex(y);
 
     if (!pitchHoverCtx) return;
-    pitchHoverCtx.clearRect(0, 0, pitchHoverCtx.canvas.width, pitchHoverCtx.canvas.height);
+    pitchHoverCtx.clearRect(0, 0, getLogicalCanvasWidth(pitchHoverCtx.canvas), getLogicalCanvasHeight(pitchHoverCtx.canvas));
     
     // Handle modulation marker dragging
     if (isDraggingModulationMarker && draggedModulationMarker) {
@@ -1379,7 +1380,7 @@ function handleMouseMove(e) {
 
 function handleMouseLeave() {
     if (pitchHoverCtx) {
-        pitchHoverCtx.clearRect(0, 0, pitchHoverCtx.canvas.width, pitchHoverCtx.canvas.height);
+        pitchHoverCtx.clearRect(0, 0, getLogicalCanvasWidth(pitchHoverCtx.canvas), getLogicalCanvasHeight(pitchHoverCtx.canvas));
     }
     lastHoveredTonicPoint = null;
     lastHoveredOctaveRows = [];
@@ -1613,7 +1614,7 @@ function drawModulationPreview(ctx, xPosition, ratio) {
     // Draw three solid preview lines
     const lineSpacing = 3; // pixels between lines
     const lineWidth = 2;
-    const canvasHeight = ctx.canvas.height;
+    const canvasHeight = getLogicalCanvasHeight(ctx.canvas);
     
     ctx.strokeStyle = color;
     ctx.lineWidth = lineWidth;

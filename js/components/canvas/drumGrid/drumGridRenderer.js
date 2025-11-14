@@ -7,6 +7,7 @@ import { getColumnX as getModulatedColumnX } from '@components/canvas/pitchGrid/
 import { renderModulationMarkers } from '@components/canvas/pitchGrid/renderers/modulationRenderer.js';
 import DrumPlayheadRenderer from './drumPlayheadRenderer.js';
 import { getIconPath } from '@utils/assetPaths.js';
+import { getLogicalCanvasWidth, getLogicalCanvasHeight } from '@utils/canvasDimensions.js';
 
 // Pre-load the volume icon
 let volumeIconImage = null;
@@ -151,7 +152,8 @@ function drawVerticalGridLines(ctx, options) {
         const x = getColumnX(i, options);
         
         // Skip lines outside the canvas bounds
-        if (x < 0 || x > ctx.canvas.width) {
+        const canvasWidth = getLogicalCanvasWidth(ctx.canvas);
+        if (x < 0 || x > canvasWidth) {
             continue;
         }
         
@@ -182,7 +184,7 @@ function drawVerticalGridLines(ctx, options) {
         
         ctx.beginPath();
         ctx.moveTo(x, 0);
-        ctx.lineTo(x, ctx.canvas.height);
+        ctx.lineTo(x, getLogicalCanvasHeight(ctx.canvas));
         ctx.lineWidth = style.lineWidth;
         ctx.strokeStyle = style.strokeStyle;
         ctx.setLineDash(style.dash);
@@ -199,7 +201,7 @@ function drawVerticalGridLines(ctx, options) {
 export function drawDrumGrid(ctx, options) {
     const { placedNotes, columnWidths, cellWidth, cellHeight, placedTonicSigns } = options;
     
-    ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+    ctx.clearRect(0, 0, getLogicalCanvasWidth(ctx.canvas), getLogicalCanvasHeight(ctx.canvas));
     
     // DEBUG: Log canvas positioning info for comparison
     const canvas = ctx.canvas;
@@ -235,7 +237,7 @@ export function drawDrumGrid(ctx, options) {
         const y = i * drumRowHeight;
         ctx.beginPath();
         ctx.moveTo(legendLeftBoundary, y);
-        ctx.lineTo(ctx.canvas.width, y);
+        ctx.lineTo(getLogicalCanvasWidth(ctx.canvas), y);
         ctx.strokeStyle = '#ced4da';
         ctx.lineWidth = 1;
         ctx.stroke();

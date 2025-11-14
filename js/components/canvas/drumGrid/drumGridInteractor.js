@@ -6,6 +6,7 @@ import { drawDrumShape } from './drumGridRenderer.js';
 import { BASE_DRUM_ROW_HEIGHT, DRUM_HEIGHT_SCALE_FACTOR } from '../../../core/constants.js';
 import { getColumnX as getModulatedColumnX } from '@components/canvas/pitchGrid/renderers/rendererUtils.js';
 import DrumPlayheadRenderer from './drumPlayheadRenderer.js';
+import { getLogicalCanvasWidth, getLogicalCanvasHeight } from '@utils/canvasDimensions.js';
 
 // --- Interaction State ---
 let drumHoverCtx;
@@ -104,7 +105,7 @@ function handleMouseMove(e) {
     // Don't process drum grid interactions if hovering over volume icon
     if (isHoveringVolumeIcon) {
         if (drumHoverCtx) {
-            drumHoverCtx.clearRect(0, 0, drumHoverCtx.canvas.width, drumHoverCtx.canvas.height);
+            drumHoverCtx.clearRect(0, 0, getLogicalCanvasWidth(drumHoverCtx.canvas), getLogicalCanvasHeight(drumHoverCtx.canvas));
         }
         return;
     }
@@ -120,7 +121,7 @@ function handleMouseMove(e) {
         return;
     }
 
-    drumHoverCtx.clearRect(0, 0, drumHoverCtx.canvas.width, drumHoverCtx.canvas.height);
+    drumHoverCtx.clearRect(0, 0, getLogicalCanvasWidth(drumHoverCtx.canvas), getLogicalCanvasHeight(drumHoverCtx.canvas));
     const drumTrack = ['H', 'M', 'L'][rowIndex];
     
     if (isRightClickActive) {
@@ -136,7 +137,7 @@ function handleMouseMove(e) {
 
 function handleMouseLeave() {
     if (drumHoverCtx) {
-        drumHoverCtx.clearRect(0, 0, drumHoverCtx.canvas.width, drumHoverCtx.canvas.height);
+        drumHoverCtx.clearRect(0, 0, getLogicalCanvasWidth(drumHoverCtx.canvas), getLogicalCanvasHeight(drumHoverCtx.canvas));
     }
     
     // Reset volume icon state when mouse leaves drum grid
@@ -190,7 +191,7 @@ function handleMouseDown(e) {
         if (store.eraseDrumNoteAt(colIndex, drumTrack, false)) {
             rightClickActionTaken = true;
         }
-        drumHoverCtx.clearRect(0, 0, drumHoverCtx.canvas.width, drumHoverCtx.canvas.height);
+        drumHoverCtx.clearRect(0, 0, getLogicalCanvasWidth(drumHoverCtx.canvas), getLogicalCanvasHeight(drumHoverCtx.canvas));
         drawHoverHighlight(colIndex, drumRow, 'rgba(220, 53, 69, 0.3)');
         return;
     }

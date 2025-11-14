@@ -7,6 +7,7 @@ import { getRowY } from '@components/canvas/pitchGrid/renderers/rendererUtils.js
 import PaintCanvas from './paintCanvas.js';
 import * as Tone from 'tone';
 import { Note } from 'tonal';
+import { getLogicalCanvasWidth, getLogicalCanvasHeight } from '@utils/canvasDimensions.js';
 
 class PaintPlayheadRenderer {
   constructor() {
@@ -72,7 +73,7 @@ class PaintPlayheadRenderer {
     }
     
     if (this.ctx) {
-      this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+      this.ctx.clearRect(0, 0, getLogicalCanvasWidth(this.canvas), getLogicalCanvasHeight(this.canvas));
     }
   }
 
@@ -82,7 +83,7 @@ class PaintPlayheadRenderer {
       return;
     }
 
-    this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+    this.ctx.clearRect(0, 0, getLogicalCanvasWidth(this.canvas), getLogicalCanvasHeight(this.canvas));
 
     const playbackState = {
       isPlaying: store.state.isPlaying,
@@ -104,7 +105,7 @@ class PaintPlayheadRenderer {
     const now = performance.now();
     
     // Clear canvas first
-    this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+    this.ctx.clearRect(0, 0, getLogicalCanvasWidth(this.canvas), getLogicalCanvasHeight(this.canvas));
     
     const y = this.midiToY(detectedPitch.midi);
     const hasValidPitch = y !== null;
@@ -188,7 +189,7 @@ class PaintPlayheadRenderer {
     this.ctx.shadowBlur = 6;
     this.ctx.beginPath();
     this.ctx.moveTo(xPos, 0);
-    this.ctx.lineTo(xPos, this.canvas.height);
+    this.ctx.lineTo(xPos, getLogicalCanvasHeight(this.canvas));
     this.ctx.stroke();
     this.ctx.shadowBlur = 0;
 
@@ -296,7 +297,7 @@ class PaintPlayheadRenderer {
     // Handle exact matches (midiValue exactly equals a grid row)
     if (lowerMidi === midiValue) {
       const rowY = getRowY(lowerRowIndex, store.state);
-      return Math.max(0, Math.min(rowY, this.canvas.height));
+      return Math.max(0, Math.min(rowY, getLogicalCanvasHeight(this.canvas)));
     }
 
     // Interpolate between adjacent rows for continuous positioning
@@ -307,7 +308,7 @@ class PaintPlayheadRenderer {
       const interpolatedY = lowerY + (upperY - lowerY) * interpolationFactor;
       
       
-      return Math.max(0, Math.min(interpolatedY, this.canvas.height));
+      return Math.max(0, Math.min(interpolatedY, getLogicalCanvasHeight(this.canvas)));
     }
 
     // Fallback: use closest row if interpolation fails
@@ -324,7 +325,7 @@ class PaintPlayheadRenderer {
     }
 
     const rowY = getRowY(bestRowIndex, store.state);
-    return Math.max(0, Math.min(rowY, this.canvas.height));
+    return Math.max(0, Math.min(rowY, getLogicalCanvasHeight(this.canvas)));
   }
 
   /**

@@ -46,6 +46,53 @@ function getDynamicMinZoomLevel() {
     return Math.max(MIN_ZOOM_LEVEL, requiredZoom);
 }
 
+function getDevicePixelRatio() {
+    const ratio = window?.devicePixelRatio ?? 1;
+    if (!Number.isFinite(ratio) || ratio <= 0) {
+        return 1;
+    }
+    return ratio;
+}
+
+function resizeCanvasForPixelRatio(canvasElement, logicalWidth, logicalHeight, pixelRatio, existingContext = null) {
+    if (!canvasElement) {
+        return false;
+    }
+    const normalizedRatio = Number.isFinite(pixelRatio) && pixelRatio > 0 ? pixelRatio : 1;
+    canvasElement.dataset.pixelRatio = `${normalizedRatio}`;
+
+    let resized = false;
+
+    if (typeof logicalWidth === 'number') {
+        const targetWidth = Math.max(1, Math.round(logicalWidth * normalizedRatio));
+        if (Math.abs(canvasElement.width - targetWidth) > 0.5) {
+            canvasElement.width = targetWidth;
+            resized = true;
+        }
+        canvasElement.style.width = `${logicalWidth}px`;
+        canvasElement.dataset.logicalWidth = `${logicalWidth}`;
+    }
+
+    if (typeof logicalHeight === 'number') {
+        const targetHeight = Math.max(1, Math.round(logicalHeight * normalizedRatio));
+        if (Math.abs(canvasElement.height - targetHeight) > 0.5) {
+            canvasElement.height = targetHeight;
+            resized = true;
+        }
+        canvasElement.style.height = `${logicalHeight}px`;
+        canvasElement.dataset.logicalHeight = `${logicalHeight}`;
+    }
+
+    if (resized) {
+        const ctxToScale = existingContext || canvasElement.getContext('2d');
+        if (ctxToScale) {
+            ctxToScale.setTransform(normalizedRatio, 0, 0, normalizedRatio, 0, 0);
+        }
+    }
+
+    return resized;
+}
+
 function initDOMElements() {
     // gridContainer = document.getElementById('grid-container');  // Unused variable
     pitchGridWrapper = document.getElementById('pitch-grid-wrapper');
@@ -135,6 +182,7 @@ function recalcAndApplyLayout() {
     const modulatedCanvasWidth = LayoutService.getModulatedCanvasWidth();
     const finalCanvasWidth = modulatedCanvasWidth > totalCanvasWidth ? modulatedCanvasWidth : totalCanvasWidth;
     const totalCanvasWidthPx = Math.round(finalCanvasWidth);
+    const pixelRatio = getDevicePixelRatio();
     
     const drumGridWrapper = document.getElementById('drum-grid-wrapper');
     const gridsWrapper = document.getElementById('grids-wrapper');
@@ -346,22 +394,31 @@ function recalcAndApplyLayout() {
     }
 
     // Both pitch and drum canvases now use the same unified width
-    [canvas, playheadCanvas, hoverCanvas, pitchPaintCanvas].forEach(c => {
-        if(c && Math.abs(c.width - totalCanvasWidthPx) > 1) {
-            c.width = totalCanvasWidthPx;
-        }
-    });
-
-    [drumCanvas, drumPlayheadCanvas, drumHoverCanvas].forEach(c => {
-        if(c && Math.abs(c.width - totalCanvasWidthPx) > 1) {
-            c.width = totalCanvasWidthPx;
-        }
-    });
-    
     const drumRowHeight = Math.max(BASE_DRUM_ROW_HEIGHT, DRUM_HEIGHT_SCALE_FACTOR * store.state.cellHeight);
     const drumCanvasHeight = DRUM_ROW_COUNT * drumRowHeight;
     const drumHeightPx = `${drumCanvasHeight}px`;
-    
+
+    const pitchCanvasTargets = [
+        { element: canvas, context: ctx },
+        { element: playheadCanvas },
+        { element: hoverCanvas },
+        { element: pitchPaintCanvas }
+    ];
+
+    pitchCanvasTargets.forEach(({ element, context }) => {
+        resizeCanvasForPixelRatio(element, totalCanvasWidthPx, undefined, pixelRatio, context);
+    });
+
+    const drumCanvasTargets = [
+        { element: drumCanvas, context: drumCtx },
+        { element: drumPlayheadCanvas },
+        { element: drumHoverCanvas }
+    ];
+
+    drumCanvasTargets.forEach(({ element, context }) => {
+        resizeCanvasForPixelRatio(element, totalCanvasWidthPx, drumCanvasHeight, pixelRatio, context);
+    });
+
     const drumHeightChanged = Math.abs(lastCalculatedDrumHeight - drumCanvasHeight) > 5;
     const shouldUpdateDrumHeight = drumGridWrapper && (drumHeightChanged || lastCalculatedDrumHeight === 0);
     
@@ -369,25 +426,16 @@ function recalcAndApplyLayout() {
         drumGridWrapper.style.height = drumHeightPx;
         lastCalculatedDrumHeight = drumCanvasHeight;
     }
-    if (drumCanvas && Math.abs(drumCanvas.height - drumCanvasHeight) > 1) {
-        drumCanvas.height = drumCanvasHeight;
-    }
-    if (drumPlayheadCanvas && Math.abs(drumPlayheadCanvas.height - drumCanvasHeight) > 1) {
-        drumPlayheadCanvas.height = drumCanvasHeight;
-    }
-    if (drumHoverCanvas && Math.abs(drumHoverCanvas.height - drumCanvasHeight) > 1) {
-        drumHoverCanvas.height = drumCanvasHeight;
-    }
+
+    const scheduledPixelRatio = pixelRatio;
+    const scheduledPitchWidth = totalCanvasWidthPx;
 
     setTimeout(() => {
         const finalPitchGridContainer = document.getElementById('pitch-grid-container');
         const finalContainerHeight = finalPitchGridContainer.clientHeight;
         
-        
-        [canvas, playheadCanvas, hoverCanvas, pitchPaintCanvas].forEach((c, index) => { 
-            if(c && Math.abs(c.height - finalContainerHeight) > 1) { 
-                c.height = finalContainerHeight; 
-            } 
+        pitchCanvasTargets.forEach(({ element, context }) => {
+            resizeCanvasForPixelRatio(element, scheduledPitchWidth, finalContainerHeight, scheduledPixelRatio, context);
         });
         
         document.dispatchEvent(new CustomEvent('canvasResized', { 

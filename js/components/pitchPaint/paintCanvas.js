@@ -4,6 +4,7 @@ import { getPaintColor } from '@utils/chromaticColors.js';
 // We need the renderer to use its calculation methods
 import PaintPlayheadRenderer from './paintPlayheadRenderer.js';
 import logger from '@utils/logger.js';
+import { getLogicalCanvasWidth, getLogicalCanvasHeight } from '@utils/canvasDimensions.js';
 
 class PaintCanvas {
   constructor() {
@@ -66,33 +67,13 @@ class PaintCanvas {
 
   resize() {
     if (!this.canvas) return;
-    const wrapper = document.getElementById('pitch-canvas-wrapper');
-    
-    // DEFER to get final measurements after layout settles
-    setTimeout(() => {
-        const pitchGridContainer = document.getElementById('pitch-grid-container');
-        
-        // FIXED: Use the same intended viewport height calculation as layoutService
-        // to ensure paint canvas matches the main notation grid canvas
-        const DEFAULT_VISIBLE_RANKS = 68; // Should match layoutService
-        const cellHeight = store.state.cellHeight || 18.35;
-        const intendedViewportHeight = DEFAULT_VISIBLE_RANKS * (cellHeight / 2);
-        
-        const finalTargetHeight = intendedViewportHeight;
-        
-        
-        if (this.canvas.width !== wrapper.clientWidth || this.canvas.height !== finalTargetHeight) {
-            logger.debug('PaintCanvas', `Setting pitch-paint-canvas height (DEFERRED): ${this.canvas.height} → ${finalTargetHeight}`, null, 'paint');
-            this.canvas.width = wrapper.clientWidth;
-            this.canvas.height = finalTargetHeight;
-            this.render();
-        }
-    }, 30); // Slightly longer delay than layoutService
+    // LayoutService now drives the backing-store sizing; just re-render.
+    this.render();
   }
 
   render() {
     if (!this.ctx) return;
-    this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+    this.ctx.clearRect(0, 0, getLogicalCanvasWidth(this.canvas), getLogicalCanvasHeight(this.canvas));
     
     const paintHistory = store.state.paint.paintHistory;
     

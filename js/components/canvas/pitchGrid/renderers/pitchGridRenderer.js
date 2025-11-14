@@ -8,6 +8,7 @@ import { renderStamps } from './stampRenderer.js';
 import { renderTriplets } from './tripletRenderer.js';
 import { renderModulationMarkers } from './modulationRenderer.js';
 import { renderAnnotations } from './annotationRenderer.js';
+import { getLogicalCanvasWidth, getLogicalCanvasHeight } from '@utils/canvasDimensions.js';
 
 export function drawPitchGrid(ctx, options) {
     const fullOptions = { ...options, ...store.state };
@@ -18,7 +19,7 @@ export function drawPitchGrid(ctx, options) {
     if (fullOptions.modulationMarkers && fullOptions.modulationMarkers.length > 0) {
     }
     
-    ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+    ctx.clearRect(0, 0, getLogicalCanvasWidth(ctx.canvas), getLogicalCanvasHeight(ctx.canvas));
 
     // 1. Get the range of rows that are actually visible
     const { startRow, endRow } = getVisibleRowRange();

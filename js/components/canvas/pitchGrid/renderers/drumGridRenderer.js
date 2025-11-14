@@ -1,5 +1,6 @@
 // js/components/Canvas/PitchGrid/renderers/drumGridRenderer.js
 import LayoutService from '../../../../services/layoutService.js';
+import { getLogicalCanvasWidth, getLogicalCanvasHeight } from '@utils/canvasDimensions.js';
 
 // --- Pure Helper Functions ---
 function getColumnX(index, options) {
@@ -74,7 +75,7 @@ function drawVerticalGridLines(ctx, options) {
         
         ctx.beginPath();
         ctx.moveTo(x, 0);
-        ctx.lineTo(x, ctx.canvas.height);
+        ctx.lineTo(x, getLogicalCanvasHeight(ctx.canvas));
         ctx.lineWidth = style.lineWidth;
         ctx.strokeStyle = style.strokeStyle;
         ctx.setLineDash(style.dash);
@@ -91,7 +92,7 @@ function drawVerticalGridLines(ctx, options) {
 export function drawDrumGrid(ctx, options) {
     const { placedNotes, columnWidths, cellWidth, cellHeight, placedTonicSigns } = options;
     
-    ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+    ctx.clearRect(0, 0, getLogicalCanvasWidth(ctx.canvas), getLogicalCanvasHeight(ctx.canvas));
 
     // Use zoom-dependent row height with minimum size
     const baseDrumRowHeight = 30;
@@ -114,7 +115,7 @@ export function drawDrumGrid(ctx, options) {
         const y = i * drumRowHeight;
         ctx.beginPath();
         ctx.moveTo(0, y);
-        ctx.lineTo(ctx.canvas.width, y);
+        ctx.lineTo(getLogicalCanvasWidth(ctx.canvas), y);
         ctx.strokeStyle = '#ced4da';
         ctx.lineWidth = 1;
         ctx.stroke();

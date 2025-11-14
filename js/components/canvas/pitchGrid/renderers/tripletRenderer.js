@@ -4,6 +4,7 @@ import { createTripletNotehead } from '../../../Rhythm/glyphs/tripletGlyphs.js';
 import { getRowY, getColumnX } from './rendererUtils.js';
 import store from '../../../../state/index.js';
 import logger from '../../../../utils/logger.js';
+import { getLogicalCanvasWidth } from '@utils/canvasDimensions.js';
 
 logger.moduleLoaded('TripletRenderer', 'triplets');
 
@@ -48,7 +49,8 @@ function renderTripletGroup(ctx, placement, options) {
   const groupHeight = options.cellHeight;
   
   // Skip if outside viewport
-  if (groupX + groupWidth < 0 || groupX > ctx.canvas.width) return;
+  const canvasWidth = getLogicalCanvasWidth(ctx.canvas);
+  if (groupX + groupWidth < 0 || groupX > canvasWidth) return;
   
   // Draw triplet noteheads with per-shape offsets
   const getRowYWithOptions = (rowIndex) => getRowY(rowIndex, options);

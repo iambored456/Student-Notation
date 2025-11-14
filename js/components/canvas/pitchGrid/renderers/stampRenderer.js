@@ -4,6 +4,7 @@ import { defaultStampRenderer } from '../../../../utils/stampRenderer.js';
 import { getRowY, getColumnX } from './rendererUtils.js';
 import store from '../../../../state/index.js';
 import logger from '../../../../utils/logger.js';
+import { getLogicalCanvasWidth } from '@utils/canvasDimensions.js';
 
 logger.moduleLoaded('StampRenderer', 'stamps');
 
@@ -45,7 +46,8 @@ function renderStamp(ctx, placement, options) {
   const stampHeight = options.cellHeight;
 
   // Skip if outside viewport
-  if (stampX + stampWidth < 0 || stampX > ctx.canvas.width) return;
+  const canvasWidth = getLogicalCanvasWidth(ctx.canvas);
+  if (stampX + stampWidth < 0 || stampX > canvasWidth) return;
 
   // Create a getRowY wrapper that uses the current options
   const getRowYWithOptions = (rowIndex) => getRowY(rowIndex, options);

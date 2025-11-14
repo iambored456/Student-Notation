@@ -8,6 +8,7 @@ import GlobalService from './globalService.js';
 import domCache from './domCache.js';
 import logger from '@utils/logger.js';
 import DrumPlayheadRenderer from '@components/canvas/drumGrid/drumPlayheadRenderer.js';
+import { getLogicalCanvasWidth, getLogicalCanvasHeight } from '@utils/canvasDimensions.js';
 
 import { getStampPlaybackData } from '@/rhythm/stampPlacements.js';
 import { getStampScheduleEvents } from '@/rhythm/scheduleStamps.js';
@@ -615,7 +616,9 @@ function animatePlayhead() {
             playheadAnimationFrame = requestAnimationFrame(draw);
             return;
         };
-        ctx.clearRect(0, 0, playheadCanvas.width, playheadCanvas.height);
+        const logicalWidth = getLogicalCanvasWidth(playheadCanvas);
+        const logicalHeight = getLogicalCanvasHeight(playheadCanvas);
+        ctx.clearRect(0, 0, logicalWidth, logicalHeight);
         
         let loopAwareTime = currentTime;
         if (isLooping) {
@@ -719,7 +722,8 @@ function animatePlayhead() {
             ctx.lineWidth = 2;
             ctx.beginPath();
             ctx.moveTo(finalXPos, 0);
-            ctx.lineTo(finalXPos, playheadCanvas.height);
+        const canvasHeight = getLogicalCanvasHeight(playheadCanvas);
+        ctx.lineTo(finalXPos, canvasHeight);
             ctx.stroke();
         }
         
@@ -984,7 +988,7 @@ const TransportService = {
         const playheadCanvas = domCache.get('playheadCanvas');
         if (playheadCanvas) {
             const ctx = playheadCanvas.getContext('2d');
-            ctx.clearRect(0, 0, playheadCanvas.width, playheadCanvas.height);
+            ctx.clearRect(0, 0, getLogicalCanvasWidth(playheadCanvas), getLogicalCanvasHeight(playheadCanvas));
         }
         
         if (store.state.paint.isMicPaintActive) {
