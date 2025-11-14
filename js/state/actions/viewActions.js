@@ -1,5 +1,6 @@
 // js/state/actions/viewActions.js
 import { fullRowData as masterRowData } from '../pitchData.js';
+import logger from '@utils/logger.js';
 
 function remapAnnotation(annotation, oldRange, newRange) {
     if (!annotation || typeof annotation !== 'object') {
@@ -111,30 +112,48 @@ function remapAnnotation(annotation, oldRange, newRange) {
 export const viewActions = {
     // Tools
     toggleAccidentalMode(type) {
-        if (!this.state.accidentalMode.hasOwnProperty(type)) return;
+        if (!this.state.accidentalMode?.hasOwnProperty(type)) return;
 
-        const currentValue = this.state.accidentalMode[type];
+        const snapshot = { ...this.state.accidentalMode };
+        const currentValue = snapshot[type];
         const otherType = type === 'flat' ? 'sharp' : 'flat';
-        const otherValue = this.state.accidentalMode[otherType];
+        const otherValue = snapshot[otherType];
 
-        // If trying to turn OFF this type and the other is already OFF,
-        // turn the other ON instead (prevent both being OFF)
+        logger.debug('ViewActions', `toggleAccidentalMode(${type})`, {
+            previousState: snapshot,
+            requestedType: type,
+            requestedValue: !currentValue,
+            pairedType: otherType,
+            pairedValue: otherValue
+        }, 'state');
+
         if (currentValue && !otherValue) {
             this.state.accidentalMode[otherType] = true;
             this.state.accidentalMode[type] = false;
+            logger.warn('ViewActions', `Prevented both accidentals from being disabled (enabling ${otherType})`, {
+                enforcedType: otherType,
+                toggledType: type
+            }, 'state');
         } else {
-            // Normal toggle
             this.state.accidentalMode[type] = !currentValue;
         }
 
+        logger.debug('ViewActions', `toggleAccidentalMode(${type}) result`, {
+            newState: { ...this.state.accidentalMode }
+        }, 'state');
         this.emit('accidentalModeChanged', this.state.accidentalMode);
         this.emit('layoutConfigChanged');
     },
 
     toggleFrequencyLabels() {
-        // Simply toggle the frequency display mode
-        // Does NOT modify accidental mode state
+        const previous = this.state.showFrequencyLabels;
         this.state.showFrequencyLabels = !this.state.showFrequencyLabels;
+
+        logger.debug('ViewActions', 'toggleFrequencyLabels', {
+            previous,
+            next: this.state.showFrequencyLabels,
+            accidentalMode: { ...this.state.accidentalMode }
+        }, 'state');
 
         this.emit('frequencyLabelsChanged', this.state.showFrequencyLabels);
         this.emit('layoutConfigChanged');
@@ -142,7 +161,14 @@ export const viewActions = {
 
     toggleFocusColours() {
         this.state.focusColours = !this.state.focusColours;
-        this.emit('focusColoursChanged', this.state.focusColours);
+        const focusColoursEnabled = this.state.focusColours;
+        this.emit('focusColoursChanged', focusColoursEnabled);
+
+        if (focusColoursEnabled && !this.state.showFrequencyLabels) {
+            this.state.showFrequencyLabels = true;
+            this.emit('frequencyLabelsChanged', true);
+        }
+
         this.emit('layoutConfigChanged');
     },
 
@@ -159,6 +185,7 @@ export const viewActions = {
         const oldMode = this.state.degreeDisplayMode;
         this.state.degreeDisplayMode = this.state.degreeDisplayMode === mode ? 'off' : mode;
         const newMode = this.state.degreeDisplayMode;
+        logger.debug('ViewActions', 'setDegreeDisplayMode', { oldMode, newMode }, 'state');
 
         this.emit('layoutConfigChanged');
         this.emit('degreeDisplayModeChanged', newMode);

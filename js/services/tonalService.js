@@ -2,17 +2,43 @@
 import { Note, Interval, Scale, Chord, RomanNumeral, Progression } from 'tonal';
 import { getKeyContextForColumn } from '@state/selectors.js';
 
+const SEMITONE_TO_DIATONIC = {
+    0: { degree: 1, alt: 0 },
+    1: { degree: 2, alt: -1 },
+    2: { degree: 2, alt: 0 },
+    3: { degree: 3, alt: -1 },
+    4: { degree: 3, alt: 0 },
+    5: { degree: 4, alt: 0 },
+    6: { degree: 5, alt: -1 }, // prefer ♭5 partner; enharmonic toggle can reach ♯4
+    7: { degree: 5, alt: 0 },
+    8: { degree: 6, alt: -1 },
+    9: { degree: 6, alt: 0 },
+    10: { degree: 7, alt: -1 },
+    11: { degree: 7, alt: 0 }
+};
+
+function getOctavePartner(details) {
+    const absNum = Math.abs(details.num);
+    if (absNum !== 8 || details.alt >= 0) {
+        return null;
+    }
+    const semitones = ((details.semitones % 12) + 12) % 12;
+    return SEMITONE_TO_DIATONIC[semitones] || null;
+}
 
 function formatInterval(interval) {
     if (!interval) return null;
     const details = Interval.get(interval);
     if (!details || details.num === undefined) return null;
+
+    const octavePartner = getOctavePartner(details);
+    let degreeNumber = octavePartner ? octavePartner.degree : Math.abs(details.num);
+    let alt = octavePartner ? octavePartner.alt : details.alt;
+
     let prefix = '';
-    const alt = details.alt;
-    const num = Math.abs(details.num);
-    if (alt < 0) prefix = 'â™­'.repeat(Math.abs(alt));
-    else if (alt > 0) prefix = 'â™¯'.repeat(alt);
-    return `${prefix}${num}`;
+    if (alt < 0) prefix = '♭'.repeat(Math.abs(alt));
+    else if (alt > 0) prefix = '♯'.repeat(alt);
+    return `${prefix}${degreeNumber}`;
 }
 
 // Helper function to get enharmonic equivalent of a scale degree
@@ -21,16 +47,16 @@ function getEnharmonicDegree(degreeStr) {
     
     // Mapping of enharmonic equivalents for scale degrees
     const enharmonicMap = {
-        'â™¯1': 'â™­2',
-        'â™­2': 'â™¯1',
-        'â™¯2': 'â™­3',
-        'â™­3': 'â™¯2',
-        'â™¯4': 'â™­5',
-        'â™­5': 'â™¯4',
-        'â™¯5': 'â™­6',
-        'â™­6': 'â™¯5',
-        'â™¯6': 'â™­7',
-        'â™­7': 'â™¯6'
+        '♯1': '♭2',
+        '♭2': '♯1',
+        '♯2': '♭3',
+        '♭3': '♯2',
+        '♯4': '♭5',
+        '♭5': '♯4',
+        '♯5': '♭6',
+        '♭6': '♯5',
+        '♯6': '♭7',
+        '♭7': '♯6'
     };
     
     return enharmonicMap[degreeStr] || null;
@@ -38,7 +64,7 @@ function getEnharmonicDegree(degreeStr) {
 
 // Helper function to check if a degree has an accidental
 function hasAccidental(degreeStr) {
-    return degreeStr && (degreeStr.includes('â™¯') || degreeStr.includes('â™­'));
+    return degreeStr && (degreeStr.includes('♯') || degreeStr.includes('♭'));
 }
 
 const TonalService = {

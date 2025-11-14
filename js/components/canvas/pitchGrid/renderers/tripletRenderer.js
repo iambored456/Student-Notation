@@ -98,9 +98,14 @@ function renderTripletNoteheads(ctx, stamp, groupX, centerY, groupWidth, groupHe
       noteheadY = getRowY(shapeRow);
 
       if (rowOffset !== 0) {
-        console.log('[TRIPLET RENDER] Drawing notehead with offset:', {
-          slot, shapeKey, rowOffset, baseRow: placement.row, shapeRow, y: noteheadY
-        });
+        logger.debug('TripletRenderer', 'Drawing notehead with offset', {
+          slot,
+          shapeKey,
+          rowOffset,
+          baseRow: placement.row,
+          shapeRow,
+          y: noteheadY
+        }, 'triplets');
       }
     }
 

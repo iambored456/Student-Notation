@@ -2,7 +2,7 @@
 import { initialState } from './initialState/index.js';
 import { fullRowData as masterRowData } from './pitchData.js';
 import { historyActions } from './actions/historyActions.js';
-import { noteActions } from './actions/noteActions.js';
+import { noteActions, ensureCircleNoteSpan } from './actions/noteActions.js';
 import { timbreActions } from './actions/timbreActions.js';
 import { rhythmActions } from './actions/rhythmActions.js';
 import { viewActions } from './actions/viewActions.js';
@@ -19,7 +19,9 @@ const STORAGE_KEY = 'studentNotationState';
 function loadStateFromLocalStorage() {
     try {
         const serializedState = localStorage.getItem(STORAGE_KEY);
-        if (serializedState === null) return undefined;
+        if (serializedState === null) {
+            return undefined;
+        }
         const parsedState = JSON.parse(serializedState);
 
         // This logic correctly converts plain objects/arrays from storage back to Float32Arrays
@@ -60,6 +62,10 @@ function loadStateFromLocalStorage() {
             const bottomIndex = Math.max(topIndex, Math.min(maxIndex, parsedState.pitchRange.bottomIndex ?? maxIndex));
             parsedState.pitchRange = { topIndex, bottomIndex };
         }
+
+        if (parsedState.placedNotes?.length) {
+            parsedState.placedNotes.forEach(ensureCircleNoteSpan);
+        }
         
         return parsedState;
     } catch (err) {
@@ -89,6 +95,7 @@ function saveStateToLocalStorage(state) {
             annotations: state.annotations,
             pitchRange: state.pitchRange,
             snapZoomToRange: state.snapZoomToRange,
+            degreeDisplayMode: state.degreeDisplayMode,
             paint: {
                 paintHistory: state.paint.paintHistory,
                 paintSettings: state.paint.paintSettings
@@ -166,6 +173,11 @@ for (const key in actions) {
 
 // Persist tempo adjustments immediately so the slider matches after refresh
 store.on('tempoChanged', () => {
+    saveStateToLocalStorage(store.state);
+});
+
+// Persist degree display mode changes immediately
+store.on('degreeDisplayModeChanged', () => {
     saveStateToLocalStorage(store.state);
 });
 

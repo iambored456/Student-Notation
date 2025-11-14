@@ -88,7 +88,7 @@ let userInteractionReceived = false;
 const initAudioOnInteraction = () => {
     if (!userInteractionReceived) {
         userInteractionReceived = true;
-        window.initAudio().catch(e => console.warn('Failed to initialize audio:', e));
+        window.initAudio().catch(e => logger.warn('Main.js', 'Failed to initialize audio after user interaction', e, 'initialization'));
         // Remove listeners after first interaction
         document.removeEventListener('click', initAudioOnInteraction, true);
         document.removeEventListener('keydown', initAudioOnInteraction, true);
@@ -100,6 +100,11 @@ const initAudioOnInteraction = () => {
 document.addEventListener('click', initAudioOnInteraction, true);
 document.addEventListener('keydown', initAudioOnInteraction, true);
 document.addEventListener('touchstart', initAudioOnInteraction, true);
+window.addEventListener('beforeunload', () => {
+    if (typeof SynthEngine.teardown === 'function') {
+        SynthEngine.teardown();
+    }
+});
 
 // ? Component readiness tracking for initialization order safeguards
 const componentReadiness = {
@@ -244,7 +249,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     // Phase 2c-1: Initializing RhythmPlaybackService
     // Don't await - this may need user interaction for audio context
     rhythmPlaybackService.initialize().catch(err => {
-        console.warn('[INIT] RhythmPlaybackService initialization deferred (needs user interaction):', err);
+        logger.warn('Main.js', 'RhythmPlaybackService initialization deferred (needs user interaction)', err, 'initialization');
     });
     markComponentReady('rhythmPlaybackService');
 
@@ -337,10 +342,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     }, 1000);
     
     } catch (error) {
-        console.error('[INIT] ? INITIALIZATION FAILED:', error);
-        console.error('[INIT] Error stack:', error.stack);
-        console.error('[INIT] Component readiness at failure:', componentReadiness);
-        logger.error('Main.js', 'Initialization failed', error);
+        logger.error('Main.js', 'Initialization failed', error, 'initialization');
+        logger.error('Main.js', 'Component readiness snapshot at failure', { ...componentReadiness }, 'initialization');
         loadingManager.showError(error);
         
         // Show user-friendly error message

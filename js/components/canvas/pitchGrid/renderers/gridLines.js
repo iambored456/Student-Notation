@@ -2,6 +2,7 @@
 import { getColumnX, getRowY, getPitchClass, getLineStyleFromPitchClass, getCurrentCoordinateMapping } from './rendererUtils.js';
 import { shouldDrawVerticalLineAtColumn, isTonicColumn } from '../../../../utils/tonicColumnUtils.js';
 import { fullRowData } from '../../../../state/pitchData.js';
+import logger from '@utils/logger.js';
 
 function drawHorizontalMusicLines(ctx, options, startRow, endRow) {
     // Access accidental button states
@@ -318,11 +319,11 @@ function drawGhostLines(ctx, options) {
         const rightLegendColumnIndex = options.columnWidths.length - 2;
         const rightBoundary = getColumnX(rightLegendColumnIndex, options);
         
-        console.log('[GRIDLINES] Ghost line boundary calculation:', {
+        logger.debug('GridLines', 'Ghost line boundary calculation', {
             rightLegendColumnIndex,
             rightBoundary,
             canvasWidth: ctx.canvas.width
-        });
+        }, 'grid');
         
         ghostPositions.forEach((x, posIndex) => {
             // Skip ghost lines that extend past the right boundary

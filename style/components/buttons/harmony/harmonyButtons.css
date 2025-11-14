@@ -4,6 +4,9 @@
 
 /* --- Accidental Toggle Buttons --- */
 #accidental-controls-container-v2 { display: flex; justify-content: center; gap: var(--space-025); }
+/* REMOVED: Accidental button styling moved to style/components/buttons/accidentalButtons.css
+   to consolidate all accidental button rules in one place */
+/* Legacy rules kept for reference but commented out:
 .accidental-button {
     width: 30px; height: 30px; font-size: 18px; font-weight: bold; padding: 0;
     line-height: 1; border: 1px solid var(--c-border); border-radius: var(--border-radius-sm);
@@ -11,6 +14,7 @@
 }
 .accidental-button.active { background-color: var(--c-warning); color: var(--c-text); opacity: 1.0; }
 .accidental-button:not(.active):hover { background-color: var(--c-border); }
+*/
 
 /* --- Chord Shape Container Styles --- */
 .pitch-tabs-container {

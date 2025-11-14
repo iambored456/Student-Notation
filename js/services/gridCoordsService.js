@@ -44,17 +44,18 @@ const GridCoordsService = {
 
     getPitchRowIndex(y) {
         const viewportInfo = LayoutService.getViewportInfo();
-        
+
         if (!viewportInfo || !viewportInfo.halfUnit || viewportInfo.halfUnit === 0) {
             return -1;
         }
-        
+
         // For dual-parity grid: use halfUnit spacing (cellHeight/2) for row calculations
-        // Convert mouse Y to rank index accounting for viewport offset
-        const relativeRankFromMouse = Math.floor(y / viewportInfo.halfUnit);
+        // Shift click detection up by 0.5 halfUnit (0.25 cellHeight) to center clickable area on visual row lines
+        // This makes the clickable area span ±0.25 cellHeight around each row's visual position
+        const relativeRankFromMouse = Math.floor((y + viewportInfo.halfUnit * 0.5) / viewportInfo.halfUnit);
         const finalRowIndex = viewportInfo.startRank + relativeRankFromMouse;
-        
-        
+
+
         return finalRowIndex;
     },
     

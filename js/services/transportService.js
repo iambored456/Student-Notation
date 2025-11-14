@@ -9,19 +9,6 @@ import domCache from './domCache.js';
 import logger from '@utils/logger.js';
 import DrumPlayheadRenderer from '@components/canvas/drumGrid/drumPlayheadRenderer.js';
 
-/**
- * Gets the base (non-modulated) column X position for playhead timing
- * @param {number} columnIndex - Column index
- * @returns {number} Base X position without modulation effects
- */
-function getBaseColumnX(columnIndex) {
-    let x = 0;
-    for (let i = 0; i < columnIndex; i++) {
-        const widthMultiplier = store.state.columnWidths[i] || 0;
-        x += widthMultiplier * store.state.cellWidth;
-    }
-    return x;
-}
 import { getStampPlaybackData } from '@/rhythm/stampPlacements.js';
 import { getStampScheduleEvents } from '@/rhythm/scheduleStamps.js';
 import { getTripletPlaybackData } from '@/rhythm/tripletPlacements.js';
@@ -29,6 +16,7 @@ import { getTripletScheduleEvents } from '@/rhythm/scheduleTriplets.js';
 import { createCoordinateMapping, canvasXToSeconds, secondsToCanvasX, columnToRegularTime } from '@/rhythm/modulationMapping.js';
 import { analyzeNoteCrossesMarkers } from '@components/canvas/pitchGrid/renderers/notes.js';
 import { getColumnX } from '@components/canvas/pitchGrid/renderers/rendererUtils.js';
+import { updatePlayheadModel, getColumnStartX, getColumnWidth, getRightLegendStartIndex } from '@services/playheadModel.js';
 
 const FLAT_SYMBOL = '\u266d';
 const SHARP_SYMBOL = '\u266f';
@@ -52,6 +40,8 @@ let drumPlayers;
 let timeMap = [];
 let configuredLoopStart = 0;
 let configuredLoopEnd = 0;
+const DRUM_START_EPSILON = 1e-4; // seconds; keeps Tone.Player start times strictly increasing
+const lastDrumStartTimes = new Map();
 
 const transportDebugSnapshot = () => {
     const transport = Tone?.Transport;
@@ -74,6 +64,22 @@ function logTransportDebug(event, details = {}) {
     // Logging disabled
 }
 
+function resetDrumStartTimes() {
+    lastDrumStartTimes.clear();
+}
+
+function getSafeDrumStartTime(trackId, requestedTime) {
+    let safeTime = Number.isFinite(requestedTime) ? requestedTime : Tone.now();
+    const lastTime = lastDrumStartTimes.get(trackId) ?? -Infinity;
+
+    if (!(safeTime > lastTime)) {
+        safeTime = lastTime + DRUM_START_EPSILON;
+    }
+
+    lastDrumStartTimes.set(trackId, safeTime);
+    return safeTime;
+}
+
 function reapplyConfiguredLoopBounds() {
     if (configuredLoopEnd > configuredLoopStart) {
         const loopStartDiff = Math.abs(Tone.Transport.loopStart - configuredLoopStart);
@@ -86,6 +92,28 @@ function reapplyConfiguredLoopBounds() {
             Tone.Transport.loop = store.state.isLooping;
         }
     }
+}
+
+function setLoopBounds(loopStart, loopEnd) {
+    const minDuration = Math.max(getMicrobeatDuration(), 0.001);
+    const safeStart = Number.isFinite(loopStart) ? loopStart : 0;
+    let safeEnd = Number.isFinite(loopEnd) ? loopEnd : safeStart + minDuration;
+    if (safeEnd <= safeStart) {
+        safeEnd = safeStart + minDuration;
+    }
+    configuredLoopStart = safeStart;
+    configuredLoopEnd = safeEnd;
+    if (Tone?.Transport) {
+        Tone.Transport.loopStart = safeStart;
+        Tone.Transport.loopEnd = safeEnd;
+    }
+    reapplyConfiguredLoopBounds();
+}
+
+function updateLoopBoundsFromTimeline() {
+    const loopStart = findNonAnacrusisStart();
+    const loopEnd = getMusicalEndTime();
+    setLoopBounds(loopStart, loopEnd);
 }
 
 function getMicrobeatDuration() {
@@ -130,19 +158,54 @@ function calculateTimeMap() {
     calculateRegularTimeMap(microbeatDuration, columnWidths, placedTonicSigns);
     
     logger.timing('transportService', 'calculateTimeMap', { totalDuration: `${timeMap[timeMap.length - 1]?.toFixed(2)}s` });
+
+    const musicalEnd = getMusicalEndTime();
+    updatePlayheadModel({
+        timeMap,
+        musicalEndTime: musicalEnd,
+        columnWidths: store.state.columnWidths,
+        cellWidth: store.state.cellWidth
+    });
+
+    updateLoopBoundsFromTimeline();
+
+    if (typeof window !== 'undefined') {
+        window.__transportTimeMap = [...timeMap];
+        window.__transportMusicalEnd = musicalEnd;
+    }
+}
+
+/**
+ * Returns the time (in seconds) where the musical grid ends.
+ * Excludes the right legend columns so the playhead and audio stop together.
+ */
+function getMusicalEndTime() {
+    const timelineEnd = timeMap.length > 0 ? timeMap[timeMap.length - 1] : 0;
+    const columnCount = store.state.columnWidths?.length ?? 0;
+    if (columnCount < 2) {
+        return timelineEnd;
+    }
+    const rightLegendStartIndex = columnCount - 2;
+    const musicalEnd = timeMap[rightLegendStartIndex];
+    return (typeof musicalEnd === 'number' && Number.isFinite(musicalEnd))
+        ? musicalEnd
+        : timelineEnd;
 }
 
 function calculateRegularTimeMap(microbeatDuration, columnWidths, placedTonicSigns) {
+    const rightLegendStartIndex = Math.max(0, columnWidths.length - 2);
     let currentTime = 0;
     
-    for (let i = 0; i < columnWidths.length; i++) {
+    for (let i = 0; i <= rightLegendStartIndex; i++) {
         timeMap[i] = currentTime;
+        const isLegendColumn = i >= rightLegendStartIndex;
         const isTonicColumn = placedTonicSigns.some(ts => ts.columnIndex === i);
-        if (!isTonicColumn) {
-            currentTime += columnWidths[i] * microbeatDuration;
+        if (!isLegendColumn && !isTonicColumn) {
+            currentTime += (columnWidths[i] || 0) * microbeatDuration;
         }
     }
-    timeMap.push(currentTime);
+    
+    timeMap.length = rightLegendStartIndex + 1;
 }
 
 function calculateModulatedTimeMap(microbeatDuration, columnWidths, placedTonicSigns) {
@@ -151,7 +214,8 @@ function calculateModulatedTimeMap(microbeatDuration, columnWidths, placedTonicS
     
     
     // Calculate time for each column using modulation mapping
-    for (let i = 0; i < columnWidths.length; i++) {
+    const rightLegendStartIndex = Math.max(0, columnWidths.length - 2);
+    for (let i = 0; i <= rightLegendStartIndex; i++) {
         const columnX = getColumnXForTimeMap(i, columnWidths, baseMicrobeatPx);
         const timeSeconds = canvasXToSeconds(columnX, coordinateMapping, microbeatDuration);
         timeMap[i] = timeSeconds;
@@ -161,10 +225,8 @@ function calculateModulatedTimeMap(microbeatDuration, columnWidths, placedTonicS
         
     }
     
-    // Add final time point
-    const finalX = getColumnXForTimeMap(columnWidths.length, columnWidths, baseMicrobeatPx);
-    const finalTime = canvasXToSeconds(finalX, coordinateMapping, microbeatDuration);
-    timeMap.push(finalTime);
+    // Add final time point (start of right legend)
+    timeMap.length = rightLegendStartIndex + 1;
     
 }
 
@@ -220,6 +282,7 @@ function getPitchForNote(note) {
 function scheduleNotes() {
     logger.debug('transportService', 'scheduleNotes', 'Clearing previous transport events and rescheduling all notes');
     Tone.Transport.cancel();
+    resetDrumStartTimes();
     calculateTimeMap();
     GlobalService.adsrComponent?.playheadManager.clearAll();
 
@@ -310,7 +373,8 @@ function scheduleNotes() {
         if (note.isDrum) {
             Tone.Transport.schedule(time => {
                 if (store.state.isPaused) return;
-                drumPlayers?.player(note.drumTrack)?.start(time);
+                const safeTime = getSafeDrumStartTime(note.drumTrack, time);
+                drumPlayers?.player(note.drumTrack)?.start(safeTime);
                 
                 // Trigger drum note pop animation
                 DrumPlayheadRenderer.triggerNotePop(note.startColumnIndex, note.drumTrack);
@@ -517,8 +581,6 @@ function animatePlayhead() {
     if (!playheadCanvas) return;
     const ctx = playheadCanvas.getContext('2d');
     
-    const maxXPos = getBaseColumnX(store.state.columnWidths.length - 2);
-    
     const baseTempo = store.state.tempo;
     const TEMPO_MULTIPLIER_EPSILON = 0.0001;
     const MARKER_PASS_EPSILON = 0.5; // pixels
@@ -534,9 +596,9 @@ function animatePlayhead() {
         }
 
         const transportLoopEnd = Tone.Transport.loopEnd ?? 0;
-        const timelineEnd = timeMap.length > 0 ? timeMap[timeMap.length - 1] : 0;
         const isLooping = store.state.isLooping;
-        const playbackEnd = (isLooping && transportLoopEnd > 0) ? transportLoopEnd : timelineEnd;
+        const musicalEnd = getMusicalEndTime();
+        const playbackEnd = (isLooping && transportLoopEnd > 0) ? transportLoopEnd : musicalEnd;
         const currentTime = Tone.Transport.seconds;
 
         const reachedEnd = currentTime >= (playbackEnd - 0.001);
@@ -563,6 +625,7 @@ function animatePlayhead() {
             }
         }
 
+        const maxXPos = getColumnStartX(getRightLegendStartIndex());
         let xPos = 0;
         for (let i = 0; i < timeMap.length - 1; i++) {
             if (timeMap[i] === undefined) continue; 
@@ -575,8 +638,8 @@ function animatePlayhead() {
                 
                 // PLAYHEAD FIX: Always use base column positions for consistent playhead speed
                 // The playhead moves at constant tempo regardless of modulation
-                const colStartX = getBaseColumnX(i);
-                const colWidth = getBaseColumnX(i + 1) - colStartX;
+                const colStartX = getColumnStartX(i);
+                const colWidth = getColumnWidth(i);
                 
                 const ratio = colDuration > 0 ? timeIntoCol / colDuration : 0;
                 xPos = colStartX + ratio * colWidth;
@@ -818,20 +881,12 @@ const TransportService = {
                 scheduledTriplets: getTripletPlaybackData().length
             });
             const timelineEnd = timeMap.length > 0 ? timeMap[timeMap.length - 1] : 0;
-            const musicalDuration = timeMap[store.state.columnWidths.length - 2] || timelineEnd;
+            const musicalDuration = getMusicalEndTime();
             const anacrusisOffset = timeMap[2] || 0;
             const nonAnacrusisStart = findNonAnacrusisStart();
 
             // Loop starts at non-anacrusis area (skipping pickup notes on repeats)
-            Tone.Transport.loopStart = nonAnacrusisStart;
-            Tone.Transport.loopEnd = musicalDuration;
-            Tone.Transport.loop = store.state.isLooping;
-
-            if (Tone.Transport.loopEnd <= Tone.Transport.loopStart) {
-                Tone.Transport.loopEnd = Tone.Transport.loopStart + Math.max(getMicrobeatDuration(), 0.001);
-            }
-            configuredLoopStart = Tone.Transport.loopStart;
-            configuredLoopEnd = Tone.Transport.loopEnd;
+            setLoopBounds(nonAnacrusisStart, musicalDuration);
             Tone.Transport.bpm.value = store.state.tempo;
             
             logger.debug('TransportService', `Transport configured. Loop: ${Tone.Transport.loop}, BPM: ${Tone.Transport.bpm.value}, StartOffset: ${anacrusisOffset}, LoopStart: ${nonAnacrusisStart}`, null, 'transport');
@@ -920,6 +975,7 @@ const TransportService = {
         }
         
         Tone.Transport.cancel();
+        resetDrumStartTimes();
         Tone.Transport.bpm.value = store.state.tempo;
         reapplyConfiguredLoopBounds();
         logTransportDebug('stop:transport-reset', { tempoResetTo: store.state.tempo });

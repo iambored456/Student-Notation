@@ -165,34 +165,73 @@ function calculateTailYOffset(note, allNotes, options) {
     return currentNoteIndex * tailOffsetAmount;
 }
 
-function drawScaleDegreeText(ctx, note, options, centerX, centerY, noteHeight) {
-    console.log(`🎵 [SCALE/MODE] drawScaleDegreeText called:`, {
-        degreeDisplayMode: options.degreeDisplayMode,
-        noteRow: note.row,
-        noteStartCol: note.startColumnIndex,
-        pitch: options.fullRowData[note.row]?.pitch
-    });
-    
+function getScaleDegreeLabel(note, options) {
     const degreeStr = TonalService.getDegreeForNote(note, options);
-    
-    console.log(`🎵 [SCALE/MODE] TonalService returned:`, {
-        degreeStr,
-        degreeDisplayMode: options.degreeDisplayMode
-    });
-    
-    if (!degreeStr) return;
-    
-    // Scale font size with zoom level for clarity
-    const fontSize = (note.shape === 'oval' ? noteHeight * OVAL_NOTE_FONT_RATIO : noteHeight * FILLED_NOTE_FONT_RATIO) * options.zoomLevel;
-    if (fontSize < MIN_FONT_SIZE) return; // Don't draw text if it's too small to read
+    if (!degreeStr) {
+        return { label: null, isAccidental: false };
+    }
+
+    const isAccidental = TonalService.hasAccidental(degreeStr);
+    if (!isAccidental) {
+        return { label: degreeStr, isAccidental: false };
+    }
+
+    const accidentalMode = store.state.accidentalMode || {};
+    const sharpEnabled = accidentalMode.sharp ?? true;
+    const flatEnabled = accidentalMode.flat ?? true;
+
+    if (!sharpEnabled && !flatEnabled) {
+        return { label: null, isAccidental: true };
+    }
+
+    let sharpLabel = degreeStr.includes('♯') ? degreeStr : null;
+    let flatLabel = degreeStr.includes('♭') ? degreeStr : null;
+    const enharmonic = TonalService.getEnharmonicDegree(degreeStr);
+
+    if (enharmonic) {
+        if (enharmonic.includes('♯') && !sharpLabel) {
+            sharpLabel = enharmonic;
+        }
+        if (enharmonic.includes('♭') && !flatLabel) {
+            flatLabel = enharmonic;
+        }
+    }
+
+    let label = null;
+    if (sharpEnabled && flatEnabled) {
+        const parts = [];
+        if (sharpLabel) parts.push(sharpLabel);
+        if (flatLabel && (!sharpLabel || flatLabel !== sharpLabel)) parts.push(flatLabel);
+        label = parts.join('/');
+        if (!label) label = degreeStr;
+    } else if (sharpEnabled) {
+        label = sharpLabel || degreeStr;
+    } else if (flatEnabled) {
+        label = flatLabel || degreeStr;
+    }
+
+    return { label, isAccidental: true };
+}
+
+function drawScaleDegreeText(ctx, note, options, centerX, centerY, noteHeight) {
+    const { label: noteLabel, isAccidental } = getScaleDegreeLabel(note, options);
+
+    if (!noteLabel) return;
+
+    const containsAccidental = isAccidental || /[\u266d\u266f]/.test(noteLabel) || noteLabel.includes('/') || noteLabel.includes('�T-') || noteLabel.includes('�T_');
+
+    const baseFontSize = (note.shape === 'oval' ? noteHeight * OVAL_NOTE_FONT_RATIO : noteHeight * FILLED_NOTE_FONT_RATIO) * options.zoomLevel;
+    const fontSize = containsAccidental ? baseFontSize * 0.92 : baseFontSize;
+    if (fontSize < MIN_FONT_SIZE) return;
+
+    const opticalOffset = fontSize * 0.08;
 
     ctx.fillStyle = '#212529';
     ctx.font = `bold ${fontSize}px 'Atkinson Hyperlegible', sans-serif`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillText(degreeStr, centerX, centerY);
+    ctx.fillText(noteLabel, centerX, centerY + opticalOffset);
 }
-
 let invalidDimensionWarningShown = false;
 
 function hasRenderableDimensions(width, height) {

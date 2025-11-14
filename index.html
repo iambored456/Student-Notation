@@ -659,26 +659,30 @@
 
   <div id="canvas-container" role="region" aria-label="Musical notation canvas">
     <div id="canvas-content">
-        <div id="button-grid">
-            <div class="button-grid-left-cell">
-                <div id="accidental-controls-container-v2" class="accidental-buttons-container">
-                    <button id="flat-toggle-btn" class="accidental-button active" aria-pressed="true">♭</button>
-                    <button id="sharp-toggle-btn" class="accidental-button active" aria-pressed="true">♯</button>
-                    <button id="hz-toggle-btn" class="accidental-button" aria-pressed="false">Hz</button>
-                </div>
-            </div>
-            <div class="button-grid-middle-cell">
-                <div id="beat-line-button-layer">
-                    <div id="time-signature-row" class="beat-line-row"></div>
-                    <div id="grouping-buttons-row" class="beat-line-row"></div>
-                    <div id="boundary-buttons-row" class="beat-line-row"></div>
-                </div>
-            </div>
-            <div class="button-grid-right-cell">
-                <!-- Null/empty cell for alignment with pitch grid right legend -->
-            </div>
-        </div>
         <div id="grids-wrapper">
+            <div id="button-grid">
+                <div class="button-grid-left-cell">
+                    <div class="left-cell-row" id="left-cell-row-1">
+                        <div id="sharp-toggle-btn" class="accidental-btn active" role="button" tabindex="0" aria-pressed="true">♯</div>
+                    </div>
+                    <div class="left-cell-row" id="left-cell-row-2">
+                        <div id="flat-toggle-btn" class="accidental-btn active" role="button" tabindex="0" aria-pressed="true">♭</div>
+                    </div>
+                    <div class="left-cell-row" id="left-cell-row-3">
+                        <div id="hz-toggle-btn" class="accidental-btn" role="button" tabindex="0" aria-pressed="false">Hz</div>
+                    </div>
+                </div>
+                <div class="button-grid-middle-cell">
+                    <div id="beat-line-button-layer">
+                        <div id="time-signature-row" class="beat-line-row"></div>
+                        <div id="grouping-buttons-row" class="beat-line-row"></div>
+                        <div id="boundary-buttons-row" class="beat-line-row"></div>
+                    </div>
+                </div>
+                <div class="button-grid-right-cell">
+                    <!-- Null/empty cell for alignment with pitch grid right legend -->
+                </div>
+            </div>
             <div id="pitch-grid-wrapper">
                 <div id="pitch-grid-container">
                     <div id="grid-container">
@@ -897,27 +901,11 @@
     let hasMeasuredEffectsWidth = false;
 
     function logPresetWidth(message, details) {
-        if (!PRESET_WIDTH_DEBUG) return;
-        if (details !== undefined) {
-            console.log(`[preset-width] ${message}`, details);
-        } else {
-            console.log(`[preset-width] ${message}`);
-        }
+        // Logging disabled
     }
 
     function logPresetBoxMetrics(context) {
-        if (!PRESET_WIDTH_DEBUG) return;
-        const presetBox = document.querySelector('.preset-content-box');
-        if (!presetBox) {
-            logPresetWidth(`${context}: preset-content-box not found`);
-            return;
-        }
-        const computedWidth = window.getComputedStyle(presetBox).width;
-        const storedVar = rootStyle?.getPropertyValue(EFFECTS_WIDTH_VAR)?.trim();
-        logPresetWidth(`${context}: preset box width snapshot`, {
-            computedWidth,
-            storedVar
-        });
+        // Logging disabled
     }
 
     function setPresetWidthValue(width, options = {}) {

@@ -3,6 +3,7 @@ import store from '../../../../state/index.js'; // <-- UPDATED PATH
 import { getColumnX, getRowY, getPitchClass, getLineStyleFromPitchClass } from './rendererUtils.js';
 import { Scale, Note } from 'tonal';
 import { getPlacedTonicSigns } from '../../../../state/selectors.js';
+import logger from '@utils/logger.js';
 
 // Import MODE_NAMES for modal scale support
 const MODE_NAMES = ["major", "dorian", "phrygian", "lydian", "mixolydian", "minor", "locrian"];
@@ -58,7 +59,7 @@ function getModalScaleNotes(tonicNote, tonicNumber) {
     // Map tonic number to mode name (tonicNumber is 1-indexed)
     const modeIndex = tonicNumber - 1;
     if (modeIndex < 0 || modeIndex >= MODE_NAMES.length) {
-        console.warn(`Invalid tonic number: ${tonicNumber}`);
+        logger.warn('LegendRenderer', `Invalid tonic number: ${tonicNumber}`, null, 'grid');
         return [];
     }
     
@@ -67,10 +68,9 @@ function getModalScaleNotes(tonicNote, tonicNumber) {
     try {
         const scaleQuery = `${tonicNote} ${modeName}`;
         const scale = Scale.get(scaleQuery);
-        console.log(`🎵 Focus Colours: Generated ${scaleQuery} scale:`, scale.notes);
         return scale.notes || [];
     } catch (error) {
-        console.warn(`Could not generate ${modeName} scale for tonic: ${tonicNote}`, error);
+        logger.warn('LegendRenderer', `Could not generate ${modeName} scale`, { tonic: tonicNote, error }, 'grid');
         return [];
     }
 }
@@ -108,7 +108,8 @@ export function drawLegends(ctx, options, startRow, endRow) {
     const { fullRowData, columnWidths, cellWidth, cellHeight, colorMode } = options;
     const { sharp, flat } = store.state.accidentalMode;
     const { focusColours, showFrequencyLabels } = store.state;
-    
+
+
     // Focus colours logic - get tonic information and scales
     let leftScale = [];
     let rightScale = [];
@@ -130,29 +131,50 @@ export function drawLegends(ctx, options, startRow, endRow) {
 
 
     const processLabel = (label, relevantScale = [], rowData = null) => {
-        // If frequency mode is enabled, always return the frequency value
-        // This bypasses all flat/sharp/focus color logic
+        // When Hz mode is on, optionally gate the numeric display to focus pitches
         if (showFrequencyLabels) {
+            const focusGateActive = focusColours && Array.isArray(relevantScale) && relevantScale.length > 0;
+            const isScalePitch = rowData ? isPitchInScale(rowData.pitch, relevantScale) : false;
+
+            if (focusGateActive && rowData && !isScalePitch) {
+                // Non-focus pitches are hidden entirely when focus colours are active
+                return null;
+            }
+
             if (rowData && rowData.frequency) {
                 return String(rowData.frequency);
             }
-            // If no rowData or frequency, still return something to avoid null
             return label;
         }
 
-        if (!label.includes('/')) return label;
+        // If no rowData provided, use the new direct field access
+        if (!rowData) {
+            // Fallback to old string parsing if rowData not available
+            if (!label.includes('/')) return label;
+            const octave = label.slice(-1);
+            const pitches = label.substring(0, label.length - 1);
+            const [flatName, sharpName] = pitches.split('/');
 
-        // ---Preserve the octave number ---
-        const octave = label.slice(-1);
-        const pitches = label.substring(0, label.length - 1);
-        const [flatName, sharpName] = pitches.split('/');
-        
+            if (sharp && flat) return `${flatName}/${sharpName}${octave}`;
+            if (sharp) return `${sharpName}${octave}`;
+            if (flat) return `${flatName}${octave}`;
+            return `${sharpName}${octave}`;
+        }
+
+        // NEW: Use direct field access from expanded pitchData structure
+        const { flatName, sharpName, isAccidental } = rowData;
+
+        // For natural notes, flatName === sharpName === pitch
+        if (!isAccidental) {
+            return flatName; // or sharpName, they're identical for naturals
+        }
+
         // Focus Colours override: prioritize scale degrees over accidental buttons
         if (focusColours && relevantScale.length > 0) {
-            // Check which enharmonic equivalent is in the scale
-            const flatNormalized = flatName.replace(/♭/g, 'b').replace(/♯/g, '#');
-            const sharpNormalized = sharpName.replace(/♭/g, 'b').replace(/♯/g, '#');
-            
+            // Normalize for tonal library comparison
+            const flatNormalized = flatName.replace(/♭/g, 'b').replace(/♯/g, '#').replace(/\d+$/, '');
+            const sharpNormalized = sharpName.replace(/♭/g, 'b').replace(/♯/g, '#').replace(/\d+$/, '');
+
             const flatInScale = relevantScale.some(note => {
                 try {
                     return Note.enharmonic(note) === Note.enharmonic(flatNormalized) || note === flatNormalized;
@@ -160,7 +182,7 @@ export function drawLegends(ctx, options, startRow, endRow) {
                     return note === flatNormalized;
                 }
             });
-            
+
             const sharpInScale = relevantScale.some(note => {
                 try {
                     return Note.enharmonic(note) === Note.enharmonic(sharpNormalized) || note === sharpNormalized;
@@ -168,39 +190,39 @@ export function drawLegends(ctx, options, startRow, endRow) {
                     return note === sharpNormalized;
                 }
             });
-            
+
             // If both accidental buttons are inactive, show the scale degree version
             if (!sharp && !flat) {
-                if (flatInScale) return `${flatName}${octave}`;
-                if (sharpInScale) return `${sharpName}${octave}`;
+                if (flatInScale) return flatName;
+                if (sharpInScale) return sharpName;
             }
             // If only sharp button active, show sharp version if it's in scale
             else if (sharp && !flat) {
-                if (sharpInScale) return `${sharpName}${octave}`;
-                // If sharp version not in scale but flat is, don't show this accidental at all
-                return null; 
+                if (sharpInScale) return sharpName;
+                return null; // Not in scale, hide it
             }
-            // If only flat button active, show flat version if it's in scale  
+            // If only flat button active, show flat version if it's in scale
             else if (!sharp && flat) {
-                if (flatInScale) return `${flatName}${octave}`;
-                // If flat version not in scale but sharp is, don't show this accidental at all
-                return null;
+                if (flatInScale) return flatName;
+                return null; // Not in scale, hide it
             }
-            // If both buttons active, use normal logic but still filter by scale
+            // If both buttons active, use combined notation but still filter by scale
             else if (sharp && flat) {
                 if (flatInScale || sharpInScale) {
-                    return `${flatName}/${sharpName}${octave}`;
+                    return rowData.pitch; // Return combined notation like 'B♭/A♯7'
                 }
                 return null; // Neither version is in scale
             }
         }
-        
-        // Original accidental button logic (when Focus Colours is off or no relevant scale)
-        if (sharp && flat) return `${flatName}/${sharpName}${octave}`;
-        if (sharp) return `${sharpName}${octave}`;
-        if (flat) return `${flatName}${octave}`;
 
-        return `${sharpName}${octave}`; // Default fallback
+        // Original accidental button logic (when Focus Colours is off or no relevant scale)
+        let result;
+        if (sharp && flat) result = rowData.pitch; // Combined notation like 'B♭/A♯7'
+        else if (sharp && !flat) result = sharpName; // e.g., 'A♯7'
+        else if (flat && !sharp) result = flatName; // e.g., 'B♭7'
+        else result = sharpName; // Default fallback
+
+        return result;
     };
 
     const isAccidentalHidden = () => !sharp && !flat;
@@ -224,7 +246,8 @@ export function drawLegends(ctx, options, startRow, endRow) {
 
                 if (row.column === colLabel) {
                     const y = getRowY(rowIndex, options);
-                    const isAccidental = row.pitch.includes('/');
+                    // Use the new isAccidental field from expanded pitchData
+                    const isAccidental = row.isAccidental ?? row.pitch.includes('/'); // Fallback for safety
                     // Don't hide accidentals when in frequency mode
                     const shouldHideAccidental = !showFrequencyLabels && isAccidental && isAccidentalHidden();
 
@@ -234,6 +257,7 @@ export function drawLegends(ctx, options, startRow, endRow) {
                     // Pre-check if this pitch should be shown at all (for Focus Colours filtering)
                     const pitchToDraw = processLabel(row.pitch, relevantScale, row);
                     const shouldSkipPitch = pitchToDraw === null;
+
 
                     // Check if we should apply transparency
                     let shouldApplyTransparency = shouldHideAccidental || shouldSkipPitch;

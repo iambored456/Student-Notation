@@ -1,16 +1,22 @@
 // js/components/canvas/drumGrid/drumPlayheadRenderer.js
 import store from '@state/index.js';
-import LayoutService from '@services/layoutService.js';
-import { getColumnX as getModulatedColumnX } from '@components/canvas/pitchGrid/renderers/rendererUtils.js';
 import * as Tone from 'tone';
+import logger from '@utils/logger.js';
+import {
+  getTimeMapReference,
+  getColumnStartX,
+  getColumnWidth,
+  getCachedMusicalEndTime
+} from '@services/playheadModel.js';
 
 class DrumPlayheadRenderer {
   constructor() {
     this.canvas = null;
     this.ctx = null;
     this.animationFrameId = null;
-    this.timeMap = [];
-    this._lastTempo = 0;
+    this._lastColumnIndex = null;
+    this._lastColumnProgress = 0;
+    this._lastDebugLogTime = 0;
     
     // Animation system for drum note pops
     this.activeAnimations = new Map(); // key: "colIndex-drumTrack", value: {startTime, phase}
@@ -42,7 +48,7 @@ class DrumPlayheadRenderer {
   }
 
   invalidateTimeMap() {
-    this._lastTempo = 0; // Force rebuild on next render
+    // Retained for compatibility; playheadModel keeps timing in sync.
   }
 
   startRendering() {
@@ -86,57 +92,75 @@ class DrumPlayheadRenderer {
     this.ctx.stroke();
     this.ctx.shadowBlur = 0;
 
+    this.debugPlayhead(Tone.Transport.seconds, xPos);
+
     this.animationFrameId = requestAnimationFrame(() => this.render());
   }
 
-  buildTimeMap() {
-    this.timeMap = [];
-    let currentTime = 0;
-    const microbeatDuration = 30 / store.state.tempo;
-    
-    for (let i = 0; i < store.state.columnWidths.length; i++) {
-      this.timeMap[i] = currentTime;
-      currentTime += store.state.columnWidths[i] * microbeatDuration;
-    }
-    this.timeMap.push(currentTime);
-  }
-
-  getColumnX(index) {
-    // Use modulation-aware column positions if modulation exists
-    const hasModulation = store.state.modulationMarkers && store.state.modulationMarkers.length > 0;
-    
-    if (hasModulation) {
-      const options = {
-        modulationMarkers: store.state.modulationMarkers,
-        columnWidths: store.state.columnWidths,
-        cellWidth: store.state.cellWidth,
-        baseMicrobeatPx: store.state.baseMicrobeatPx || store.state.cellWidth || 40
-      };
-      return getModulatedColumnX(index, options);
-    } else {
-      return LayoutService.getColumnX(index);
-    }
-  }
-
   calculateXFromTime(currentTime) {
-    if (store.state.tempo !== this._lastTempo) {
-      this.buildTimeMap();
-      this._lastTempo = store.state.tempo;
+    this._lastColumnIndex = null;
+    this._lastColumnProgress = 0;
+
+    const timeMap = getTimeMapReference();
+    if (!Array.isArray(timeMap) || timeMap.length < 2) {
+      return null;
     }
 
-    for (let i = 0; i < this.timeMap.length - 1; i++) {
-      if (currentTime >= this.timeMap[i] && currentTime < this.timeMap[i + 1]) {
-        const colStartTime = this.timeMap[i];
-        const colDuration = this.timeMap[i + 1] - colStartTime;
+    for (let i = 0; i < timeMap.length - 1; i++) {
+      if (currentTime >= timeMap[i] && currentTime < timeMap[i + 1]) {
+        const colStartTime = timeMap[i];
+        const colDuration = timeMap[i + 1] - colStartTime;
         const timeIntoCol = currentTime - colStartTime;
         
-        const colStartX = this.getColumnX(i);
-        const colWidth = this.getColumnX(i + 1) - colStartX;
+        const colStartX = getColumnStartX(i);
+        const colWidth = getColumnWidth(i);
         
+        this._lastColumnIndex = i;
+        this._lastColumnProgress = colDuration > 0 ? timeIntoCol / colDuration : 0;
         return colStartX + (colDuration > 0 ? (timeIntoCol / colDuration) * colWidth : 0);
       }
     }
     return null;
+  }
+
+  debugPlayhead(currentTime, xPos) {
+    if (!window.__DEBUG_PLAYHEAD_SYNC__) {
+      return;
+    }
+
+    const now = performance.now();
+    if (now - this._lastDebugLogTime < 250) {
+      return;
+    }
+    this._lastDebugLogTime = now;
+
+    const timeMap = getTimeMapReference();
+    const colIndex = this._lastColumnIndex;
+    const drumStartTime = (Array.isArray(timeMap) && colIndex !== null && colIndex >= 0) ? timeMap[colIndex] : undefined;
+    const drumEndTime = (Array.isArray(timeMap) && colIndex !== null && colIndex + 1 < timeMap.length) ? timeMap[colIndex + 1] : undefined;
+    const drumTimelineEnd = Array.isArray(timeMap) ? (timeMap[timeMap.length - 1] ?? 0) : 0;
+    const transportTimelineEnd = getCachedMusicalEndTime();
+
+    const info = {
+      transportSeconds: Number(currentTime.toFixed(3)),
+      drumX: Number((xPos ?? 0).toFixed(2)),
+      columnIndex: colIndex,
+      columnProgress: Number(this._lastColumnProgress.toFixed(3)),
+      drumStartTime: Number(drumStartTime?.toFixed(3) ?? NaN),
+      transportStartTime: Number(drumStartTime?.toFixed(3) ?? NaN),
+      startDelta: 0,
+      drumEndTime: Number(drumEndTime?.toFixed(3) ?? NaN),
+      transportEndTime: Number(drumEndTime?.toFixed(3) ?? NaN),
+      endDelta: 0,
+      drumTimelineEnd: Number(drumTimelineEnd.toFixed(3)),
+      transportTimelineEnd: Number((transportTimelineEnd ?? 0).toFixed(3)),
+      timelineDelta: Number((drumTimelineEnd - (transportTimelineEnd ?? 0)).toFixed(3)),
+      toneLoopStart: Number((Tone.Transport.loopStart ?? 0).toFixed(3)),
+      toneLoopEnd: Number((Tone.Transport.loopEnd ?? 0).toFixed(3)),
+      storeLooping: store.state.isLooping
+    };
+
+    logger.debug('DrumPlayheadRenderer', 'Playhead diagnostics', info, 'canvas');
   }
 
   // Animation methods for drum note pops

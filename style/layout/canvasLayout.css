@@ -23,16 +23,33 @@
 .button-grid-left-cell {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
+  align-items: stretch;
+  justify-content: stretch;
   flex: 0 0 auto;
-  padding: var(--space-1);
+  padding: 0;
   background-color: var(--c-surface);
   border-right: 2px solid var(--c-border-strong);
   border-bottom: 2px solid var(--c-border-strong);
   border-top: none;
   border-left: none;
+  gap: 0;
+  min-height: 0;
   /* Width and height will be set by JavaScript */
+}
+
+/* Three equal rows within the left cell */
+.left-cell-row {
+  flex: 1 1 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-1);
+  border-bottom: 1px solid var(--c-border);
+  min-height: 0;
+}
+
+.left-cell-row:last-child {
+  border-bottom: none;
 }
 
 .button-grid-middle-cell {
@@ -85,9 +102,11 @@
 }
 
 #grid-scrollbar-proxy {
+  position: sticky;
+  left: 0;
   flex: 0 0 auto;
   width: 100%;
-  max-width: 100%;
+  /* Inner element width set dynamically by layoutService.js to create scrollable area */
   min-height: 20px;
   margin: var(--space-1) 0;
   overflow-x: auto;
@@ -98,6 +117,7 @@
   border-radius: var(--border-radius-sm);
   box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.1);
   scrollbar-color: var(--c-accent) transparent;
+  z-index: 10;
 }
 
 #grid-scrollbar-proxy:focus-visible {
@@ -138,6 +158,9 @@
   width: 100%;
 }
 
+/* REMOVED: Accidental button styling moved to style/components/buttons/accidentalButtons.css
+   to avoid conflicts and ensure proper specificity */
+/* Legacy rules kept for reference but commented out:
 .accidental-button {
   background: var(--c-surface);
   border: 1px solid var(--c-border);
@@ -165,6 +188,7 @@
   color: var(--c-surface);
   border-color: var(--c-accent);
 }
+*/
 
 /* Beat line button layer in middle cell of button grid */
 #beat-line-button-layer {

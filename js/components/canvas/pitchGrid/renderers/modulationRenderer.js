@@ -3,6 +3,7 @@
 import { getModulationDisplayText, getModulationColor } from '../../../../rhythm/modulationMapping.js';
 import { getMacrobeatInfo } from '../../../../state/selectors.js';
 import { getColumnX } from './rendererUtils.js';
+import logger from '@utils/logger.js';
 
 /**
  * Converts a measure index to canvas X position for rendering
@@ -27,7 +28,7 @@ function measureIndexToCanvasX(measureIndex, options) {
         return (measureInfo.endColumn + 1) * cellWidth;
     }
     
-    console.warn('[MODULATION] Could not find measure info for index:', measureIndex);
+    logger.warn('ModulationRenderer', 'Could not find measure info for index', { measureIndex }, 'grid');
     return measureIndex * 200; // Fallback
 }
 
@@ -74,7 +75,7 @@ export function renderModulationMarkers(ctx, options) {
                 if (macrobeatInfo) {
                     canvasX = getColumnX(macrobeatInfo.endColumn + 1, options);
                 } else {
-                    console.warn(`[GRIDLINE-ALIGN] Could not find macrobeat info for index ${marker.macrobeatIndex}`);
+                    logger.warn('ModulationRenderer', 'Could not find macrobeat info for index', { macrobeatIndex: marker.macrobeatIndex }, 'grid');
                     canvasX = marker.xPosition || 0;
                 }
             } else if (marker.measureIndex !== null && marker.measureIndex !== undefined) {

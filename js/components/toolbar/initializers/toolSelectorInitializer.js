@@ -474,26 +474,68 @@ export function initToolSelectors() {
         });
     }
     if (flatBtn) flatBtn.addEventListener('click', () => {
+        console.log('🔵 FLAT BUTTON CLICKED - Before state:', {
+            sharp: store.state.accidentalMode.sharp,
+            flat: store.state.accidentalMode.flat,
+            showFrequencyLabels: store.state.showFrequencyLabels,
+            flatBtnClasses: flatBtn.classList.toString()
+        });
+
         // Toggling flat/sharp automatically turns off Hz mode
         if (store.state.showFrequencyLabels) {
             store.toggleFrequencyLabels();
         }
         store.toggleAccidentalMode('flat');
         flatBtn.blur(); // Remove focus to prevent lingering blue highlight
+
+        console.log('🔵 FLAT BUTTON CLICKED - After state:', {
+            sharp: store.state.accidentalMode.sharp,
+            flat: store.state.accidentalMode.flat,
+            flatBtnClasses: flatBtn.classList.toString()
+        });
     });
     if (sharpBtn) sharpBtn.addEventListener('click', () => {
+        console.log('🔶 SHARP BUTTON CLICKED - Before state:', {
+            sharp: store.state.accidentalMode.sharp,
+            flat: store.state.accidentalMode.flat,
+            showFrequencyLabels: store.state.showFrequencyLabels,
+            sharpBtnClasses: sharpBtn.classList.toString()
+        });
+
         // Toggling flat/sharp automatically turns off Hz mode
         if (store.state.showFrequencyLabels) {
             store.toggleFrequencyLabels();
         }
         store.toggleAccidentalMode('sharp');
         sharpBtn.blur(); // Remove focus to prevent lingering blue highlight
+
+        console.log('🔶 SHARP BUTTON CLICKED - After state:', {
+            sharp: store.state.accidentalMode.sharp,
+            flat: store.state.accidentalMode.flat,
+            sharpBtnClasses: sharpBtn.classList.toString()
+        });
     });
     if (frequencyBtn) frequencyBtn.addEventListener('click', () => {
         // Hz button toggles independently, doesn't affect flat/sharp states
         store.toggleFrequencyLabels();
         frequencyBtn.blur(); // Remove focus to prevent lingering blue highlight
     });
+
+    const setAccidentalButtonsLocked = (locked) => {
+        [flatBtn, sharpBtn].forEach(btn => {
+            if (!btn) return;
+            btn.classList.toggle('accidental-btn--disabled', locked);
+            btn.setAttribute('aria-disabled', locked ? 'true' : 'false');
+        });
+    };
+
+    const syncFrequencyUiState = (showFrequencyLabels) => {
+        if (frequencyBtn) {
+            frequencyBtn.classList.toggle('active', showFrequencyLabels);
+            frequencyBtn.setAttribute('aria-pressed', showFrequencyLabels ? 'true' : 'false');
+        }
+        setAccidentalButtonsLocked(showFrequencyLabels);
+    };
     if (focusColoursToggle) focusColoursToggle.addEventListener('change', () => {
         // If turning on Focus Colours, check for tonic shapes
         if (!store.state.focusColours && !hasTonicShapesOnCanvas()) {
@@ -574,7 +616,6 @@ export function initToolSelectors() {
     });
 
     store.on('degreeDisplayModeChanged', (mode) => {
-        
         // Update visibility toggle switch state (Show/Hide)
         if (degreeVisibilityToggle) {
             // Set toggle switch position based on mode: false = Show (left), true = Hide (right)
@@ -586,29 +627,33 @@ export function initToolSelectors() {
         // Update mode toggle switch state - just handle the visual toggle state
         if (degreeModeToggle) {
             // Set toggle switch position based on mode: false = Scale (left), true = Mode (right)
-            const wasActive = degreeModeToggle.classList.contains('active');
             degreeModeToggle.classList.toggle('active', mode === 'modal');
-            const isActive = degreeModeToggle.classList.contains('active');
         }
-        
+
         // Update the disabled state of the Scale/Mode toggle
         updateScaleModeToggleState();
     });
 
     store.on('accidentalModeChanged', (accidentalMode) => {
         const { sharp, flat } = accidentalMode;
+        console.log('🎯 EVENT: accidentalModeChanged fired', {
+            sharp,
+            flat,
+            sharpBtnBefore: sharpBtn?.classList.toString(),
+            flatBtnBefore: flatBtn?.classList.toString()
+        });
+
         sharpBtn?.classList.toggle('active', sharp);
         flatBtn?.classList.toggle('active', flat);
+
+        console.log('🎯 EVENT: accidentalModeChanged - UI updated', {
+            sharpBtnAfter: sharpBtn?.classList.toString(),
+            flatBtnAfter: flatBtn?.classList.toString()
+        });
     });
 
-    store.on('frequencyLabelsChanged', (showFrequencyLabels) => {
-        frequencyBtn?.classList.toggle('active', showFrequencyLabels);
-        // Visually disable flat/sharp buttons when frequency mode is active
-        if (flatBtn) flatBtn.style.opacity = showFrequencyLabels ? '0.3' : '';
-        if (sharpBtn) sharpBtn.style.opacity = showFrequencyLabels ? '0.3' : '';
-        if (flatBtn) flatBtn.style.pointerEvents = showFrequencyLabels ? 'none' : '';
-        if (sharpBtn) sharpBtn.style.pointerEvents = showFrequencyLabels ? 'none' : '';
-    });
+    store.on('frequencyLabelsChanged', syncFrequencyUiState);
+    syncFrequencyUiState(store.state.showFrequencyLabels);
 
     // Initialize accent colors on startup
     if (harmonyContainer && store.state.selectedNote) {
@@ -625,7 +670,17 @@ export function initToolSelectors() {
 
     // Initialize toggle state on startup
     setTimeout(() => updateChordPositionToggleState(), 50);
-    
+
     // Initialize Scale/Mode toggle state on startup
     updateScaleModeToggleState();
+
+    // Initialize degree display toggle states from saved state
+    const currentMode = store.state.degreeDisplayMode;
+    if (degreeVisibilityToggle) {
+        degreeVisibilityToggle.classList.toggle('active', currentMode !== 'off');
+    }
+    if (degreeModeToggle) {
+        degreeModeToggle.classList.toggle('active', currentMode === 'modal');
+        degreeModeToggle.classList.toggle('disabled', currentMode === 'off');
+    }
 }

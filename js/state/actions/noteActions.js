@@ -3,6 +3,16 @@ import { getMacrobeatInfo } from '../selectors.js';
 import logger from '@utils/logger.js';
 import TonalService from '@services/tonalService.js';
 
+export function ensureCircleNoteSpan(note) {
+    if (!note || note.isDrum) return;
+    if (note.shape === 'circle' && typeof note.startColumnIndex === 'number') {
+        const minimumEnd = note.startColumnIndex + 1;
+        if (typeof note.endColumnIndex !== 'number' || note.endColumnIndex < minimumEnd) {
+            note.endColumnIndex = minimumEnd;
+        }
+    }
+}
+
 function generateUUID() {
     return `uuid-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 }
@@ -51,19 +61,28 @@ export const noteActions = {
         }
         
         const noteWithId = { ...note, uuid: generateUUID() };
+        ensureCircleNoteSpan(noteWithId);
         this.state.placedNotes.push(noteWithId);
         this.emit('notesChanged');
         return noteWithId;
     },
 
     updateNoteTail(note, newEndColumn) {
-        note.endColumnIndex = newEndColumn;
+        let nextEnd = newEndColumn;
+        if (note.shape === 'circle') {
+            nextEnd = Math.max(note.startColumnIndex + 1, newEndColumn);
+        }
+        note.endColumnIndex = nextEnd;
         this.emit('notesChanged');
     },
 
     updateMultipleNoteTails(notes, newEndColumn) {
         notes.forEach((note) => {
-            note.endColumnIndex = newEndColumn;
+            let nextEnd = newEndColumn;
+            if (note.shape === 'circle') {
+                nextEnd = Math.max(note.startColumnIndex + 1, newEndColumn);
+            }
+            note.endColumnIndex = nextEnd;
         });
         this.emit('notesChanged');
     },
@@ -82,14 +101,18 @@ export const noteActions = {
 
     updateNotePosition(note, newStartColumn) {
         note.startColumnIndex = newStartColumn;
-        note.endColumnIndex = newStartColumn; // Oval notes have startColumn === endColumn
+        note.endColumnIndex = note.shape === 'circle'
+            ? newStartColumn + 1
+            : newStartColumn; // Oval notes have startColumn === endColumn
         this.emit('notesChanged');
     },
 
     updateMultipleNotePositions(notes, newStartColumn) {
         notes.forEach((note) => {
             note.startColumnIndex = newStartColumn;
-            note.endColumnIndex = newStartColumn; // Oval notes have startColumn === endColumn
+            note.endColumnIndex = note.shape === 'circle'
+                ? newStartColumn + 1
+                : newStartColumn; // Oval notes have startColumn === endColumn
         });
         this.emit('notesChanged');
     },
@@ -106,7 +129,10 @@ export const noteActions = {
             
             // For circle notes, check if their 2×1 footprint intersects with eraser's 2×3 area
             if (note.shape === 'circle') {
-                const noteEndCol = note.startColumnIndex + 1; // Circle notes span 2 columns
+                const minSpanEnd = note.startColumnIndex + 1;
+                const noteEndCol = typeof note.endColumnIndex === 'number'
+                    ? Math.max(minSpanEnd, note.endColumnIndex)
+                    : minSpanEnd;
                 // Circle notes only span 1 row (note.row)
                 
                 // Check for any overlap between note's 2×1 area and eraser's 2×3 area
@@ -255,6 +281,7 @@ export const noteActions = {
     },
 
     loadNotes(importedNotes) {
+        importedNotes?.forEach(ensureCircleNoteSpan);
         this.state.placedNotes = importedNotes;
         this.emit('notesChanged');
         this.recordState();

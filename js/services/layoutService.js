@@ -75,7 +75,7 @@ function initDOMElements() {
 function recalcAndApplyLayout() {
     if (!pitchGridWrapper || pitchGridWrapper.clientHeight === 0) {
         if (!pitchGridNotReadyLogged) {
-            console.warn('[LayoutService] Pitch grid wrapper not ready for layout (height=0). Retrying on next frame.');
+            logger.warn('LayoutService', 'Pitch grid wrapper not ready for layout (height=0). Retrying on next frame.', null, 'layout');
             pitchGridNotReadyLogged = true;
         }
         requestAnimationFrame(recalcAndApplyLayout);
@@ -124,10 +124,10 @@ function recalcAndApplyLayout() {
     });
 
     if (!store.state.cellWidth || !newColumnWidths.length) {
-        console.warn('[LayoutService] Unexpected layout configuration', {
+        logger.warn('LayoutService', 'Unexpected layout configuration', {
             cellWidth: store.state.cellWidth,
             columnCount: newColumnWidths.length
-        });
+        }, 'layout');
     }
 
     const totalWidthUnits = newColumnWidths.reduce((sum, w) => sum + w, 0);
@@ -139,6 +139,7 @@ function recalcAndApplyLayout() {
     const drumGridWrapper = document.getElementById('drum-grid-wrapper');
     const gridsWrapper = document.getElementById('grids-wrapper');
     const targetWidth = totalCanvasWidthPx + 'px';
+
 
     // Both pitch grid and drum grid now use the same total width (unified grid system)
     if (pitchGridContainer) {
@@ -153,8 +154,21 @@ function recalcAndApplyLayout() {
         drumGridWrapper.style.width = targetWidth;
     }
 
-    if (gridScrollbarInner) {
+    // Scrollbar proxy should fill viewport (width: 100%), inner should be full grid width
+    if (gridScrollbarInner && gridScrollbarProxy) {
         gridScrollbarInner.style.width = targetWidth;
+
+        // Check if grids extend beyond viewport
+        const gridsWrapperWidth = gridsWrapper?.getBoundingClientRect().width || 0;
+        const needsScrollbar = totalCanvasWidthPx > gridsWrapperWidth;
+
+        // Show/hide scrollbar based on whether content exceeds viewport
+        if (needsScrollbar) {
+            gridScrollbarProxy.style.display = '';
+        } else {
+            gridScrollbarProxy.style.display = 'none';
+        }
+
     }
 
     // Calculate button grid height (same as drum grid for visual consistency)
@@ -171,18 +185,18 @@ function recalcAndApplyLayout() {
         middleCellWidth += (store.state.columnWidths[i] || 0) * store.state.cellWidth;
     }
     if (columnWidthsCount <= 4) {
-        console.warn('[LayoutService] Column widths array does not contain interior columns.', {
+        logger.warn('LayoutService', 'Column widths array does not contain interior columns.', {
             columnWidthsCount,
             columnWidths: store.state.columnWidths
-        });
+        }, 'layout');
     }
     if (middleCellWidth < 50 && columnWidthsCount > 4) {
-        console.warn('[LayoutService] Computed button-grid middle cell width is unexpectedly small.', {
+        logger.warn('LayoutService', 'Computed button-grid middle cell width is unexpectedly small.', {
             middleCellWidth,
             columnWidthsSample: store.state.columnWidths?.slice(0, 10),
             cellWidth: store.state.cellWidth,
             macrobeatGroupings: store.state.macrobeatGroupings
-        });
+        }, 'layout');
     }
 
     // Set widths and heights for the three-cell button grid structure
@@ -219,46 +233,46 @@ function recalcAndApplyLayout() {
             applyCellSizing(leftCell, leftCellWidth);
             const leftRect = leftCell.getBoundingClientRect();
             if (leftCellWidth > 0 && leftRect.width === 0) {
-                console.warn('[LayoutService] Left button-grid cell measured width is 0 after assignment.', {
+                logger.warn('LayoutService', 'Left button-grid cell measured width is 0 after assignment.', {
                     assignedWidth: leftCellWidth,
                     measuredWidth: leftRect.width,
                     computedDisplay: window.getComputedStyle(leftCell).display
-                });
+                }, 'layout');
             }
         }
 
         if (middleCell) {
             if (middleCellWidth === 0) {
-                console.warn('[LayoutService] Calculated middle button-grid width is 0. Check column width data.', {
+                logger.warn('LayoutService', 'Calculated middle button-grid width is 0. Check column width data.', {
                     columnWidths: store.state.columnWidths,
                     cellWidth: store.state.cellWidth
-                });
+                }, 'layout');
             }
             applyCellSizing(middleCell, middleCellWidth);
             const middleRect = middleCell.getBoundingClientRect();
             if (middleCellWidth > 0 && middleRect.width === 0) {
-                console.warn('[LayoutService] Middle button-grid cell assigned width but still measures 0.', {
+                logger.warn('LayoutService', 'Middle button-grid cell assigned width but still measures 0.', {
                     assignedWidth: middleCellWidth,
                     measuredWidth: middleRect.width,
                     computedStyles: window.getComputedStyle(middleCell)
-                });
+                }, 'layout');
             }
             if (Math.abs(middleRect.width - middleCellWidth) > 5) {
-                console.warn('[LayoutService] Middle cell measured width does not match assigned width.', {
+                logger.warn('LayoutService', 'Middle cell measured width does not match assigned width.', {
                     assignedWidth: middleCellWidth,
                     measuredWidth: middleRect.width,
                     styleWidth: middleCell.style.width,
                     cellWidth: store.state.cellWidth
-                });
+                }, 'layout');
                 requestAnimationFrame(() => {
                     const postRect = middleCell.getBoundingClientRect();
                     if (Math.abs(postRect.width - middleCellWidth) > 5) {
-                        console.warn('[LayoutService] Middle cell still mismatched after RAF.', {
+                        logger.warn('LayoutService', 'Middle cell still mismatched after RAF.', {
                             assignedWidth: middleCellWidth,
                             measuredWidth: postRect.width,
                             delta: postRect.width - middleCellWidth,
                             computedStyles: window.getComputedStyle(middleCell)
-                        });
+                        }, 'layout');
                     }
                 });
             }
@@ -269,7 +283,7 @@ function recalcAndApplyLayout() {
                     const beatLineRect = beatLineLayer.getBoundingClientRect();
                     if (beatLineRect.width === 0) {
                         const beatLineStyles = window.getComputedStyle(beatLineLayer);
-                        console.warn('[LayoutService] #beat-line-button-layer width is 0 despite middle cell sizing.', {
+                        logger.warn('LayoutService', '#beat-line-button-layer width is 0 despite middle cell sizing.', {
                             beatLineRect,
                             beatLineStyles: {
                                 display: beatLineStyles.display,
@@ -286,11 +300,11 @@ function recalcAndApplyLayout() {
                             },
                             middleRect,
                             middleCellComputedWidth: beatLineStyles.width
-                        });
+                        }, 'layout');
                         beatLineWidthWarningShown = true;
                     }
                 } else {
-                    console.warn('[LayoutService] Could not find #beat-line-button-layer inside middle cell to measure.');
+                    logger.warn('LayoutService', 'Could not find #beat-line-button-layer inside middle cell to measure.', null, 'layout');
                     beatLineWidthWarningShown = true;
                 }
             }
@@ -300,30 +314,33 @@ function recalcAndApplyLayout() {
             applyCellSizing(rightCell, rightCellWidth);
             const rightRect = rightCell.getBoundingClientRect();
             if (rightCellWidth > 0 && rightRect.width === 0) {
-                console.warn('[LayoutService] Right button-grid cell measured width is 0 after assignment.', {
+                logger.warn('LayoutService', 'Right button-grid cell measured width is 0 after assignment.', {
                     assignedWidth: rightCellWidth,
                     measuredWidth: rightRect.width,
                     computedDisplay: window.getComputedStyle(rightCell).display
-                });
+                }, 'layout');
             }
         }
 
         const totalButtonGridWidth = leftCellWidth + middleCellWidth + rightCellWidth;
+
+        // Button grid should match the total canvas width (same as pitch/drum grids)
+        // Use targetWidth directly to ensure alignment
         if (Number.isFinite(totalButtonGridWidth) && totalButtonGridWidth > 0) {
-            const widthValue = `${totalButtonGridWidth}px`;
-            buttonGridWrapper.style.width = widthValue;
-            buttonGridWrapper.style.maxWidth = widthValue;
-            buttonGridWrapper.style.minWidth = widthValue;
+            buttonGridWrapper.style.width = targetWidth;
+            buttonGridWrapper.style.maxWidth = targetWidth;
+            buttonGridWrapper.style.minWidth = targetWidth;
+
         }
 
         const buttonGridRect = buttonGridWrapper.getBoundingClientRect();
         if (buttonGridRect.width === 0) {
-            console.warn('[LayoutService] Entire button grid wrapper width is 0 after layout pass.', {
+            logger.warn('LayoutService', 'Entire button grid wrapper width is 0 after layout pass.', {
                 leftCellWidth,
                 middleCellWidth,
                 rightCellWidth,
                 wrapperStyles: window.getComputedStyle(buttonGridWrapper)
-            });
+            }, 'layout');
         }
 
     }

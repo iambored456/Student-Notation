@@ -23,6 +23,7 @@ import { hitTestAnyStampShape } from '../../../../utils/stampHitTest.js';
 import { hitTestAnyTripletShape } from '../../../../utils/tripletHitTest.js';
 // import { hitTestModulationMarker, getModulationMarkerCursor } from '../renderers/modulationRenderer.js'; // Temporarily commented out
 import { getModulationDisplayText, getModulationColor, MODULATION_RATIOS } from '../../../../rhythm/modulationMapping.js';
+import logger from '@utils/logger.js';
 
 // --- Interaction State ---
 let pitchHoverCtx;
@@ -271,10 +272,11 @@ function drawGhostNote(colIndex, rowIndex, isFaint = false) {
         drawTonicShape(pitchHoverCtx, fullOptions, ghostTonic);
     } else if (toolType === 'note') { 
         // Create ghost note that snaps to grid positions like normal notes
+        const baseEndColumn = shape === 'circle' ? colIndex + 1 : colIndex;
         const ghostNote = { 
             row: rowIndex, 
             startColumnIndex: colIndex, 
-            endColumnIndex: colIndex, 
+            endColumnIndex: baseEndColumn, 
             color, 
             shape, 
             isDrum: false
@@ -303,10 +305,11 @@ function attemptPlaceNoteAt(colIndex, rowIndex) {
     }
 
     const { shape, color } = store.state.selectedNote;
+    const defaultEndColumn = shape === 'circle' ? colIndex + 1 : colIndex;
     const newNote = {
         row: rowIndex,
         startColumnIndex: colIndex,
-        endColumnIndex: colIndex,
+        endColumnIndex: defaultEndColumn,
         color,
         shape,
         isDrum: false
@@ -693,7 +696,8 @@ function handleMouseDown(e) {
             chordNotes.forEach(noteName => {
                 const noteRow = store.state.fullRowData.findIndex(r => r.toneNote === noteName);
                 if (noteRow !== -1) {
-                    const newNote = { row: noteRow, startColumnIndex: colIndex, endColumnIndex: colIndex, color, shape, isDrum: false };
+                    const defaultEndColumn = shape === 'circle' ? colIndex + 1 : colIndex;
+                    const newNote = { row: noteRow, startColumnIndex: colIndex, endColumnIndex: defaultEndColumn, color, shape, isDrum: false };
                     const addedNote = store.addNote(newNote);
                     if (addedNote) {
                         activeChordNotes.push(addedNote);
@@ -758,8 +762,6 @@ function handleMouseDown(e) {
 
             if (hitResult) {
                 // Clicked on an individual shape - start dragging
-                console.log('[STAMP INTERACTION] ✓ Hit detected, starting shape drag:', hitResult);
-
                 draggedStampShape = {
                     ...hitResult,
                     startRow: store.getShapeRow(hitResult.placement, hitResult.shapeKey),
@@ -767,19 +769,12 @@ function handleMouseDown(e) {
                 };
                 isDraggingStampShape = true;
 
-                console.log('[STAMP INTERACTION] Drag state initialized:', {
-                    shapeKey: draggedStampShape.shapeKey,
-                    startRow: draggedStampShape.startRow,
-                    placementId: draggedStampShape.placement.id
-                });
-
                 return; // Skip normal stamp placement
             }
 
             // No shape hit - check if clicking on an existing stamp (to replay the rhythm pattern)
             const existingStamp = rhythmPlaybackService.getStampAtPosition(colIndex, rowIndex);
             if (existingStamp) {
-                console.log('[STAMP INTERACTION] Clicked existing stamp, replaying pattern:', existingStamp.stampId);
 
                 const pitch = getPitchForRow(rowIndex);
                 if (pitch) {
@@ -806,7 +801,6 @@ function handleMouseDown(e) {
             // No existing stamp - place new stamp
             const selectedStamp = StampsToolbar.getSelectedStamp();
             if (selectedStamp) {
-                console.log('[STAMP INTERACTION] Placing new stamp:', { stampId: selectedStamp.id, colIndex, rowIndex });
 
                 const { color, shape } = store.state.selectedNote;
                 placeStamp(selectedStamp.id, colIndex, rowIndex, color);
@@ -830,11 +824,9 @@ function handleMouseDown(e) {
             const allTriplets = store.getAllTripletPlacements();
             const actualX = x + scrollLeft;
             const fullOptions = { ...store.state };
-            console.log('[TRIPLET INTERACTION] Checking for shape hit at:', { actualX, y, numTriplets: allTriplets.length });
 
             const hitResult = hitTestAnyTripletShape(actualX, y, allTriplets, fullOptions);
             if (hitResult) {
-                console.log('[TRIPLET INTERACTION] ✓ Hit detected, starting shape drag:', hitResult);
                 draggedTripletShape = {
                     ...hitResult,
                     startRow: store.getTripletShapeRow(hitResult.placement, hitResult.shapeKey),
@@ -848,7 +840,6 @@ function handleMouseDown(e) {
             const cellIndex = Math.floor(colIndex / 2);
             const existingTriplet = rhythmPlaybackService.getTripletAtPosition(cellIndex, rowIndex);
             if (existingTriplet) {
-                console.log('[TRIPLET INTERACTION] Clicked existing triplet, replaying pattern:', existingTriplet.stampId);
 
                 const pitch = getPitchForRow(rowIndex);
                 if (pitch) {
@@ -863,7 +854,6 @@ function handleMouseDown(e) {
             // No existing triplet - place new triplet
             const selectedTriplet = TripletsToolbar.getSelectedTripletStamp();
             if (selectedTriplet && store.state.selectedNote) {
-                console.log('[TRIPLET INTERACTION] Placing new triplet:', { stampId: selectedTriplet.id, colIndex, rowIndex });
 
                 // Convert column index to cell index for triplets (cell = 2 microbeats)
                 const placement = placeTripletGroup(selectedTriplet.id, cellIndex, rowIndex, store.state.selectedNote.color);
@@ -886,32 +876,32 @@ function handleMouseDown(e) {
             // Get the selected modulation ratio from the UI
             const selectedRatio = store.state.selectedModulationRatio;
             if (!selectedRatio) {
-                console.warn('[MODULATION] No ratio selected - click 2:3 or 3:2 button first');
+                logger.warn('PitchGridInteractor', 'No modulation ratio selected before placement', null, 'grid');
                 return;
             }
             
             // Find which measure boundary we're closest to
             const measureBoundary = findNearestMeasureBoundary(actualX, colIndex);
             if (!measureBoundary) {
-                console.warn('[MODULATION] Click must be near a measure boundary');
+                logger.warn('PitchGridInteractor', 'Modulation placement must be near a measure boundary', { clickX: actualX }, 'grid');
                 return;
             }
             
-            console.log('[MODULATION] Placing marker at measure boundary:', {
+            logger.debug('PitchGridInteractor', 'Placing modulation marker at boundary', {
                 measureIndex: measureBoundary.measureIndex,
                 ratio: selectedRatio,
                 clickX: actualX,
                 boundaryX: measureBoundary.xPosition
-            });
+            }, 'grid');
             
             // Create and add the marker at the measure boundary
             const markerId = store.addModulationMarker(measureBoundary.measureIndex, selectedRatio, measureBoundary.xPosition, null, measureBoundary.macrobeatIndex);
             
-            console.log('[MODULATION] Marker placed successfully:', {
+            logger.debug('PitchGridInteractor', 'Modulation marker placed', {
                 markerId,
                 measureIndex: measureBoundary.measureIndex,
                 ratio: selectedRatio
-            });
+            }, 'grid');
             
             return;
         }
@@ -950,14 +940,6 @@ function handleMouseMove(e) {
         const newRow = GridCoordsService.getPitchRowIndex(y);
         const rowOffset = newRow - draggedStampShape.placement.row;
 
-        console.log('[STAMP DRAG] Mouse moved, updating shape position:', {
-            mouseY: y,
-            newRow,
-            baseRow: draggedStampShape.placement.row,
-            rowOffset,
-            shapeKey: draggedStampShape.shapeKey
-        });
-
         // Update the shape's offset in state
         store.updateStampShapeOffset(
             draggedStampShape.placement.id,
@@ -987,14 +969,6 @@ function handleMouseMove(e) {
         const newRow = GridCoordsService.getPitchRowIndex(y);
         const rowOffset = newRow - draggedTripletShape.placement.row;
 
-        console.log('[TRIPLET DRAG] Mouse moved, updating shape position:', {
-            mouseY: y,
-            newRow,
-            baseRow: draggedTripletShape.placement.row,
-            rowOffset,
-            shapeKey: draggedTripletShape.shapeKey
-        });
-
         // Update the shape's offset in state
         store.updateTripletShapeOffset(
             draggedTripletShape.placement.id,
@@ -1005,16 +979,9 @@ function handleMouseMove(e) {
         // Play audio feedback when row changes
         if (newRow !== draggedTripletShape.startRow) {
             const pitch = getPitchForRow(newRow);
-            console.log('[TRIPLET DRAG] Row changed, playing audio:', {
-                oldRow: draggedTripletShape.startRow,
-                newRow,
-                pitch,
-                hasPitch: !!pitch
-            });
             if (pitch) {
                 const color = draggedTripletShape.placement.color || store.state.selectedNote?.color;
                 // Quick note for feedback
-                console.log('[TRIPLET DRAG] Triggering audio for pitch:', pitch, 'color:', color);
                 SynthEngine.triggerAttack(pitch, color);
                 setTimeout(() => SynthEngine.triggerRelease(pitch, color), 100);
             }
@@ -1282,7 +1249,8 @@ function handleMouseMove(e) {
             finalNotes.forEach(noteName => {
                 const noteRowIndex = store.state.fullRowData.findIndex(r => r.toneNote === noteName);
                 if (noteRowIndex > -1) {
-                    const ghostNote = { row: noteRowIndex, startColumnIndex: colIndex, endColumnIndex: colIndex, color, shape, isDrum: false };
+                    const defaultEndColumn = shape === 'circle' ? colIndex + 1 : colIndex;
+                    const ghostNote = { row: noteRowIndex, startColumnIndex: colIndex, endColumnIndex: defaultEndColumn, color, shape, isDrum: false };
                     const fullOptions = { ...store.state, zoomLevel: LayoutService.getViewportInfo().zoomLevel };
                     if (shape === 'oval') {
                         drawSingleColumnOvalNote(pitchHoverCtx, fullOptions, ghostNote, noteRowIndex);
@@ -1421,8 +1389,6 @@ function handleMouseLeave() {
 function handleGlobalMouseUp() {
     // Handle stamp shape drag end
     if (isDraggingStampShape && draggedStampShape) {
-        console.log('[STAMP DRAG] Drag ended, saving state for undo/redo');
-
         isDraggingStampShape = false;
         draggedStampShape = null;
 
@@ -1438,8 +1404,6 @@ function handleGlobalMouseUp() {
 
     // Handle triplet shape drag end
     if (isDraggingTripletShape && draggedTripletShape) {
-        console.log('[TRIPLET DRAG] Drag ended, saving state for undo/redo');
-
         isDraggingTripletShape = false;
         draggedTripletShape = null;
 
@@ -1546,7 +1510,7 @@ function findNearestMeasureBoundary(clickX, colIndex) {
     const boundaries = [];
     const hasModulation = store.state.modulationMarkers && store.state.modulationMarkers.length > 0;
     
-    console.log('[MODULATION] Boundary calculation - has modulation:', hasModulation);
+    logger.debug('PitchGridInteractor', 'Boundary calculation modulation state', { hasModulation }, 'grid');
     
     for (let i = 0; i < macrobeatBoundaryStyles.length; i++) {
         if (macrobeatBoundaryStyles[i] === 'solid') {
@@ -1563,7 +1527,12 @@ function findNearestMeasureBoundary(clickX, colIndex) {
                     }) :
                     LayoutService.getColumnX(measureInfo.endColumn + 1);
                     
-                console.log(`[MODULATION] Boundary ${i}: measureInfo.endColumn=${measureInfo.endColumn}, calculatedX=${boundaryX}, method=${hasModulation ? 'modulated' : 'base'}`);
+                logger.debug('PitchGridInteractor', 'Computed measure boundary', {
+                    boundaryIndex: i,
+                    endColumn: measureInfo.endColumn,
+                    calculatedX: boundaryX,
+                    method: hasModulation ? 'modulated' : 'base'
+                }, 'grid');
                     
                 boundaries.push({
                     measureIndex: i + 1, // Modulation starts after this measure
@@ -1585,15 +1554,18 @@ function findNearestMeasureBoundary(clickX, colIndex) {
         }) :
         LayoutService.getColumnX(2); // Start of first measure
         
-    console.log('[MODULATION] Start boundary: calculatedX=', startBoundaryX, ', method=', hasModulation ? 'modulated' : 'base');
+    logger.debug('PitchGridInteractor', 'Start boundary position', {
+        startBoundaryX,
+        method: hasModulation ? 'modulated' : 'base'
+    }, 'grid');
     boundaries.unshift({
         measureIndex: 0,
         xPosition: startBoundaryX,
         macrobeatIndex: -1
     });
     
-    console.log('[MODULATION] Available measure boundaries:', boundaries);
-    console.log('[MODULATION] Click position:', clickX, 'tolerance:', tolerance);
+    logger.debug('PitchGridInteractor', 'Available measure boundaries', { boundaries }, 'grid');
+    logger.debug('PitchGridInteractor', 'Modulation click context', { clickX, tolerance }, 'grid');
     
     // Find the closest boundary within tolerance
     let closestBoundary = null;
@@ -1601,7 +1573,10 @@ function findNearestMeasureBoundary(clickX, colIndex) {
     
     boundaries.forEach(boundary => {
         const distance = Math.abs(clickX - boundary.xPosition);
-        console.log(`[MODULATION] Boundary at x=${boundary.xPosition}, distance=${distance}`);
+        logger.debug('PitchGridInteractor', 'Boundary distance check', {
+            boundaryX: boundary.xPosition,
+            distance
+        }, 'grid');
         
         if (distance <= tolerance && distance < closestDistance) {
             closestDistance = distance;
@@ -1610,9 +1585,12 @@ function findNearestMeasureBoundary(clickX, colIndex) {
     });
     
     if (closestBoundary) {
-        console.log('[MODULATION] Found closest boundary:', closestBoundary, 'distance:', closestDistance);
+        logger.debug('PitchGridInteractor', 'Found closest boundary', {
+            boundary: closestBoundary,
+            distance: closestDistance
+        }, 'grid');
     } else {
-        console.log('[MODULATION] No boundary within tolerance');
+        logger.debug('PitchGridInteractor', 'No boundary found within tolerance', { tolerance }, 'grid');
     }
     
     return closestBoundary;
@@ -1666,7 +1644,7 @@ export function initPitchGridInteraction() {
     const hoverCanvas = document.getElementById('hover-canvas');
 
     if (!pitchCanvas || !hoverCanvas) {
-        console.error("PitchGridInteractor: Could not find required canvas elements.");
+        logger.error('PitchGridInteractor', 'Could not find required canvas elements.', { hasPitchCanvas: Boolean(pitchCanvas), hasHoverCanvas: Boolean(hoverCanvas) }, 'grid');
         return;
     }
     pitchHoverCtx = hoverCanvas.getContext('2d');

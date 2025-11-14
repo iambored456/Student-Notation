@@ -12,7 +12,10 @@ const POLYPHONY_REFERENCE = 32; // Reference voice count for gain normalization 
 const PER_VOICE_BASELINE_GAIN = 1.0 / Math.sqrt(POLYPHONY_REFERENCE); // ~0.177 linear amplitude (1/sqrt(32))
 const SMOOTHING_TAU_MS = 200; // Smoothing window duration
 const MASTER_GAIN_RAMP_MS = 50; // Ramp time for gain changes to avoid zipper noise
-const GAIN_UPDATE_INTERVAL = "32n"; // Update master gain every 32nd note (~realistic for musical changes)
+const GAIN_UPDATE_INTERVAL_MS = 16; // ~60 Hz, fast enough for smooth gain changes
+const CLIPPING_WARNING_THRESHOLD_DB = -3.0;
+const CLIPPING_MONITOR_INTERVAL_MS = 500;
+const CLIPPING_WARNING_COOLDOWN_MS = 2000;
 
 let synths = {};
 let masterGain; // Master gain with polyphony-aware scaling
@@ -24,6 +27,8 @@ let waveformAnalyzers = {}; // Store analyzers for waveform visualization
 let activeVoiceCount = 0; // Track total active voices across all synths (instantaneous)
 let smoothedVoiceCount = POLYPHONY_REFERENCE; // Initialize to reference to avoid initial boost
 let gainUpdateLoopId = null; // ID for scheduled gain updates
+let clippingMonitorId = null;
+let lastClippingWarningAt = 0;
 
 /**
  * Update smoothed voice count using exponential moving average
@@ -59,6 +64,41 @@ function updateMasterGain() {
 
     // Ramp to new gain to avoid zipper noise and abrupt level changes
     masterGain.gain.rampTo(targetGain, MASTER_GAIN_RAMP_MS / 1000, now);
+}
+
+function stopGainUpdateLoop() {
+    if (gainUpdateLoopId !== null) {
+        clearInterval(gainUpdateLoopId);
+        gainUpdateLoopId = null;
+    }
+}
+
+function startGainUpdateLoop() {
+    stopGainUpdateLoop();
+    gainUpdateLoopId = setInterval(() => updateMasterGain(), GAIN_UPDATE_INTERVAL_MS);
+}
+
+function stopClippingMonitor() {
+    if (clippingMonitorId !== null) {
+        clearInterval(clippingMonitorId);
+        clippingMonitorId = null;
+    }
+}
+
+function startClippingMonitor() {
+    stopClippingMonitor();
+    if (!clippingMeter) return;
+    lastClippingWarningAt = 0;
+    clippingMonitorId = setInterval(() => {
+        const level = clippingMeter.getValue();
+        if (level > CLIPPING_WARNING_THRESHOLD_DB) {
+            const now = Date.now();
+            if (now - lastClippingWarningAt >= CLIPPING_WARNING_COOLDOWN_MS) {
+                lastClippingWarningAt = now;
+                logger.warn('SynthEngine', 'Limiter input approaching clipping threshold', { level }, 'audio');
+            }
+        }
+    }, CLIPPING_MONITOR_INTERVAL_MS);
 }
 
 // A custom synth voice with a more sophisticated series/parallel filter blend
@@ -280,6 +320,9 @@ class FilteredVoice extends Tone.Synth {
 
 const SynthEngine = {
     init() {
+        if (typeof this.stopBackgroundMonitors === 'function') {
+            this.stopBackgroundMonitors();
+        }
         // === Build Master Audio Chain ===
         // Signal flow: synths â†’ masterGain â†’ volumeControl â†’ compressor â†’ limiter â†’ destination
 
@@ -312,12 +355,7 @@ const SynthEngine = {
         limiter.connect(clippingMeter);
 
         // Start monitoring for clipping every 500ms
-        setInterval(() => {
-            const level = clippingMeter.getValue();
-            if (level > -3.0) {
-                // Approaching limiter threshold - clipping detected
-            }
-        }, 500);
+        startClippingMonitor();
 
 
         for (const color in store.state.timbres) {
@@ -337,7 +375,6 @@ const SynthEngine = {
             const presetGain = timbre.gain || 1.0;
 
             const synth = new Tone.PolySynth({
-                maxPolyphony: Number.MAX_SAFE_INTEGER, // disable Tone's max-voice guard per user preference
                 voice: FilteredVoice,
                 options: {
                     oscillator: { type: 'custom', partials: Array.from(normalizedCoeffs) },
@@ -449,10 +486,7 @@ const SynthEngine = {
 
         // Start scheduled master gain updates for smooth polyphony-aware scaling
         // Using setInterval for reliability (runs independent of Tone.Transport)
-        const UPDATE_INTERVAL_MS = 16; // ~60 Hz, fast enough for smooth gain changes
-        gainUpdateLoopId = setInterval(() => {
-            updateMasterGain();
-        }, UPDATE_INTERVAL_MS);
+        startGainUpdateLoop();
 
 
         logger.info('SynthEngine', 'Initialized with multi-timbral support', null, 'audio');
@@ -729,6 +763,17 @@ const SynthEngine = {
      */
     getMasterGainNode() {
         return masterGain || null;
+    },
+
+    stopBackgroundMonitors() {
+        stopClippingMonitor();
+        stopGainUpdateLoop();
+    },
+
+    teardown() {
+        this.stopBackgroundMonitors();
+        this.disposeAllWaveformAnalyzers();
+        logger.debug('SynthEngine', 'Stopped SynthEngine background monitors', null, 'audio');
     }
 };
 

@@ -1,42 +1,71 @@
-/* Button-grid accidental buttons (♭, ♯, Hz) - overrides harmonyButtons.css */
-/* These buttons are in the button-grid's left cell, distinct from harmony panel buttons */
+/* ============================================================================
+   ACCIDENTAL BUTTONS (♭, ♯, Hz) - CLEAN IMPLEMENTATION
+   Using <div> elements to avoid global button styles
+   ============================================================================ */
 
-.button-grid-left-cell .accidental-button,
-#button-grid .accidental-button,
-#accidental-controls-container-v2 .accidental-button {
-  background: var(--c-surface);
-  border: 1px solid var(--c-border);
-  color: var(--c-text);
-  font-size: var(--font-size-base);
-  padding: var(--space-020) var(--space-035);
+.accidental-btn {
+  /* Base OFF state */
+  background-color: var(--c-surface) !important;
+  border: 2px solid var(--c-border) !important;
+  color: var(--c-text-muted) !important;
+  font-size: clamp(0.85rem, 1.8vw, 1.125rem);
+  font-weight: 600;
+  box-sizing: border-box;
+  flex: 1 1 auto;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
   border-radius: var(--border-radius-sm);
   cursor: pointer;
   text-align: center;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: var(--box-shadow-sm);
-  transition: background-color 0.2s ease;
-  flex: 1 1 0;
-  min-width: 50px;
-  min-height: 0;
-  width: auto;
-  height: auto;
-  opacity: 0.6;
+  padding: clamp(0.15rem, 0.4vw, 0.35rem);
+  user-select: none;
+  transition: background-color 0.15s ease, border-color 0.15s ease, opacity 0.15s ease;
+  opacity: 0.5 !important;
+  outline: none; /* Remove focus outline */
 }
 
-.button-grid-left-cell .accidental-button:hover,
-#button-grid .accidental-button:hover,
-#accidental-controls-container-v2 .accidental-button:hover {
-  background-color: var(--c-surface-muted);
-  opacity: 0.8;
+.accidental-btn.accidental-btn--disabled {
+  background-color: var(--c-surface-muted) !important;
+  border-color: var(--c-border) !important;
+  color: var(--c-text-muted) !important;
+  opacity: 0.35 !important;
+  box-shadow: none !important;
+  cursor: default;
+  pointer-events: none;
 }
 
-.button-grid-left-cell .accidental-button.active,
-#button-grid .accidental-button.active,
-#accidental-controls-container-v2 .accidental-button.active {
-  background-color: var(--c-accent-general);
-  color: var(--c-text);
-  border-color: var(--c-accent-general);
-  opacity: 1.0;
+.accidental-btn.accidental-btn--disabled.active {
+  background-color: var(--c-surface-muted) !important;
+  color: var(--c-text-muted) !important;
+  border-color: var(--c-border) !important;
+  box-shadow: none !important;
+}
+
+.accidental-btn.accidental-btn--disabled:hover {
+  filter: none;
+}
+
+/* ACTIVE state */
+.accidental-btn.active {
+  background-color: var(--c-accent-general) !important;
+  color: var(--c-text) !important;
+  border-color: var(--c-accent-general) !important;
+  opacity: 1.0 !important;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2) !important;
+}
+
+/* Hover state for OFF buttons - distinct light blue tint */
+.accidental-btn:not(.active):hover {
+  background-color: #e3f2fd;
+  border-color: #90caf9;
+  opacity: 0.7;
+}
+
+/* Hover state for ACTIVE buttons - slight darkening */
+.accidental-btn.active:hover {
+  filter: brightness(0.95);
 }
