@@ -28,7 +28,7 @@ export function getTripletScheduleEvents(tripletStampId, placement = null) {
   }
 
   const events = [];
-  const stepStr = stamp.span === "eighth" ? "8t" : "4t"; // triplet eighth or triplet quarter
+  const stepStr = stamp.span === 'eighth' ? '8t' : '4t'; // triplet eighth or triplet quarter
   const stepDuration = stepStr; // duration equals the step for clean reads
 
   // Create events for each active slot in the triplet
@@ -39,7 +39,7 @@ export function getTripletScheduleEvents(tripletStampId, placement = null) {
     // Calculate proper offset for each slot using simple multiplication
     let offset;
     if (slot === 0) {
-      offset = "0";
+      offset = '0';
     } else if (slot === 1) {
       offset = stepStr; // First triplet step (8t or 4t)
     } else if (slot === 2) {
@@ -55,7 +55,7 @@ export function getTripletScheduleEvents(tripletStampId, placement = null) {
     events.push({
       offset: offset,
       duration: stepDuration,
-      type: stamp.span === "eighth" ? 'triplet-eighth' : 'triplet-quarter',
+      type: stamp.span === 'eighth' ? 'triplet-eighth' : 'triplet-quarter',
       slot: slot,
       shapeKey,
       rowOffset  // Pitch offset from base row
@@ -75,24 +75,24 @@ export function getTripletScheduleEvents(tripletStampId, placement = null) {
 export function scheduleTripletGroup(tripletGroup, synth) {
   const { startCellIndex, stampId, pitch } = tripletGroup;
   const stamp = getTripletStampById(stampId);
-  
+
   if (!stamp) {
     logger.warn('TripletScheduler', `Cannot schedule unknown triplet stamp ID: ${stampId}`, { stampId }, 'triplets');
     return;
   }
 
   const groupStart = getCellStartSeconds(startCellIndex);
-  const stepStr = stamp.span === "eighth" ? "8t" : "4t";
+  const stepStr = stamp.span === 'eighth' ? '8t' : '4t';
   const stepSec = Tone.Time(stepStr).toSeconds();
 
-  logger.debug('TripletScheduler', `Scheduling triplet group`, { 
-    startCellIndex, 
-    stampId, 
-    pitch, 
-    groupStart, 
+  logger.debug('TripletScheduler', `Scheduling triplet group`, {
+    startCellIndex,
+    stampId,
+    pitch,
+    groupStart,
     stepStr,
     stepSec,
-    hits: stamp.hits 
+    hits: stamp.hits
   }, 'triplets');
 
   // Trigger each active slot
@@ -100,12 +100,12 @@ export function scheduleTripletGroup(tripletGroup, synth) {
     const triggerTime = groupStart + slot * stepSec;
     // Duration: one triplet step reads cleanly; adjust if you want legato/overlap
     synth.triggerAttackRelease(pitch, stepSec, triggerTime);
-    
-    logger.debug('TripletScheduler', `Scheduled triplet note`, { 
-      slot, 
-      triggerTime, 
+
+    logger.debug('TripletScheduler', `Scheduled triplet note`, {
+      slot,
+      triggerTime,
       duration: stepSec,
-      pitch 
+      pitch
     }, 'triplets');
   });
 }
@@ -143,26 +143,26 @@ export function getTripletGroupSpan(tripletStampId) {
  */
 export function canPlaceTripletGroup(startCellIndex, tripletStampId, existingPlacements = []) {
   const span = getTripletGroupSpan(tripletStampId);
-  
+
   // Check if the required cells are available
   for (let i = 0; i < span; i++) {
     const cellIndex = startCellIndex + i;
-    const hasConflict = existingPlacements.some(placement => 
-      placement.cellIndex === cellIndex || 
-      (placement.tripletGroup && 
-       placement.tripletGroup.startCellIndex <= cellIndex && 
+    const hasConflict = existingPlacements.some(placement =>
+      placement.cellIndex === cellIndex ||
+      (placement.tripletGroup &&
+       placement.tripletGroup.startCellIndex <= cellIndex &&
        cellIndex < placement.tripletGroup.startCellIndex + getTripletGroupSpan(placement.tripletGroup.stampId))
     );
-    
+
     if (hasConflict) {
-      logger.debug('TripletScheduler', `Triplet placement conflict at cell ${cellIndex}`, { 
-        startCellIndex, 
-        tripletStampId, 
-        span 
+      logger.debug('TripletScheduler', `Triplet placement conflict at cell ${cellIndex}`, {
+        startCellIndex,
+        tripletStampId,
+        span
       }, 'triplets');
       return false;
     }
   }
-  
+
   return true;
 }

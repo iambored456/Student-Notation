@@ -6,7 +6,7 @@ const math = {
     return (value - min) / (max - min);
   },
   scale(inNum, inMin, inMax, outMin, outMax) {
-    if (inMin === inMax) return outMin;
+    if (inMin === inMax) {return outMin;}
     return (((inNum - inMin) * (outMax - outMin)) / (inMax - inMin)) + outMin;
   }
 };
@@ -17,7 +17,7 @@ class SmartCanvas {
     const p = typeof parent === 'string'
       ? document.querySelector(parent)
       : parent;
-    if (!p) throw new Error('Meter: parent element not found.');
+    if (!p) {throw new Error('Meter: parent element not found.');}
 
     this.element = document.createElement('canvas');
     this.context = this.element.getContext('2d');
@@ -43,7 +43,7 @@ class SmartCanvas {
   }
 
   refreshIntervalReached(currentTime) {
-    if (!this.millisecondsPerFrame) return true;
+    if (!this.millisecondsPerFrame) {return true;}
     if ((currentTime - this.lastRefreshTime) >= this.millisecondsPerFrame) {
       this.lastRefreshTime = currentTime;
       return true;
@@ -116,7 +116,7 @@ export default class Meter {
     // Optional click-to-toggle (only if a source exists)
     this.element.style.cursor = 'pointer';
     this.element.addEventListener('click', () => {
-      if (!this.source) return;
+      if (!this.source) {return;}
       this.active = !this.active;
       this.render(); // (re)enter loop if needed
     });
@@ -132,7 +132,7 @@ export default class Meter {
     if (!node || !node.context) {
       throw new Error('Meter.connect: expected a Web Audio AudioNode.');
     }
-    if (this.source) this.disconnect();
+    if (this.source) {this.disconnect();}
 
     // Determine channels and build analyser chain
     this.channels = Math.max(1, channels || node.channelCount || 2);
@@ -199,15 +199,15 @@ export default class Meter {
   render(nowTime = performance.now()) {
     if (this.active) {
       requestAnimationFrame(this.render.bind(this));
-      if (!this.canvas.refreshIntervalReached(nowTime)) return;
+      if (!this.canvas.refreshIntervalReached(nowTime)) {return;}
     }
-    
+
     // Performance monitoring
     if (this.active && typeof performance !== 'undefined') {
       const startTime = performance.now();
       this._drawFrame();
       const endTime = performance.now();
-      
+
       // Log performance warnings if frame takes too long (> 16ms for 60fps)
       const frameTime = endTime - startTime;
       if (frameTime > 16 && Math.random() < 0.01) { // Sample 1% of frames
@@ -244,7 +244,7 @@ export default class Meter {
     ctx.fillStyle = this.colors.fill;
     ctx.fillRect(0, 0, width, height);
 
-    if (!this.analysers.length) return;
+    if (!this.analysers.length) {return;}
 
     // For each channel, compute RMS -> dBFS and draw
     for (let ch = 0; ch < this.analysers.length; ch++) {

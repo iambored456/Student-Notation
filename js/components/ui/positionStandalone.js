@@ -38,7 +38,7 @@ export default class Position {
   constructor(target, opts = {}) {
     // Resolve target element (selector or node)
     this._root = typeof target === 'string' ? document.querySelector(target) : target;
-    if (!this._root) throw new Error('Position: target not found');
+    if (!this._root) {throw new Error('Position: target not found');}
 
     // Defaults
     const {
@@ -52,7 +52,7 @@ export default class Position {
     // A) REQUIRED CORE — tiny event emitter + value/interaction helpers
     // ──────────────────────────────────────────────────────────────────────────
     this._events = new Map();           // event emitter
-    this._emit = (t, v) => { const s = this._events.get(t); if (s) for (const f of s) f(v); };
+    this._emit = (t, v) => { const s = this._events.get(t); if (s) {for (const f of s) {f(v);}} };
 
     // Step: clamps + quantizes a value in [min..max] with an optional step
     class Step {
@@ -217,13 +217,13 @@ export default class Position {
   //    change: { x, y } (real values in your configured ranges)
   // ────────────────────────────────────────────────────────────────────────────
   on(type, fn) {
-    if (!this._events.has(type)) this._events.set(type, new Set());
+    if (!this._events.has(type)) {this._events.set(type, new Set());}
     this._events.get(type).add(fn);
     return () => this.off(type, fn);
   }
   off(type, fn) {
     const set = this._events.get(type);
-    if (set) set.delete(fn);
+    if (set) {set.delete(fn);}
   }
 
   // ────────────────────────────────────────────────────────────────────────────
@@ -282,7 +282,7 @@ export default class Position {
     this._bg.setAttribute('width', this._w);
     this._bg.setAttribute('height', this._h);
     // Rebuild grid lines
-    while (this._grid.firstChild) this._grid.removeChild(this._grid.firstChild);
+    while (this._grid.firstChild) {this._grid.removeChild(this._grid.firstChild);}
     const qv = [0.25, 0.5, 0.75];
     for (const q of qv) {
       const vx = document.createElementNS(this._svg.namespaceURI, 'line');
@@ -304,7 +304,7 @@ export default class Position {
     window.removeEventListener('pointerup', this._onUp);
     window.removeEventListener('pointercancel', this._onUp);
     window.removeEventListener('pointermove', this._onMove);
-    if (this._root && this._root.contains(this._svg)) this._root.removeChild(this._svg);
+    if (this._root && this._root.contains(this._svg)) {this._root.removeChild(this._svg);}
     this._events.clear();
   }
 
@@ -316,7 +316,7 @@ export default class Position {
     this._xh.setAttribute('stroke', this._style.cross);
     this._yh.setAttribute('stroke', this._style.cross);
     this._knob.setAttribute('fill', this._style.handle);
-    if (this._label) this._label.setAttribute('fill', this._style.text);
+    if (this._label) {this._label.setAttribute('fill', this._style.text);}
     this._grid.setAttribute('stroke', this._style.grid);
     this._draw();
   }
@@ -347,7 +347,7 @@ export default class Position {
     e.preventDefault();
   }
   _onMove(e) {
-    if (!this._clicked) return;
+    if (!this._clicked) {return;}
     const m = this._localPoint(e);
     this._hX.update(m);
     this._hY.update(m);
@@ -355,7 +355,7 @@ export default class Position {
     e.preventDefault();
   }
   _onUp() {
-    if (!this._clicked) return;
+    if (!this._clicked) {return;}
     this._clicked = false;
     window.removeEventListener('pointermove', this._onMove);
     // Emit 'up' event for interaction tracking

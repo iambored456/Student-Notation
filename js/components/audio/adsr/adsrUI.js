@@ -9,21 +9,21 @@ const elements = {};
  * @returns {object} The cached DOM elements.
  */
 function init() {
-    elements.container = document.querySelector('#adsr-envelope');
-    elements.parentContainer = elements.container.closest('.adsr-container');
-    elements.sustainTrack = document.getElementById('sustain-slider-track');
-    elements.sustainThumb = document.getElementById('sustain-slider-thumb');
-    elements.multiSliderContainer = document.getElementById('multi-thumb-slider-container');
-    elements.thumbA = document.getElementById('thumb-a');
-    elements.thumbD = document.getElementById('thumb-d');
-    elements.thumbR = document.getElementById('thumb-r');
+  elements.container = document.querySelector('#adsr-envelope');
+  elements.parentContainer = elements.container.closest('.adsr-container');
+  elements.sustainTrack = document.getElementById('sustain-slider-track');
+  elements.sustainThumb = document.getElementById('sustain-slider-thumb');
+  elements.multiSliderContainer = document.getElementById('multi-thumb-slider-container');
+  elements.thumbA = document.getElementById('thumb-a');
+  elements.thumbD = document.getElementById('thumb-d');
+  elements.thumbR = document.getElementById('thumb-r');
 
-    return elements;
+  return elements;
 }
 
 export default {
-    init,
-    get elements() {
-        return elements;
-    }
+  init,
+  get elements() {
+    return elements;
+  }
 };

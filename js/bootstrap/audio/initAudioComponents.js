@@ -11,32 +11,32 @@ import effectsController from '@components/audio/effects/effectsController.js';
 import positionEffectsController from '@components/ui/positionEffectsController.js';
 
 export async function initAudioComponents() {
-    initAdsrComponent();
-    initHarmonicBins();
-    initFilterControls();
+  initAdsrComponent();
+  initHarmonicBins();
+  initFilterControls();
 
-    logger.initStart('Static Waveform Visualizer');
-    if (initStaticWaveformVisualizer()) {
-        logger.initSuccess('Static Waveform Visualizer');
-    } else {
-        logger.initFailed('Static Waveform Visualizer');
-    }
+  logger.initStart('Static Waveform Visualizer');
+  if (initStaticWaveformVisualizer()) {
+    logger.initSuccess('Static Waveform Visualizer');
+  } else {
+    logger.initFailed('Static Waveform Visualizer');
+  }
 
-    // Initialize effects architecture
-    logger.initStart('Effects Managers');
-    animationEffectsManager.init();
-    audioEffectsManager.init();
+  // Initialize effects architecture
+  logger.initStart('Effects Managers');
+  animationEffectsManager.init();
+  audioEffectsManager.init();
 
-    effectsCoordinator.init();
+  effectsCoordinator.init();
 
-    effectsController.init();
-    positionEffectsController.init();
+  effectsController.init();
+  positionEffectsController.init();
 
-    // Expose for legacy consumers
-    window.effectsCoordinator = effectsCoordinator;
-    window.animationEffectsManager = animationEffectsManager;
-    window.audioEffectsManager = audioEffectsManager;
-    window.effectsController = effectsController;
-    window.positionEffectsController = positionEffectsController;
-    logger.initSuccess('Effects Managers');
+  // Expose for legacy consumers
+  window.effectsCoordinator = effectsCoordinator;
+  window.animationEffectsManager = animationEffectsManager;
+  window.audioEffectsManager = audioEffectsManager;
+  window.effectsController = effectsController;
+  window.positionEffectsController = positionEffectsController;
+  logger.initSuccess('Effects Managers');
 }

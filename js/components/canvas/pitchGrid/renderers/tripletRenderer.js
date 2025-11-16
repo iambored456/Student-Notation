@@ -15,8 +15,8 @@ logger.moduleLoaded('TripletRenderer', 'triplets');
  */
 export function renderTriplets(ctx, options) {
   const triplets = store.getAllTripletPlacements();
-  
-  if (triplets.length === 0) return;
+
+  if (triplets.length === 0) {return;}
 
   logger.debug('TripletRenderer', `Rendering ${triplets.length} triplet groups`, { count: triplets.length }, 'triplets');
 
@@ -33,36 +33,36 @@ export function renderTriplets(ctx, options) {
  */
 function renderTripletGroup(ctx, placement, options) {
   const stamp = getTripletStampById(placement.stampId);
-  if (!stamp) return;
+  if (!stamp) {return;}
 
   const { startCellIndex, span, row, color } = placement;
-  
+
   // Convert cell index to microbeat columns for rendering
   const startColumn = startCellIndex * 2; // Each cell = 2 microbeats
   const endColumn = startColumn + (span * 2) - 1;
-  
+
   // Get the triplet group bounds
   const groupX = getColumnX(startColumn, options);
   const rowCenterY = getRowY(row, options);
   const groupY = rowCenterY - (options.cellHeight / 2);
   const groupWidth = options.cellWidth * 2 * span; // span cells * 2 microbeats per cell
   const groupHeight = options.cellHeight;
-  
+
   // Skip if outside viewport
   const canvasWidth = getLogicalCanvasWidth(ctx.canvas);
-  if (groupX + groupWidth < 0 || groupX > canvasWidth) return;
-  
+  if (groupX + groupWidth < 0 || groupX > canvasWidth) {return;}
+
   // Draw triplet noteheads with per-shape offsets
   const getRowYWithOptions = (rowIndex) => getRowY(rowIndex, options);
   renderTripletNoteheads(ctx, stamp, groupX, rowCenterY, groupWidth, groupHeight, color, placement, getRowYWithOptions);
-  
+
   // Draw a subtle background to make triplets stand out (like sixteenth stamps)
   ctx.save();
   ctx.globalAlpha = 0.1;
   ctx.fillStyle = color;
   ctx.fillRect(groupX + 1, groupY + 1, groupWidth - 2, groupHeight - 2);
   ctx.restore();
-  
+
   // Optional: Draw triplet bracket/number (can be toggled later)
   // renderTripletBracket(ctx, groupX, rowCenterY, groupWidth, groupHeight);
 }
@@ -80,7 +80,7 @@ function renderTripletGroup(ctx, placement, options) {
  * @param {Function} getRowY - Optional function to get Y position for a row index
  */
 function renderTripletNoteheads(ctx, stamp, groupX, centerY, groupWidth, groupHeight, color, placement = null, getRowY = null) {
-  const kind = stamp.span === "eighth" ? "ovalWide" : "circleWide";
+  const kind = stamp.span === 'eighth' ? 'ovalWide' : 'circleWide';
 
   // Scale dynamically based on cell dimensions (like stamp renderer)
   const scale = Math.min(groupWidth / 100, groupHeight / 100) * 0.8;
@@ -125,7 +125,7 @@ function renderTripletNoteheads(ctx, stamp, groupX, centerY, groupWidth, groupHe
  * @param {number} strokeWidth - Stroke width
  * @param {number} scale - Scale factor
  */
-function drawTripletNotehead(ctx, kind, cx, cy, stroke = "currentColor", strokeWidth = 4, scale = 1) {
+function drawTripletNotehead(ctx, kind, cx, cy, stroke = 'currentColor', strokeWidth = 4, scale = 1) {
   const baseRx = 20 * scale;
   const baseRy = 60 * scale;
 
@@ -134,10 +134,10 @@ function drawTripletNotehead(ctx, kind, cx, cy, stroke = "currentColor", strokeW
   ctx.fillStyle = 'none';
 
   ctx.beginPath();
-  
-  if (kind === "circleWide") {
+
+  if (kind === 'circleWide') {
     // Draw ellipse for "circleWide" - allows independent x/y scaling
-    const rx = baseRx*2
+    const rx = baseRx*2;
     const ry = baseRy;
     ctx.ellipse(cx, cy, rx, ry, 0, 0, 2 * Math.PI);
   } else {
@@ -146,7 +146,7 @@ function drawTripletNotehead(ctx, kind, cx, cy, stroke = "currentColor", strokeW
     const ry = baseRy;
     ctx.ellipse(cx, cy, rx, ry, 0, 0, 2 * Math.PI);
   }
-  
+
   ctx.stroke();
 }
 
@@ -159,24 +159,24 @@ function drawTripletNotehead(ctx, kind, cx, cy, stroke = "currentColor", strokeW
  * @param {Object} options - Rendering options
  */
 export function renderTripletPreview(ctx, cellIndex, row, stamp, options) {
-  if (!stamp) return;
-  
+  if (!stamp) {return;}
+
   // Convert cell index to microbeat columns
   const startColumn = cellIndex * 2;
   const span = stamp.span === 'eighth' ? 1 : 2;
-  
+
   // Get the preview bounds
   const groupX = getColumnX(startColumn, options);
   const rowCenterY = getRowY(row, options);
   const groupWidth = options.cellWidth * 2 * span;
   const groupHeight = options.cellHeight;
-  
+
   // Draw semi-transparent preview
   ctx.save();
   ctx.globalAlpha = 0.6;
-  
+
   const previewColor = options.previewColor || '#4a90e2';
   renderTripletNoteheads(ctx, stamp, groupX, rowCenterY, groupWidth, groupHeight, previewColor);
-  
+
   ctx.restore();
 }

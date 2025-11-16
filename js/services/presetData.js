@@ -72,25 +72,25 @@ function generateSawtooth() {
 const RAW_SPECTRA = {
   strings: { // Renamed from violin to match the UI button
     amps:   [0.995, 0.940, 0.425, 0.480, 0.000, 0.365,
-             0.040, 0.085, 0.000, 0.090, 0.000, 0.000],
+      0.040, 0.085, 0.000, 0.090, 0.000, 0.000],
     phases: [0, Math.PI/2, 0, Math.PI/2, 0, Math.PI/2,
-             0, Math.PI/2, 0, Math.PI/2, 0, 0]
+      0, Math.PI/2, 0, Math.PI/2, 0, 0]
   },
   piano: {
     amps:   [1.000, 0.700, 0.600, 0.500, 0.400, 0.320,
-             0.250, 0.200, 0.170, 0.140, 0.120, 0.100],
+      0.250, 0.200, 0.170, 0.140, 0.120, 0.100],
     phases: Array(12).fill(0)
   },
   marimba: {
     // Strong 4th partial, otherwise sparse
     amps:   [1.000, 0.200, 0.150, 0.700, 0.050, 0.180,
-             0.030, 0.050, 0.020, 0.010, 0.000, 0.000],
+      0.030, 0.050, 0.020, 0.010, 0.000, 0.000],
     phases: Array(12).fill(0)
   },
   woodwind: {
     // Clarinet-like (odd > even)
     amps:   [1.000, 0.050, 0.500, 0.050, 0.300, 0.050,
-             0.200, 0.050, 0.120, 0.050, 0.080, 0.050],
+      0.200, 0.050, 0.120, 0.050, 0.080, 0.050],
     phases: Array(12).fill(0)
   }
 };

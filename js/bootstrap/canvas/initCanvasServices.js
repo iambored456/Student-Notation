@@ -8,8 +8,8 @@ import scrollSyncService from '@services/scrollSyncService.js';
  * Returns any context objects LayoutService exposes so consumers can render.
  */
 export async function initCanvasServices() {
-    const contexts = LayoutService.init();
-    CanvasContextService.setContexts(contexts);
-    scrollSyncService.init();
-    return contexts;
+  const contexts = LayoutService.init();
+  CanvasContextService.setContexts(contexts);
+  scrollSyncService.init();
+  return contexts;
 }

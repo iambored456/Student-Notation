@@ -86,7 +86,7 @@ export class StampRenderer {
     const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
     svg.setAttribute('viewBox', `0 0 ${viewBoxWidth} ${viewBoxHeight}`);
     svg.style.color = '#000000'; // Ensure visibility with explicit color
-    
+
     const scale = Math.min(viewBoxWidth / 100, viewBoxHeight / 100) * 0.8;
     const diamondW = this.options.diamondW * scale;
     const diamondH = this.options.diamondH * scale;

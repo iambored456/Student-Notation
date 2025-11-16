@@ -1,11 +1,83 @@
 /* ==========================================================================
-   TONIC CONTROLS - MODE BUTTONS AND DEGREES
+   RANGE CONTROLS - TONIC MODES, DEGREES, CLEF RANGE
    ========================================================================= */
 
-/* --- Tonic Content Box --- */
-/* Inherits flex layout from .intervals-content-box parent class */
+/* --- Range Content Box --- */
+.range-content-box {
+    background-color: var(--c-surface);
+    border: 1px solid var(--c-border);
+    border-radius: var(--border-radius-md);
+    padding: var(--space-015);
+    box-shadow: var(--box-shadow-sm);
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
 
-/* --- Tonic Layout --- */
+/* --- Range Layout --- */
+.range-layout {
+    display: flex;
+    flex-direction: row;
+    gap: var(--space-025);
+    align-items: flex-start;
+    width: 100%;
+    height: 100%;
+    min-height: 0;
+    flex: 1;
+}
+
+.range-panel-section {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-015);
+    align-items: flex-start;
+}
+
+.range-panel-section.modes-section {
+    flex: 1 1 auto;
+}
+
+.range-panel-section.degrees-section {
+    flex: 0 1 auto;
+    min-height: 0;
+    overflow: hidden;
+}
+
+.range-panel-section.wheels-section {
+    flex: 0 0 auto;
+}
+
+.range-panel-section.summary-section {
+    flex: 0 0 auto;
+}
+
+.range-panel-section.presets-section {
+    flex: 0 0 auto;
+}
+
+/* --- Legacy Tonic Content Box (kept for compatibility) --- */
+.tonic-content-box {
+    background-color: var(--c-surface);
+    border: 1px solid var(--c-border);
+    border-radius: var(--border-radius-md);
+    padding: var(--space-015);
+    box-shadow: var(--box-shadow-sm);
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+/* --- Legacy Tonic Layout --- */
 .tonic-layout {
     display: flex;
     flex-direction: row;
@@ -87,10 +159,10 @@
 }
 
 .tonic-mode-button.selected {
-    background-color: var(--c-accent-light, #63a9fd);
+    background-color: var(--c-accent-neutral-light, #ffd54f);
     color: var(--c-text, #212529);
-    border-color: var(--c-accent, #4A90E2);
-    box-shadow: 0 0 8px rgba(74, 144, 226, 0.45);
+    border-color: var(--c-accent-neutral, #ffc107);
+    box-shadow: 0 0 8px rgba(255, 193, 7, 0.45);
 }
 
 .tonic-mode-button.selected .tonic-mode-label {
@@ -99,13 +171,13 @@
 }
 
 .tonic-mode-button.selected:focus {
-    background-color: var(--c-accent-light);
+    background-color: var(--c-accent-neutral-light);
     color: var(--c-text);
 }
 
 /* --- Tonic Degrees Container (right sidebar) --- */
 .tonic-degrees-container {
-    flex: 0 0 auto;
+    flex: 0 1 auto;
     display: flex;
     flex-direction: column;
     gap: var(--space-025);
@@ -115,6 +187,7 @@
     justify-content: flex-start;
     height: 100%;
     min-height: 0;
+    overflow: hidden;
 }
 
 /* --- Degree Toggle Container --- */
@@ -170,7 +243,7 @@
     left: 2px;
     width: 56px;
     height: 26px;
-    background-color: var(--c-accent);
+    background-color: var(--c-accent-neutral);
     border-radius: 13px;
     transition: transform 0.3s ease;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);

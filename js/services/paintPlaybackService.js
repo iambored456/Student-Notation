@@ -13,7 +13,7 @@ class PaintPlaybackService {
   }
 
   async initialize() {
-    if (this.isInitialized) return;
+    if (this.isInitialized) {return;}
 
     try {
       // Create a simple sine wave synth for paint playback
@@ -85,7 +85,7 @@ class PaintPlaybackService {
     paintHistory.forEach((point, index) => {
       const frequency = this.midiToFrequency(point.midi);
       const duration = 0.2; // Short note duration for paint points
-      
+
       // Schedule the note to play at the recorded musical time
       const eventId = Tone.Transport.schedule((time) => {
         if (this.paintSynth && store.state.paint.paintSettings.playbackEnabled) {
@@ -135,17 +135,17 @@ class PaintPlaybackService {
 
   async dispose() {
     this.clearScheduledEvents();
-    
+
     if (this.paintSynth) {
       this.paintSynth.dispose();
       this.paintSynth = null;
     }
-    
+
     if (this.paintGain) {
       this.paintGain.dispose();
       this.paintGain = null;
     }
-    
+
     this.isInitialized = false;
     logger.info('PaintPlaybackService', 'Disposed');
   }

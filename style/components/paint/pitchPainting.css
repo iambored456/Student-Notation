@@ -37,7 +37,7 @@
 
 .mic-permission-prompt button {
     margin-top: var(--space-025);
-    background-color: var(--c-accent);
+    background-color: var(--c-accent-neutral);
     color: var(--c-surface);
     border: none;
     padding: var(--space-025) var(--space-035);
@@ -47,7 +47,7 @@
 }
 
 .mic-permission-prompt button:hover {
-    background-color: var(--c-accent-hover);
+    background-color: var(--c-accent-neutral-hover);
 }
 
 /* Accessibility enhancements */

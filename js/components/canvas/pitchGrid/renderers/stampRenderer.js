@@ -15,9 +15,9 @@ logger.moduleLoaded('StampRenderer', 'stamps');
  */
 export function renderStamps(ctx, options) {
   const stamps = store.getAllStampPlacements();
-  
-  
-  if (stamps.length === 0) return;
+
+
+  if (stamps.length === 0) {return;}
 
   logger.debug('StampRenderer', `Rendering ${stamps.length} stamps`, { count: stamps.length }, 'stamps');
 
@@ -34,7 +34,7 @@ export function renderStamps(ctx, options) {
  */
 function renderStamp(ctx, placement, options) {
   const stamp = getStampById(placement.stampId);
-  if (!stamp) return;
+  if (!stamp) {return;}
 
   const { startColumn, endColumn, row, color } = placement;
 
@@ -47,7 +47,7 @@ function renderStamp(ctx, placement, options) {
 
   // Skip if outside viewport
   const canvasWidth = getLogicalCanvasWidth(ctx.canvas);
-  if (stampX + stampWidth < 0 || stampX > canvasWidth) return;
+  if (stampX + stampWidth < 0 || stampX > canvasWidth) {return;}
 
   // Create a getRowY wrapper that uses the current options
   const getRowYWithOptions = (rowIndex) => getRowY(rowIndex, options);
@@ -87,26 +87,26 @@ function renderStamp(ctx, placement, options) {
  * Renders stamp hover preview at mouse position
  * @param {CanvasRenderingContext2D} ctx - The canvas context
  * @param {number} column - Grid column
- * @param {number} row - Grid row  
+ * @param {number} row - Grid row
  * @param {Object} stamp - The stamp to preview
  * @param {Object} options - Rendering options
  */
 export function renderStampPreview(ctx, column, row, stamp, options) {
-  if (!stamp) return;
-  
+  if (!stamp) {return;}
+
   // Preview spans 2 microbeats like actual stamps, snapping to grid positions
   const stampX = getColumnX(column, options);
   const rowCenterY = getRowY(row, options);
   const stampY = rowCenterY - (options.cellHeight / 2); // Center the stamp on the row like the highlight
   const stampWidth = options.cellWidth * 2; // 2-microbeat width like circle notes
   const stampHeight = options.cellHeight;
-  
-  
+
+
   ctx.save();
   ctx.globalAlpha = 0.6;
-  
+
   // Use shared stamp renderer for preview
   defaultStampRenderer.renderToCanvas(ctx, stamp, stampX, stampY, stampWidth, stampHeight, options.previewColor || '#4a90e2');
-  
+
   ctx.restore();
 }

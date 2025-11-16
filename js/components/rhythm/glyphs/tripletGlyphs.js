@@ -9,29 +9,29 @@ export function createTripletNotehead({
   kind,
   cx,
   cy,
-  stroke = "currentColor",
+  stroke = 'currentColor',
   strokeWidth = 4,
-  scale = 1,
+  scale = 1
 }) {
   const baseRx = 20 * scale;
   const baseRy = 60 * scale;
 
-  const ellipse = document.createElementNS("http://www.w3.org/2000/svg", "ellipse");
-  ellipse.setAttribute("cx", cx);
-  ellipse.setAttribute("cy", cy);
-  ellipse.setAttribute("fill", "none");
-  ellipse.setAttribute("stroke", stroke);
-  ellipse.setAttribute("stroke-width", strokeWidth);
-  ellipse.setAttribute("stroke-linecap", "round");
+  const ellipse = document.createElementNS('http://www.w3.org/2000/svg', 'ellipse');
+  ellipse.setAttribute('cx', cx);
+  ellipse.setAttribute('cy', cy);
+  ellipse.setAttribute('fill', 'none');
+  ellipse.setAttribute('stroke', stroke);
+  ellipse.setAttribute('stroke-width', strokeWidth);
+  ellipse.setAttribute('stroke-linecap', 'round');
 
-  if (kind === "circleWide") {
+  if (kind === 'circleWide') {
     // Draw ellipse for "circleWide" - allows independent x/y scaling
-    ellipse.setAttribute("rx", baseRx * 2); // Slightly wider for quarter note weight
-    ellipse.setAttribute("ry", baseRy);
+    ellipse.setAttribute('rx', baseRx * 2); // Slightly wider for quarter note weight
+    ellipse.setAttribute('ry', baseRy);
   } else {
     // Draw ellipse for "ovalWide"
-    ellipse.setAttribute("rx", baseRx);
-    ellipse.setAttribute("ry", baseRy);
+    ellipse.setAttribute('rx', baseRx);
+    ellipse.setAttribute('ry', baseRy);
   }
 
   return ellipse;
@@ -41,22 +41,22 @@ export function createTripletNotehead({
  * Creates a complete triplet preview SVG for a given stamp
  */
 export function createTripletPreview(stamp, width = 48, height = 48) {
-  const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-  
+  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+
   // Use wider viewBox for quarter triplets to maintain proper proportions
   const isWide = stamp.span === 'quarter';
   const viewBoxWidth = isWide ? 200 : 100; // Quarter triplets get 2x wider viewBox
-  svg.setAttribute("viewBox", `0 0 ${viewBoxWidth} 100`);
-  svg.setAttribute("width", width);
-  svg.setAttribute("height", height);
-  svg.setAttribute("aria-label", stamp.label);
+  svg.setAttribute('viewBox', `0 0 ${viewBoxWidth} 100`);
+  svg.setAttribute('width', width);
+  svg.setAttribute('height', height);
+  svg.setAttribute('aria-label', stamp.label);
   svg.style.color = '#000000'; // Ensure visibility like the stamp renderer
 
 
   // Calculate centers based on viewBox width
   const centerY = 50;
-  const kind = stamp.span === "eighth" ? "ovalWide" : "circleWide";
-  
+  const kind = stamp.span === 'eighth' ? 'ovalWide' : 'circleWide';
+
   // Position noteheads appropriately for the viewBox size
   let centers;
   if (isWide) {
@@ -73,7 +73,7 @@ export function createTripletPreview(stamp, width = 48, height = 48) {
       kind,
       cx: centers[hit],
       cy: centerY,
-      stroke: "currentColor",
+      stroke: 'currentColor',
       strokeWidth: 3, // Match grid rendering
       scale: 0.8 // Match grid rendering
     });

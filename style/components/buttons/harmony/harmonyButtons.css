@@ -161,6 +161,21 @@
     align-items: flex-start;
 }
 
+.intervals-panel-section {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-015);
+    align-items: flex-start;
+}
+
+.intervals-panel-section.inversion-section {
+    flex: 0 0 auto;
+}
+
+.intervals-panel-section.intervals-grid-section {
+    flex: 1;
+}
+
 .inversion-column {
     display: flex;
     flex-direction: column;
@@ -169,50 +184,61 @@
     flex: 0 0 auto;
 }
 
-.inversion-column h4 {
-    margin: 0;
-    color: var(--c-text-muted);
-    font-size: 0.8em;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    text-align: center;
-}
-
 .toggle-switch {
     width: 20px;
     height: 40px;
-    background-color: var(--c-border);
+    background: linear-gradient(180deg, var(--c-gridline) 0%, var(--c-border) 100%);
+    border: 1px solid var(--c-border-strong);
     border-radius: 10px;
     position: relative;
     cursor: pointer;
-    transition: background-color 0.3s ease;
+    transition: background 0.3s ease, border-color 0.3s ease;
 }
 
 .toggle-switch.active {
-    background-color: var(--c-border);
+    background: linear-gradient(180deg, var(--c-accent-neutral-light) 0%, var(--c-accent-neutral) 100%);
+    border-color: var(--c-accent-neutral);
 }
 
 .toggle-slider {
     width: 16px;
     height: 16px;
-    background-color: transparent;
+    background-color: var(--c-surface);
+    border: 2px solid var(--c-border-strong);
     border-radius: 50%;
     position: absolute;
     top: 2px;
     left: 2px;
-    transition: transform 0.3s ease;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+    transition: transform 0.3s ease, background-color 0.3s ease, border-color 0.3s ease;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
 .toggle-switch.active .toggle-slider {
     transform: translateY(20px);
 }
 
-/* --- Chords Panel Layout --- */
+/* --- Chords Panel Layout (now includes intervals) --- */
 .chords-layout {
     display: flex;
+    gap: var(--space-025);
+    align-items: flex-start;
+}
+
+.chords-panel-section {
+    display: flex;
+    flex-direction: column;
     gap: var(--space-015);
     align-items: flex-start;
+}
+
+.chords-panel-section.inversion-section,
+.chords-panel-section.position-section {
+    flex: 0 0 auto;
+}
+
+.chords-panel-section.intervals-grid-section,
+.chords-panel-section.chords-grid-section {
+    flex: 1;
 }
 
 .chord-inversion-column {
@@ -222,15 +248,6 @@
     gap: var(--space-015);
     flex: 0 0 auto;
     text-align: left;
-}
-
-.chord-inversion-column h4 {
-    margin: 0;
-    color: var(--c-text-muted);
-    font-size: 0.7em;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    text-align: left !important;
 }
 
 /* --- 3-State Toggle Switch - Vertical --- */
@@ -447,43 +464,50 @@
 .six-state-toggle {
     width: 20px;
     height: 120px;
-    background-color: var(--c-border);
+    background: linear-gradient(180deg, var(--c-gridline) 0%, var(--c-border) 100%);
+    border: 1px solid var(--c-border-strong);
     border-radius: 10px;
     position: relative;
     cursor: pointer;
-    transition: background-color 0.3s ease;
+    transition: background 0.3s ease, border-color 0.3s ease;
 }
 
 .six-state-toggle.state-1 {
-    background-color: var(--c-border);
+    background: linear-gradient(180deg, var(--c-accent-neutral-light) 0%, var(--c-accent-neutral) 16.67%, var(--c-border) 33.33%, var(--c-gridline) 100%);
+    border-color: var(--c-accent-neutral);
 }
 
 .six-state-toggle.state-2 {
-    background-color: var(--c-border);
+    background: linear-gradient(180deg, var(--c-accent-neutral-light) 0%, var(--c-accent-neutral) 33.33%, var(--c-border) 50%, var(--c-gridline) 100%);
+    border-color: var(--c-accent-neutral);
 }
 
 .six-state-toggle.state-3 {
-    background-color: var(--c-border);
+    background: linear-gradient(180deg, var(--c-accent-neutral-light) 0%, var(--c-accent-neutral) 50%, var(--c-border) 66.67%, var(--c-gridline) 100%);
+    border-color: var(--c-accent-neutral);
 }
 
 .six-state-toggle.state-4 {
-    background-color: var(--c-border);
+    background: linear-gradient(180deg, var(--c-accent-neutral-light) 0%, var(--c-accent-neutral) 66.67%, var(--c-border) 83.33%, var(--c-gridline) 100%);
+    border-color: var(--c-accent-neutral);
 }
 
 .six-state-toggle.state-5 {
-    background-color: var(--c-border);
+    background: linear-gradient(180deg, var(--c-accent-neutral-light) 0%, var(--c-accent-neutral) 83.33%, var(--c-border) 91.67%, var(--c-gridline) 100%);
+    border-color: var(--c-accent-neutral);
 }
 
 .six-state-slider {
     width: 16px;
     height: 16px;
-    background-color: transparent;
+    background-color: var(--c-surface);
+    border: 2px solid var(--c-border-strong);
     border-radius: 50%;
     position: absolute;
     top: 2px;
     left: 2px;
-    transition: transform 0.3s ease;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+    transition: transform 0.3s ease, background-color 0.3s ease, border-color 0.3s ease;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
 .six-state-toggle.state-1 .six-state-slider {
@@ -537,6 +561,16 @@
     pointer-events: none;
 }
 
+/* --- Panel Section Titles --- */
+.panel-section-title {
+    margin: 0;
+    color: var(--c-text-muted);
+    font-size: 0.75em;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 600;
+}
+
 /* --- Utility Classes --- */
 .hidden {
     display: none;
@@ -582,6 +616,21 @@
     color: var(--c-text, #212529);
     border-color: var(--c-accent, #4A90E2);
     font-weight: 600;
+}
+
+/* Style for partial chord matches - lighter highlighting */
+.harmony-preset-button.partial-match {
+    background-color: rgba(99, 169, 253, 0.25); /* 25% opacity of --c-accent-light */
+    color: var(--c-text, #212529);
+    border-color: rgba(74, 144, 226, 0.4); /* 40% opacity of --c-accent */
+    font-weight: 500;
+    opacity: 0.7;
+}
+
+.harmony-preset-button.partial-match:hover {
+    background-color: rgba(99, 169, 253, 0.4); /* Slightly stronger on hover */
+    border-color: rgba(74, 144, 226, 0.6);
+    opacity: 0.85;
 }
 
 

@@ -18,7 +18,7 @@ class DrumPlayheadRenderer {
     this._lastColumnIndex = null;
     this._lastColumnProgress = 0;
     this._lastDebugLogTime = 0;
-    
+
     // Animation system for drum note pops
     this.activeAnimations = new Map(); // key: "colIndex-drumTrack", value: {startTime, phase}
     this.popDuration = {
@@ -53,7 +53,7 @@ class DrumPlayheadRenderer {
   }
 
   startRendering() {
-    if (this.animationFrameId) return;
+    if (this.animationFrameId) {return;}
     this.render();
   }
 
@@ -62,7 +62,7 @@ class DrumPlayheadRenderer {
       cancelAnimationFrame(this.animationFrameId);
       this.animationFrameId = null;
     }
-    
+
     if (this.ctx) {
       this.ctx.clearRect(0, 0, getLogicalCanvasWidth(this.canvas), getLogicalCanvasHeight(this.canvas));
     }
@@ -112,10 +112,10 @@ class DrumPlayheadRenderer {
         const colStartTime = timeMap[i];
         const colDuration = timeMap[i + 1] - colStartTime;
         const timeIntoCol = currentTime - colStartTime;
-        
+
         const colStartX = getColumnStartX(i);
         const colWidth = getColumnWidth(i);
-        
+
         this._lastColumnIndex = i;
         this._lastColumnProgress = colDuration > 0 ? timeIntoCol / colDuration : 0;
         return colStartX + (colDuration > 0 ? (timeIntoCol / colDuration) * colWidth : 0);
@@ -171,7 +171,7 @@ class DrumPlayheadRenderer {
       startTime: performance.now(),
       phase: 'scaleUp'
     });
-    
+
     // Ensure drum grid is redrawn to show animation
     if (window.drumGridRenderer) {
       window.drumGridRenderer.render();
@@ -181,12 +181,12 @@ class DrumPlayheadRenderer {
   getAnimationScale(colIndex, drumTrack) {
     const key = `${colIndex}-${drumTrack}`;
     const animation = this.activeAnimations.get(key);
-    
-    if (!animation) return 1.0;
-    
+
+    if (!animation) {return 1.0;}
+
     const now = performance.now();
     const elapsed = now - animation.startTime;
-    
+
     if (animation.phase === 'scaleUp') {
       if (elapsed >= this.popDuration.scaleUp) {
         // Transition to scale down phase
@@ -204,12 +204,12 @@ class DrumPlayheadRenderer {
         this.activeAnimations.delete(key);
         return 1.0;
       } else {
-        // Scale down: popScale -> 1.0 over scaleDown duration  
+        // Scale down: popScale -> 1.0 over scaleDown duration
         const progress = elapsed / this.popDuration.scaleDown;
         return this.popScale - (this.popScale - 1.0) * progress;
       }
     }
-    
+
     return 1.0;
   }
 
@@ -222,10 +222,10 @@ class DrumPlayheadRenderer {
     const now = performance.now();
     for (const [key, animation] of this.activeAnimations.entries()) {
       const elapsed = now - animation.startTime;
-      const totalDuration = animation.phase === 'scaleUp' 
-        ? this.popDuration.scaleUp 
+      const totalDuration = animation.phase === 'scaleUp'
+        ? this.popDuration.scaleUp
         : this.popDuration.scaleUp + this.popDuration.scaleDown;
-      
+
       if (elapsed > totalDuration) {
         this.activeAnimations.delete(key);
       }

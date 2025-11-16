@@ -9,6 +9,7 @@
     gap: var(--space-035);
     padding: var(--space-015);
     width: 100%;
+    height: 100%;
     background-color: var(--c-surface);
     border: 1px solid var(--c-border);
     border-radius: var(--border-radius-md);
@@ -17,19 +18,44 @@
     z-index: 1;
 }
 
-/* Draw tools row - horizontal layout for tool buttons */
-.draw-tools-row {
-    display: flex;
-    flex-direction: row;
+/* Draw layout grid - 5 equal-width columns */
+.draw-layout-grid {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(min-content, var(--draw-panel-synced-width, max-content)));
     gap: var(--space-025);
+    align-items: start;
+}
+
+/* Individual tool panel */
+.draw-tool-panel {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-015);
+    width: var(--draw-panel-synced-width, max-content);
+    min-width: min-content;
+    transition: opacity 0.2s ease;
+}
+
+/* Active tool panel highlight */
+.draw-tool-panel.active {
+    opacity: 1;
+}
+
+.draw-tool-panel:not(.active) {
+    opacity: 0.6;
+}
+
+/* Tool header (contains the tool icon button) */
+.draw-tool-header {
+    display: flex;
     justify-content: center;
     align-items: center;
 }
 
 /* Individual draw tool button */
 .draw-tool-button {
-    width: 2.5rem;
-    height: 2.5rem;
+    width: 2rem;
+    height: 2rem;
     padding: var(--space-015);
     display: flex;
     align-items: center;
@@ -59,7 +85,7 @@
     height: 100%;
 }
 
-/* Draw tool options container - appears below tool buttons when a tool is selected */
+/* Draw tool options container - appears below tool button in each panel */
 .draw-tool-options {
     display: flex;
     flex-direction: column;
@@ -69,10 +95,11 @@
     border: 1px solid var(--c-border);
     border-radius: var(--border-radius-md);
     min-height: auto;
+    width: 100%;
 }
 
 .draw-tool-options:empty {
-    display: none;
+    min-height: 2rem;
 }
 
 /* Toolbar row for compact button layout */
@@ -85,8 +112,8 @@
 
 /* Toolbar buttons (for arrow tool options) */
 .draw-toolbar-button {
-    width: 2rem;
-    height: 2rem;
+    width: 1.5rem;
+    height: 1.5rem;
     padding: var(--space-015);
     display: flex;
     align-items: center;
@@ -289,3 +316,12 @@
     background-color: #4a90e2;
     color: white;
 }
+
+/* ==========================================================================
+   DRAW PANEL WIDTH SYNCING
+   ========================================================================= */
+
+/*
+ * All draw tool panels sync to the same width (the widest panel's content width)
+ * This uses a CSS variable approach similar to the preset-effects syncing system
+ */

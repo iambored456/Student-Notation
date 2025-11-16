@@ -13,7 +13,7 @@ import { getPlacedTonicSigns } from '@state/selectors.js';
  * @returns {boolean} True if the column is a tonic column
  */
 export function isTonicColumn(columnIndex, placedTonicSigns) {
-    return placedTonicSigns.some(ts => ts.columnIndex === columnIndex);
+  return placedTonicSigns.some(ts => ts.columnIndex === columnIndex);
 }
 
 /**
@@ -24,9 +24,9 @@ export function isTonicColumn(columnIndex, placedTonicSigns) {
  * @returns {boolean} True if the column is within a tonic shape's span
  */
 export function isWithinTonicSpan(columnIndex, placedTonicSigns) {
-    return placedTonicSigns.some(ts => 
-        columnIndex === ts.columnIndex || columnIndex === ts.columnIndex + 1
-    );
+  return placedTonicSigns.some(ts =>
+    columnIndex === ts.columnIndex || columnIndex === ts.columnIndex + 1
+  );
 }
 
 /**
@@ -36,7 +36,7 @@ export function isWithinTonicSpan(columnIndex, placedTonicSigns) {
  * @returns {Array} Array of tonic signs that affect this column
  */
 export function getTonicSignsAtColumn(columnIndex, placedTonicSigns) {
-    return placedTonicSigns.filter(ts => ts.columnIndex === columnIndex);
+  return placedTonicSigns.filter(ts => ts.columnIndex === columnIndex);
 }
 
 /**
@@ -47,10 +47,10 @@ export function getTonicSignsAtColumn(columnIndex, placedTonicSigns) {
  * @returns {boolean} True if notes can be placed at this column
  */
 export function isNotePlayableAtColumn(columnIndex, state) {
-    const placedTonicSigns = getPlacedTonicSigns(state);
-    
-    // Don't allow notes in tonic columns or the column immediately after
-    return !isWithinTonicSpan(columnIndex, placedTonicSigns);
+  const placedTonicSigns = getPlacedTonicSigns(state);
+
+  // Don't allow notes in tonic columns or the column immediately after
+  return !isWithinTonicSpan(columnIndex, placedTonicSigns);
 }
 
 /**
@@ -61,24 +61,24 @@ export function isNotePlayableAtColumn(columnIndex, state) {
  * @returns {boolean} True if vertical line should be drawn
  */
 export function shouldDrawVerticalLineAtColumn(columnIndex, placedTonicSigns) {
-    // Don't draw vertical lines in the middle of tonic shapes
-    // Only suppress the line between the tonic column and the next column (columnIndex + 1)
-    // But DO draw the line at the right border (columnIndex + 2)
-    for (const ts of placedTonicSigns) {
-        // Suppress the line that would appear between the tonic column and its extension
-        if (columnIndex === ts.columnIndex + 1) {
-            // Suppressing vertical line (middle of tonic)
-            return false;
-        }
+  // Don't draw vertical lines in the middle of tonic shapes
+  // Only suppress the line between the tonic column and the next column (columnIndex + 1)
+  // But DO draw the line at the right border (columnIndex + 2)
+  for (const ts of placedTonicSigns) {
+    // Suppress the line that would appear between the tonic column and its extension
+    if (columnIndex === ts.columnIndex + 1) {
+      // Suppressing vertical line (middle of tonic)
+      return false;
     }
-    
-    // Check if this is a right border of a tonic shape
-    const isRightBorder = placedTonicSigns.some(ts => columnIndex === ts.columnIndex + 2);
-    if (isRightBorder) {
-        // Allowing vertical line (right border of tonic)
-    }
-    
-    return true;
+  }
+
+  // Check if this is a right border of a tonic shape
+  const isRightBorder = placedTonicSigns.some(ts => columnIndex === ts.columnIndex + 2);
+  if (isRightBorder) {
+    // Allowing vertical line (right border of tonic)
+  }
+
+  return true;
 }
 
 /**
@@ -87,7 +87,7 @@ export function shouldDrawVerticalLineAtColumn(columnIndex, placedTonicSigns) {
  * @returns {Set} Set of column indices that are tonic columns
  */
 export function getTonicColumnIndices(placedTonicSigns) {
-    return new Set(placedTonicSigns.map(ts => ts.columnIndex));
+  return new Set(placedTonicSigns.map(ts => ts.columnIndex));
 }
 
 /**
@@ -96,10 +96,10 @@ export function getTonicColumnIndices(placedTonicSigns) {
  * @returns {Set} Set of column indices that are within tonic spans
  */
 export function getTonicSpanColumnIndices(placedTonicSigns) {
-    const spanColumns = new Set();
-    placedTonicSigns.forEach(ts => {
-        spanColumns.add(ts.columnIndex);
-        spanColumns.add(ts.columnIndex + 1);
-    });
-    return spanColumns;
+  const spanColumns = new Set();
+  placedTonicSigns.forEach(ts => {
+    spanColumns.add(ts.columnIndex);
+    spanColumns.add(ts.columnIndex + 1);
+  });
+  return spanColumns;
 }

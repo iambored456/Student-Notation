@@ -18,90 +18,90 @@ class PaintCanvas {
   initialize() {
     this.canvas = document.getElementById('pitch-paint-canvas');
     if (!this.canvas) {
-        logger.error('PaintCanvas', 'Could not find #pitch-paint-canvas element', null, 'paint');
-        return;
+      logger.error('PaintCanvas', 'Could not find #pitch-paint-canvas element', null, 'paint');
+      return;
     }
     this.ctx = this.canvas.getContext('2d');
 
     const wrapper = document.getElementById('pitch-canvas-wrapper');
     if (!wrapper) {
-        logger.error('PaintCanvas', 'Could not find #pitch-canvas-wrapper element', null, 'paint');
-        return;
+      logger.error('PaintCanvas', 'Could not find #pitch-canvas-wrapper element', null, 'paint');
+      return;
     }
 
-    store.on('paintHistoryChanged', () => this.render()); 
+    store.on('paintHistoryChanged', () => this.render());
     store.on('layoutConfigChanged', () => this.resize());
-    
+
     store.on('micPaintStateChanged', (isActive) => {
-        if (isActive) {
-            this.startRendering();
-        } else {
-            this.stopRendering();
-        }
+      if (isActive) {
+        this.startRendering();
+      } else {
+        this.stopRendering();
+      }
     });
 
     this.resize();
     this.isInitialized = true;
   }
-  
+
   startRendering() {
-    if (this.animationFrameId) return;
+    if (this.animationFrameId) {return;}
     this.animationFrameId = requestAnimationFrame(() => this.animationLoop());
   }
 
   stopRendering() {
     if (this.animationFrameId) {
-        cancelAnimationFrame(this.animationFrameId);
-        this.animationFrameId = null;
+      cancelAnimationFrame(this.animationFrameId);
+      this.animationFrameId = null;
     }
   }
 
   animationLoop() {
     if (store.state.paint.paintHistory.length !== this.lastHistoryLength) {
-        this.render();
-        this.lastHistoryLength = store.state.paint.paintHistory.length;
+      this.render();
+      this.lastHistoryLength = store.state.paint.paintHistory.length;
     }
     this.animationFrameId = requestAnimationFrame(() => this.animationLoop());
   }
 
 
   resize() {
-    if (!this.canvas) return;
+    if (!this.canvas) {return;}
     // LayoutService now drives the backing-store sizing; just re-render.
     this.render();
   }
 
   render() {
-    if (!this.ctx) return;
+    if (!this.ctx) {return;}
     this.ctx.clearRect(0, 0, getLogicalCanvasWidth(this.canvas), getLogicalCanvasHeight(this.canvas));
-    
+
     const paintHistory = store.state.paint.paintHistory;
-    
-    if (paintHistory.length === 0) return;
+
+    if (paintHistory.length === 0) {return;}
 
     this.renderPaintTrail(paintHistory);
   }
 
   renderPaintTrail(paintHistory) {
-    if (paintHistory.length < 2) return;
+    if (paintHistory.length < 2) {return;}
 
     // THE BIG CHANGE STARTS HERE
     // 1. Create a new array of points with recalculated X and Y values
     const renderPoints = paintHistory.map(point => {
-        const x = PaintPlayheadRenderer.calculateXFromTime(point.musicalTime);
-        const y = PaintPlayheadRenderer.midiToY(point.midi);
-        
-        // Return null if the point is now off-screen or invalid
-        if (x === null || y === null) return null;
+      const x = PaintPlayheadRenderer.calculateXFromTime(point.musicalTime);
+      const y = PaintPlayheadRenderer.midiToY(point.midi);
 
-        return {
-            ...point, // keep original timestamp, thickness, color etc.
-            x, // use the new, recalculated x
-            y, // use the new, recalculated y
-        };
+      // Return null if the point is now off-screen or invalid
+      if (x === null || y === null) {return null;}
+
+      return {
+        ...point, // keep original timestamp, thickness, color etc.
+        x, // use the new, recalculated x
+        y // use the new, recalculated y
+      };
     }).filter(p => p !== null); // Filter out any points that are no longer valid
 
-    if (renderPoints.length < 2) return;
+    if (renderPoints.length < 2) {return;}
 
     // 2. Render using the newly calculated points
     const opacity = store.state.paint.paintSettings.opacity / 100;
@@ -114,8 +114,8 @@ class PaintCanvas {
       const currentPoint = renderPoints[i];
 
       // Use original timestamp for continuity check
-      if (currentPoint.timestamp - prevPoint.timestamp > 200) continue;
-      
+      if (currentPoint.timestamp - prevPoint.timestamp > 200) {continue;}
+
       this.drawPaintSegment(prevPoint, currentPoint);
     }
     this.ctx.globalAlpha = 1.0;
@@ -128,7 +128,7 @@ class PaintCanvas {
 
     this.ctx.strokeStyle = gradient;
     this.ctx.lineWidth = (point1.thickness + point2.thickness) / 2;
-    
+
     this.ctx.beginPath();
     this.ctx.moveTo(point1.x, point1.y);
     this.ctx.lineTo(point2.x, point2.y);
@@ -140,13 +140,13 @@ class PaintCanvas {
     const { colorMode } = store.state.paint.paintSettings;
     const selectedNoteColor = store.state.selectedNote?.color;
     const color = getPaintColor(midiValue, colorMode, selectedNoteColor);
-    
+
     const point = {
       musicalTime, // Store this instead of x
       midi: midiValue, // Store this instead of y
       color,
       timestamp: performance.now(),
-      thickness: store.state.paint.paintSettings.thickness,
+      thickness: store.state.paint.paintSettings.thickness
     };
     store.addPaintPoint(point);
   }

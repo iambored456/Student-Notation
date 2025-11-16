@@ -9,33 +9,33 @@ import { getIconPath } from '@utils/assetPaths.js';
  */
 
 class LoadingManager {
-    constructor() {
-        this.tasks = [];
-        this.completedTasks = 0;
-        this.totalTasks = 0;
-        this.startTime = null;
-        this.loadingScreen = null;
-        this.progressBar = null;
-        this.progressText = null;
-        this.statusText = null;
-        this.initialized = false;
-        this.cache = {
-            fonts: new Map(),
-            icons: new Map(),
-            modules: new Map()
-        };
-        this.diagnostics = [];
-    }
+  constructor() {
+    this.tasks = [];
+    this.completedTasks = 0;
+    this.totalTasks = 0;
+    this.startTime = null;
+    this.loadingScreen = null;
+    this.progressBar = null;
+    this.progressText = null;
+    this.statusText = null;
+    this.initialized = false;
+    this.cache = {
+      fonts: new Map(),
+      icons: new Map(),
+      modules: new Map()
+    };
+    this.diagnostics = [];
+  }
 
-    /**
+  /**
      * Initialize loading screen UI
      */
-    createLoadingScreen() {
-        if (this.loadingScreen) return;
+  createLoadingScreen() {
+    if (this.loadingScreen) {return;}
 
-        this.loadingScreen = document.createElement('div');
-        this.loadingScreen.id = 'app-loading-screen';
-        this.loadingScreen.innerHTML = `
+    this.loadingScreen = document.createElement('div');
+    this.loadingScreen.id = 'app-loading-screen';
+    this.loadingScreen.innerHTML = `
             <div class="loading-container">
                 <div class="loading-logo">
                     <svg viewBox="0 0 100 100" class="logo-svg">
@@ -54,262 +54,262 @@ class LoadingManager {
             </div>
         `;
 
-        document.body.appendChild(this.loadingScreen);
-        this.progressBar = document.getElementById('loading-progress-fill');
-        this.progressText = document.getElementById('loading-progress-text');
-        this.statusText = document.getElementById('loading-status');
-    }
+    document.body.appendChild(this.loadingScreen);
+    this.progressBar = document.getElementById('loading-progress-fill');
+    this.progressText = document.getElementById('loading-progress-text');
+    this.statusText = document.getElementById('loading-status');
+  }
 
-    /**
+  /**
      * Register a loading task
      */
-    registerTask(name, weight = 1) {
-        this.tasks.push({ name, weight, completed: false });
-        this.totalTasks += weight;
-    }
+  registerTask(name, weight = 1) {
+    this.tasks.push({ name, weight, completed: false });
+    this.totalTasks += weight;
+  }
 
-    /**
+  /**
      * Mark a task as complete and update progress
      */
-    completeTask(name) {
-        const task = this.tasks.find(t => t.name === name && !t.completed);
-        if (!task) return;
+  completeTask(name) {
+    const task = this.tasks.find(t => t.name === name && !t.completed);
+    if (!task) {return;}
 
-        task.completed = true;
-        this.completedTasks += task.weight;
-        this.updateProgress();
-    }
+    task.completed = true;
+    this.completedTasks += task.weight;
+    this.updateProgress();
+  }
 
-    /**
+  /**
      * Update loading progress UI
      */
-    updateProgress() {
-        if (!this.progressBar || !this.progressText) return;
+  updateProgress() {
+    if (!this.progressBar || !this.progressText) {return;}
 
-        const progress = this.totalTasks > 0 ? (this.completedTasks / this.totalTasks) * 100 : 0;
-        const progressRounded = Math.round(progress);
+    const progress = this.totalTasks > 0 ? (this.completedTasks / this.totalTasks) * 100 : 0;
+    const progressRounded = Math.round(progress);
 
-        this.progressBar.style.width = `${progressRounded}%`;
-        this.progressText.textContent = `${progressRounded}%`;
-    }
+    this.progressBar.style.width = `${progressRounded}%`;
+    this.progressText.textContent = `${progressRounded}%`;
+  }
 
-    /**
+  /**
      * Update status text
      */
-    updateStatus(message) {
-        if (this.statusText) {
-            this.statusText.textContent = message;
-        }
+  updateStatus(message) {
+    if (this.statusText) {
+      this.statusText.textContent = message;
     }
+  }
 
-    /**
+  /**
      * Record a diagnostic message for later inspection
      */
-    recordDiagnostic(level, message, data = null) {
-        this.diagnostics.push({
-            level,
-            message,
-            data,
-            timestamp: Date.now()
-        });
-    }
+  recordDiagnostic(level, message, data = null) {
+    this.diagnostics.push({
+      level,
+      message,
+      data,
+      timestamp: Date.now()
+    });
+  }
 
-    getDiagnostics() {
-        return [...this.diagnostics];
-    }
+  getDiagnostics() {
+    return [...this.diagnostics];
+  }
 
-    /**
+  /**
      * Preload font
      */
-    async preloadFont(fontFamily, url, weight = 'normal', style = 'normal') {
-        const cacheKey = `${fontFamily}-${weight}-${style}`;
+  async preloadFont(fontFamily, url, weight = 'normal', style = 'normal') {
+    const cacheKey = `${fontFamily}-${weight}-${style}`;
 
-        if (this.cache.fonts.has(cacheKey)) {
-            return this.cache.fonts.get(cacheKey);
-        }
-
-        try {
-            const fontFace = new FontFace(fontFamily, `url(${url})`, { weight, style });
-            const loadedFont = await fontFace.load();
-            document.fonts.add(loadedFont);
-            this.cache.fonts.set(cacheKey, loadedFont);
-            return loadedFont;
-        } catch (error) {
-            this.recordDiagnostic('warn', `Failed to preload font ${fontFamily}`, error);
-            return null;
-        }
+    if (this.cache.fonts.has(cacheKey)) {
+      return this.cache.fonts.get(cacheKey);
     }
 
-    /**
+    try {
+      const fontFace = new FontFace(fontFamily, `url(${url})`, { weight, style });
+      const loadedFont = await fontFace.load();
+      document.fonts.add(loadedFont);
+      this.cache.fonts.set(cacheKey, loadedFont);
+      return loadedFont;
+    } catch (error) {
+      this.recordDiagnostic('warn', `Failed to preload font ${fontFamily}`, error);
+      return null;
+    }
+  }
+
+  /**
      * Preload image/icon
      */
-    async preloadImage(url) {
-        if (this.cache.icons.has(url)) {
-            return this.cache.icons.get(url);
-        }
-
-        return new Promise((resolve, reject) => {
-            const img = new Image();
-            img.onload = () => {
-                this.cache.icons.set(url, img);
-                resolve(img);
-            };
-            img.onerror = () => {
-                this.recordDiagnostic('warn', `Failed to preload image: ${url}`);
-                resolve(null); // Don't reject, just continue
-            };
-            img.src = url;
-        });
+  async preloadImage(url) {
+    if (this.cache.icons.has(url)) {
+      return this.cache.icons.get(url);
     }
 
-    /**
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => {
+        this.cache.icons.set(url, img);
+        resolve(img);
+      };
+      img.onerror = () => {
+        this.recordDiagnostic('warn', `Failed to preload image: ${url}`);
+        resolve(null); // Don't reject, just continue
+      };
+      img.src = url;
+    });
+  }
+
+  /**
      * Preload all critical resources
      */
-    async preloadResources() {
-        const resources = [];
+  async preloadResources() {
+    const resources = [];
 
-        // Preload fonts
-        resources.push(
-            this.preloadFont(
-                'Atkinson Hyperlegible',
-                '../../fonts/atkinsonHyperlegibleNextRegular.otf'
-            )
-        );
+    // Preload fonts
+    resources.push(
+      this.preloadFont(
+        'Atkinson Hyperlegible',
+        '../../fonts/atkinsonHyperlegibleNextRegular.otf'
+      )
+    );
 
-        // Preload critical icons
-        const criticalIcons = [
-            getIconPath('play.svg'),
-            getIconPath('pause.svg'),
-            getIconPath('stop.svg'),
-            getIconPath('settings.svg'),
-            getIconPath('volume.svg')
-        ];
+    // Preload critical icons
+    const criticalIcons = [
+      getIconPath('play.svg'),
+      getIconPath('pause.svg'),
+      getIconPath('stop.svg'),
+      getIconPath('settings.svg'),
+      getIconPath('volume.svg')
+    ];
 
-        resources.push(...criticalIcons.map(url => this.preloadImage(url)));
+    resources.push(...criticalIcons.map(url => this.preloadImage(url)));
 
-        // Wait for all resources with a timeout
-        try {
-            await Promise.race([
-                Promise.all(resources),
-                new Promise(resolve => setTimeout(resolve, 3000)) // 3s timeout
-            ]);
-        } catch (error) {
-            this.recordDiagnostic('warn', 'Some resources failed to preload', error);
-        }
+    // Wait for all resources with a timeout
+    try {
+      await Promise.race([
+        Promise.all(resources),
+        new Promise(resolve => setTimeout(resolve, 3000)) // 3s timeout
+      ]);
+    } catch (error) {
+      this.recordDiagnostic('warn', 'Some resources failed to preload', error);
     }
+  }
 
-    /**
+  /**
      * Initialize Tone.js audio context (lazy)
      */
-    async initializeAudioContext() {
-        try {
-            // Import Tone.js dynamically
-            const Tone = await import('tone');
+  async initializeAudioContext() {
+    try {
+      // Import Tone.js dynamically
+      const Tone = await import('tone');
 
-            // Don't start audio yet - wait for user gesture
-            // Just ensure Tone is loaded
-            this.cache.modules.set('tone', Tone);
+      // Don't start audio yet - wait for user gesture
+      // Just ensure Tone is loaded
+      this.cache.modules.set('tone', Tone);
 
-            return Tone;
-        } catch (error) {
-            this.recordDiagnostic('error', 'Failed to initialize audio context', error);
-            throw error;
-        }
+      return Tone;
+    } catch (error) {
+      this.recordDiagnostic('error', 'Failed to initialize audio context', error);
+      throw error;
     }
+  }
 
-    /**
+  /**
      * Initialize loading screen (synchronous part)
      */
-    async init() {
-        if (this.initialized) return;
+  async init() {
+    if (this.initialized) {return;}
 
-        this.startTime = Date.now();
-        this.createLoadingScreen();
+    this.startTime = Date.now();
+    this.createLoadingScreen();
 
-        try {
-            // Step 1: Preload fonts
-            this.updateStatus('Loading fonts...');
-            await this.preloadResources();
-            await this.delay(50);
+    try {
+      // Step 1: Preload fonts
+      this.updateStatus('Loading fonts...');
+      await this.preloadResources();
+      await this.delay(50);
 
-            // Step 2: Preload icons (already done in preloadResources)
-            await this.delay(50);
+      // Step 2: Preload icons (already done in preloadResources)
+      await this.delay(50);
 
-            // Step 3: Don't initialize audio context yet - Tone.js is already imported in main.js
-            // Just wait a moment for visual feedback
-            this.updateStatus('Preparing...');
-            await this.delay(50);
+      // Step 3: Don't initialize audio context yet - Tone.js is already imported in main.js
+      // Just wait a moment for visual feedback
+      this.updateStatus('Preparing...');
+      await this.delay(50);
 
-            this.initialized = true;
+      this.initialized = true;
 
-        } catch (error) {
-            this.recordDiagnostic('error', '[LOADING] Resource preloading failed', error);
-            this.showError(error);
-            throw error;
-        }
+    } catch (error) {
+      this.recordDiagnostic('error', '[LOADING] Resource preloading failed', error);
+      this.showError(error);
+      throw error;
     }
+  }
 
-    /**
+  /**
      * Complete loading and fade out
      */
-    async complete() {
-        if (!this.loadingScreen) return;
+  async complete() {
+    if (!this.loadingScreen) {return;}
 
-        this.updateStatus('Ready!');
+    this.updateStatus('Ready!');
 
-        // Small delay before fade out
-        await this.delay(200);
+    // Small delay before fade out
+    await this.delay(200);
 
-        // Fade out loading screen
-        await this.fadeOut();
-    }
+    // Fade out loading screen
+    await this.fadeOut();
+  }
 
-    /**
+  /**
      * Delay helper for pacing
      */
-    delay(ms) {
-        return new Promise(resolve => setTimeout(resolve, ms));
-    }
+  delay(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+  }
 
-    /**
+  /**
      * Fade out loading screen
      */
-    async fadeOut() {
-        if (!this.loadingScreen) return;
+  async fadeOut() {
+    if (!this.loadingScreen) {return;}
 
-        this.loadingScreen.classList.add('fade-out');
+    this.loadingScreen.classList.add('fade-out');
 
-        // Wait for animation to complete
-        await this.delay(600);
+    // Wait for animation to complete
+    await this.delay(600);
 
-        // Remove from DOM
-        if (this.loadingScreen.parentNode) {
-            this.loadingScreen.parentNode.removeChild(this.loadingScreen);
-        }
-
-        this.loadingScreen = null;
+    // Remove from DOM
+    if (this.loadingScreen.parentNode) {
+      this.loadingScreen.parentNode.removeChild(this.loadingScreen);
     }
 
-    /**
+    this.loadingScreen = null;
+  }
+
+  /**
      * Show error message
      */
-    showError(error) {
-        if (!this.statusText) return;
+  showError(error) {
+    if (!this.statusText) {return;}
 
-        this.statusText.textContent = `Error: ${error.message}`;
-        this.statusText.style.color = '#ff4444';
+    this.statusText.textContent = `Error: ${error.message}`;
+    this.statusText.style.color = '#ff4444';
 
-        if (this.loadingScreen) {
-            this.loadingScreen.classList.add('error');
-        }
+    if (this.loadingScreen) {
+      this.loadingScreen.classList.add('error');
     }
+  }
 
-    /**
+  /**
      * Get cached resource
      */
-    getCached(type, key) {
-        return this.cache[type]?.get(key);
-    }
+  getCached(type, key) {
+    return this.cache[type]?.get(key);
+  }
 }
 
 // Export singleton instance

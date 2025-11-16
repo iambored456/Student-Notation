@@ -10,13 +10,13 @@ function stampsForSpan(span, baseId, prefix) {
     { id: baseId + 3, span, hits: [0, 1],    label: `${prefix} [1 2]` },
     { id: baseId + 4, span, hits: [1, 2],    label: `${prefix} [2 3]` },
     { id: baseId + 5, span, hits: [0, 2],    label: `${prefix} [1 3]` },
-    { id: baseId + 6, span, hits: [0, 1, 2], label: `${prefix} [1 2 3]` },
+    { id: baseId + 6, span, hits: [0, 1, 2], label: `${prefix} [1 2 3]` }
   ];
 }
 
 export const TRIPLET_STAMPS = [
-  ...stampsForSpan("eighth",  1, "8th triplet"),
-  ...stampsForSpan("quarter", 8, "Quarter triplet"),
+  ...stampsForSpan('eighth',  1, '8th triplet'),
+  ...stampsForSpan('quarter', 8, 'Quarter triplet')
 ];
 
 // One timeline "cell" = 2 microbeats (your existing sixteenth-stamp cell width).
@@ -25,7 +25,7 @@ export const MICROBEATS_PER_CELL = 2;
 // For triplets:
 export const GROUP_WIDTH_CELLS = {
   eighth: 1,   // 2 microbeats
-  quarter: 2,  // 4 microbeats
+  quarter: 2  // 4 microbeats
 };
 
 // Normalized X centers across a group width: 1/6, 3/6, 5/6

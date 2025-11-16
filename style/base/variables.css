@@ -14,11 +14,17 @@
   --c-gridline: #e9ecef;        /* Gridlines / very light dividers */
   --c-danger: #dc3545;          /* Destructive actions */
   --c-warning: #ffc107;         /* Highlight accents (loop, macrobeat) */
-  --c-accent: #4a90e2;          /* Primary accent (toolbar actives) */
-  --c-accent-hover: #3b78bb;    /* Accent hover / pressed */
-  --c-accent-light: #63a9fd;    /* Subtle accent highlight */
+  --c-accent: #4a90e2;          /* Primary accent (toolbar actives) - DYNAMIC: changes to note color */
+  --c-accent-hover: var(--c-accent-neutral-hover, #ffb300); /* Accent hover / pressed (neutral override) */
+  --c-accent-light: #63a9fd;    /* Subtle accent highlight - DYNAMIC: changes to note color */
   --c-accent-rgb: 74, 144, 226; /* Accent in rgb for box-shadows */
   --c-accent-general: #ffc107;  /* General accent for toggleable UI elements */
+
+  /* Neutral UI Accent - STATIC: never changes with note selection */
+  --c-accent-neutral: #ffc107;        /* Yellow - for non-note-related controls */
+  --c-accent-neutral-light: #ffd54f;  /* Lighter yellow for backgrounds */
+  --c-accent-neutral-hover: #ffb300;  /* Darker yellow for hover states */
+  --c-accent-neutral-rgb: 255, 193, 7; /* RGB for box-shadows */
 
   /* Spacing Scale */
   --space-0: 0rem;

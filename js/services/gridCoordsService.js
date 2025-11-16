@@ -5,67 +5,67 @@ import { BASE_DRUM_ROW_HEIGHT, DRUM_HEIGHT_SCALE_FACTOR } from '@/core/constants
 import { getColumnX } from '@components/canvas/pitchGrid/renderers/rendererUtils.js';
 
 const GridCoordsService = {
-    getColumnIndex(x) {
-        const { columnWidths, cellWidth, modulationMarkers } = store.state;
-        // Handle case where cellWidth might be zero during initial load
-        if (cellWidth === 0) return 0;
-        
-        const hasModulation = modulationMarkers && modulationMarkers.length > 0;
-        
-        if (hasModulation) {
-            // Use modulation-aware column positions
-            const renderOptions = {
-                ...store.state,
-                modulationMarkers,
-                cellWidth,
-                columnWidths,
-                baseMicrobeatPx: cellWidth
-            };
-            
-            for (let i = 0; i < columnWidths.length; i++) {
-                const columnX = getColumnX(i + 1, renderOptions); // Get end of this column
-                if (x < columnX) {
-                    return i;
-                }
-            }
-        } else {
-            // Use base column positions
-            let cumulative = 0;
-            for (let i = 0; i < columnWidths.length; i++) {
-                cumulative += columnWidths[i] * cellWidth;
-                if (x < cumulative) {
-                    return i;
-                }
-            }
+  getColumnIndex(x) {
+    const { columnWidths, cellWidth, modulationMarkers } = store.state;
+    // Handle case where cellWidth might be zero during initial load
+    if (cellWidth === 0) {return 0;}
+
+    const hasModulation = modulationMarkers && modulationMarkers.length > 0;
+
+    if (hasModulation) {
+      // Use modulation-aware column positions
+      const renderOptions = {
+        ...store.state,
+        modulationMarkers,
+        cellWidth,
+        columnWidths,
+        baseMicrobeatPx: cellWidth
+      };
+
+      for (let i = 0; i < columnWidths.length; i++) {
+        const columnX = getColumnX(i + 1, renderOptions); // Get end of this column
+        if (x < columnX) {
+          return i;
         }
-        
-        return columnWidths.length - 1;
-    },
-
-    getPitchRowIndex(y) {
-        const viewportInfo = LayoutService.getViewportInfo();
-
-        if (!viewportInfo || !viewportInfo.halfUnit || viewportInfo.halfUnit === 0) {
-            return -1;
+      }
+    } else {
+      // Use base column positions
+      let cumulative = 0;
+      for (let i = 0; i < columnWidths.length; i++) {
+        cumulative += columnWidths[i] * cellWidth;
+        if (x < cumulative) {
+          return i;
         }
-
-        // For dual-parity grid: use halfUnit spacing (cellHeight/2) for row calculations
-        // Shift click detection up by 0.5 halfUnit (0.25 cellHeight) to center clickable area on visual row lines
-        // This makes the clickable area span ±0.25 cellHeight around each row's visual position
-        const relativeRankFromMouse = Math.floor((y + viewportInfo.halfUnit * 0.5) / viewportInfo.halfUnit);
-        const finalRowIndex = viewportInfo.startRank + relativeRankFromMouse;
-
-
-        return finalRowIndex;
-    },
-    
-    getDrumRowIndex(y) {
-        // Use the same drum row height calculation as LayoutService
-        const drumRowHeight = Math.max(BASE_DRUM_ROW_HEIGHT, DRUM_HEIGHT_SCALE_FACTOR * store.state.cellHeight);
-        if (drumRowHeight === 0) return -1;
-        const rowIndex = Math.floor(y / drumRowHeight);
-        return rowIndex;
+      }
     }
+
+    return columnWidths.length - 1;
+  },
+
+  getPitchRowIndex(y) {
+    const viewportInfo = LayoutService.getViewportInfo();
+
+    if (!viewportInfo || !viewportInfo.halfUnit || viewportInfo.halfUnit === 0) {
+      return -1;
+    }
+
+    // For dual-parity grid: use halfUnit spacing (cellHeight/2) for row calculations
+    // Shift click detection up by 0.5 halfUnit (0.25 cellHeight) to center clickable area on visual row lines
+    // This makes the clickable area span ±0.25 cellHeight around each row's visual position
+    const relativeRankFromMouse = Math.floor((y + viewportInfo.halfUnit * 0.5) / viewportInfo.halfUnit);
+    const finalRowIndex = viewportInfo.startRank + relativeRankFromMouse;
+
+
+    return finalRowIndex;
+  },
+
+  getDrumRowIndex(y) {
+    // Use the same drum row height calculation as LayoutService
+    const drumRowHeight = Math.max(BASE_DRUM_ROW_HEIGHT, DRUM_HEIGHT_SCALE_FACTOR * store.state.cellHeight);
+    if (drumRowHeight === 0) {return -1;}
+    const rowIndex = Math.floor(y / drumRowHeight);
+    return rowIndex;
+  }
 };
 
 export default GridCoordsService;

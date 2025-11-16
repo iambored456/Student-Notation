@@ -11,17 +11,17 @@ import logger from '@utils/logger.js';
 logger.moduleLoaded('ToolbarComponent', 'toolbar');
 
 const Toolbar = {
-    init() {
-        initSidebarAndVolume();
-        initFileActions();
-        initToolSelectors();
-        initPlaybackControls();
-        initAudioControls();
-        initGridControls();
-        initModulationControls();
-        
-        logger.info('ToolbarComponent', 'All controls initialized', null, 'toolbar');
-    },
+  init() {
+    initSidebarAndVolume();
+    initFileActions();
+    initToolSelectors();
+    initPlaybackControls();
+    initAudioControls();
+    initGridControls();
+    initModulationControls();
+
+    logger.info('ToolbarComponent', 'All controls initialized', null, 'toolbar');
+  }
 
 };
 

@@ -10,15 +10,15 @@ class PaintControls {
 
   initialize() {
     this.cacheDOMElements();
-    if (!this.elements.toggleBtn) return;
+    if (!this.elements.toggleBtn) {return;}
 
     this.setupEventListeners();
     this.updateUI();
-    
+
     store.on('micPaintStateChanged', () => this.updateUI());
     store.on('paintHistoryChanged', () => this.updateUI());
     store.on('paintSettingsChanged', () => this.updateUI());
-    
+
   }
 
   cacheDOMElements() {
@@ -47,7 +47,7 @@ class PaintControls {
 
     // Set up color toggle listener
     this.elements.colorToggle.addEventListener('click', () => this.handleColorToggle());
-    
+
     // Set up playback toggle listener
     this.elements.playbackToggle.addEventListener('click', () => this.handlePlaybackToggle());
   }
@@ -55,7 +55,7 @@ class PaintControls {
   async handleMicPaintToggle() {
     const isCurrentlyActive = store.state.paint.isMicPaintActive;
     this.elements.toggleBtn.disabled = true;
-    
+
     if (!isCurrentlyActive) {
       try {
         await PitchPaintService.initialize();
@@ -94,7 +94,7 @@ class PaintControls {
 
     this.elements.toggleBtn.textContent = isMicPaintActive ? 'Mic Paint (ON)' : 'Mic Paint (OFF)';
     this.elements.toggleBtn.classList.toggle('active', isMicPaintActive);
-    
+
     this.elements.clearBtn.disabled = paintHistory.length === 0;
 
     // Update dropdown selections with current values
@@ -104,13 +104,13 @@ class PaintControls {
     if (this.elements.opacitySelect && this.elements.opacitySelect.value !== paintSettings.opacity.toString()) {
       this.elements.opacitySelect.value = paintSettings.opacity.toString();
     }
-    
+
     // Update color toggle state
     if (this.elements.colorToggle) {
       const isShapeNote = paintSettings.colorMode === 'shapenote';
       this.elements.colorToggle.classList.toggle('active', isShapeNote);
     }
-    
+
     // Update playback toggle state
     if (this.elements.playbackToggle) {
       this.elements.playbackToggle.classList.toggle('active', paintSettings.playbackEnabled);

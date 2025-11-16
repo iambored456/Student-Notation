@@ -3,16 +3,16 @@ import store from '@state/index.js';
 import LayoutService from '@services/layoutService.js';
 
 class ZoomIndicator {
-    constructor() {
-        this.element = null;
-        this.isVisible = false;
-        this.hideTimeout = null;
-    }
+  constructor() {
+    this.element = null;
+    this.isVisible = false;
+    this.hideTimeout = null;
+  }
 
-    initialize() {
-        this.element = document.createElement('div');
-        this.element.className = 'zoom-indicator';
-        this.element.style.cssText = `
+  initialize() {
+    this.element = document.createElement('div');
+    this.element.className = 'zoom-indicator';
+    this.element.style.cssText = `
             position: fixed;
             top: 20px;
             right: 20px;
@@ -28,57 +28,57 @@ class ZoomIndicator {
             pointer-events: none;
         `;
 
-        document.body.appendChild(this.element);
-        store.on('zoomIn', () => this.show());
-        store.on('zoomOut', () => this.show());
-        
+    document.body.appendChild(this.element);
+    store.on('zoomIn', () => this.show());
+    store.on('zoomOut', () => this.show());
+
+  }
+
+  show() {
+    if (!this.element) {return;}
+
+    let zoomPercent = 100;
+    let visibilityText = '';
+
+    if (LayoutService.getViewportInfo) {
+      const viewportInfo = LayoutService.getViewportInfo();
+      zoomPercent = Math.round(viewportInfo.zoomLevel * 100);
+
+      if (viewportInfo.canSeeFullRange) {
+        visibilityText = ' (Full Range)';
+      } else {
+        // Fixed: use startRank/endRank instead of startRow/endRow
+        const startRank = viewportInfo.startRank || viewportInfo.startRow;
+        const endRank = viewportInfo.endRank || viewportInfo.endRow;
+        const visibleSemitones = Math.floor((endRank - startRank + 1));
+        visibilityText = ` (~${visibleSemitones} semitones)`;
+      }
     }
 
-    show() {
-        if (!this.element) return;
+    this.element.textContent = `Zoom: ${zoomPercent}%${visibilityText}`;
+    this.element.style.opacity = '1';
+    this.isVisible = true;
 
-        let zoomPercent = 100;
-        let visibilityText = '';
-        
-        if (LayoutService.getViewportInfo) {
-            const viewportInfo = LayoutService.getViewportInfo();
-            zoomPercent = Math.round(viewportInfo.zoomLevel * 100);
-            
-            if (viewportInfo.canSeeFullRange) {
-                visibilityText = ' (Full Range)';
-            } else {
-                // Fixed: use startRank/endRank instead of startRow/endRow
-                const startRank = viewportInfo.startRank || viewportInfo.startRow;
-                const endRank = viewportInfo.endRank || viewportInfo.endRow;
-                const visibleSemitones = Math.floor((endRank - startRank + 1));
-                visibilityText = ` (~${visibleSemitones} semitones)`;
-            }
-        }
+    // Auto-hide after 2 seconds
+    clearTimeout(this.hideTimeout);
+    this.hideTimeout = setTimeout(() => this.hide(), 2000);
+  }
 
-        this.element.textContent = `Zoom: ${zoomPercent}%${visibilityText}`;
-        this.element.style.opacity = '1';
-        this.isVisible = true;
+  hide() {
+    if (!this.element || !this.isVisible) {return;}
 
-        // Auto-hide after 2 seconds
-        clearTimeout(this.hideTimeout);
-        this.hideTimeout = setTimeout(() => this.hide(), 2000);
+    this.element.style.opacity = '0';
+    this.isVisible = false;
+    clearTimeout(this.hideTimeout);
+  }
+
+  dispose() {
+    if (this.element) {
+      document.body.removeChild(this.element);
+      this.element = null;
     }
-
-    hide() {
-        if (!this.element || !this.isVisible) return;
-        
-        this.element.style.opacity = '0';
-        this.isVisible = false;
-        clearTimeout(this.hideTimeout);
-    }
-
-    dispose() {
-        if (this.element) {
-            document.body.removeChild(this.element);
-            this.element = null;
-        }
-        clearTimeout(this.hideTimeout);
-    }
+    clearTimeout(this.hideTimeout);
+  }
 }
 
 export default new ZoomIndicator();

@@ -13,81 +13,81 @@ import { getColumnX, getRowY } from '@components/canvas/pitchGrid/renderers/rend
  * @returns {Object|null} { type: 'diamond'|'oval', slot: 0-3, cx, cy, placement } or null
  */
 export function hitTestStampShape(mouseX, mouseY, placement, options) {
-    const stamp = getStampById(placement.stampId);
-    if (!stamp) {
-        return null;
-    }
+  const stamp = getStampById(placement.stampId);
+  if (!stamp) {
+    return null;
+  }
 
-    // Calculate stamp bounds
-    const stampX = getColumnX(placement.startColumn, options);
-    const stampY = getRowY(placement.row, options) - (options.cellHeight / 2);
-    const stampWidth = options.cellWidth * 2; // Stamps span 2 microbeats
-    const stampHeight = options.cellHeight;
-    const centerY = stampY + stampHeight / 2;
+  // Calculate stamp bounds
+  const stampX = getColumnX(placement.startColumn, options);
+  const stampY = getRowY(placement.row, options) - (options.cellHeight / 2);
+  const stampWidth = options.cellWidth * 2; // Stamps span 2 microbeats
+  const stampHeight = options.cellHeight;
+  const centerY = stampY + stampHeight / 2;
 
-    // Calculate slot centers (matching stampRenderer.js)
-    const slotCenters = [0.125, 0.375, 0.625, 0.875].map(
-        ratio => stampX + ratio * stampWidth
+  // Calculate slot centers (matching stampRenderer.js)
+  const slotCenters = [0.125, 0.375, 0.625, 0.875].map(
+    ratio => stampX + ratio * stampWidth
+  );
+
+  // Test diamonds first (smaller, more precise hit targets)
+  for (const slot of stamp.diamonds) {
+    const shapeKey = `diamond_${slot}`;
+    const rowOffset = (placement.shapeOffsets?.[shapeKey]) || 0;
+    const shapeRow = placement.row + rowOffset;
+    const shapeCenterY = getRowY(shapeRow, options);
+
+    const cx = slotCenters[slot];
+    const distance = Math.sqrt(
+      Math.pow(mouseX - cx, 2) + Math.pow(mouseY - shapeCenterY, 2)
     );
 
-    // Test diamonds first (smaller, more precise hit targets)
-    for (const slot of stamp.diamonds) {
-        const shapeKey = `diamond_${slot}`;
-        const rowOffset = (placement.shapeOffsets?.[shapeKey]) || 0;
-        const shapeRow = placement.row + rowOffset;
-        const shapeCenterY = getRowY(shapeRow, options);
+    // Hit radius - increased for easier hover detection and dragging
+    const hitRadius = Math.min(stampWidth * 0.20, stampHeight * 1.0);
 
-        const cx = slotCenters[slot];
-        const distance = Math.sqrt(
-            Math.pow(mouseX - cx, 2) + Math.pow(mouseY - shapeCenterY, 2)
-        );
-
-        // Hit radius - increased for easier hover detection and dragging
-        const hitRadius = Math.min(stampWidth * 0.20, stampHeight * 1.0);
-
-        if (distance < hitRadius) {
-            return {
-                type: 'diamond',
-                slot,
-                shapeKey,
-                cx,
-                cy: shapeCenterY,
-                placement
-            };
-        }
+    if (distance < hitRadius) {
+      return {
+        type: 'diamond',
+        slot,
+        shapeKey,
+        cx,
+        cy: shapeCenterY,
+        placement
+      };
     }
+  }
 
-    // Test ovals (larger hit targets)
-    for (const ovalStart of stamp.ovals) {
-        const shapeKey = `oval_${ovalStart}`;
-        const rowOffset = (placement.shapeOffsets?.[shapeKey]) || 0;
-        const shapeRow = placement.row + rowOffset;
-        const shapeCenterY = getRowY(shapeRow, options);
+  // Test ovals (larger hit targets)
+  for (const ovalStart of stamp.ovals) {
+    const shapeKey = `oval_${ovalStart}`;
+    const rowOffset = (placement.shapeOffsets?.[shapeKey]) || 0;
+    const shapeRow = placement.row + rowOffset;
+    const shapeCenterY = getRowY(shapeRow, options);
 
-        const cx = ovalStart === 0 ?
-            stampX + 0.25 * stampWidth :
-            stampX + 0.75 * stampWidth;
+    const cx = ovalStart === 0 ?
+      stampX + 0.25 * stampWidth :
+      stampX + 0.75 * stampWidth;
 
-        const distance = Math.sqrt(
-            Math.pow(mouseX - cx, 2) + Math.pow(mouseY - shapeCenterY, 2)
-        );
+    const distance = Math.sqrt(
+      Math.pow(mouseX - cx, 2) + Math.pow(mouseY - shapeCenterY, 2)
+    );
 
-        // Hit radius for ovals - larger for easier interaction
-        const hitRadius = Math.min(stampWidth * 0.25, stampHeight * 1.0);
+    // Hit radius for ovals - larger for easier interaction
+    const hitRadius = Math.min(stampWidth * 0.25, stampHeight * 1.0);
 
-        if (distance < hitRadius) {
-            return {
-                type: 'oval',
-                slot: ovalStart,
-                shapeKey,
-                cx,
-                cy: shapeCenterY,
-                placement
-            };
-        }
+    if (distance < hitRadius) {
+      return {
+        type: 'oval',
+        slot: ovalStart,
+        shapeKey,
+        cx,
+        cy: shapeCenterY,
+        placement
+      };
     }
+  }
 
-    return null;
+  return null;
 }
 
 /**
@@ -99,12 +99,12 @@ export function hitTestStampShape(mouseX, mouseY, placement, options) {
  * @returns {Object|null} Hit result or null
  */
 export function hitTestAnyStampShape(mouseX, mouseY, placements, options) {
-    for (const placement of placements) {
-        const hitResult = hitTestStampShape(mouseX, mouseY, placement, options);
-        if (hitResult) {
-            return hitResult;
-        }
+  for (const placement of placements) {
+    const hitResult = hitTestStampShape(mouseX, mouseY, placement, options);
+    if (hitResult) {
+      return hitResult;
     }
+  }
 
-    return null;
+  return null;
 }

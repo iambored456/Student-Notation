@@ -19,7 +19,7 @@ export function diamondPath(cx, cy, w, totalH) {
     `${cx},${yBottom}`,
     `${xR},${yLower}`,
     `${xR},${yUpper}`
-  ].join(" ");
+  ].join(' ');
 
-  return `M ${pts} Z`.replace(/,/g, " ");
+  return `M ${pts} Z`.replace(/,/g, ' ');
 }

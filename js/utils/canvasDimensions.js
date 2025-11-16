@@ -6,17 +6,17 @@
  * @returns {number}
  */
 export function getLogicalCanvasWidth(canvas) {
-    if (!canvas) {
-        return 0;
-    }
+  if (!canvas) {
+    return 0;
+  }
 
-    const storedWidth = canvas.dataset?.logicalWidth;
-    const parsedWidth = storedWidth !== undefined ? Number(storedWidth) : NaN;
-    if (Number.isFinite(parsedWidth)) {
-        return parsedWidth;
-    }
+  const storedWidth = canvas.dataset?.logicalWidth;
+  const parsedWidth = storedWidth !== undefined ? Number(storedWidth) : NaN;
+  if (Number.isFinite(parsedWidth)) {
+    return parsedWidth;
+  }
 
-    return canvas.width || 0;
+  return canvas.width || 0;
 }
 
 /**
@@ -25,17 +25,17 @@ export function getLogicalCanvasWidth(canvas) {
  * @returns {number}
  */
 export function getLogicalCanvasHeight(canvas) {
-    if (!canvas) {
-        return 0;
-    }
+  if (!canvas) {
+    return 0;
+  }
 
-    const storedHeight = canvas.dataset?.logicalHeight;
-    const parsedHeight = storedHeight !== undefined ? Number(storedHeight) : NaN;
-    if (Number.isFinite(parsedHeight)) {
-        return parsedHeight;
-    }
+  const storedHeight = canvas.dataset?.logicalHeight;
+  const parsedHeight = storedHeight !== undefined ? Number(storedHeight) : NaN;
+  if (Number.isFinite(parsedHeight)) {
+    return parsedHeight;
+  }
 
-    return canvas.height || 0;
+  return canvas.height || 0;
 }
 
 /**
@@ -44,15 +44,15 @@ export function getLogicalCanvasHeight(canvas) {
  * @returns {number}
  */
 export function getCanvasPixelRatio(canvas) {
-    if (!canvas) {
-        return 1;
-    }
-
-    const storedRatio = canvas.dataset?.pixelRatio;
-    const parsedRatio = storedRatio !== undefined ? Number(storedRatio) : NaN;
-    if (Number.isFinite(parsedRatio) && parsedRatio > 0) {
-        return parsedRatio;
-    }
-
+  if (!canvas) {
     return 1;
+  }
+
+  const storedRatio = canvas.dataset?.pixelRatio;
+  const parsedRatio = storedRatio !== undefined ? Number(storedRatio) : NaN;
+  if (Number.isFinite(parsedRatio) && parsedRatio > 0) {
+    return parsedRatio;
+  }
+
+  return 1;
 }

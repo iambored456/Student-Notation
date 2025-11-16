@@ -33,11 +33,11 @@ export function placeTripletGroup(tripletStampId, startCellIndex, row, color = '
   }
 
   const span = GROUP_WIDTH_CELLS[stamp.span];
-  
+
   // Check for collisions with existing rhythm elements
   if (!canPlaceTripletAt(startCellIndex, span, row)) {
-    logger.debug('TripletPlacements', `Cannot place triplet at cell ${startCellIndex}, row ${row} - collision detected`, { 
-      tripletStampId, startCellIndex, row, span 
+    logger.debug('TripletPlacements', `Cannot place triplet at cell ${startCellIndex}, row ${row} - collision detected`, {
+      tripletStampId, startCellIndex, row, span
     }, 'triplets');
     return null;
   }
@@ -66,7 +66,7 @@ export function placeTripletGroup(tripletStampId, startCellIndex, row, color = '
  */
 export function canPlaceTripletAt(startCellIndex, span, row) {
   const state = store.state;
-  
+
   // Check for collisions with existing stamp placements
   if (state.stampPlacements) {
     for (const placement of state.stampPlacements) {
@@ -74,7 +74,7 @@ export function canPlaceTripletAt(startCellIndex, span, row) {
         // Check if this stamp overlaps with our triplet cells
         const stampStartCell = Math.floor(placement.startColumn / 2); // Convert microbeat columns to cells
         const stampEndCell = Math.floor(placement.endColumn / 2);
-        
+
         for (let i = 0; i < span; i++) {
           const cellIndex = startCellIndex + i;
           if (cellIndex >= stampStartCell && cellIndex <= stampEndCell) {
@@ -92,7 +92,7 @@ export function canPlaceTripletAt(startCellIndex, span, row) {
         // Check if triplet groups overlap
         const existingEnd = placement.startCellIndex + placement.span - 1;
         const newEnd = startCellIndex + span - 1;
-        
+
         if (!(newEnd < placement.startCellIndex || startCellIndex > existingEnd)) {
           return false; // Overlapping
         }
@@ -113,20 +113,20 @@ export function canPlaceTripletAt(startCellIndex, span, row) {
  */
 export function eraseTripletGroups(eraseStartCol, eraseEndCol, eraseStartRow, eraseEndRow) {
   const state = store.state;
-  if (!state.tripletPlacements) return false;
+  if (!state.tripletPlacements) {return false;}
 
   // Convert microbeat columns to cell indices
   const eraseStartCell = Math.floor(eraseStartCol / 2);
   const eraseEndCell = Math.floor(eraseEndCol / 2);
 
   const toRemove = [];
-  
+
   for (const placement of state.tripletPlacements) {
     // Check if triplet is in the eraser's row range
     if (placement.row >= eraseStartRow && placement.row <= eraseEndRow) {
       // Check if triplet overlaps with eraser's cell range
       const tripletEndCell = placement.startCellIndex + placement.span - 1;
-      
+
       if (!(tripletEndCell < eraseStartCell || placement.startCellIndex > eraseEndCell)) {
         toRemove.push(placement.id);
       }
@@ -135,9 +135,9 @@ export function eraseTripletGroups(eraseStartCol, eraseEndCol, eraseStartRow, er
 
   if (toRemove.length > 0) {
     toRemove.forEach(id => store.removeTripletPlacement(id));
-    logger.debug('TripletPlacements', `Erased ${toRemove.length} triplet groups`, { 
-      removedIds: toRemove, 
-      eraseArea: { eraseStartCell, eraseEndCell, eraseStartRow, eraseEndRow } 
+    logger.debug('TripletPlacements', `Erased ${toRemove.length} triplet groups`, {
+      removedIds: toRemove,
+      eraseArea: { eraseStartCell, eraseEndCell, eraseStartRow, eraseEndRow }
     }, 'triplets');
     return true;
   }
@@ -151,7 +151,7 @@ export function eraseTripletGroups(eraseStartCol, eraseEndCol, eraseStartRow, er
  */
 export function getTripletPlaybackData() {
   const state = store.state;
-  if (!state.tripletPlacements) return [];
+  if (!state.tripletPlacements) {return [];}
 
   return state.tripletPlacements.map(placement => ({
     startCellIndex: placement.startCellIndex,

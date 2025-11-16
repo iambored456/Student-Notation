@@ -7,7 +7,7 @@ logger.moduleLoaded('StampScheduler', 'stamps');
 
 // Time offsets for each slot within a 2-microbeat cell
 // slot 0 = start, slot 1 = 1st 16th, slot 2 = 8th beat, slot 3 = 3rd 16th (8n + 16n)
-const SLOT_OFFSETS = ["0", "16n", "8n", {"8n": 1, "16n": 1}];
+const SLOT_OFFSETS = ['0', '16n', '8n', {'8n': 1, '16n': 1}];
 
 /**
  * Gets the stamp scheduling data for a cell
@@ -31,7 +31,7 @@ export function getStampScheduleEvents(stampId, placement = null) {
 
     events.push({
       offset: SLOT_OFFSETS[start],
-      duration: "8n",
+      duration: '8n',
       type: 'oval',
       slot: start,
       shapeKey,
@@ -46,7 +46,7 @@ export function getStampScheduleEvents(stampId, placement = null) {
 
     events.push({
       offset: SLOT_OFFSETS[slot],
-      duration: "16n",
+      duration: '16n',
       type: 'diamond',
       slot: slot,
       shapeKey,

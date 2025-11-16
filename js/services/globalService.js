@@ -5,7 +5,7 @@
  * to avoid complex dependency injection or event bus patterns for simple cases.
  */
 const GlobalService = {
-    adsrComponent: null
+  adsrComponent: null
 };
 
 export default GlobalService;

@@ -4,10 +4,10 @@
 import html2canvas from 'html2canvas';
 
 const DEFAULT_OPTIONS = {
-    scale: window.devicePixelRatio || 1,
-    backgroundColor: null,
-    useCORS: true,
-    logging: false
+  scale: window.devicePixelRatio || 1,
+  backgroundColor: null,
+  useCORS: true,
+  logging: false
 };
 
 /**
@@ -17,14 +17,14 @@ const DEFAULT_OPTIONS = {
  * @returns {Promise<HTMLCanvasElement>}
  */
 export function domToCanvas(element, options = {}) {
-    if (!element) {
-        throw new Error('domToCanvas requires a valid element reference.');
-    }
+  if (!element) {
+    throw new Error('domToCanvas requires a valid element reference.');
+  }
 
-    const mergedOptions = {
-        ...DEFAULT_OPTIONS,
-        ...options
-    };
+  const mergedOptions = {
+    ...DEFAULT_OPTIONS,
+    ...options
+  };
 
-    return html2canvas(element, mergedOptions);
+  return html2canvas(element, mergedOptions);
 }

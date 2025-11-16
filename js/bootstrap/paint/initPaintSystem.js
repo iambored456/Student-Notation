@@ -7,12 +7,12 @@ import PaintPlaybackService from '@services/paintPlaybackService.js';
 import MeterController from '@components/audio/meter/meterController.js';
 
 export async function initPaintSystem() {
-    logger.initStart('Paint components');
-    PaintCanvas.initialize();
-    PaintPlayheadRenderer.initialize();
-    PaintControls.initialize();
-    await PaintPlaybackService.initialize();
-    window.PaintPlaybackService = PaintPlaybackService;
-    MeterController.initialize();
-    logger.initSuccess('Paint components');
+  logger.initStart('Paint components');
+  PaintCanvas.initialize();
+  PaintPlayheadRenderer.initialize();
+  PaintControls.initialize();
+  await PaintPlaybackService.initialize();
+  window.PaintPlaybackService = PaintPlaybackService;
+  MeterController.initialize();
+  logger.initSuccess('Paint components');
 }

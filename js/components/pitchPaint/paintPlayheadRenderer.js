@@ -4,6 +4,7 @@ import LayoutService from '@services/layoutService.js';
 import GridCoordsService from '@services/gridCoordsService.js';
 import { getPitchColor, getInterpolatedColor, getPaintColor } from '@utils/chromaticColors.js';
 import { getRowY } from '@components/canvas/pitchGrid/renderers/rendererUtils.js';
+import { getColumnStartX, getColumnWidth, getTimeMapReference } from '@services/playheadModel.js';
 import PaintCanvas from './paintCanvas.js';
 import * as Tone from 'tone';
 import { Note } from 'tonal';
@@ -14,9 +15,7 @@ class PaintPlayheadRenderer {
     this.canvas = null;
     this.ctx = null;
     this.animationFrameId = null;
-    this.timeMap = [];
-    this._lastTempo = 0;
-    
+
     // Fade-out animation properties
     this.lastValidPitch = null;
     this.lastValidPitchTime = 0;
@@ -27,22 +26,22 @@ class PaintPlayheadRenderer {
   initialize() {
     this.canvas = document.getElementById('playhead-canvas');
     if (!this.canvas) {
-        return;
+      return;
     }
     this.ctx = this.canvas.getContext('2d');
 
     store.on('micPaintStateChanged', (isActive) => this.handlePaintStateChange(isActive));
     store.on('pitchDetected', (pitchData) => this.handlePitchDetection(pitchData));
     store.on('playbackStateChanged', () => {
-        if (store.state.paint.isMicPaintActive) {
-        }
+      if (store.state.paint.isMicPaintActive) {
+      }
     });
 
   }
 
   handlePaintStateChange(isActive) {
     const hoverCanvas = document.getElementById('hover-canvas');
-    if (hoverCanvas) hoverCanvas.style.display = isActive ? 'none' : 'block';
+    if (hoverCanvas) {hoverCanvas.style.display = isActive ? 'none' : 'block';}
 
     if (isActive) {
       this.startRendering();
@@ -54,7 +53,7 @@ class PaintPlayheadRenderer {
   handlePitchDetection(pitchData) {
     // Store the pitch data for rendering (this will update the horizontal line)
     // No need to restrict this to only when playing
-    
+
     // Only add permanent paint when music is actually playing
     if (store.state.paint.isMicPaintActive && store.state.isPlaying && !store.state.isPaused) {
       this.addPaintAtPlayhead(pitchData);
@@ -62,7 +61,7 @@ class PaintPlayheadRenderer {
   }
 
   startRendering() {
-    if (this.animationFrameId) return;
+    if (this.animationFrameId) {return;}
     this.render();
   }
 
@@ -71,7 +70,7 @@ class PaintPlayheadRenderer {
       cancelAnimationFrame(this.animationFrameId);
       this.animationFrameId = null;
     }
-    
+
     if (this.ctx) {
       this.ctx.clearRect(0, 0, getLogicalCanvasWidth(this.canvas), getLogicalCanvasHeight(this.canvas));
     }
@@ -103,10 +102,10 @@ class PaintPlayheadRenderer {
   renderStationaryPlayhead() {
     const { detectedPitch } = store.state.paint;
     const now = performance.now();
-    
+
     // Clear canvas first
     this.ctx.clearRect(0, 0, getLogicalCanvasWidth(this.canvas), getLogicalCanvasHeight(this.canvas));
-    
+
     const y = this.midiToY(detectedPitch.midi);
     const hasValidPitch = y !== null;
 
@@ -119,13 +118,13 @@ class PaintPlayheadRenderer {
       this.lastValidPitch = detectedPitch;
       this.lastValidPitchTime = now;
       this.isFading = false;
-      
+
       // Render current pitch normally with color mode
       const { colorMode } = store.state.paint.paintSettings;
       const selectedNoteColor = store.state.selectedNote?.color;
       const colorRgb = getPaintColor(detectedPitch.midi, colorMode, selectedNoteColor);
       const color = `rgb(${colorRgb[0]}, ${colorRgb[1]}, ${colorRgb[2]})`;
-      
+
       this.ctx.strokeStyle = color;
       this.ctx.globalAlpha = Math.min(detectedPitch.clarity * 1.2, 1.0);
       this.ctx.lineWidth = 4;
@@ -137,23 +136,23 @@ class PaintPlayheadRenderer {
       this.ctx.stroke();
       this.ctx.shadowBlur = 0;
       this.ctx.globalAlpha = 1.0;
-      
+
     } else if (this.lastValidPitch && (now - this.lastValidPitchTime) < this.fadeOutDurationMs) {
       // Start or continue fade-out animation
       this.isFading = true;
       const fadeProgress = (now - this.lastValidPitchTime) / this.fadeOutDurationMs;
       const fadeAlpha = Math.max(0, 1.0 - fadeProgress);
-      
+
       // Use easing function for smoother fade
       const easedAlpha = this.easeOutCubic(1.0 - fadeProgress);
-      
+
       const fadeY = this.midiToY(this.lastValidPitch.midi);
       if (fadeY !== null) {
         const { colorMode } = store.state.paint.paintSettings;
         const selectedNoteColor = store.state.selectedNote?.color;
         const colorRgb = getPaintColor(this.lastValidPitch.midi, colorMode, selectedNoteColor);
         const color = `rgb(${colorRgb[0]}, ${colorRgb[1]}, ${colorRgb[2]})`;
-        
+
         this.ctx.strokeStyle = color;
         this.ctx.globalAlpha = easedAlpha * Math.min(this.lastValidPitch.clarity * 1.2, 1.0);
         this.ctx.lineWidth = 4;
@@ -180,7 +179,7 @@ class PaintPlayheadRenderer {
 
   renderMovingPlayhead() {
     const xPos = this.calculateXFromTime(Tone.Transport.seconds);
-    if (xPos === null) return;
+    if (xPos === null) {return;}
 
     // UPDATED: Draw playhead line across the full canvas height
     this.ctx.strokeStyle = '#FF6B35';
@@ -196,69 +195,57 @@ class PaintPlayheadRenderer {
     const { detectedPitch } = store.state.paint;
     const y = this.midiToY(detectedPitch.midi);
     if (y !== null) {
-        const { colorMode } = store.state.paint.paintSettings;
-        const selectedNoteColor = store.state.selectedNote?.color;
-        const colorRgb = getPaintColor(detectedPitch.midi, colorMode, selectedNoteColor);
-        const color = `rgb(${colorRgb[0]}, ${colorRgb[1]}, ${colorRgb[2]})`;
-        this.ctx.fillStyle = color;
-        this.ctx.strokeStyle = 'white';
-        this.ctx.lineWidth = 2;
-        this.ctx.shadowColor = color;
-        this.ctx.shadowBlur = 4;
-        this.ctx.beginPath();
-        this.ctx.arc(xPos, y, 8, 0, 2 * Math.PI); // Slightly larger for better visibility
-        this.ctx.fill();
-        this.ctx.stroke();
-        this.ctx.shadowBlur = 0;
+      const { colorMode } = store.state.paint.paintSettings;
+      const selectedNoteColor = store.state.selectedNote?.color;
+      const colorRgb = getPaintColor(detectedPitch.midi, colorMode, selectedNoteColor);
+      const color = `rgb(${colorRgb[0]}, ${colorRgb[1]}, ${colorRgb[2]})`;
+      this.ctx.fillStyle = color;
+      this.ctx.strokeStyle = 'white';
+      this.ctx.lineWidth = 2;
+      this.ctx.shadowColor = color;
+      this.ctx.shadowBlur = 4;
+      this.ctx.beginPath();
+      this.ctx.arc(xPos, y, 8, 0, 2 * Math.PI); // Slightly larger for better visibility
+      this.ctx.fill();
+      this.ctx.stroke();
+      this.ctx.shadowBlur = 0;
     }
   }
 
   addPaintAtPlayhead(pitchData) {
-    if (pitchData.midi === 0) return;
+    if (pitchData.midi === 0) {return;}
     const musicalTime = Tone.Transport.seconds;
     PaintCanvas.addPaintPoint(musicalTime, pitchData.midi);
   }
 
-  buildTimeMap() {
-    this.timeMap = [];
-    let currentTime = 0;
-    const microbeatDuration = 30 / store.state.tempo;
-    
-    for (let i = 0; i < store.state.columnWidths.length; i++) {
-        this.timeMap[i] = currentTime;
-        currentTime += store.state.columnWidths[i] * microbeatDuration;
-    }
-    this.timeMap.push(currentTime);
-  }
-
   calculateXFromTime(currentTime) {
-    if (store.state.tempo !== this._lastTempo) {
-        this.buildTimeMap();
-        this._lastTempo = store.state.tempo;
+    const timeMap = getTimeMapReference();
+    if (!Array.isArray(timeMap) || timeMap.length < 2) {
+      return null;
     }
 
-    for (let i = 0; i < this.timeMap.length - 1; i++) {
-      if (currentTime >= this.timeMap[i] && currentTime < this.timeMap[i + 1]) {
-        const colStartTime = this.timeMap[i];
-        const colDuration = this.timeMap[i + 1] - colStartTime;
+    for (let i = 0; i < timeMap.length - 1; i++) {
+      if (currentTime >= timeMap[i] && currentTime < timeMap[i + 1]) {
+        const colStartTime = timeMap[i];
+        const colDuration = timeMap[i + 1] - colStartTime;
         const timeIntoCol = currentTime - colStartTime;
-        
-        const colStartX = LayoutService.getColumnX(i);
-        const colWidth = LayoutService.getColumnX(i + 1) - colStartX;
-        
+
+        const colStartX = getColumnStartX(i);
+        const colWidth = getColumnWidth(i);
+
         return colStartX + (colDuration > 0 ? (timeIntoCol / colDuration) * colWidth : 0);
       }
     }
     return null;
   }
-  
+
   /**
    * Convert MIDI to continuous Y coordinate with smooth interpolation between grid rows.
    * Enables true glissando painting by calculating precise positions between semitones.
    * Filters out pitches outside C1-C8 range (MIDI 24-96).
    */
   midiToY(midiValue) {
-    if (midiValue === 0) return null;
+    if (midiValue === 0) {return null;}
 
     const { fullRowData } = store.state;
     if (!fullRowData || fullRowData.length === 0) {
@@ -268,7 +255,7 @@ class PaintPlayheadRenderer {
     // Get the proper MIDI range (note: grid rows may be in descending order)
     const minRowMidi = Math.min(...fullRowData.map(row => Note.midi(row.toneNote)));
     const maxRowMidi = Math.max(...fullRowData.map(row => Note.midi(row.toneNote)));
-    
+
     // Filter out pitches outside reasonable range (C1-C8: MIDI 24-96)
     if (midiValue < 24 || midiValue > 96 || midiValue < minRowMidi || midiValue > maxRowMidi) {
       return null; // Don't paint invalid pitches
@@ -280,13 +267,13 @@ class PaintPlayheadRenderer {
 
     for (let i = 0; i < fullRowData.length; i++) {
       const rowMidi = Note.midi(fullRowData[i].toneNote);
-      
+
       // Find the highest row MIDI that's still <= midiValue (lower bound)
       if (rowMidi <= midiValue && rowMidi > lowerMidi) {
         lowerRowIndex = i;
         lowerMidi = rowMidi;
       }
-      
+
       // Find the lowest row MIDI that's still >= midiValue (upper bound)
       if (rowMidi >= midiValue && rowMidi < upperMidi) {
         upperRowIndex = i;
@@ -306,15 +293,15 @@ class PaintPlayheadRenderer {
       const upperY = getRowY(upperRowIndex, store.state);
       const interpolationFactor = (midiValue - lowerMidi) / (upperMidi - lowerMidi);
       const interpolatedY = lowerY + (upperY - lowerY) * interpolationFactor;
-      
-      
+
+
       return Math.max(0, Math.min(interpolatedY, getLogicalCanvasHeight(this.canvas)));
     }
 
     // Fallback: use closest row if interpolation fails
     let bestRowIndex = 0;
     let smallestDiff = Math.abs(Note.midi(fullRowData[0].toneNote) - midiValue);
-    
+
     for (let i = 1; i < fullRowData.length; i++) {
       const rowMidi = Note.midi(fullRowData[i].toneNote);
       const diff = Math.abs(rowMidi - midiValue);

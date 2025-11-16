@@ -6,9 +6,9 @@ import StampsToolbar from '@components/rhythm/stampsToolbar/stampsToolbar.js';
 import TripletsToolbar from '@components/rhythm/stampsToolbar/tripletsToolbar.js';
 
 export async function initUiComponents() {
-    Toolbar.init();
-    GridManager.init();
-    PrintPreview.init();
-    StampsToolbar.init();
-    TripletsToolbar.init();
+  Toolbar.init();
+  GridManager.init();
+  PrintPreview.init();
+  StampsToolbar.init();
+  TripletsToolbar.init();
 }
