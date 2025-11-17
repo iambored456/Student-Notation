@@ -1,6 +1,6 @@
 // js/rhythm/scheduleTriplets.js
 import * as Tone from 'tone';
-import { TRIPLET_STAMPS, getTripletStampById, GROUP_WIDTH_CELLS } from './triplets.js';
+import { getTripletStampById, GROUP_WIDTH_CELLS } from './triplets.js';
 import logger from '@utils/logger.js';
 
 logger.moduleLoaded('TripletScheduler', 'triplets');

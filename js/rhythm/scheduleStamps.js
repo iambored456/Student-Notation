@@ -1,6 +1,5 @@
 // js/rhythm/scheduleStamps.js
-import * as Tone from 'tone';
-import { SIXTEENTH_STAMPS, getStampById } from './stamps.js';
+import { getStampById } from './stamps.js';
 import logger from '@utils/logger.js';
 
 logger.moduleLoaded('StampScheduler', 'stamps');

@@ -1,6 +1,5 @@
 ﻿// js/services/timbreEffects/effectsAudio/vibratoAudioEffect.js
 import logger from '@utils/logger.js';
-import * as Tone from 'tone';
 
 logger.moduleLoaded('VibratoAudioEffect');
 
@@ -74,7 +73,7 @@ class VibratoAudioEffect {
      * Get effect instance for a color (for effects chaining)
      * Vibrato is applied directly to voice, so no separate instance needed
      */
-  getEffectInstance(color) {
+  getEffectInstance() {
     // Vibrato modifies the voice directly, no separate effect instance
     return null;
   }

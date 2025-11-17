@@ -1,6 +1,5 @@
 // js/components/Toolbar/initializers/toolSelectorInitializer.js
 import store from '@state/index.js';
-import { Chord, ChordType } from 'tonal';
 import domCache from '@services/domCache.js';
 import notificationSystem from '@components/ui/notificationSystem.js';
 import clefRangeController from '@components/harmony/clefRangeController.js';
@@ -127,8 +126,6 @@ function updateChordButtonSelection() {
     // Normalize current intervals for octave equivalence
     const normalizedCurrentIntervals = currentIntervals.map(normalizeInterval);
 
-    let exactMatchFound = false;
-
     // Search through all chord buttons
     for (const button of chordsPanel.querySelectorAll('.harmony-preset-button')) {
       const buttonIntervals = CHORD_SHAPES[button.textContent.trim()];
@@ -140,7 +137,6 @@ function updateChordButtonSelection() {
       // Check for exact match
       if (buttonIntervalsString === currentIntervalsString) {
         button.classList.add('selected');
-        exactMatchFound = true;
         continue;
       }
 
@@ -210,7 +206,6 @@ export function initToolSelectors() {
 
   // Get harmony container directly since it uses a class, not an ID
   const harmonyContainer = document.querySelector('.pitch-tabs-container');
-  const harmonyPresetGrid = document.querySelector('.harmony-preset-grid');
 
   // Get inversion toggle element
   const inversionToggle = document.getElementById('inversion-toggle');
@@ -220,9 +215,6 @@ export function initToolSelectors() {
 
   // Initialize clef range controls when the elements are available
   clefRangeController.init();
-
-  // Define 4-note chord types
-  const fourNoteChords = ['X7', 'x⁷', 'ø⁷', 'Xmaj7', 'x°7'];
 
   // --- Tool Click Listeners ---
   if (noteBankContainer) {

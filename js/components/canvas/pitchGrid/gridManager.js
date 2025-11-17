@@ -17,7 +17,7 @@ const GridManager = {
     initDrumGridInteraction();
 
     // Listen for canvas resize events from layoutService
-    document.addEventListener('canvasResized', (event) => {
+    document.addEventListener('canvasResized', () => {
       this.renderPitchGrid();
       this.renderDrumGrid();
     });

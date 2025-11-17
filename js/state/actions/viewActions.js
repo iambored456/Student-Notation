@@ -81,7 +81,7 @@ function remapAnnotation(annotation, oldRange, newRange) {
   }
 
   if (annotation.data && typeof annotation.data === 'object') {
-    Object.entries(annotation.data).forEach(([key, value]) => {
+    Object.entries(annotation.data).forEach(([, value]) => {
       if (value && typeof value === 'object') {
         if (Array.isArray(value)) {
           value.forEach(item => {
@@ -294,8 +294,8 @@ export const viewActions = {
           columnWidths: [...(this.state.columnWidths || [])]
         }
       });
-    } else {
     }
+    // else: No history to push
   },
 
   setGridPosition(newPosition) {
@@ -316,7 +316,6 @@ export const viewActions = {
   },
 
   setPrintPreviewActive(isActive) {
-    const wasActive = this.state.isPrintPreviewActive;
     this.state.isPrintPreviewActive = isActive;
     this.emit('printPreviewStateChanged', isActive);
   },

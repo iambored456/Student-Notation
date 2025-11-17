@@ -1,7 +1,6 @@
 ﻿// js/services/synthEngine.js
 import * as Tone from 'tone';
 import store from '@state/index.js';
-import { PRESETS } from './presetData.js';
 import logger from '@utils/logger.js';
 import { getFilteredCoefficients } from '@components/audio/harmonicsFilter/harmonicBins.js';
 
@@ -409,7 +408,7 @@ const SynthEngine = {
             // DISABLED: This reconnects voices and bypasses masterGain
             if (activeVoices && activeVoices.size > 0) {
               // Iterate through active voices in the Map
-              activeVoices.forEach((voice, note) => {
+              activeVoices.forEach((voice) => {
                 if (!voice.effectsApplied) {
                   window.audioEffectsManager.applyEffectsToVoice(voice, color);
                   voice.effectsApplied = true; // Mark as applied
@@ -418,7 +417,7 @@ const SynthEngine = {
             } else {
               // Try accessing through _voices property if available
               if (this._voices && Array.isArray(this._voices)) {
-                this._voices.forEach((voice, index) => {
+                this._voices.forEach((voice) => {
                   if (voice && !voice.effectsApplied) {
                     window.audioEffectsManager.applyEffectsToVoice(voice, color);
                     voice.effectsApplied = true;
@@ -429,7 +428,7 @@ const SynthEngine = {
           } else {
             // Fallback to legacy approach if new architecture not available
             if (activeVoices && activeVoices.size > 0) {
-              activeVoices.forEach((voice, note) => {
+              activeVoices.forEach((voice) => {
                 if (voice._setVibrato && voice.vibratoApplied !== true) {
                   voice._setVibrato(this._currentVibrato);
                   voice.vibratoApplied = true;
@@ -441,7 +440,7 @@ const SynthEngine = {
               });
             } else {
               if (this._voices && Array.isArray(this._voices)) {
-                this._voices.forEach((voice, index) => {
+                this._voices.forEach((voice) => {
                   if (voice && voice._setVibrato && voice.vibratoApplied !== true) {
                     voice._setVibrato(this._currentVibrato);
                     voice.vibratoApplied = true;
@@ -476,7 +475,7 @@ const SynthEngine = {
     });
 
     // Listen to new audio effect events from effects coordinator
-    store.on('audioEffectChanged', ({ effectType, parameter, value, color, effectParams }) => {
+    store.on('audioEffectChanged', ({ color }) => {
 
       // Update synth for any audio effect change
       this.updateSynthForColor(color);
@@ -548,31 +547,28 @@ const SynthEngine = {
     const activeVoices = synth._activeVoices;
 
     if (activeVoices && activeVoices.size > 0) {
-      activeVoices.forEach((voice, note) => {
+      activeVoices.forEach((voice) => {
         if (voice._setFilter) {
           voice._setFilter(timbre.filter);
         }
         if (voice._setVibrato) {
           voice._setVibrato(timbre.vibrato);
           voice.vibratoApplied = true; // Mark as updated
-        } else {
         }
         if (voice._setTremolo) {
           voice._setTremolo(timbre.tremelo);
           voice.tremoloApplied = true; // Mark as updated
-        } else {
         }
         if (voice._setPresetGain) {
           // Use preset gain from timbre state, fallback to 1.0 if not set
           const presetGain = timbre.gain || 1.0;
           voice._setPresetGain(presetGain);
-        } else {
         }
       });
     } else {
       // Try _voices array as backup
       if (synth._voices && Array.isArray(synth._voices)) {
-        synth._voices.forEach((voice, index) => {
+        synth._voices.forEach((voice) => {
           if (voice && voice._setVibrato) {
             voice._setVibrato(timbre.vibrato);
             voice.vibratoApplied = true;

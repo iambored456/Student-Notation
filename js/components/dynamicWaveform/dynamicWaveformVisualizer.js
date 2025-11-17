@@ -241,7 +241,7 @@ class DynamicWaveformVisualizer {
       this.drawSingleLiveWaveform(waveform, color, width, centerY, baseAmplitude);
     } else if (colors.length > 1) {
       // Multiple colors - draw layered waveforms with transparency
-      colors.forEach((color, index) => {
+      colors.forEach((color) => {
         const waveform = this.liveWaveforms.get(color);
         this.drawLayeredLiveWaveform(waveform, color, width, centerY, baseAmplitude, colors.length);
       });

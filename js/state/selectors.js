@@ -1,6 +1,5 @@
 // js/state/selectors.js
 import { Note } from 'tonal';
-import LayoutService from '@services/layoutService.js';
 
 const MODE_NAMES = ['major', 'dorian', 'phrygian', 'lydian', 'mixolydian', 'minor', 'locrian'];
 

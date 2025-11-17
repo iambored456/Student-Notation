@@ -23,7 +23,6 @@ export function hitTestTripletShape(mouseX, mouseY, placement, options) {
 
   // Calculate triplet group bounds
   const groupX = getColumnX(startColumn, options);
-  const groupY = getRowY(placement.row, options) - (options.cellHeight / 2);
   const groupWidth = options.cellWidth * 2 * placement.span; // span cells * 2 microbeats per cell
   const groupHeight = options.cellHeight;
 

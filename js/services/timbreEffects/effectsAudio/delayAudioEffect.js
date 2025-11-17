@@ -86,7 +86,7 @@ class DelayAudioEffect {
       if (voice && voice.output && (typeof voice.isDisposed !== 'function' || !voice.isDisposed())) {
         try {
           voice.connect(delayInstance); // Direct connection - delay handles wet/dry internally
-        } catch (connectError) {
+        } catch {
           // Try alternative connection method
           if (voice.output) {
             voice.output.connect(delayInstance);

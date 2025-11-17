@@ -1,7 +1,6 @@
 // js/components/StaticWaveform/staticWaveformVisualizer.js
 import store from '@state/index.js';
 import { HARMONIC_BINS } from '@/core/constants.js';
-import * as Tone from 'tone';
 import { hexToRgba } from '@utils/colorUtils.js';
 import { getFilteredCoefficients } from '@components/audio/harmonicsFilter/harmonicBins.js';
 import DynamicWaveformVisualizer from '../DynamicWaveform/dynamicWaveformVisualizer.js';
@@ -118,7 +117,7 @@ class StaticWaveformVisualizer {
     });
 
     // Listen for waveform extended view changes
-    store.on('waveformExtendedViewChanged', (isExtended) => {
+    store.on('waveformExtendedViewChanged', () => {
       this.generateWaveform();
       this.updateToggleButton();
     });
@@ -266,7 +265,7 @@ class StaticWaveformVisualizer {
   }
 
   // Start a phase transition animation
-  startPhaseTransition(fromPhases, toPhases, harmonicIndex) {
+  startPhaseTransition(fromPhases, toPhases) {
     if (this.isTransitioning) {
       // Cancel any existing transition
       if (this.transitionAnimationId) {

@@ -23,7 +23,6 @@ export function hitTestStampShape(mouseX, mouseY, placement, options) {
   const stampY = getRowY(placement.row, options) - (options.cellHeight / 2);
   const stampWidth = options.cellWidth * 2; // Stamps span 2 microbeats
   const stampHeight = options.cellHeight;
-  const centerY = stampY + stampHeight / 2;
 
   // Calculate slot centers (matching stampRenderer.js)
   const slotCenters = [0.125, 0.375, 0.625, 0.875].map(

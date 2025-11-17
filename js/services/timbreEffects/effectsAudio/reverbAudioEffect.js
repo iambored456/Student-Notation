@@ -86,7 +86,7 @@ class ReverbAudioEffect {
       if (voice && voice.output && (typeof voice.isDisposed !== 'function' || !voice.isDisposed())) {
         try {
           voice.connect(reverbInstance); // Direct connection - reverb handles wet/dry internally
-        } catch (connectError) {
+        } catch {
           // Try alternative connection method
           if (voice.output) {
             voice.output.connect(reverbInstance);

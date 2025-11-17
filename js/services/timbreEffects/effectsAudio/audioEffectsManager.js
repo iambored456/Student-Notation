@@ -110,7 +110,7 @@ class AudioEffectsManager {
     // Disconnect synth from everything to rebuild clean chain
     try {
       synth.disconnect();
-    } catch (error) {
+    } catch {
       // Error disconnecting synth
     }
 
@@ -123,7 +123,7 @@ class AudioEffectsManager {
         reverbInstance.disconnect();
         currentOutput.connect(reverbInstance);
         currentOutput = reverbInstance;
-      } catch (error) {
+      } catch {
         // Error connecting reverb
       }
     }
@@ -134,7 +134,7 @@ class AudioEffectsManager {
         delayInstance.disconnect();
         currentOutput.connect(delayInstance);
         currentOutput = delayInstance;
-      } catch (error) {
+      } catch {
         // Error connecting delay
       }
     }
@@ -150,7 +150,7 @@ class AudioEffectsManager {
           synth.connect(analyzer);
         }
       }
-    } catch (error) {
+    } catch {
       // Error connecting to masterGain
     }
   }

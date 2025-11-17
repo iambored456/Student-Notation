@@ -149,7 +149,7 @@ class AdsrComponent {
     store.on('tempoChanged', () => this.render());
 
     // Listen for ADSR control changes
-    store.on('adsrTimeAxisScaleChanged', (scale) => {
+    store.on('adsrTimeAxisScaleChanged', () => {
       this.render();
       this.updateSliders();
       this.updateTimeScaleWidth(); // Also update container width

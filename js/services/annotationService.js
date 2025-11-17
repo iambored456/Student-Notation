@@ -2,7 +2,6 @@
 import store from '@state/index.js';
 import logger from '@utils/logger.js';
 import { getColumnFromX, getRowFromY, getColumnX, getRowY } from '@components/canvas/pitchGrid/renderers/rendererUtils.js';
-import LayoutService from './layoutService.js';
 import PitchGridController from '@components/canvas/pitchGrid/pitchGrid.js';
 import { isPointInPolygon, calculateConvexHull, isPointNearHull, polygonIntersectsEllipse, polygonIntersectsRect } from '@utils/geometryUtils.js';
 
@@ -485,7 +484,7 @@ class AnnotationService {
     }
   }
 
-  handleMouseUp(e) {
+  handleMouseUp() {
     // Stop resizing
     if (this.isResizing) {
       this.isResizing = false;
@@ -1127,7 +1126,7 @@ class AnnotationService {
       const words = paragraph.split(' ');
       let currentLine = '';
 
-      words.forEach((word, index) => {
+      words.forEach((word) => {
         const testLine = currentLine ? currentLine + ' ' + word : word;
         const metrics = ctx.measureText(testLine);
 

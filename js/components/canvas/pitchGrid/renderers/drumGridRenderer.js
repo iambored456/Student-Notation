@@ -3,7 +3,7 @@ import LayoutService from '../../../../services/layoutService.js';
 import { getLogicalCanvasWidth, getLogicalCanvasHeight } from '@utils/canvasDimensions.js';
 
 // --- Pure Helper Functions ---
-function getColumnX(index, options) {
+function getColumnX(index) {
   // Use LayoutService to get the column X position with horizontal offset
   return LayoutService.getColumnX(index);
 }

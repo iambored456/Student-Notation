@@ -112,7 +112,7 @@ function handleDropdownSelection(event) {
     const dropdown = document.getElementById('time-signature-dropdown');
     dropdown.classList.add('hidden');
     dropdownInstance = null;
-  } catch (error) {
+  } catch {
     // Silently fail - invalid groupings data
   }
 }

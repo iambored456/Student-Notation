@@ -144,11 +144,11 @@ function createEmptyMapping(baseMicrobeatPx) {
       return canvasX / baseMicrobeatPx;
     },
 
-    getSegmentAtX(canvasX) {
+    getSegmentAtX() {
       return this.segments[0];
     },
 
-    getGhostGridPositions(segment, baseMicrobeatPx) {
+    getGhostGridPositions() {
       return []; // No ghost grid when no modulation
     }
   };
@@ -197,7 +197,6 @@ export function createCoordinateMapping(markers, baseMicrobeatPx, state = null) 
 
   // Create segments with cumulative scaling
   const segments = [];
-  const currentX = 0;
   let cumulativeScale = 1.0;
 
   // Add initial segment (before first marker)

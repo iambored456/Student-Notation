@@ -1,6 +1,5 @@
 ﻿// js/services/timbreEffects/effectsAudio/tremoloAudioEffect.js
 import logger from '@utils/logger.js';
-import * as Tone from 'tone';
 
 logger.moduleLoaded('TremoloAudioEffect');
 
@@ -74,7 +73,7 @@ class TremoloAudioEffect {
      * Get effect instance for a color (for effects chaining)
      * Tremolo is applied directly to voice, so no separate instance needed
      */
-  getEffectInstance(color) {
+  getEffectInstance() {
     // Tremolo modifies the voice directly, no separate effect instance
     return null;
   }

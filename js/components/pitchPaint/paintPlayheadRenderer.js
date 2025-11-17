@@ -2,7 +2,7 @@
 import store from '@state/index.js';
 import LayoutService from '@services/layoutService.js';
 import GridCoordsService from '@services/gridCoordsService.js';
-import { getPitchColor, getInterpolatedColor, getPaintColor } from '@utils/chromaticColors.js';
+import { getPaintColor } from '@utils/chromaticColors.js';
 import { getRowY } from '@components/canvas/pitchGrid/renderers/rendererUtils.js';
 import { getColumnStartX, getColumnWidth, getTimeMapReference } from '@services/playheadModel.js';
 import PaintCanvas from './paintCanvas.js';
@@ -34,6 +34,7 @@ class PaintPlayheadRenderer {
     store.on('pitchDetected', (pitchData) => this.handlePitchDetection(pitchData));
     store.on('playbackStateChanged', () => {
       if (store.state.paint.isMicPaintActive) {
+        // TODO: Handle playback state changes during mic paint
       }
     });
 

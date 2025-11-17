@@ -101,7 +101,6 @@ class EffectsCoordinator {
     }
 
     // Update the parameter
-    const oldValue = colorEffects[effectType][parameter];
     colorEffects[effectType][parameter] = value;
 
     // Distribute to consumers with separate events

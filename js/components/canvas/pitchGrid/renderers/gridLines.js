@@ -1,9 +1,8 @@
 // js/components/Canvas/PitchGrid/renderers/gridLines.js
-import { getColumnX, getRowY, getPitchClass, getLineStyleFromPitchClass, getCurrentCoordinateMapping } from './rendererUtils.js';
+import { getColumnX, getRowY, getPitchClass, getLineStyleFromPitchClass } from './rendererUtils.js';
 import { shouldDrawVerticalLineAtColumn, isTonicColumn } from '../../../../utils/tonicColumnUtils.js';
 import { fullRowData } from '../../../../state/pitchData.js';
-import logger from '@utils/logger.js';
-import { getLogicalCanvasWidth, getLogicalCanvasHeight } from '@utils/canvasDimensions.js';
+import { getLogicalCanvasHeight } from '@utils/canvasDimensions.js';
 
 function drawHorizontalMusicLines(ctx, options, startRow, endRow) {
   // Access accidental button states
@@ -59,27 +58,20 @@ function drawHorizontalMusicLines(ctx, options, startRow, endRow) {
     return [1, options.columnWidths.length - 2]; // Left A is col 1, right A is col length-2
   }
 
-  let linesDrawn = 0;
-  let linesSkipped = 0;
-
   for (let rowIndex = startRow; rowIndex <= endRow; rowIndex++) {
     const row = options.fullRowData[rowIndex];
     if (!row) {
-      linesSkipped++;
       continue;
     }
 
     const y = getRowY(rowIndex, options);
     // Add a small buffer to prevent lines from disappearing at the very edge
     if (y < -10 || y > options.viewportHeight + 10) {
-      linesSkipped++;
       continue;
     }
 
     const pitchClass = getPitchClass(row.pitch);
     const style = getLineStyleFromPitchClass(pitchClass);
-
-    linesDrawn++;
 
     // Determine drawing behavior based on pitch class
     if (pitchClass === 'C' || pitchClass === 'E') {
@@ -295,81 +287,4 @@ function drawRegularVerticalLines(ctx, options) {
     ctx.stroke();
   }
   ctx.setLineDash([]);
-}
-
-function drawGhostLines(ctx, options) {
-  const { modulationMarkers } = options;
-
-  if (!modulationMarkers || modulationMarkers.length === 0) {
-    return;
-  }
-
-  // Get coordinate mapping to access ghost line positions
-  const mapping = getCurrentCoordinateMapping(options);
-  const baseMicrobeatPx = options.baseMicrobeatPx || options.cellWidth || 40;
-
-  // Draw ghost lines for each modulated segment
-  mapping.segments.forEach((segment, index) => {
-    if (!segment.marker) {
-      return; // Skip base segment
-    }
-
-    const ghostPositions = mapping.getGhostGridPositions(segment, options);
-
-    // Get right legend boundary to stop ghost lines at the music area end
-    const rightLegendColumnIndex = options.columnWidths.length - 2;
-    const rightBoundary = getColumnX(rightLegendColumnIndex, options);
-
-    logger.debug('GridLines', 'Ghost line boundary calculation', {
-      rightLegendColumnIndex,
-      rightBoundary,
-      canvasWidth: getLogicalCanvasWidth(ctx.canvas)
-    }, 'grid');
-
-    ghostPositions.forEach((x, posIndex) => {
-      // Skip ghost lines that extend past the right boundary
-      if (x >= rightBoundary) {
-        return;
-      }
-
-      // Only draw ghost lines that don't overlap with regular grid lines
-      const isRegular = isRegularGridLineAt(x, options);
-
-      if (!isRegular) {
-        drawGhostLine(ctx, x);
-      }
-    });
-  });
-}
-
-function drawGhostLine(ctx, x) {
-  ctx.save();
-
-  // Ghost line style: dashed, lighter color, reduced opacity
-  ctx.beginPath();
-  ctx.moveTo(x, 0);
-  ctx.lineTo(x, getLogicalCanvasHeight(ctx.canvas));
-  ctx.lineWidth = 1;
-  ctx.strokeStyle = 'rgba(173, 181, 189, 0.4)'; // 40% opacity of regular grid color
-  ctx.setLineDash([4, 3]); // 4px dash, 3px gap
-  ctx.stroke();
-
-  ctx.restore();
-}
-
-function isRegularGridLineAt(x, options) {
-  // Check if there's already a regular grid line at this position
-  // This is a simple tolerance check to avoid overlapping lines
-  const tolerance = 2; // pixels
-  const { columnWidths } = options;
-
-  const currentX = 0;
-  for (let i = 0; i < columnWidths.length; i++) {
-    const lineX = getColumnX(i, options);
-    if (Math.abs(x - lineX) <= tolerance) {
-      return true;
-    }
-  }
-
-  return false;
 }

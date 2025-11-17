@@ -3,7 +3,6 @@ import * as Tone from 'tone';
 import { PitchDetector } from 'pitchy';
 import store from '@state/index.js';
 import logger from '@utils/logger.js';
-import { Note } from 'tonal';
 
 class PitchPaintService {
   constructor() {
@@ -112,7 +111,7 @@ class PitchPaintService {
         if (pitch && clarity > 0.1 && now - this.lastLogTime > this.logThrottleMs) {
           this.lastLogTime = now;
         }
-      } catch (error) {
+      } catch {
         pitch = null;
         clarity = 0;
       }

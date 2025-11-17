@@ -130,7 +130,8 @@ function initNodeDragging(elements, component) {
 
     const timeVal = (xPercent / 100) * getCurrentMaxTime();
     const currentTimbre = store.state.timbres[component.currentColor];
-    const { attack, decay, release, sustain } = currentTimbre.adsr;
+    const { attack, decay, release } = currentTimbre.adsr;
+    let sustain = currentTimbre.adsr.sustain;
 
     const currentTimes = {
       a: attack,

@@ -14,10 +14,10 @@ export function drawPitchGrid(ctx, options) {
   const fullOptions = { ...options, ...store.state };
 
 
-  // Debug modulation markers
-
-  if (fullOptions.modulationMarkers && fullOptions.modulationMarkers.length > 0) {
-  }
+  // Debug modulation markers (currently unused)
+  // if (fullOptions.modulationMarkers && fullOptions.modulationMarkers.length > 0) {
+  //   // TODO: Add modulation marker debugging visualization
+  // }
 
   ctx.clearRect(0, 0, getLogicalCanvasWidth(ctx.canvas), getLogicalCanvasHeight(ctx.canvas));
 
@@ -49,8 +49,8 @@ export function drawPitchGrid(ctx, options) {
       drawSingleColumnOvalNote(ctx, fullOptions, note, note.row);
     } else if (note.shape === 'circle') {
       drawTwoColumnOvalNote(ctx, fullOptions, note, note.row);
-    } else {
     }
+    // Other note shapes not yet implemented
   });
 
   // Draw tonic signs

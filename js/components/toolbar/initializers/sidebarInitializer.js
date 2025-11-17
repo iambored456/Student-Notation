@@ -71,7 +71,7 @@ export function initSidebarAndVolume() {
             return clampVolume(parsed);
           }
         }
-      } catch (err) {
+      } catch {
         // Ignore localStorage access issues
       }
       return 70;
@@ -79,7 +79,7 @@ export function initSidebarAndVolume() {
     const storeVolume = (value) => {
       try {
         window.localStorage.setItem(VOLUME_STORAGE_KEY, String(clampVolume(value)));
-      } catch (err) {
+      } catch {
         // Ignore localStorage write issues
       }
     };

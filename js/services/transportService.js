@@ -2,7 +2,6 @@
 import * as Tone from 'tone';
 import store from '@state/index.js';
 import { getPlacedTonicSigns, getMacrobeatInfo } from '@state/selectors.js';
-import LayoutService from './layoutService.js';
 import SynthEngine from './synthEngine.js';
 import GlobalService from './globalService.js';
 import domCache from './domCache.js';
@@ -42,24 +41,7 @@ let configuredLoopEnd = 0;
 const DRUM_START_EPSILON = 1e-4; // seconds; keeps Tone.Player start times strictly increasing
 const lastDrumStartTimes = new Map();
 
-const transportDebugSnapshot = () => {
-  const transport = Tone?.Transport;
-  return {
-    bpm: Number(transport?.bpm?.value ?? store.state.tempo),
-    seconds: Number(transport?.seconds ?? 0),
-    position: transport?.position ?? '0:0:0',
-    state: transport?.state ?? 'stopped',
-    loop: {
-      enabled: Boolean(transport?.loop),
-      start: Number(transport?.loopStart ?? 0),
-      end: Number(transport?.loopEnd ?? 0)
-    },
-    storeTempo: store.state.tempo,
-    storeLooping: store.state.isLooping
-  };
-};
-
-function logTransportDebug(event, details = {}) {
+function logTransportDebug() {
   // Logging disabled
 }
 
@@ -147,13 +129,12 @@ function calculateTimeMap() {
   timeMap = [];
 
   const microbeatDuration = getMicrobeatDuration();
-  const { columnWidths, modulationMarkers } = store.state;
+  const { columnWidths } = store.state;
   const placedTonicSigns = getPlacedTonicSigns(store.state);
 
   // PLAYHEAD FIX: Always use regular timing for consistent playhead speed
   // Note triggers will be calculated separately using modulation mapping
-  if (modulationMarkers && modulationMarkers.length > 0) {
-  }
+  // Modulation markers are handled in calculateNoteTriggerTime, not here
   calculateRegularTimeMap(microbeatDuration, columnWidths, placedTonicSigns);
 
   logger.timing('transportService', 'calculateTimeMap', { totalDuration: `${timeMap[timeMap.length - 1]?.toFixed(2)}s` });
@@ -205,28 +186,6 @@ function calculateRegularTimeMap(microbeatDuration, columnWidths, placedTonicSig
   }
 
   timeMap.length = rightLegendStartIndex + 1;
-}
-
-function calculateModulatedTimeMap(microbeatDuration, columnWidths, placedTonicSigns) {
-  const baseMicrobeatPx = store.state.baseMicrobeatPx || store.state.cellWidth || 40;
-  const coordinateMapping = createCoordinateMapping(store.state.modulationMarkers, baseMicrobeatPx, store.state);
-
-
-  // Calculate time for each column using modulation mapping
-  const rightLegendStartIndex = Math.max(0, columnWidths.length - 2);
-  for (let i = 0; i <= rightLegendStartIndex; i++) {
-    const columnX = getColumnXForTimeMap(i, columnWidths, baseMicrobeatPx);
-    const timeSeconds = canvasXToSeconds(columnX, coordinateMapping, microbeatDuration);
-    timeMap[i] = timeSeconds;
-
-    // Skip tonic columns (they don't consume time)
-    const isTonicColumn = placedTonicSigns.some(ts => ts.columnIndex === i);
-
-  }
-
-  // Add final time point (start of right legend)
-  timeMap.length = rightLegendStartIndex + 1;
-
 }
 
 function getColumnXForTimeMap(columnIndex, columnWidths, baseMicrobeatPx) {
@@ -329,15 +288,9 @@ function scheduleNotes() {
     const scheduleTime = regularStartTime;
 
 
-    // Show timing comparison when modulation is active
-    if (hasModulation) {
-      const timeDifference = modulatedStartTime - regularStartTime;
-    }
-
     // Calculate duration based on note shape
     let duration;
     const regularEndTime = timeMap[note.endColumnIndex + 1];
-    const modulatedEndTime = hasModulation ? calculateNoteTriggerTime(note.endColumnIndex + 1) : regularEndTime;
 
     // Safety check: if endTime is undefined, skip this note
     if (regularEndTime === undefined) {
@@ -900,9 +853,8 @@ const TransportService = {
         musicalDuration
       });
 
-      // Log modulation setup
-      if (store.state.modulationMarkers && store.state.modulationMarkers.length > 0) {
-      }
+      // Log modulation setup (currently logged elsewhere)
+      // Modulation markers are applied in calculateNoteTriggerTime
 
       // Always start from anacrusis (pickup) on first play, but loops will skip anacrusis
       Tone.Transport.start(Tone.now(), anacrusisOffset);

@@ -248,8 +248,8 @@ function getDegreeFontMultiplier(label) {
   }
 }
 
-function drawScaleDegreeText(ctx, note, options, centerX, centerY, noteWidth, noteHeight) {
-  const { label: noteLabel, isAccidental } = getScaleDegreeLabel(note, options);
+function drawScaleDegreeText(ctx, note, options, centerX, centerY, noteWidth) {
+  const { label: noteLabel } = getScaleDegreeLabel(note, options);
 
   if (!noteLabel) {return;}
 

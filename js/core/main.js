@@ -144,24 +144,6 @@ function getTrebleClefPresetRange() {
   return resolveRangeFromToneNotes(TREBLE_CLEF_PRESET_TONES);
 }
 
-function calculateTargetZoomForRange(range) {
-  if (!range || typeof range.topIndex !== 'number' || typeof range.bottomIndex !== 'number') {
-    return null;
-  }
-  const totalRanks = (range.bottomIndex - range.topIndex) + 1;
-  if (totalRanks <= 0) {return null;}
-
-  const pitchGridContainer = document.getElementById('pitch-grid-container');
-  const containerHeight = pitchGridContainer?.clientHeight || (window.innerHeight * 0.7);
-  if (!containerHeight || containerHeight <= 0) {return null;}
-
-  const BASE_ABSTRACT_UNIT = 30;
-  const MIN_ZOOM = 0.1;
-  const MAX_ZOOM = 5.0;
-  const requiredZoom = (2 * containerHeight) / (totalRanks * BASE_ABSTRACT_UNIT);
-  return Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, requiredZoom));
-}
-
 function markComponentReady(componentName) {
   componentReadiness[componentName] = true;
   // Component ready
@@ -361,11 +343,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Initialize modulation testing (keep for advanced debugging)
     window.ModulationTest = ModulationTest;
 
-    // Log viewport info after initialization
-    setTimeout(() => {
-      if (LayoutService.getViewportInfo) {
-      }
-    }, 1000);
+    // Log viewport info after initialization (currently disabled)
+    // setTimeout(() => {
+    //   if (LayoutService.getViewportInfo) {
+    //     // TODO: Log viewport info
+    //   }
+    // }, 1000);
 
   } catch (error) {
     logger.error('Main.js', 'Initialization failed', error, 'initialization');

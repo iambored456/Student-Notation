@@ -467,7 +467,7 @@ function handleBinPointerEvent(e, binIndex = null) {
 }
 
 // âœ… State synchronization validation helper
-function validateStateSync(localCoeffs, localPhases, storeTimbre, context) {
+function validateStateSync(localCoeffs, localPhases, storeTimbre) {
   const storeCoeffs = storeTimbre.coeffs;
   const storePhases = storeTimbre.phases || new Float32Array(storeCoeffs.length).fill(0);
 
@@ -599,7 +599,7 @@ export function initHarmonicBins() {
     phaseBtn.dataset.binIndex = i; // Store bin index for snap-to-zero
 
     // Snap-to-zero when dragging onto phase button
-    phaseBtn.addEventListener('pointerenter', (e) => {
+    phaseBtn.addEventListener('pointerenter', () => {
       if (isDraggingBin) {
         recordHarmonicBinsDebug('log', '[SNAP-TO-ZERO] ðŸŽ¯ Drag entered phase button for bin', i + 1);
 

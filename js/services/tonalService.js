@@ -1,5 +1,5 @@
 ﻿// js/services/tonalService.js
-import { Note, Interval, Scale, Chord, RomanNumeral, Progression } from 'tonal';
+import { Note, Interval, Chord, RomanNumeral, Progression } from 'tonal';
 import { getKeyContextForColumn } from '@state/selectors.js';
 
 const SEMITONE_TO_DIATONIC = {
@@ -121,7 +121,7 @@ const TonalService = {
   /**
      * FINAL CORRECTED VERSION: Analyzes notes using the documented functions.
      */
-  getRomanNumeralForNotes(notes, keyTonic, keyMode) {
+  getRomanNumeralForNotes(notes, keyTonic) {
     if (!notes || notes.length < 2) {return null;}
 
     // Step 1: Detect the chord from the given notes.

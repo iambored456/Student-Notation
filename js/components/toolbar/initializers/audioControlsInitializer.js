@@ -3,10 +3,9 @@ import store from '@state/index.js';
 import { PRESETS } from '@services/presetData.js';
 import DraggableNumber from '@components/ui/draggableNumber.js';
 import tempoVisualizer from '../tempoVisualizer.js';
-import tapTempo from '../tapTempo.js';
 import logger from '@utils/logger.js';
 
-const logTempoDebug = (event, details = {}) => {
+const logTempoDebug = () => {
   // Logging disabled
 };
 
@@ -193,11 +192,12 @@ export function initAudioControls() {
           setTimeout(() => {
             try {
               updatePresetSelection(currentColor);
-            } catch (error) {
+            } catch {
+              // Ignore preset selection errors
             }
           }, 10);
-        } else {
         }
+        // else: No current color selected
         button.blur(); // Remove focus to prevent lingering blue highlight
       });
     }
@@ -250,8 +250,7 @@ export function initAudioControls() {
       const presetId = btn.id.replace('preset-', '');
       const isSelected = timbre && timbre.activePresetName === presetId;
       btn.classList.toggle('selected', isSelected);
-      if (isSelected) {
-      }
+      // Selected button styling is handled by the 'selected' class
     });
 
     // Create an even lighter version for button backgrounds

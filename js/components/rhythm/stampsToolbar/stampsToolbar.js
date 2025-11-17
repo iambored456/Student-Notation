@@ -57,7 +57,7 @@ const StampsToolbar = {
     this.setInitialSelection(this.selectedStampId);
   },
 
-  createStampButton(stamp, index) {
+  createStampButton(stamp) {
     const button = document.createElement('button');
     button.className = 'stamp-button';
     button.setAttribute('data-stamp-id', stamp.id);

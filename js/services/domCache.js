@@ -65,8 +65,8 @@ class DOMCache {
     const element = document.getElementById(id);
     if (element) {
       this.elements.set(key, element);
-    } else {
     }
+    // If element not found, just don't cache it
   }
 
   /**

@@ -274,7 +274,7 @@ const PrintPreview = {
     };
   },
 
-  drawVerticalHandle(y, width, type) {
+  drawVerticalHandle(y, width) {
     const handleWidth = 60;
     const handleX = (width - handleWidth) / 2;
 
@@ -309,7 +309,7 @@ const PrintPreview = {
 
   },
 
-  drawHorizontalHandle(x, height, type) {
+  drawHorizontalHandle(x, height) {
     const handleHeight = 60;
     const handleY = (height - handleHeight) / 2;
 

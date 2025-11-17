@@ -34,21 +34,6 @@ function measureIndexToCanvasX(measureIndex, options) {
 }
 
 /**
- * Calculates column X position without modulation effects (for stable marker positioning)
- * @param {number} columnIndex - Column index
- * @param {Object} options - Render options
- * @returns {number} Non-modulated X position
- */
-function getBaseColumnX(columnIndex, options) {
-  let x = 0;
-  for (let i = 0; i < columnIndex; i++) {
-    const widthMultiplier = options.columnWidths[i] || 0;
-    x += widthMultiplier * options.cellWidth;
-  }
-  return x;
-}
-
-/**
  * Renders modulation markers with barlines and labels
  * @param {CanvasRenderingContext2D} ctx - Canvas context
  * @param {Object} options - Render options containing modulation markers
@@ -98,7 +83,7 @@ export function renderModulationMarkers(ctx, options) {
 
   // Render each active marker
   markersWithCanvasX.forEach(marker => {
-    renderSingleMarker(ctx, marker, options);
+    renderSingleMarker(ctx, marker);
   });
 
   // Restore context state
@@ -106,17 +91,17 @@ export function renderModulationMarkers(ctx, options) {
 }
 
 // Renders a single modulation marker
-function renderSingleMarker(ctx, marker, options) {
+function renderSingleMarker(ctx, marker) {
   const xCanvas = marker.xCanvas;
   const ratio = marker.ratio;
   const color = getModulationColor(ratio);
   const displayText = getModulationDisplayText(ratio);
 
   // Draw vertical barline
-  drawBarline(ctx, xCanvas, color, options);
+  drawBarline(ctx, xCanvas, color);
 
   // Draw ratio label above the barline
-  drawRatioLabel(ctx, xCanvas, displayText, color, options);
+  drawRatioLabel(ctx, xCanvas, displayText, color);
 }
 
 /**
@@ -124,9 +109,8 @@ function renderSingleMarker(ctx, marker, options) {
  * @param {CanvasRenderingContext2D} ctx - Canvas context
  * @param {number} xCanvas - X position of the marker
  * @param {string} color - Color for the barline
- * @param {Object} options - Render options
  */
-function drawBarline(ctx, xCanvas, color, options) {
+function drawBarline(ctx, xCanvas, color) {
   const lineWidth = 3; // Thick barline as specified
   const canvasHeight = getLogicalCanvasHeight(ctx.canvas);
 
@@ -145,9 +129,8 @@ function drawBarline(ctx, xCanvas, color, options) {
  * @param {number} xCanvas - X position of the marker
  * @param {string} displayText - Text to display (e.g., "2:3")
  * @param {string} color - Color for the label
- * @param {Object} options - Render options
  */
-function drawRatioLabel(ctx, xCanvas, displayText, color, options) {
+function drawRatioLabel(ctx, xCanvas, displayText, color) {
   const fontSize = 14;
   const fontFamily = 'Arial, sans-serif';
   const padding = 6;
@@ -216,10 +199,9 @@ function drawRoundedRect(ctx, x, y, width, height, radius, fillColor) {
  * @param {number} x - X coordinate
  * @param {number} y - Y coordinate
  * @param {Object} marker - Modulation marker object
- * @param {Object} options - Render options
  * @returns {Object|null} Hit test result with marker and interaction type
  */
-export function hitTestModulationMarker(x, y, marker, options) {
+export function hitTestModulationMarker(x, y, marker) {
   const { xCanvas } = marker;
   const barlineWidth = 6; // Slightly wider hit area than visual width
   const labelHeight = 40; // Approximate label area height

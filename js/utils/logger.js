@@ -140,8 +140,9 @@ class Logger {
      * @param {string} componentName - Name of the component/module
      * @param {string} [category='general'] - Log category
      */
-  moduleLoaded(componentName, category = 'general') {
+  moduleLoaded(_componentName, category = 'general') {
     if (!this.enabledLevels.INFO || !this.isCategoryEnabled(category)) {return;}
+    // No-op in production - logging disabled by default
   }
 
   /**
@@ -149,8 +150,9 @@ class Logger {
      * @param {string} componentName - Name of the component
      * @param {string} [category='initialization'] - Log category
      */
-  initStart(componentName, category = 'initialization') {
+  initStart(_componentName, category = 'initialization') {
     if (!this.enabledLevels.INFO || !this.isCategoryEnabled(category)) {return;}
+    // No-op in production - logging disabled by default
   }
 
   /**
@@ -158,8 +160,9 @@ class Logger {
      * @param {string} componentName - Name of the component
      * @param {string} [category='initialization'] - Log category
      */
-  initSuccess(componentName, category = 'initialization') {
+  initSuccess(_componentName, category = 'initialization') {
     if (!this.enabledLevels.INFO || !this.isCategoryEnabled(category)) {return;}
+    // No-op in production - logging disabled by default
   }
 
   /**
@@ -168,9 +171,9 @@ class Logger {
      * @param {string} [reason] - Optional failure reason
      * @param {string} [category='initialization'] - Log category
      */
-  initFailed(componentName, reason = '', category = 'initialization') {
+  initFailed(_componentName, _reason = '', category = 'initialization') {
     if (!this.enabledLevels.WARN || !this.isCategoryEnabled(category)) {return;}
-    const message = reason ? ` (${reason})` : '';
+    // No-op in production - logging disabled by default
   }
 
   /**
@@ -178,8 +181,9 @@ class Logger {
      * @param {string} title - Section title
      * @param {string} [category='general'] - Log category
      */
-  section(title, category = 'general') {
+  section(_title, category = 'general') {
     if (!this.enabledLevels.INFO || !this.isCategoryEnabled(category)) {return;}
+    // No-op in production - logging disabled by default
   }
 
   /**
@@ -189,10 +193,9 @@ class Logger {
      * @param {string} [details] - Optional event details
      * @param {string} [category='ui'] - Log category
      */
-  event(component, event, details = '', category = 'ui') {
+  event(_component, _event, _details = '', category = 'ui') {
     if (!this.enabledLevels.INFO || !this.isCategoryEnabled(category)) {return;}
-    const formattedComponent = this.formatComponent(component);
-    const message = details ? `${event}. ${details}` : event;
+    // No-op in production - logging disabled by default
   }
 
   /**
@@ -202,13 +205,9 @@ class Logger {
      * @param {Object} [data] - Optional state data
      * @param {string} [category='state'] - Log category
      */
-  state(component, description, data = null, category = 'state') {
+  state(_component, _description, _data = null, category = 'state') {
     if (!this.enabledLevels.INFO || !this.isCategoryEnabled(category)) {return;}
-    const formattedComponent = this.formatComponent(component);
-    if (data) {
-      const dataStr = typeof data === 'object' ? JSON.stringify(data) : String(data);
-    } else {
-    }
+    // No-op in production - logging disabled by default
   }
 
   /**
@@ -218,13 +217,9 @@ class Logger {
      * @param {Object|string} [data] - Optional debug data
      * @param {string} [category='debug'] - Log category
      */
-  debug(component, action, data = null, category = 'debug') {
+  debug(_component, _action, _data = null, category = 'debug') {
     if (!this.enabledLevels.DEBUG || !this.isCategoryEnabled(category)) {return;}
-    const formattedComponent = this.formatComponent(component);
-    if (data) {
-      const dataStr = typeof data === 'object' ? JSON.stringify(data) : String(data);
-    } else {
-    }
+    // No-op in production - logging disabled by default
   }
 
   /**
@@ -234,17 +229,9 @@ class Logger {
      * @param {Object} metrics - Timing metrics
      * @param {string} [category='performance'] - Log category
      */
-  timing(component, operation, metrics, category = 'performance') {
+  timing(_component, _operation, _metrics, category = 'performance') {
     if (!this.enabledLevels.DEBUG || !this.isCategoryEnabled(category)) {return;}
-    const formattedComponent = this.formatComponent(component);
-    const metricsStr = Object.entries(metrics)
-      .map(([key, value]) => {
-        if (typeof value === 'number' && value % 1 !== 0) {
-          return `${key}=${value.toFixed(3)}`;
-        }
-        return `${key}=${value}`;
-      })
-      .join(', ');
+    // No-op in production - logging disabled by default
   }
 
   /**
@@ -254,12 +241,9 @@ class Logger {
      * @param {any} [data] - Optional warning data
      * @param {string} [category='general'] - Log category
      */
-  warn(component, message, data = null, category = 'general') {
+  warn(_component, _message, _data = null, category = 'general') {
     if (!this.enabledLevels.WARN || !this.isCategoryEnabled(category)) {return;}
-    const formattedComponent = this.formatComponent(component);
-    if (data) {
-    } else {
-    }
+    // No-op in production - logging disabled by default
   }
 
   /**
@@ -269,12 +253,9 @@ class Logger {
      * @param {Error|any} [error] - Optional error object or data
      * @param {string} [category='general'] - Log category (errors are always shown regardless)
      */
-  error(component, message, error = null, category = 'general') {
+  error(_component, _message, _error = null, _category = 'general') {
     if (!this.enabledLevels.ERROR) {return;}
-    const formattedComponent = this.formatComponent(component);
-    if (error) {
-    } else {
-    }
+    // No-op in production - logging disabled by default
   }
 
   /**
@@ -284,12 +265,9 @@ class Logger {
      * @param {any} [data] - Optional info data
      * @param {string} [category='general'] - Log category
      */
-  info(component, message, data = null, category = 'general') {
+  info(_component, _message, _data = null, category = 'general') {
     if (!this.enabledLevels.INFO || !this.isCategoryEnabled(category)) {return;}
-    const formattedComponent = this.formatComponent(component);
-    if (data) {
-    } else {
-    }
+    // No-op in production - logging disabled by default
   }
 
   /**
@@ -301,7 +279,7 @@ class Logger {
       logLevel: this.logLevel,
       enabledLevels: { ...this.enabledLevels },
       enabledCategories: Object.entries(this.categories)
-        .filter(([key, value]) => value)
+        .filter(([, value]) => value)
         .map(([key]) => key)
     };
   }

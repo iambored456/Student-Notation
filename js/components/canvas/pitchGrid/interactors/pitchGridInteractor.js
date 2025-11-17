@@ -1,6 +1,6 @@
 // js/components/Canvas/PitchGrid/interactors/pitchGridInteractor.js
 import store from '../../../../state/index.js';
-import { getPlacedTonicSigns, getMacrobeatInfo } from '../../../../state/selectors.js';
+import { getMacrobeatInfo } from '../../../../state/selectors.js';
 import SynthEngine from '../../../../services/synthEngine.js';
 import rhythmPlaybackService from '../../../../services/rhythmPlaybackService.js';
 import GridCoordsService from '../../../../services/gridCoordsService.js';
@@ -10,8 +10,8 @@ import { drawSingleColumnOvalNote, drawTwoColumnOvalNote, drawTonicShape } from 
 import { getRowY, getColumnX } from '../renderers/rendererUtils.js';
 import GlobalService from '../../../../services/globalService.js';
 import domCache from '../../../../services/domCache.js';
-import { Note, Interval } from 'tonal';
-import { isNotePlayableAtColumn, isWithinTonicSpan } from '../../../../utils/tonicColumnUtils.js';
+import { Note } from 'tonal';
+import { isNotePlayableAtColumn } from '../../../../utils/tonicColumnUtils.js';
 import { setGhostNotePosition, clearGhostNotePosition } from '../../../../services/spacebarHandler.js';
 import { placeStamp, removeStampsInEraserArea } from '../../../../rhythm/stampPlacements.js';
 import { placeTripletGroup, eraseTripletGroups } from '../../../../rhythm/tripletPlacements.js';
@@ -109,7 +109,7 @@ function findMeasureSnapPoint(columnIndex) {
 }
 
 // --- Chord Calculation Logic (with Enharmonic Correction) ---
-function getChordNotesFromIntervals(rootNote, clickedRowIndex) {
+function getChordNotesFromIntervals(rootNote) {
   const { activeChordIntervals, isIntervalsInverted, chordPositionState } = store.state;
   if (!rootNote || !activeChordIntervals || activeChordIntervals.length === 0) {return [];}
 
@@ -593,11 +593,10 @@ function handleMouseDown(e) {
   if (e.button === 0) {
     // First check for modulation marker interactions (before tool-specific logic)
     const actualX = x + scrollLeft;
-    const fullOptions = { ...store.state };
 
     // Test if we clicked on an existing modulation marker
     for (const marker of store.state.modulationMarkers || []) {
-      // const hitResult = hitTestModulationMarker(actualX, y, marker, fullOptions); // Temporarily commented out
+      // const hitResult = hitTestModulationMarker(actualX, y, marker); // Temporarily commented out
       const hitResult = null;
       if (hitResult) {
         if (hitResult.type === 'label') {
@@ -679,7 +678,7 @@ function handleMouseDown(e) {
 
       const rootNote = getPitchForRow(rowIndex);
       if (!rootNote) {return;}
-      const chordNotes = getChordNotesFromIntervals(rootNote, rowIndex);
+      const chordNotes = getChordNotesFromIntervals(rootNote);
       const { shape, color } = store.state.selectedNote;
 
       // NEW: Trigger audio preview for all notes in the chord
@@ -746,10 +745,10 @@ function handleMouseDown(e) {
       const eraseEndRow = rowIndex + 1; // Eraser covers 3 rows: row-1, row, row+1
 
 
-      const removedStamps = removeStampsInEraserArea(colIndex, eraseEndCol, eraseStartRow, eraseEndRow);
+      removeStampsInEraserArea(colIndex, eraseEndCol, eraseStartRow, eraseEndRow);
 
       // Also remove triplets that intersect with the eraser area
-      const removedTriplets = eraseTripletGroups(colIndex, eraseEndCol, eraseStartRow, eraseEndRow);
+      eraseTripletGroups(colIndex, eraseEndCol, eraseStartRow, eraseEndRow);
       return;
     }
 
@@ -882,7 +881,7 @@ function handleMouseDown(e) {
       }
 
       // Find which measure boundary we're closest to
-      const measureBoundary = findNearestMeasureBoundary(actualX, colIndex);
+      const measureBoundary = findNearestMeasureBoundary(actualX);
       if (!measureBoundary) {
         logger.warn('PitchGridInteractor', 'Modulation placement must be near a measure boundary', { clickX: actualX }, 'grid');
         return;
@@ -1029,12 +1028,11 @@ function handleMouseMove(e) {
 
   // Handle modulation tool preview and hover
   const actualX = x + scrollLeft;
-  const fullOptions = { ...store.state };
   let hoveredMarker = null;
 
   // Check for existing modulation marker hover
-  for (const marker of store.state.modulationMarkers || []) {
-    // const hitResult = hitTestModulationMarker(actualX, y, marker, fullOptions); // Temporarily commented out
+  for (const _marker of store.state.modulationMarkers || []) {
+    // const hitResult = hitTestModulationMarker(actualX, y, marker); // Temporarily commented out
     const hitResult = null;
     if (hitResult) {
       hoveredMarker = hitResult;
@@ -1044,7 +1042,7 @@ function handleMouseMove(e) {
 
   // Show modulation placement preview if modulation tool is active
   if (store.state.selectedTool === 'modulation' && !hoveredMarker) {
-    const nearestBoundary = findNearestMeasureBoundary(actualX, colIndex);
+    const nearestBoundary = findNearestMeasureBoundary(actualX);
     if (nearestBoundary) {
       drawModulationPreview(pitchHoverCtx, nearestBoundary.xPosition, store.state.selectedModulationRatio);
     }
@@ -1061,16 +1059,16 @@ function handleMouseMove(e) {
     lastModulationHoverResult = null;
   }
 
-  // Debug log when dragging
-  if (isDragging) {
-  }
+  // Debug log when dragging (currently disabled)
+  // if (isDragging) {
+  //   // TODO: Add drag debugging
+  // }
 
   // Check boundaries for mouse move - circle notes need more space
   const isCircleNote = (store.state.selectedTool === 'note' || store.state.selectedTool === 'chord') && store.state.selectedNote && store.state.selectedNote.shape === 'circle';
   const maxColumn = isCircleNote ? store.state.columnWidths.length - 3 : store.state.columnWidths.length - 2;
   if (colIndex < 2 || colIndex >= maxColumn || getPitchForRow(rowIndex) === null) {
-    if (isDragging) {
-    }
+    // Out of bounds - handled below
     lastHoveredTonicPoint = null;
     lastHoveredOctaveRows = [];
     clearGhostNotePosition();
@@ -1087,13 +1085,11 @@ function handleMouseMove(e) {
 
     if (activeNote) {
       // Handle single note dragging
-      let needsUpdate = false;
 
       if (activeNote.shape === 'circle') {
         // Circle notes: extend tail horizontally
         if (newEndIndex !== activeNote.endColumnIndex) {
           store.updateNoteTail(activeNote, newEndIndex);
-          needsUpdate = true;
         }
 
         // Circle notes: change pitch vertically (only when row changes)
@@ -1118,7 +1114,6 @@ function handleMouseMove(e) {
             GlobalService.adsrComponent?.playheadManager.trigger(activeNote.uuid, 'attack', pitchColor, store.state.timbres[activeNote.color].adsr);
 
             lastDragRow = newRow;
-            needsUpdate = true;
           }
         }
       } else if (activeNote.shape === 'oval') {
@@ -1126,7 +1121,6 @@ function handleMouseMove(e) {
         const newStartIndex = colIndex;
         if (newStartIndex !== activeNote.startColumnIndex) {
           store.updateNotePosition(activeNote, newStartIndex);
-          needsUpdate = true;
         }
 
         // Oval notes: change pitch vertically (update on every row change)
@@ -1149,14 +1143,11 @@ function handleMouseMove(e) {
             // Update ADSR visualization
             const pitchColor = store.state.fullRowData[newRow]?.hex || '#888888';
             GlobalService.adsrComponent?.playheadManager.trigger(activeNote.uuid, 'attack', pitchColor, store.state.timbres[activeNote.color].adsr);
-
-            needsUpdate = true;
           }
         }
       }
     } else if (activeChordNotes.length > 0) {
       // Handle chord notes dragging
-      let needsUpdate = false;
       const firstChordNote = activeChordNotes[0];
 
       if (firstChordNote.shape === 'circle') {
@@ -1164,7 +1155,6 @@ function handleMouseMove(e) {
         const notesToUpdate = activeChordNotes.filter(note => newEndIndex !== note.endColumnIndex);
         if (notesToUpdate.length > 0) {
           store.updateMultipleNoteTails(notesToUpdate, newEndIndex);
-          needsUpdate = true;
         }
 
         // Circle chord notes: change pitch vertically (only when row changes)
@@ -1194,7 +1184,6 @@ function handleMouseMove(e) {
             activePreviewPitches = newPitches;
 
             lastDragRow = newRow;
-            needsUpdate = true;
           }
         }
       } else if (firstChordNote.shape === 'oval') {
@@ -1203,7 +1192,6 @@ function handleMouseMove(e) {
         const notesToUpdate = activeChordNotes.filter(note => newStartIndex !== note.startColumnIndex);
         if (notesToUpdate.length > 0) {
           store.updateMultipleNotePositions(notesToUpdate, newStartIndex);
-          needsUpdate = true;
         }
 
         // Oval chord notes: change pitch vertically (update on every row change)
@@ -1232,7 +1220,6 @@ function handleMouseMove(e) {
             activePreviewPitches = newPitches;
 
             lastDragRow = newRow;
-            needsUpdate = true;
           }
         }
       }
@@ -1243,7 +1230,7 @@ function handleMouseMove(e) {
   if (store.state.selectedTool === 'chord') {
     const ghostRootNote = getPitchForRow(rowIndex);
     if (ghostRootNote) {
-      const finalNotes = getChordNotesFromIntervals(ghostRootNote, rowIndex);
+      const finalNotes = getChordNotesFromIntervals(ghostRootNote);
       const { shape, color } = store.state.selectedNote;
 
       pitchHoverCtx.globalAlpha = 0.4;
@@ -1499,12 +1486,10 @@ function handleGlobalMouseUp() {
 /**
  * Finds the nearest measure boundary to a given click position
  * @param {number} clickX - Canvas x position of click
- * @param {number} colIndex - Column index of click
  * @returns {Object|null} Measure boundary info or null if none found
  */
-function findNearestMeasureBoundary(clickX, colIndex) {
-  const { macrobeatGroupings, macrobeatBoundaryStyles } = store.state;
-  const placedTonicSigns = getPlacedTonicSigns(store.state);
+function findNearestMeasureBoundary(clickX) {
+  const { macrobeatBoundaryStyles } = store.state;
   const tolerance = 100; // pixels - increased for easier placement
 
   // Find all measure boundaries (solid boundaries)

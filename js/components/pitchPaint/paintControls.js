@@ -61,7 +61,7 @@ class PaintControls {
         await PitchPaintService.initialize();
         store.setMicPaintActive(true);
         PitchPaintService.startDetection();
-      } catch (error) {
+      } catch {
         alert('Microphone access is required for Pitch Painting. Please check your browser permissions and try again.');
         store.setMicPaintActive(false);
       }

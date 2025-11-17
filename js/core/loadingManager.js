@@ -148,7 +148,7 @@ class LoadingManager {
       return this.cache.icons.get(url);
     }
 
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
       const img = new Image();
       img.onload = () => {
         this.cache.icons.set(url, img);

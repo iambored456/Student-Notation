@@ -8,12 +8,6 @@ export function initModulationControls() {
 
   // Debug: Check if DOM is ready
 
-  // Try to find any button elements first
-  const allButtons = document.querySelectorAll('button');
-
-  // Check for modulation-related elements
-  const modulationSection = document.querySelector('.modulation-controls');
-
   const modulation23Btn = document.getElementById('modulation-2-3-btn');
   const modulation32Btn = document.getElementById('modulation-3-2-btn');
   const modulationClearBtn = document.getElementById('modulation-clear-btn');

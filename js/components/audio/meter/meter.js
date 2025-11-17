@@ -163,7 +163,7 @@ export default class Meter {
 
   disconnect() {
     if (this.source && this.splitter) {
-      try { this.source.disconnect(this.splitter); } catch (_) {}
+      try { this.source.disconnect(this.splitter); } catch { /* Ignore disconnect errors */ }
     }
     this.splitter = null;
     this.analysers = [];

@@ -1,6 +1,5 @@
 // js/components/Canvas/PitchGrid/renderers/tripletRenderer.js
 import { getTripletStampById, tripletCenterPercents } from '../../../../rhythm/triplets.js';
-import { createTripletNotehead } from '../../../Rhythm/glyphs/tripletGlyphs.js';
 import { getRowY, getColumnX } from './rendererUtils.js';
 import store from '../../../../state/index.js';
 import logger from '../../../../utils/logger.js';
@@ -39,7 +38,6 @@ function renderTripletGroup(ctx, placement, options) {
 
   // Convert cell index to microbeat columns for rendering
   const startColumn = startCellIndex * 2; // Each cell = 2 microbeats
-  const endColumn = startColumn + (span * 2) - 1;
 
   // Get the triplet group bounds
   const groupX = getColumnX(startColumn, options);

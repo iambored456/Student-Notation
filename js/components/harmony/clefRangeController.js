@@ -82,7 +82,7 @@ class WheelPicker {
       if (typeof this.element.setPointerCapture === 'function') {
         try {
           this.element.setPointerCapture(this.pointerId);
-        } catch (err) {
+        } catch {
           // Ignore if pointer capture is not available for this element
         }
       }

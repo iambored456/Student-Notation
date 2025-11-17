@@ -679,7 +679,7 @@ const LayoutService = {
     });
   },
 
-  scrollByPixels(deltaY, deltaX = 0) {
+  scrollByPixels(deltaY) {
     const totalRanks = store.state.fullRowData.length;
     const baseRankHeight = store.state.cellHeight || BASE_ABSTRACT_UNIT;
     const rankHeight = baseRankHeight * currentZoomLevel;
@@ -753,7 +753,7 @@ const LayoutService = {
       const finalWidth = Math.max(baseWidth, estimatedWidth);
       return finalWidth;
 
-    } catch (error) {
+    } catch {
       return baseWidth;
     }
   },

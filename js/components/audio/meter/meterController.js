@@ -134,7 +134,7 @@ class MeterController {
       // the PitchPaintService should already have microphone access
       this.permissionState = 'granted';
 
-    } catch (error) {
+    } catch {
       this.permissionState = 'denied';
       throw new Error('Microphone access denied. Please check your browser permissions.');
     }
@@ -193,7 +193,7 @@ class MeterController {
       try {
         // Note: We don't disconnect the splitter itself as it's used by pitch detection
         // We only disconnect our meter from it
-      } catch (e) {
+      } catch {
         // Ignore disconnect errors
       }
       this.meterSource = null;
@@ -365,7 +365,7 @@ class MeterController {
       }, 1500);
 
 
-    } catch (error) {
+    } catch {
       this.calibrateBtn.textContent = 'Auto-Calibrate';
       this.calibrateBtn.disabled = false;
     }

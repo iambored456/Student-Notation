@@ -1,6 +1,6 @@
 // js/components/Canvas/PitchGrid/renderers/legend.js
 import store from '../../../../state/index.js'; // <-- UPDATED PATH
-import { getColumnX, getRowY, getPitchClass, getLineStyleFromPitchClass } from './rendererUtils.js';
+import { getColumnX, getRowY } from './rendererUtils.js';
 import { Scale, Note } from 'tonal';
 import { getPlacedTonicSigns } from '../../../../state/selectors.js';
 import logger from '@utils/logger.js';
@@ -283,8 +283,6 @@ export function drawLegends(ctx, options, startRow, endRow) {
 
           ctx.fillStyle = bgColor;
           ctx.fillRect(cumulativeX, y - cellHeight / 2, colWidth, cellHeight);
-
-          const pitchClass = getPitchClass(row.pitch);
 
           // Skip drawing text if pitch should not be shown
           if (shouldSkipPitch) {

@@ -122,7 +122,7 @@ export function getPitchClass(pitchWithOctave) {
   return pc;
 }
 
-export function getLineStyleFromPitchClass(pc, zoomLevel = 1) {
+export function getLineStyleFromPitchClass(pc) {
   switch (pc) {
     case 'C': return { lineWidth: 3.33, dash: [], color: '#adb5bd' };
     case 'E': return { lineWidth: 1, dash: [5, 5], color: '#adb5bd' }; // Use same pattern as vertical dashed lines

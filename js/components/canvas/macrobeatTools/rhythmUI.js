@@ -92,7 +92,6 @@ export function renderRhythmUI() {
     return;
   }
 
-  const timeRow = container.querySelector('#time-signature-row');
   const groupingRow = container.querySelector('#grouping-buttons-row');
   const boundaryRow = container.querySelector('#boundary-buttons-row');
   clearExistingElements(container);
@@ -105,16 +104,11 @@ export function renderRhythmUI() {
   const groupingFragment = document.createDocumentFragment();
   const boundaryFragment = document.createDocumentFragment();
 
-  let groupingCount = 0;
-  let boundaryCount = 0;
-
   layoutButtons.forEach((buttonDescriptor) => {
     if (buttonDescriptor.type === 'grouping') {
       groupingFragment.appendChild(createGroupingSegment(buttonDescriptor, offsetLeft));
-      groupingCount += 1;
     } else if (buttonDescriptor.type === 'boundary') {
       boundaryFragment.appendChild(createBoundaryButton(buttonDescriptor, offsetLeft));
-      boundaryCount += 1;
     }
   });
 

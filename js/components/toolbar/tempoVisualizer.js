@@ -143,7 +143,6 @@ class TempoVisualizer {
      * Trigger a single pulse animation for a tempo type
      */
   triggerPulse(type) {
-    const wasAlreadyAnimating = this.activeAnimations.has(type);
     const now = performance.now();
 
     // Always reset/start new animation (handles overlapping pulses)

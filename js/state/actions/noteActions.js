@@ -226,7 +226,7 @@ export const noteActions = {
      */
   eraseTonicSignAt(columnIndex, record = true) {
     // Find any tonic group that has a sign at this column
-    const tonicGroupToDelete = Object.entries(this.state.tonicSignGroups).find(([uuid, group]) =>
+    const tonicGroupToDelete = Object.entries(this.state.tonicSignGroups).find(([, group]) =>
       group.some(sign => sign.columnIndex === columnIndex)
     );
 

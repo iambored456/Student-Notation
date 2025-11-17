@@ -33,7 +33,7 @@ function createStateSnapshot(state) {
       }
       return value;
     }));
-  } catch (error) {
+  } catch {
     // Failed to create state snapshot
     return null;
   }

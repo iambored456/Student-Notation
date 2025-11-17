@@ -301,7 +301,7 @@ class DrawToolsController {
 
     const buttons = container.querySelectorAll('[data-popup]');
     buttons.forEach(button => {
-      button.addEventListener('click', (e) => {
+      button.addEventListener('click', () => {
         // Activate arrow tool when interacting with settings
         this.selectTool('arrow');
         const popupType = button.dataset.popup;
