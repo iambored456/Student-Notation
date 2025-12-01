@@ -73,23 +73,23 @@
 }
 
 .preset-tab-button {
-    padding: var(--space-1) var(--space-3);
-    background-color: var(--c-surface-muted); 
+    padding: clamp(0.25rem, 0.5dvh, var(--space-1)) var(--space-3);
+    background-color: var(--c-surface-muted);
     border: 1px solid var(--c-border);
     border-bottom: none;
     color: var(--c-text-muted);
-    font-family: var(--main-font); 
-    font-size: 0.875rem; 
+    font-family: var(--main-font);
+    font-size: clamp(0.7rem, 1.2dvh, 0.875rem);
     font-weight: 500;
-    cursor: pointer; 
+    cursor: pointer;
     text-align: center;
-    transition: all 0.2s ease; 
+    transition: all 0.2s ease;
     position: relative;
     border-top-left-radius: var(--border-radius-md);
     border-top-right-radius: var(--border-radius-md);
     border-bottom-left-radius: 0;
     border-bottom-right-radius: 0;
-    height: var(--preset-tab-rail-height);
+    height: clamp(2rem, 4dvh, var(--preset-tab-rail-height));
     display: flex;
     align-items: center;
     justify-content: center;
@@ -143,13 +143,15 @@
     background-color: var(--c-surface);
     border: 1px solid var(--c-border);
     border-radius: var(--border-radius-md);
-    padding: var(--space-2);
+    padding: clamp(0.25rem, 1dvh, var(--space-2));
     box-shadow: var(--box-shadow-sm);
     position: relative;
     z-index: 1;
-    min-width: fit-content;
+    min-width: 0;
+    width: fit-content;
+    max-width: 100%;
     overflow: visible;
-    flex: 1;
+    flex: 1 1 auto;
     box-sizing: border-box;
     display: flex;
     flex-direction: column;
@@ -158,8 +160,8 @@
 }
 
 .preset-content-box {
-    width: var(--preset-effects-synced-width, 100%);
-    max-width: var(--preset-effects-synced-width, 100%);
+    width: var(--preset-effects-synced-width, fit-content);
+    max-width: 100%;
 }
 
 .waveform-content-box {
@@ -245,36 +247,45 @@
 }
 
 /* --- Preset Voice Buttons --- */
-.preset-grid { 
-  display: flex; 
-  gap: var(--space-2); 
+.preset-grid {
+  display: flex;
+  flex-direction: row;
+  gap: clamp(0.125rem, 0.5dvh, var(--space-1));
   width: 100%;
   height: 100%;
-  justify-content: center;
+  min-height: 0;
+  max-height: 100%;
+  justify-content: flex-start;
   align-items: stretch;
 }
-.preset-column { 
-  display: flex; 
-  flex-direction: column; 
-  gap: var(--space-1); 
-  flex: 1;
+.preset-column {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(0.125rem, 0.5dvh, var(--space-1));
+  flex: 1 1 0;
+  min-width: 0;
   height: 100%;
+  min-height: 0;
   align-items: stretch;
   justify-content: space-evenly;
   container-type: inline-size;
 }
-.preset-button { 
-  width: 100%; 
-  min-width: fit-content;
-  justify-content: center; 
-  display: flex; 
+.preset-button {
+  width: 100%;
+  min-width: 0;
+  justify-content: center;
+  display: flex;
   align-items: center;
-  padding: 0.1rem 0.5rem; 
+  padding: clamp(0.2rem, 0.5dvh, 0.5rem) clamp(0.25rem, 0.5dvw, 0.5rem);
+  height: clamp(1.5rem, 3.5dvh, 3rem);
+  min-height: 0;
+  font-size: clamp(0.65rem, 1.2dvh, 0.85rem);
   background-color: var(--c-surface);
-  color: var(--c-text); 
-  border: 1px solid var(--c-border); 
-  font-size: 0.75rem;
-  white-space: nowrap; 
+  color: var(--c-text);
+  border: 1px solid var(--c-border);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
   box-sizing: border-box;
   container-type: inline-size;
 }

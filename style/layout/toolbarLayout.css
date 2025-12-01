@@ -16,7 +16,9 @@
     padding: var(--space-025);
     height: 100%;
     max-height: 100%;
+    min-height: 0;
     overflow: hidden;
+    display: flex;
 }
 
 /* Allow the volume slider popup to render outside the primary toolbar bounds */
@@ -109,12 +111,13 @@
 }
 
 #toolbar-secondary {
-    flex: 0 1 auto;
+    flex: 0 0 auto;
     height: 100%;
+    max-height: 100%;
     min-height: 0;
     overflow: hidden;
     display: flex;
-    min-width: fit-content;
+    width: fit-content;
 }
 
 .tab-sidebar {
@@ -127,12 +130,14 @@
 }
 
 .tab-content {
-    flex: 1;
+    flex: 1 1 0;
     padding: 0;
     background-color: transparent;
-    overflow-x: auto; /* Only allow horizontal scrolling if needed */
-    overflow-y: hidden; /* Disable vertical scrollbar */
+    overflow-x: auto;
+    overflow-y: auto;
     min-width: 0;
+    min-height: 0;
+    max-height: 100%;
     height: 100%;
 }
 
@@ -155,21 +160,37 @@
     overflow: visible;
 }
 
-.tab-panel { 
-    display: none; 
-    height: 100%; 
-    align-items: stretch; 
+/* Allow draw popups to escape toolbar/tabs */
+#toolbar-secondary:has(.draw-content-box) {
+    overflow: visible;
+}
+
+#toolbar-secondary:has(.draw-content-box) .tab-content {
+    overflow: visible;
+}
+
+.tab-panel {
+    display: none;
+    height: 100%;
+    align-items: stretch;
 }
 
 .tab-panel.active {
     display: flex;
+    flex-direction: row;
     gap: 0;
-    min-height: 0; /* Allow flex children to shrink */
+    min-height: 0;
+    height: 100%;
 }
 
+/* ==========================================================================
+   CONTROL SECTION & PANEL TAXONOMY
+   ========================================================================= */
+
+/* Base class for all control sections (top-level containers within tabs) */
 .control-section {
-    flex: 0 1 fit-content;
-    padding: 0em;
+    flex: 0 1 auto;
+    padding: 0;
     background-color: transparent;
     border-right: none;
     display: flex;
@@ -177,21 +198,62 @@
     min-width: fit-content;
     width: fit-content;
     border-radius: 0;
-    min-height: 0; /* Allow flex children to shrink */
-    max-height: 100%; /* Bound by parent height */
+    min-height: 0;
+    max-height: 100%;
+    gap: 0;
+}
+
+/* Standalone sections (no sub-tabs): Waveform, Harmonic Bins, ADSR */
+.control-section--standalone {
+    flex: 0 1 auto;
+}
+
+/* Tabbed sections (has preset-tab-buttons): Presets|Echo|Shake */
+.control-section--tabbed {
+    flex: 0 1 auto;
+}
+
+/* Individual panels within control sections */
+.control-panel {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-015);
+    min-height: 0;
+    max-height: 100%;
+    width: 100%;
+}
+
+/* Panel header (h4, h5, etc.) */
+.panel-header {
+    margin: 0;
+    padding: 0;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--c-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    flex-shrink: 0;
+}
+
+/* Panel content area */
+.panel-content {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-010);
+    min-height: 0;
+    flex: 1 1 auto;
 }
 
 .preset-effects-container {
     align-items: flex-start;
     justify-content: flex-start;
-    flex: 0 0 auto;
     width: fit-content;
-    max-height: 100%; /* Bound by control-section height */
+    max-height: 100%;
     overflow: hidden;
 }
 
 .control-section h4 {
-    margin: 0 0 var(--space-2) 0;
+    margin: 0;
     color: var(--c-text-muted);
     font-size: 0.9em;
     text-transform: uppercase;
@@ -209,14 +271,15 @@
 .rhythm-structure-container {
     display: flex;
     flex-direction: column;
-    gap: var(--space-3);
+    gap: clamp(0.5rem, 1dvh, var(--space-3));
     background-color: var(--c-surface);
     border: 1px solid var(--c-border);
     border-radius: var(--border-radius-md);
     box-shadow: var(--box-shadow-sm);
     padding: var(--space-015);
-    flex: 0 0 auto;
+    flex: 0 1 auto;
     min-height: 0;
+    max-height: clamp(100px, 18dvh, 100%);
     overflow: hidden;
 }
 
@@ -269,9 +332,115 @@
 
 /* --- Modulation Controls --- */
 .modulation-controls {
-    display: flex;
+    display: inline-flex;
+    flex-direction: column;
     gap: var(--space-2);
-    align-items: flex-start;
+    align-items: stretch;
+}
+
+/* --- Rhythm Controls Container (similar to waveform-container) --- */
+.rhythm-controls-container {
+    flex: 0 1 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: flex-start;
+    min-height: 0;
+    height: 100%;
+    gap: 0;
+}
+
+.rhythm-controls-section {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: flex-start;
+    min-height: 0;
+    height: 100%;
+    gap: 0;
+    width: 100%;
+}
+
+.rhythm-controls-tab-button {
+    cursor: default !important;
+    pointer-events: none;
+    border-bottom: none !important;
+    border-bottom-left-radius: 0 !important;
+    border-bottom-right-radius: 0 !important;
+    width: 100%;
+    flex-shrink: 0;
+}
+
+.rhythm-controls-tab-button:disabled {
+    opacity: 1;
+    background-color: var(--c-surface);
+    color: var(--c-text);
+    font-weight: 600;
+    border-color: var(--c-border);
+}
+
+.rhythm-controls-content-box {
+    background-color: var(--c-surface);
+    border: 1px solid var(--c-border);
+    border-radius: var(--border-radius-md);
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
+    padding: var(--space-2);
+    box-shadow: var(--box-shadow-sm);
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    max-width: 100%;
+    min-width: fit-content;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: row;
+    align-items: stretch;
+    justify-content: flex-start;
+    gap: var(--space-2);
+    margin-top: -1px;
+    min-height: 0;
+    flex: 1;
+    overflow: hidden;
+}
+
+/* --- Rhythm Stamps Container (similar to preset-effects-container) --- */
+.rhythm-stamps-container {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    width: 100%;
+    max-width: 100%;
+    min-width: fit-content;
+    gap: 0;
+    box-sizing: border-box;
+    min-height: 0;
+    max-height: 100%;
+}
+
+.rhythm-stamps-controls {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    min-height: 0;
+    max-height: 100%;
+    overflow: visible;
+}
+
+.rhythm-stamps-controls .rhythm-tab-content {
+    overflow: visible;
+}
+
+.rhythm-stamps-controls .rhythm-tab-panel {
+    overflow: visible;
+}
+
+.rhythm-stamps-controls .stamps-toolbar-container {
+    overflow: visible;
 }
 
 /* --- Rhythm Tabs Container (matching Pitch tab structure) --- */
@@ -280,9 +449,11 @@
     flex-direction: column;
     align-items: flex-start;
     justify-content: flex-start;
-    flex: 1 1 auto;
+    flex: 1 1 0;
     width: 100%;
     min-width: 0;
+    min-height: 0;
+    max-height: 100%;
     gap: 0;
     height: 100%;
 }
@@ -312,32 +483,43 @@
 .rhythm-tab-panel.active {
     display: flex;
     flex-direction: row;
-    flex: 1;
+    flex: 1 1 0;
     min-height: 0;
     height: 100%;
     max-height: 100%;
-    gap: var(--space-1);
+    gap: clamp(var(--space-05), 1dvh, var(--space-1));
 }
 
 /* --- Stamps Toolbar Layout --- */
 .stamps-toolbar-container {
     display: flex;
     justify-content: center;
-    padding-left: 0.3rem;
+    align-items: stretch;
+    padding: var(--space-1) var(--space-2);
     flex: 1;
+    height: 100%;
     min-height: 0;
     overflow: hidden;
+    box-sizing: border-box;
 }
 
 .stamps-grid {
     display: flex;
     flex-direction: column;
+    flex: 1;
+    height: 100%;
+    gap: var(--space-1);
+    justify-content: space-between;
 }
 
 .stamps-row {
+    flex: 1 1 0;
     display: grid;
-    gap: var(--space-3);
+    gap: var(--space-1);
     justify-items: center;
+    align-content: center;
+    padding: var(--space-05) var(--space-2);
+    box-sizing: border-box;
 }
 
 .stamps-row-1 {
@@ -346,27 +528,33 @@
 
 .stamps-row-2 {
     grid-template-columns: repeat(6, 1fr);
-    padding-top: var(--space-3);
 }
 
 .stamps-row-3 {
     grid-template-columns: repeat(5, 1fr);
-    padding-top: var(--space-3);
 }
 
 /* --- Triplets Toolbar Layout --- */
 .triplets-toolbar-container {
     display: flex;
     justify-content: center;
+    align-items: stretch;
+    padding: var(--space-1) var(--space-2);
     flex: 1;
+    height: 100%;
     min-height: 0;
     overflow: hidden;
+    box-sizing: border-box;
 }
 
 .triplets-main-container {
     display: flex;
     flex-direction: column;
-    align-items: flex-start;
+    align-items: stretch;
+    flex: 1;
+    height: 100%;
+    gap: var(--space-05);
+    justify-content: space-between;
 }
 
 .triplets-sections {
@@ -382,21 +570,29 @@
     align-items: flex-start;
 }
 
-.triplets-grid {
-    display: grid;
-    grid-template-columns: repeat(7, 1fr);
-    justify-items: center;
-    gap: var(--space-3);
+.triplets-row {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    gap: var(--space-05);
+    flex-wrap: wrap;
+    flex: 1 1 0;
+    padding: var(--space-05) var(--space-2);
+    box-sizing: border-box;
+}
+
+.triplets-eighth-row {
+    margin-bottom: var(--space-05);
 }
 
 .triplets-quarter-row {
-    grid-template-columns: repeat(3, 1fr);
-    margin-bottom: var(--space-2);
+    /* Quarter triplets use wider buttons */
+    margin-top: var(--space-05);
 }
 
-.triplets-quarter-row:nth-child(2) {
-    grid-template-columns: repeat(4, 1fr);
-    margin-bottom: 0;
+.triplets-quarter-row:first-of-type {
+    margin-top: var(--space-05);
 }
 
 /* ==========================================================================

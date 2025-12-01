@@ -42,7 +42,7 @@
     align-items: start;
     grid-template-areas: "buttons toggles settings meter";
     height: 100%;
-    min-height: 150px;
+    min-height: clamp(120px, 15dvh, 100%);
 }
 
 .paint-main-controls {

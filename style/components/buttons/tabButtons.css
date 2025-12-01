@@ -43,10 +43,10 @@
 /* --- Stamp Buttons --- */
 .stamp-button {
     position: relative;
-    width: fit-content;
-    height: fit-content;
-    min-width: 0rem;
-    min-height: 0rem;
+    width: clamp(40px, 5dvw, 60px);
+    height: clamp(40px, 5dvh, 60px);
+    min-width: 0;
+    min-height: 0;
     background-color: var(--c-surface);
     border: 1px solid var(--c-border);
     border-radius: var(--border-radius-md);
@@ -56,7 +56,7 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 0rem;
+    padding: 0;
 }
 
 .stamp-button:hover {
@@ -80,7 +80,7 @@
 }
 
 .stamp-number {
-    font-size: 0.7rem;
+    font-size: clamp(0.6rem, 1dvh, 0.7rem);
     font-weight: 600;
     color: var(--c-text-muted);
     line-height: 1;
@@ -93,10 +93,10 @@
 /* --- Triplet Buttons --- */
 .triplet-button {
     position: relative;
-    width: fit-content;
-    height: fit-content;
-    min-width: 0rem;
-    min-height: 0rem;
+    width: clamp(40px, 5dvw, 60px);
+    height: clamp(40px, 5dvh, 60px);
+    min-width: 0;
+    min-height: 0;
     background-color: var(--c-surface);
     border: 1px solid var(--c-border);
     border-radius: var(--border-radius-md);
@@ -106,7 +106,7 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 0rem;
+    padding: 0;
 }
 
 .triplet-button:hover {
@@ -131,7 +131,8 @@
 
 .triplet-button-wide {
     /* Quarter triplet buttons are wider to show their 2-cell span */
-    min-width: 96px;
+    width: clamp(80px, 10dvw, 120px);
+    min-width: 0;
     position: relative;
 }
 

@@ -42,12 +42,10 @@
 
 
 #toolbar {
-    height: 20dvh;
-    min-height: 170px;
+    height: clamp(20dvh, 20dvh, 300px);
     width: 100%;
     display: flex;
     flex-direction: row;
-    gap: var(--space-2);
     align-items: stretch;
     padding: var(--space-2);
     padding-bottom: 0;
@@ -60,4 +58,9 @@
     z-index: 2;
     overflow-x: auto;
     overflow-y: hidden;
+}
+
+/* Let draw popups escape the toolbar bounds */
+#toolbar:has(.draw-content-box) {
+    overflow: visible;
 }

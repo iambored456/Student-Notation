@@ -1,7 +1,7 @@
 ﻿// js/components/harmony/clefRangeController.js
 import store from '@state/index.js';
 import { fullRowData as masterRowData } from '@state/pitchData.js';
-import LayoutService from '@services/layoutService.js';
+import LayoutService from '@services/layoutService.ts';
 const clefRangeDebugMessages = [];
 
 function recordClefRangeDebug(level, ...args) {

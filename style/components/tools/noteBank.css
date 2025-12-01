@@ -1,12 +1,15 @@
 /* style/components/_note-bank.css */
 #note-bank-container {
+  --note-size: clamp(18px, 3vw, 28px);
   display: grid;
-  grid-template-rows: repeat(4, minmax(0, 1fr));
+  grid-template-rows: repeat(4, var(--note-size));
+  grid-auto-rows: var(--note-size);
   gap: var(--space-030);
   align-content: stretch;
   justify-items: stretch;
   min-height: 0;
-  --note-size: 100%;
+  max-height: calc(var(--note-size) * 4 + var(--space-030) * 3);
+  align-self: center;
 }
 
 .note-bank-column {
@@ -15,21 +18,27 @@
 
 .note-pair {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: var(--space-020);
-  align-items: center;
-  justify-items: center;
-  block-size: 100%;
-  padding: var(--space-010);
+  place-items: center;
+  min-block-size: calc(var(--note-size) + var(--space-020) * 3);
+  padding-block: calc(var(--space-020) * 1.25) calc(var(--space-020) * 1.75);
+  padding-inline: var(--space-010);
   border-radius: var(--border-radius-md);
   border: 2px solid transparent;
   background-color: transparent;
+  min-width: 0;
+  min-height: 0;
 }
 
 .note {
-  inline-size: auto;
-  max-inline-size: 100%;
-  block-size: 100%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: var(--note-size);
+  max-inline-size: var(--note-size);
+  block-size: var(--note-size);
+  max-block-size: var(--note-size);
   aspect-ratio: 1 / 1;
   margin: 0;
   cursor: pointer;
@@ -37,6 +46,9 @@
   transition: transform 0.2s;
   background-color: transparent;
   border: 4px solid var(--note-color);
+  color: var(--note-color);
+  box-sizing: border-box;
+  line-height: 1;
 }
 
 .note:hover {
@@ -50,6 +62,40 @@
   max-inline-size: 100%;
   justify-self: center;
 }
+
+.diamond-note {
+  border: 0;
+  border-radius: 0;
+  background: none;
+  padding: var(--space-005);
+  aspect-ratio: 1 / 1;
+  inline-size: var(--note-size);
+  block-size: var(--note-size);
+  max-inline-size: var(--note-size);
+  max-block-size: var(--note-size);
+  min-width: 0;
+  min-height: 0;
+  box-sizing: border-box;
+}
+
+.note.diamond-note.selected {
+  background-color: transparent;
+}
+
+.diamond-icon {
+  width: 90%;
+  height: 90%;
+  display: block;
+}
+
+.diamond-icon path {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 8;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
 .note-pair[data-color="#4a90e2"] .note { --note-color: #4a90e2; }
 .note-pair[data-color="#2d2d2d"] .note { --note-color: #2d2d2d; }
 .note-pair[data-color="#d66573"] .note { --note-color: #d66573; }
@@ -59,4 +105,8 @@
   width: 100%;
   height: 100%;
   object-fit: contain;
+}
+
+.note.diamond-note.selected .diamond-icon path {
+  fill: currentColor;
 }

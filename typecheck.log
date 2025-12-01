@@ -1,0 +1,986 @@
+
+> student-notation@1.0.0 typecheck
+> tsc --noEmit
+
+js/components/audio/harmonicsFilter/harmonicBins.ts(15,7): error TS7034: Variable 'harmonicBinsDebugMessages' implicitly has type 'any[]' in some locations where its type cannot be determined.
+js/components/audio/harmonicsFilter/harmonicBins.ts(17,34): error TS7006: Parameter 'level' implicitly has an 'any' type.
+js/components/audio/harmonicsFilter/harmonicBins.ts(17,41): error TS7019: Rest parameter 'args' implicitly has an 'any[]' type.
+js/components/audio/harmonicsFilter/harmonicBins.ts(30,5): error TS7034: Variable 'overlayCanvas' implicitly has type 'any' in some locations where its type cannot be determined.
+js/components/audio/harmonicsFilter/harmonicBins.ts(30,20): error TS7034: Variable 'overlayCtx' implicitly has type 'any' in some locations where its type cannot be determined.
+js/components/audio/harmonicsFilter/harmonicBins.ts(32,5): error TS7034: Variable 'currentColor' implicitly has type 'any' in some locations where its type cannot be determined.
+js/components/audio/harmonicsFilter/harmonicBins.ts(34,7): error TS7034: Variable 'binColumns' implicitly has type 'any[]' in some locations where its type cannot be determined.
+js/components/audio/harmonicsFilter/harmonicBins.ts(35,7): error TS7034: Variable 'phaseControls' implicitly has type 'any[]' in some locations where its type cannot be determined.
+js/components/audio/harmonicsFilter/harmonicBins.ts(37,5): error TS7034: Variable 'harmonicBinsGrid' implicitly has type 'any' in some locations where its type cannot be determined.
+js/components/audio/harmonicsFilter/harmonicBins.ts(43,31): error TS7006: Parameter 'norm_pos' implicitly has an 'any' type.
+js/components/audio/harmonicsFilter/harmonicBins.ts(43,41): error TS7006: Parameter 'filterSettings' implicitly has an 'any' type.
+js/components/audio/harmonicsFilter/harmonicBins.ts(87,25): error TS7006: Parameter 'filterAmp' implicitly has an 'any' type.
+js/components/audio/harmonicsFilter/harmonicBins.ts(87,36): error TS7006: Parameter 'mixAmount' implicitly has an 'any' type.
+js/components/audio/harmonicsFilter/harmonicBins.ts(100,33): error TS7006: Parameter 'originalCoeffs' implicitly has an 'any' type.
+js/components/audio/harmonicsFilter/harmonicBins.ts(100,49): error TS7006: Parameter 'filterSettings' implicitly has an 'any' type.
+js/components/audio/harmonicsFilter/harmonicBins.ts(132,31): error TS2345: Argument of type 'number | undefined' is not assignable to parameter of type 'number'.
+  Type 'undefined' is not assignable to type 'number'.
+js/components/audio/harmonicsFilter/harmonicBins.ts(139,41): error TS7006: Parameter 'color' implicitly has an 'any' type.
+js/components/audio/harmonicsFilter/harmonicBins.ts(156,39): error TS7006: Parameter 'color' implicitly has an 'any' type.
+js/components/audio/harmonicsFilter/harmonicBins.ts(195,8): error TS7005: Variable 'overlayCanvas' implicitly has an 'any' type.
+js/components/audio/harmonicsFilter/harmonicBins.ts(195,26): error TS7005: Variable 'overlayCtx' implicitly has an 'any' type.
+js/components/audio/harmonicsFilter/harmonicBins.ts(195,41): error TS7005: Variable 'harmonicBinsGrid' implicitly has an 'any' type.
+js/components/audio/harmonicsFilter/harmonicBins.ts(199,34): error TS2339: Property 'getContext' does not exist on type 'HTMLElement'.
+js/components/audio/harmonicsFilter/harmonicBins.ts(203,26): error TS7005: Variable 'overlayCtx' implicitly has an 'any' type.
+js/components/audio/harmonicsFilter/harmonicBins.ts(216,46): error TS7005: Variable 'currentColor' implicitly has an 'any' type.
+js/components/audio/harmonicsFilter/harmonicBins.ts(240,19): error TS2532: Object is possibly 'undefined'.
+js/components/audio/harmonicsFilter/harmonicBins.ts(263,54): error TS7005: Variable 'currentColor' implicitly has an 'any' type.
+js/components/audio/harmonicsFilter/harmonicBins.ts(308,3): error TS7005: Variable 'binColumns' implicitly has an 'any[]' type.
+js/components/audio/harmonicsFilter/harmonicBins.ts(313,28): error TS18048: 'val' is possibly 'undefined'.
+js/components/audio/harmonicsFilter/harmonicBins.ts(315,9): error TS18048: 'val' is possibly 'undefined'.
+js/components/audio/harmonicsFilter/harmonicBins.ts(317,39): error TS7005: Variable 'currentColor' implicitly has an 'any' type.
+js/components/audio/harmonicsFilter/harmonicBins.ts(330,9): error TS18048: 'val' is possibly 'undefined'.
+js/components/audio/harmonicsFilter/harmonicBins.ts(343,32): error TS7006: Parameter 'e' implicitly has an 'any' type.
+js/components/audio/harmonicsFilter/harmonicBins.ts(359,22): error TS7005: Variable 'harmonicBinsGrid' implicitly has an 'any' type.
+js/components/audio/harmonicsFilter/harmonicBins.ts(362,5): error TS2322: Type 'number' is not assignable to type 'null'.
+js/components/audio/harmonicsFilter/harmonicBins.ts(363,5): error TS2322: Type 'number' is not assignable to type 'null'.
+js/components/audio/harmonicsFilter/harmonicBins.ts(363,47): error TS2345: Argument of type 'null' is not assignable to parameter of type 'number'.
+js/components/audio/harmonicsFilter/harmonicBins.ts(369,23): error TS7005: Variable 'binColumns' implicitly has an 'any[]' type.
+js/components/audio/harmonicsFilter/harmonicBins.ts(369,34): error TS2538: Type 'null' cannot be used as an index type.
+js/components/audio/harmonicsFilter/harmonicBins.ts(377,61): error TS18047: 'binIndex' is possibly 'null'.
+js/components/audio/harmonicsFilter/harmonicBins.ts(385,40): error TS2532: Object is possibly 'undefined'.
+js/components/audio/harmonicsFilter/harmonicBins.ts(385,60): error TS7005: Variable 'currentColor' implicitly has an 'any' type.
+js/components/audio/harmonicsFilter/harmonicBins.ts(386,15): error TS2538: Type 'null' cannot be used as an index type.
+js/components/audio/harmonicsFilter/harmonicBins.ts(387,12): error TS2538: Type 'null' cannot be used as an index type.
+js/components/audio/harmonicsFilter/harmonicBins.ts(388,5): error TS18046: 'store.setHarmonicCoefficients' is of type 'unknown'.
+js/components/audio/harmonicsFilter/harmonicBins.ts(388,11): error TS4111: Property 'setHarmonicCoefficients' comes from an index signature, so it must be accessed with ['setHarmonicCoefficients'].
+js/components/audio/harmonicsFilter/harmonicBins.ts(388,35): error TS7005: Variable 'currentColor' implicitly has an 'any' type.
+js/components/audio/harmonicsFilter/harmonicBins.ts(391,28): error TS2538: Type 'null' cannot be used as an index type.
+js/components/audio/harmonicsFilter/harmonicBins.ts(392,39): error TS2538: Type 'null' cannot be used as an index type.
+js/components/audio/harmonicsFilter/harmonicBins.ts(393,26): error TS2538: Type 'null' cannot be used as an index type.
+js/components/audio/harmonicsFilter/harmonicBins.ts(398,39): error TS7005: Variable 'currentColor' implicitly has an 'any' type.
+js/components/audio/harmonicsFilter/harmonicBins.ts(399,47): error TS7005: Variable 'currentColor' implicitly has an 'any' type.
+js/components/audio/harmonicsFilter/harmonicBins.ts(404,48): error TS7005: Variable 'currentColor' implicitly has an 'any' type.
+js/components/audio/harmonicsFilter/harmonicBins.ts(418,54): error TS18047: 'binIndex' is possibly 'null'.
+js/components/audio/harmonicsFilter/harmonicBins.ts(418,85): error TS7005: Variable 'currentColor' implicitly has an 'any' type.
+js/components/audio/harmonicsFilter/harmonicBins.ts(420,28): error TS2538: Type 'null' cannot be used as an index type.
+js/components/audio/harmonicsFilter/harmonicBins.ts(421,39): error TS2538: Type 'null' cannot be used as an index type.
+js/components/audio/harmonicsFilter/harmonicBins.ts(422,26): error TS2538: Type 'null' cannot be used as an index type.
+js/components/audio/harmonicsFilter/harmonicBins.ts(426,39): error TS7005: Variable 'currentColor' implicitly has an 'any' type.
+js/components/audio/harmonicsFilter/harmonicBins.ts(427,47): error TS7005: Variable 'currentColor' implicitly has an 'any' type.
+js/components/audio/harmonicsFilter/harmonicBins.ts(431,88): error TS2532: Object is possibly 'undefined'.
+js/components/audio/harmonicsFilter/harmonicBins.ts(431,108): error TS7005: Variable 'currentColor' implicitly has an 'any' type.
+js/components/audio/harmonicsFilter/harmonicBins.ts(432,40): error TS2532: Object is possibly 'undefined'.
+js/components/audio/harmonicsFilter/harmonicBins.ts(432,60): error TS7005: Variable 'currentColor' implicitly has an 'any' type.
+js/components/audio/harmonicsFilter/harmonicBins.ts(434,15): error TS2538: Type 'null' cannot be used as an index type.
+js/components/audio/harmonicsFilter/harmonicBins.ts(435,12): error TS2538: Type 'null' cannot be used as an index type.
+js/components/audio/harmonicsFilter/harmonicBins.ts(439,5): error TS18046: 'store.setHarmonicCoefficients' is of type 'unknown'.
+js/components/audio/harmonicsFilter/harmonicBins.ts(439,11): error TS4111: Property 'setHarmonicCoefficients' comes from an index signature, so it must be accessed with ['setHarmonicCoefficients'].
+js/components/audio/harmonicsFilter/harmonicBins.ts(439,35): error TS7005: Variable 'currentColor' implicitly has an 'any' type.
+js/components/audio/harmonicsFilter/harmonicBins.ts(442,48): error TS7005: Variable 'currentColor' implicitly has an 'any' type.
+js/components/audio/harmonicsFilter/harmonicBins.ts(456,58): error TS18047: 'binIndex' is possibly 'null'.
+js/components/audio/harmonicsFilter/harmonicBins.ts(456,103): error TS7005: Variable 'currentColor' implicitly has an 'any' type.
+js/components/audio/harmonicsFilter/harmonicBins.ts(464,28): error TS7006: Parameter 'localCoeffs' implicitly has an 'any' type.
+js/components/audio/harmonicsFilter/harmonicBins.ts(464,41): error TS7006: Parameter 'localPhases' implicitly has an 'any' type.
+js/components/audio/harmonicsFilter/harmonicBins.ts(464,54): error TS7006: Parameter 'storeTimbre' implicitly has an 'any' type.
+js/components/audio/harmonicsFilter/harmonicBins.ts(499,28): error TS7006: Parameter 'color' implicitly has an 'any' type.
+js/components/audio/harmonicsFilter/harmonicBins.ts(524,47): error TS2554: Expected 3 arguments, but got 4.
+js/components/audio/harmonicsFilter/harmonicBins.ts(530,5): error TS7005: Variable 'phaseControls' implicitly has an 'any[]' type.
+js/components/audio/harmonicsFilter/harmonicBins.ts(542,28): error TS7053: Element implicitly has an 'any' type because expression of type 'number' can't be used to index type '{ 0: string; 90: string; 180: string; 270: string; }'.
+  No index signature with a parameter of type 'number' was found on type '{ 0: string; 90: string; 180: string; 270: string; }'.
+js/components/audio/harmonicsFilter/harmonicBins.ts(589,5): error TS2322: Type 'number' is not assignable to type 'string'.
+js/components/audio/harmonicsFilter/harmonicBins.ts(589,22): error TS4111: Property 'binIndex' comes from an index signature, so it must be accessed with ['binIndex'].
+js/components/audio/harmonicsFilter/harmonicBins.ts(601,25): error TS2339: Property 'synths' does not exist on type '{ init(): void; updateSynthForColor(color: string): void; setBpm(tempo: number): void; setVolume(dB: number): void; playNote(pitch: string | number, duration: string | number, time?: number): Promise<...>; ... 14 more ...; teardown(): void; }'.
+js/components/audio/harmonicsFilter/harmonicBins.ts(601,34): error TS7005: Variable 'currentColor' implicitly has an 'any' type.
+js/components/audio/harmonicsFilter/harmonicBins.ts(602,42): error TS2339: Property 'synths' does not exist on type '{ init(): void; updateSynthForColor(color: string): void; setBpm(tempo: number): void; setVolume(dB: number): void; playNote(pitch: string | number, duration: string | number, time?: number): Promise<...>; ... 14 more ...; teardown(): void; }'.
+js/components/audio/harmonicsFilter/harmonicBins.ts(602,49): error TS7005: Variable 'currentColor' implicitly has an 'any' type.
+js/components/audio/harmonicsFilter/harmonicBins.ts(613,46): error TS2532: Object is possibly 'undefined'.
+js/components/audio/harmonicsFilter/harmonicBins.ts(613,66): error TS7005: Variable 'currentColor' implicitly has an 'any' type.
+js/components/audio/harmonicsFilter/harmonicBins.ts(616,11): error TS18046: 'store.setHarmonicCoefficients' is of type 'unknown'.
+js/components/audio/harmonicsFilter/harmonicBins.ts(616,17): error TS4111: Property 'setHarmonicCoefficients' comes from an index signature, so it must be accessed with ['setHarmonicCoefficients'].
+js/components/audio/harmonicsFilter/harmonicBins.ts(616,41): error TS7005: Variable 'currentColor' implicitly has an 'any' type.
+js/components/audio/harmonicsFilter/harmonicBins.ts(619,54): error TS7005: Variable 'currentColor' implicitly has an 'any' type.
+js/components/audio/harmonicsFilter/harmonicBins.ts(670,7): error TS18046: 'store.setHarmonicPhases' is of type 'unknown'.
+js/components/audio/harmonicsFilter/harmonicBins.ts(670,13): error TS4111: Property 'setHarmonicPhases' comes from an index signature, so it must be accessed with ['setHarmonicPhases'].
+js/components/audio/harmonicsFilter/harmonicBins.ts(670,31): error TS7005: Variable 'currentColor' implicitly has an 'any' type.
+js/components/audio/harmonicsFilter/harmonicBins.ts(697,106): error TS18047: 'e.target' is possibly 'null'.
+js/components/audio/harmonicsFilter/harmonicBins.ts(697,115): error TS2339: Property 'className' does not exist on type 'EventTarget'.
+js/components/audio/harmonicsFilter/harmonicBins.ts(700,9): error TS18047: 'e.target' is possibly 'null'.
+js/components/audio/harmonicsFilter/harmonicBins.ts(700,18): error TS2339: Property 'classList' does not exist on type 'EventTarget'.
+js/components/audio/harmonicsFilter/harmonicBins.ts(700,56): error TS18047: 'e.target' is possibly 'null'.
+js/components/audio/harmonicsFilter/harmonicBins.ts(700,65): error TS2339: Property 'closest' does not exist on type 'EventTarget'.
+js/components/audio/harmonicsFilter/harmonicBins.ts(713,37): error TS7005: Variable 'currentColor' implicitly has an 'any' type.
+js/components/audio/harmonicsFilter/harmonicBins.ts(714,45): error TS7005: Variable 'currentColor' implicitly has an 'any' type.
+js/components/audio/harmonicsFilter/harmonicBins.ts(719,21): error TS7006: Parameter 'ev' implicitly has an 'any' type.
+js/components/audio/harmonicsFilter/harmonicBins.ts(733,40): error TS7005: Variable 'currentColor' implicitly has an 'any' type.
+js/components/audio/harmonicsFilter/harmonicBins.ts(734,47): error TS7005: Variable 'currentColor' implicitly has an 'any' type.
+js/components/audio/harmonicsFilter/harmonicBins.ts(740,11): error TS18048: 'window.staticWaveformVisualizer' is possibly 'undefined'.
+js/components/audio/harmonicsFilter/harmonicBins.ts(779,18): error TS7005: Variable 'overlayCanvas' implicitly has an 'any' type.
+js/components/audio/harmonicsFilter/harmonicBins.ts(780,9): error TS7005: Variable 'overlayCanvas' implicitly has an 'any' type.
+js/components/audio/harmonicsFilter/harmonicBins.ts(780,47): error TS7005: Variable 'overlayCanvas' implicitly has an 'any' type.
+js/components/audio/harmonicsFilter/harmonicBins.ts(781,7): error TS7005: Variable 'overlayCanvas' implicitly has an 'any' type.
+js/components/audio/harmonicsFilter/harmonicBins.ts(782,7): error TS7005: Variable 'overlayCanvas' implicitly has an 'any' type.
+js/components/audio/harmonicsFilter/harmonicBins.ts(794,19): error TS7005: Variable 'currentColor' implicitly has an 'any' type.
+js/components/audio/harmonicsFilter/harmonicBins.ts(797,25): error TS18048: 'timbre' is possibly 'undefined'.
+js/components/audio/harmonicsFilter/harmonicBins.ts(798,25): error TS18048: 'timbre' is possibly 'undefined'.
+js/components/audio/harmonicsFilter/harmonicBins.ts(811,33): error TS2532: Object is possibly 'undefined'.
+js/components/audio/harmonicsFilter/harmonicBins.ts(811,45): error TS2532: Object is possibly 'undefined'.
+js/components/audio/harmonicsFilter/harmonicBins.ts(824,97): error TS2554: Expected 3 arguments, but got 4.
+js/components/audio/harmonicsFilter/harmonicBins.ts(836,49): error TS2554: Expected 3 arguments, but got 4.
+js/components/audio/harmonicsFilter/harmonicBins.ts(849,7): error TS7005: Variable 'phaseControls' implicitly has an 'any[]' type.
+js/components/audio/harmonicsFilter/harmonicBins.ts(861,30): error TS7053: Element implicitly has an 'any' type because expression of type 'number' can't be used to index type '{ 0: string; 90: string; 180: string; 270: string; }'.
+  No index signature with a parameter of type 'number' was found on type '{ 0: string; 90: string; 180: string; 270: string; }'.
+js/components/audio/harmonicsFilter/harmonicBins.ts(867,44): error TS7005: Variable 'currentColor' implicitly has an 'any' type.
+js/components/audio/harmonicsFilter/harmonicBins.ts(874,19): error TS7005: Variable 'currentColor' implicitly has an 'any' type.
+js/components/audio/harmonicsFilter/harmonicBins.ts(879,42): error TS7005: Variable 'currentColor' implicitly has an 'any' type.
+js/components/audio/harmonicsFilter/harmonicBins.ts(886,43): error TS18048: 'timbre' is possibly 'undefined'.
+js/components/audio/harmonicsFilter/harmonicBins.ts(899,10): error TS7005: Variable 'harmonicBinsDebugMessages' implicitly has an 'any[]' type.
+js/components/audio/meter/meter.ts(116,35): error TS2345: Argument of type 'Element' is not assignable to parameter of type 'string | HTMLElement'.
+  Type 'Element' is missing the following properties from type 'HTMLElement': accessKey, accessKeyLabel, autocapitalize, autocorrect, and 129 more.
+js/components/canvas/drumGrid/drumGrid.ts(8,26): error TS2724: '"../../../../types/state.js"' has no exported member named '_PlacedNote'. Did you mean 'PlacedNote'?
+js/components/canvas/drumGrid/drumGridInteractor.ts(262,7): error TS18047: 'leftContent' is possibly 'null'.
+js/components/canvas/drumGrid/drumGridRenderer.ts(10,3): error TS2724: '"../../../../types/state.js"' has no exported member named '_AppState'. Did you mean 'AppState'?
+js/components/canvas/PitchGrid/interactors/pitchGridInteractor.ts(31,5): error TS7034: Variable 'pitchHoverCtx' implicitly has type 'any' in some locations where its type cannot be determined.
+js/components/canvas/PitchGrid/interactors/pitchGridInteractor.ts(33,5): error TS7034: Variable 'activeNote' implicitly has type 'any' in some locations where its type cannot be determined.
+js/components/canvas/PitchGrid/interactors/pitchGridInteractor.ts(34,5): error TS7034: Variable 'activeChordNotes' implicitly has type 'any[]' in some locations where its type cannot be determined.
+js/components/canvas/PitchGrid/interactors/pitchGridInteractor.ts(35,5): error TS7034: Variable 'activePreviewPitches' implicitly has type 'any[]' in some locations where its type cannot be determined.
+js/components/canvas/PitchGrid/interactors/pitchGridInteractor.ts(39,5): error TS7034: Variable 'previousTool' implicitly has type 'any' in some locations where its type cannot be determined.
+js/components/canvas/PitchGrid/interactors/pitchGridInteractor.ts(40,5): error TS7034: Variable 'lastHoveredTonicPoint' implicitly has type 'any' in some locations where its type cannot be determined.
+js/components/canvas/PitchGrid/interactors/pitchGridInteractor.ts(41,5): error TS7034: Variable 'lastHoveredOctaveRows' implicitly has type 'any[]' in some locations where its type cannot be determined.
+js/components/canvas/PitchGrid/interactors/pitchGridInteractor.ts(43,5): error TS7034: Variable 'lastDragRow' implicitly has type 'any' in some locations where its type cannot be determined.
+js/components/canvas/PitchGrid/interactors/pitchGridInteractor.ts(47,5): error TS7034: Variable 'draggedModulationMarker' implicitly has type 'any' in some locations where its type cannot be determined.
+js/components/canvas/PitchGrid/interactors/pitchGridInteractor.ts(48,5): error TS7034: Variable 'lastModulationHoverResult' implicitly has type 'any' in some locations where its type cannot be determined.
+js/components/canvas/PitchGrid/interactors/pitchGridInteractor.ts(51,5): error TS7034: Variable 'draggedStampShape' implicitly has type 'any' in some locations where its type cannot be determined.
+js/components/canvas/PitchGrid/interactors/pitchGridInteractor.ts(55,5): error TS7034: Variable 'draggedTripletShape' implicitly has type 'any' in some locations where its type cannot be determined.
+js/components/canvas/PitchGrid/interactors/pitchGridInteractor.ts(59,5): error TS7034: Variable 'pitchCanvasElement' implicitly has type 'any' in some locations where its type cannot be determined.
+js/components/canvas/PitchGrid/interactors/pitchGridInteractor.ts(62,5): error TS7034: Variable 'mobileLongPressTimer' implicitly has type 'any' in some locations where its type cannot be determined.
+js/components/canvas/PitchGrid/interactors/pitchGridInteractor.ts(63,5): error TS7034: Variable 'mobileTouchState' implicitly has type 'any' in some locations where its type cannot be determined.
+js/components/canvas/PitchGrid/interactors/pitchGridInteractor.ts(102,25): error TS7006: Parameter 'rowIndex' implicitly has an 'any' type.
+js/components/canvas/PitchGrid/interactors/pitchGridInteractor.ts(107,36): error TS7006: Parameter 'colIndex' implicitly has an 'any' type.
+js/components/canvas/PitchGrid/interactors/pitchGridInteractor.ts(107,46): error TS7006: Parameter 'rowIndex' implicitly has an 'any' type.
+js/components/canvas/PitchGrid/interactors/pitchGridInteractor.ts(140,31): error TS7006: Parameter 'columnIndex' implicitly has an 'any' type.
+js/components/canvas/PitchGrid/interactors/pitchGridInteractor.ts(168,37): error TS7006: Parameter 'rootNote' implicitly has an 'any' type.
+js/components/canvas/PitchGrid/interactors/pitchGridInteractor.ts(204,39): error TS2345: Argument of type 'string | undefined' is not assignable to parameter of type 'NoteLiteral'.
+  Type 'undefined' is not assignable to type 'NoteLiteral'.
+js/components/canvas/PitchGrid/interactors/pitchGridInteractor.ts(212,36): error TS2345: Argument of type 'string | undefined' is not assignable to parameter of type 'NoteLiteral'.
+  Type 'undefined' is not assignable to type 'NoteLiteral'.
+js/components/canvas/PitchGrid/interactors/pitchGridInteractor.ts(220,12): error TS18047: 'adjustedBassMidi' is possibly 'null'.
+js/components/canvas/PitchGrid/interactors/pitchGridInteractor.ts(220,31): error TS18047: 'targetNoteMidi' is possibly 'null'.
+js/components/canvas/PitchGrid/interactors/pitchGridInteractor.ts(221,7): error TS18047: 'adjustedBassMidi' is possibly 'null'.
+js/components/canvas/PitchGrid/interactors/pitchGridInteractor.ts(224,12): error TS18047: 'adjustedBassMidi' is possibly 'null'.
+js/components/canvas/PitchGrid/interactors/pitchGridInteractor.ts(224,37): error TS18047: 'targetNoteMidi' is possibly 'null'.
+js/components/canvas/PitchGrid/interactors/pitchGridInteractor.ts(225,7): error TS18047: 'adjustedBassMidi' is possibly 'null'.
+js/components/canvas/PitchGrid/interactors/pitchGridInteractor.ts(231,28): error TS2531: Object is possibly 'null'.
+js/components/canvas/PitchGrid/interactors/pitchGridInteractor.ts(240,29): error TS7006: Parameter 'colIndex' implicitly has an 'any' type.
+js/components/canvas/PitchGrid/interactors/pitchGridInteractor.ts(240,39): error TS7006: Parameter 'rowIndex' implicitly has an 'any' type.
+js/components/canvas/PitchGrid/interactors/pitchGridInteractor.ts(240,49): error TS7006: Parameter 'color' implicitly has an 'any' type.
+js/components/canvas/PitchGrid/interactors/pitchGridInteractor.ts(241,8): error TS7005: Variable 'pitchHoverCtx' implicitly has an 'any' type.
+js/components/canvas/PitchGrid/interactors/pitchGridInteractor.ts(261,22): error TS2532: Object is possibly 'undefined'.
+js/components/canvas/PitchGrid/interactors/pitchGridInteractor.ts(319,24): error TS7006: Parameter 'colIndex' implicitly has an 'any' type.
+js/components/canvas/PitchGrid/interactors/pitchGridInteractor.ts(319,34): error TS7006: Parameter 'rowIndex' implicitly has an 'any' type.
+js/components/canvas/PitchGrid/interactors/pitchGridInteractor.ts(320,8): error TS7005: Variable 'pitchHoverCtx' implicitly has an 'any' type.
+js/components/canvas/PitchGrid/interactors/pitchGridInteractor.ts(329,48): error TS2345: Argument of type '{ row: any; columnIndex: any; tonicNumber: number; }' is not assignable to parameter of type 'TonicSign'.
+  Property 'preMacrobeatIndex' is missing in type '{ row: any; columnIndex: any; tonicNumber: number; }' but required in type 'TonicSign'.
+js/components/canvas/PitchGrid/interactors/pitchGridInteractor.ts(343,60): error TS2345: Argument of type '{ row: any; startColumnIndex: any; endColumnIndex: any; color: string; shape: "circle" | "oval" | "diamond"; isDrum: boolean; }' is not assignable to parameter of type 'PlacedNote'.
+  Property 'uuid' is missing in type '{ row: any; startColumnIndex: any; endColumnIndex: any; color: string; shape: "circle" | "oval" | "diamond"; isDrum: boolean; }' but required in type 'PlacedNote'.
+js/components/canvas/PitchGrid/interactors/pitchGridInteractor.ts(345,57): error TS2345: Argument of type '{ row: any; startColumnIndex: any; endColumnIndex: any; color: string; shape: "circle" | "oval" | "diamond"; isDrum: boolean; }' is not assignable to parameter of type 'PlacedNote'.
+  Property 'uuid' is missing in type '{ row: any; startColumnIndex: any; endColumnIndex: any; color: string; shape: "circle" | "oval" | "diamond"; isDrum: boolean; }' but required in type 'PlacedNote'.
+js/components/canvas/PitchGrid/interactors/pitchGridInteractor.ts(351,29): error TS7006: Parameter 'colIndex' implicitly has an 'any' type.
+js/components/canvas/PitchGrid/interactors/pitchGridInteractor.ts(351,39): error TS7006: Parameter 'rowIndex' implicitly has an 'any' type.
+js/components/canvas/PitchGrid/interactors/pitchGridInteractor.ts(418,7): error TS2532: Object is possibly 'undefined'.
+js/components/canvas/PitchGrid/interactors/pitchGridInteractor.ts(453,31): error TS7006: Parameter 'touch' implicitly has an 'any' type.
+js/components/canvas/PitchGrid/interactors/pitchGridInteractor.ts(454,8): error TS7005: Variable 'pitchCanvasElement' implicitly has an 'any' type.
+js/components/canvas/PitchGrid/interactors/pitchGridInteractor.ts(466,24): error TS7006: Parameter 'touchList' implicitly has an 'any' type.
+js/components/canvas/PitchGrid/interactors/pitchGridInteractor.ts(466,35): error TS7006: Parameter 'identifier' implicitly has an 'any' type.
+js/components/canvas/PitchGrid/interactors/pitchGridInteractor.ts(478,8): error TS7005: Variable 'pitchHoverCtx' implicitly has an 'any' type.
+js/components/canvas/PitchGrid/interactors/pitchGridInteractor.ts(478,26): error TS7005: Variable 'mobileTouchState' implicitly has an 'any' type.
+js/components/canvas/PitchGrid/interactors/pitchGridInteractor.ts(489,8): error TS7005: Variable 'mobileTouchState' implicitly has an 'any' type.
+js/components/canvas/PitchGrid/interactors/pitchGridInteractor.ts(503,7): error TS7005: Variable 'mobileLongPressTimer' implicitly has an 'any' type.
+js/components/canvas/PitchGrid/interactors/pitchGridInteractor.ts(516,27): error TS7006: Parameter 'e' implicitly has an 'any' type.
+js/components/canvas/PitchGrid/interactors/pitchGridInteractor.ts(521,7): error TS7005: Variable 'mobileTouchState' implicitly has an 'any' type.
+js/components/canvas/PitchGrid/interactors/pitchGridInteractor.ts(548,26): error TS7006: Parameter 'e' implicitly has an 'any' type.
+js/components/canvas/PitchGrid/interactors/pitchGridInteractor.ts(549,8): error TS7005: Variable 'mobileTouchState' implicitly has an 'any' type.
+js/components/canvas/PitchGrid/interactors/pitchGridInteractor.ts(582,25): error TS7006: Parameter 'e' implicitly has an 'any' type.
+js/components/canvas/PitchGrid/interactors/pitchGridInteractor.ts(583,8): error TS7005: Variable 'mobileTouchState' implicitly has an 'any' type.
+js/components/canvas/PitchGrid/interactors/pitchGridInteractor.ts(617,26): error TS7006: Parameter 'e' implicitly has an 'any' type.
+js/components/canvas/PitchGrid/interactors/pitchGridInteractor.ts(622,22): error TS2531: Object is possibly 'null'.
+js/components/canvas/PitchGrid/interactors/pitchGridInteractor.ts(644,9): error TS18046: 'store.eraseInPitchArea' is of type 'unknown'.
+js/components/canvas/PitchGrid/interactors/pitchGridInteractor.ts(644,15): error TS4111: Property 'eraseInPitchArea' comes from an index signature, so it must be accessed with ['eraseInPitchArea'].
+js/components/canvas/PitchGrid/interactors/pitchGridInteractor.ts(645,9): error TS18046: 'store.eraseTonicSignAt' is of type 'unknown'.
+js/components/canvas/PitchGrid/interactors/pitchGridInteractor.ts(645,15): error TS4111: Property 'eraseTonicSignAt' comes from an index signature, so it must be accessed with ['eraseTonicSignAt'].
+js/components/canvas/PitchGrid/interactors/pitchGridInteractor.ts(662,5): error TS7005: Variable 'pitchHoverCtx' implicitly has an 'any' type.
+js/components/canvas/PitchGrid/interactors/pitchGridInteractor.ts(662,57): error TS7005: Variable 'pitchHoverCtx' implicitly has an 'any' type.
+js/components/canvas/PitchGrid/interactors/pitchGridInteractor.ts(662,103): error TS7005: Variable 'pitchHoverCtx' implicitly has an 'any' type.
+js/components/canvas/PitchGrid/interactors/pitchGridInteractor.ts(676,23): error TS2339: Property 'type' does not exist on type 'never'.
+js/components/canvas/PitchGrid/interactors/pitchGridInteractor.ts(683,30): error TS2339: Property 'type' does not exist on type 'never'.
+js/components/canvas/PitchGrid/interactors/pitchGridInteractor.ts(683,62): error TS2339: Property 'canDrag' does not exist on type 'never'.
+js/components/canvas/PitchGrid/interactors/pitchGridInteractor.ts(719,91): error TS2345: Argument of type '"circle" | "oval" | "diamond"' is not assignable to parameter of type '"circle" | "oval" | undefined'.
+  Type '"diamond"' is not assignable to type '"circle" | "oval" | undefined'.
+js/components/canvas/PitchGrid/interactors/pitchGridInteractor.ts(738,103): error TS2532: Object is possibly 'undefined'.
+js/components/canvas/PitchGrid/interactors/pitchGridInteractor.ts(766,99): error TS2532: Object is possibly 'undefined'.
+js/components/canvas/PitchGrid/interactors/pitchGridInteractor.ts(798,11): error TS7005: Variable 'lastHoveredTonicPoint' implicitly has an 'any' type.
+js/components/canvas/PitchGrid/interactors/pitchGridInteractor.ts(799,31): error TS7005: Variable 'lastHoveredOctaveRows' implicitly has an 'any[]' type.
+js/components/canvas/PitchGrid/interactors/pitchGridInteractor.ts(802,30): error TS7005: Variable 'lastHoveredTonicPoint' implicitly has an 'any' type.
+js/components/canvas/PitchGrid/interactors/pitchGridInteractor.ts(803,24): error TS7005: Variable 'lastHoveredTonicPoint' implicitly has an 'any' type.
+js/components/canvas/PitchGrid/interactors/pitchGridInteractor.ts(805,9): error TS18046: 'store.addTonicSignGroup' is of type 'unknown'.
+js/components/canvas/PitchGrid/interactors/pitchGridInteractor.ts(805,15): error TS4111: Property 'addTonicSignGroup' comes from an index signature, so it must be accessed with ['addTonicSignGroup'].
+js/components/canvas/PitchGrid/interactors/pitchGridInteractor.ts(816,7): error TS18046: 'store.eraseInPitchArea' is of type 'unknown'.
+js/components/canvas/PitchGrid/interactors/pitchGridInteractor.ts(816,13): error TS4111: Property 'eraseInPitchArea' comes from an index signature, so it must be accessed with ['eraseInPitchArea'].
+js/components/canvas/PitchGrid/interactors/pitchGridInteractor.ts(837,58): error TS2345: Argument of type 'import("c:/Users/qflem/Documents/Inventions Research/A-1. Student Notation/Student-Notation - working copy/types/state").StampPlacement[]' is not assignable to parameter of type 'import("c:/Users/qflem/Documents/Inventions Research/A-1. Student Notation/Student-Notation - working copy/js/utils/stampHitTest").StampPlacement[]'.
+  Type 'import("c:/Users/qflem/Documents/Inventions Research/A-1. Student Notation/Student-Notation - working copy/types/state").StampPlacement' is not assignable to type 'import("c:/Users/qflem/Documents/Inventions Research/A-1. Student Notation/Student-Notation - working copy/js/utils/stampHitTest").StampPlacement'.
+    Index signature for type 'string' is missing in type 'StampPlacement'.
+js/components/canvas/PitchGrid/interactors/pitchGridInteractor.ts(843,21): error TS18046: 'store.getShapeRow' is of type 'unknown'.
+js/components/canvas/PitchGrid/interactors/pitchGridInteractor.ts(843,27): error TS4111: Property 'getShapeRow' comes from an index signature, so it must be accessed with ['getShapeRow'].
+js/components/canvas/PitchGrid/interactors/pitchGridInteractor.ts(869,102): error TS2345: Argument of type '"circle" | "oval" | "diamond"' is not assignable to parameter of type '"circle" | "oval" | undefined'.
+  Type '"diamond"' is not assignable to type '"circle" | "oval" | undefined'.
+js/components/canvas/PitchGrid/interactors/pitchGridInteractor.ts(887,83): error TS2345: Argument of type '"circle" | "oval" | "diamond"' is not assignable to parameter of type '"circle" | "oval" | undefined'.
+  Type '"diamond"' is not assignable to type '"circle" | "oval" | undefined'.
+js/components/canvas/PitchGrid/interactors/pitchGridInteractor.ts(904,60): error TS2345: Argument of type 'import("c:/Users/qflem/Documents/Inventions Research/A-1. Student Notation/Student-Notation - working copy/types/state").TripletPlacement[]' is not assignable to parameter of type 'import("c:/Users/qflem/Documents/Inventions Research/A-1. Student Notation/Student-Notation - working copy/js/utils/tripletHitTest").TripletPlacement[]'.
+  Type 'import("c:/Users/qflem/Documents/Inventions Research/A-1. Student Notation/Student-Notation - working copy/types/state").TripletPlacement' is not assignable to type 'import("c:/Users/qflem/Documents/Inventions Research/A-1. Student Notation/Student-Notation - working copy/js/utils/tripletHitTest").TripletPlacement'.
+    Index signature for type 'string' is missing in type 'TripletPlacement'.
+js/components/canvas/PitchGrid/interactors/pitchGridInteractor.ts(908,21): error TS18046: 'store.getTripletShapeRow' is of type 'unknown'.
+js/components/canvas/PitchGrid/interactors/pitchGridInteractor.ts(908,27): error TS4111: Property 'getTripletShapeRow' comes from an index signature, so it must be accessed with ['getTripletShapeRow'].
+js/components/canvas/PitchGrid/interactors/pitchGridInteractor.ts(967,39): error TS2339: Property 'measureIndex' does not exist on type 'never'.
+js/components/canvas/PitchGrid/interactors/pitchGridInteractor.ts(970,36): error TS2339: Property 'xPosition' does not exist on type 'never'.
+js/components/canvas/PitchGrid/interactors/pitchGridInteractor.ts(974,66): error TS2339: Property 'measureIndex' does not exist on type 'never'.
+js/components/canvas/PitchGrid/interactors/pitchGridInteractor.ts(974,111): error TS2339: Property 'xPosition' does not exist on type 'never'.
+js/components/canvas/PitchGrid/interactors/pitchGridInteractor.ts(974,144): error TS2339: Property 'macrobeatIndex' does not exist on type 'never'.
+js/components/canvas/PitchGrid/interactors/pitchGridInteractor.ts(978,39): error TS2339: Property 'measureIndex' does not exist on type 'never'.
+js/components/canvas/PitchGrid/interactors/pitchGridInteractor.ts(991,26): error TS7006: Parameter 'e' implicitly has an 'any' type.
+js/components/canvas/PitchGrid/interactors/pitchGridInteractor.ts(996,22): error TS2531: Object is possibly 'null'.
+js/components/canvas/PitchGrid/interactors/pitchGridInteractor.ts(1000,8): error TS7005: Variable 'pitchHoverCtx' implicitly has an 'any' type.
+js/components/canvas/PitchGrid/interactors/pitchGridInteractor.ts(1004,37): error TS7005: Variable 'draggedModulationMarker' implicitly has an 'any' type.
+js/components/canvas/PitchGrid/interactors/pitchGridInteractor.ts(1010,5): error TS18046: 'store.moveModulationMarker' is of type 'unknown'.
+js/components/canvas/PitchGrid/interactors/pitchGridInteractor.ts(1010,11): error TS4111: Property 'moveModulationMarker' comes from an index signature, so it must be accessed with ['moveModulationMarker'].
+js/components/canvas/PitchGrid/interactors/pitchGridInteractor.ts(1015,31): error TS7005: Variable 'draggedStampShape' implicitly has an 'any' type.
+js/components/canvas/PitchGrid/interactors/pitchGridInteractor.ts(1020,5): error TS18046: 'store.updateStampShapeOffset' is of type 'unknown'.
+js/components/canvas/PitchGrid/interactors/pitchGridInteractor.ts(1020,11): error TS4111: Property 'updateStampShapeOffset' comes from an index signature, so it must be accessed with ['updateStampShapeOffset'].
+js/components/canvas/PitchGrid/interactors/pitchGridInteractor.ts(1044,33): error TS7005: Variable 'draggedTripletShape' implicitly has an 'any' type.
+js/components/canvas/PitchGrid/interactors/pitchGridInteractor.ts(1049,5): error TS18046: 'store.updateTripletShapeOffset' is of type 'unknown'.
+js/components/canvas/PitchGrid/interactors/pitchGridInteractor.ts(1049,11): error TS4111: Property 'updateTripletShapeOffset' comes from an index signature, so it must be accessed with ['updateTripletShapeOffset'].
+js/components/canvas/PitchGrid/interactors/pitchGridInteractor.ts(1079,56): error TS2345: Argument of type 'import("c:/Users/qflem/Documents/Inventions Research/A-1. Student Notation/Student-Notation - working copy/types/state").StampPlacement[]' is not assignable to parameter of type 'import("c:/Users/qflem/Documents/Inventions Research/A-1. Student Notation/Student-Notation - working copy/js/utils/stampHitTest").StampPlacement[]'.
+  Type 'import("c:/Users/qflem/Documents/Inventions Research/A-1. Student Notation/Student-Notation - working copy/types/state").StampPlacement' is not assignable to type 'import("c:/Users/qflem/Documents/Inventions Research/A-1. Student Notation/Student-Notation - working copy/js/utils/stampHitTest").StampPlacement'.
+    Index signature for type 'string' is missing in type 'StampPlacement'.
+js/components/canvas/PitchGrid/interactors/pitchGridInteractor.ts(1095,58): error TS2345: Argument of type 'import("c:/Users/qflem/Documents/Inventions Research/A-1. Student Notation/Student-Notation - working copy/types/state").TripletPlacement[]' is not assignable to parameter of type 'import("c:/Users/qflem/Documents/Inventions Research/A-1. Student Notation/Student-Notation - working copy/js/utils/tripletHitTest").TripletPlacement[]'.
+  Type 'import("c:/Users/qflem/Documents/Inventions Research/A-1. Student Notation/Student-Notation - working copy/types/state").TripletPlacement' is not assignable to type 'import("c:/Users/qflem/Documents/Inventions Research/A-1. Student Notation/Student-Notation - working copy/js/utils/tripletHitTest").TripletPlacement'.
+    Index signature for type 'string' is missing in type 'TripletPlacement'.
+js/components/canvas/PitchGrid/interactors/pitchGridInteractor.ts(1123,60): error TS2339: Property 'xPosition' does not exist on type 'never'.
+js/components/canvas/PitchGrid/interactors/pitchGridInteractor.ts(1133,14): error TS7005: Variable 'lastModulationHoverResult' implicitly has an 'any' type.
+js/components/canvas/PitchGrid/interactors/pitchGridInteractor.ts(1159,22): error TS7005: Variable 'activeNote' implicitly has an 'any' type.
+js/components/canvas/PitchGrid/interactors/pitchGridInteractor.ts(1163,9): error TS7005: Variable 'activeNote' implicitly has an 'any' type.
+js/components/canvas/PitchGrid/interactors/pitchGridInteractor.ts(1173,24): error TS7005: Variable 'lastDragRow' implicitly has an 'any' type.
+js/components/canvas/PitchGrid/interactors/pitchGridInteractor.ts(1193,105): error TS2532: Object is possibly 'undefined'.
+js/components/canvas/PitchGrid/interactors/pitchGridInteractor.ts(1202,11): error TS18046: 'store.updateNotePosition' is of type 'unknown'.
+js/components/canvas/PitchGrid/interactors/pitchGridInteractor.ts(1202,17): error TS4111: Property 'updateNotePosition' comes from an index signature, so it must be accessed with ['updateNotePosition'].
+js/components/canvas/PitchGrid/interactors/pitchGridInteractor.ts(1226,105): error TS2532: Object is possibly 'undefined'.
+js/components/canvas/PitchGrid/interactors/pitchGridInteractor.ts(1232,30): error TS7005: Variable 'activeChordNotes' implicitly has an 'any[]' type.
+js/components/canvas/PitchGrid/interactors/pitchGridInteractor.ts(1236,31): error TS7005: Variable 'activeChordNotes' implicitly has an 'any[]' type.
+js/components/canvas/PitchGrid/interactors/pitchGridInteractor.ts(1242,24): error TS7005: Variable 'lastDragRow' implicitly has an 'any' type.
+js/components/canvas/PitchGrid/interactors/pitchGridInteractor.ts(1243,38): error TS7005: Variable 'lastDragRow' implicitly has an 'any' type.
+js/components/canvas/PitchGrid/interactors/pitchGridInteractor.ts(1246,43): error TS7005: Variable 'activePreviewPitches' implicitly has an 'any[]' type.
+js/components/canvas/PitchGrid/interactors/pitchGridInteractor.ts(1246,65): error TS7005: Variable 'activeChordNotes' implicitly has an 'any[]' type.
+js/components/canvas/PitchGrid/interactors/pitchGridInteractor.ts(1249,27): error TS7005: Variable 'activeChordNotes' implicitly has an 'any[]' type.
+js/components/canvas/PitchGrid/interactors/pitchGridInteractor.ts(1256,42): error TS7005: Variable 'activeChordNotes' implicitly has an 'any[]' type.
+js/components/canvas/PitchGrid/interactors/pitchGridInteractor.ts(1262,43): error TS2345: Argument of type 'string | null' is not assignable to parameter of type 'string | number'.
+  Type 'null' is not assignable to type 'string | number'.
+js/components/canvas/PitchGrid/interactors/pitchGridInteractor.ts(1262,50): error TS7005: Variable 'activeChordNotes' implicitly has an 'any[]' type.
+js/components/canvas/PitchGrid/interactors/pitchGridInteractor.ts(1273,31): error TS7005: Variable 'activeChordNotes' implicitly has an 'any[]' type.
+js/components/canvas/PitchGrid/interactors/pitchGridInteractor.ts(1275,11): error TS18046: 'store.updateMultipleNotePositions' is of type 'unknown'.
+js/components/canvas/PitchGrid/interactors/pitchGridInteractor.ts(1275,17): error TS4111: Property 'updateMultipleNotePositions' comes from an index signature, so it must be accessed with ['updateMultipleNotePositions'].
+js/components/canvas/PitchGrid/interactors/pitchGridInteractor.ts(1279,37): error TS7005: Variable 'lastDragRow' implicitly has an 'any' type.
+js/components/canvas/PitchGrid/interactors/pitchGridInteractor.ts(1279,60): error TS7005: Variable 'lastDragRow' implicitly has an 'any' type.
+js/components/canvas/PitchGrid/interactors/pitchGridInteractor.ts(1279,74): error TS7005: Variable 'activeChordNotes' implicitly has an 'any[]' type.
+js/components/canvas/PitchGrid/interactors/pitchGridInteractor.ts(1282,43): error TS7005: Variable 'activePreviewPitches' implicitly has an 'any[]' type.
+js/components/canvas/PitchGrid/interactors/pitchGridInteractor.ts(1282,65): error TS7005: Variable 'activeChordNotes' implicitly has an 'any[]' type.
+js/components/canvas/PitchGrid/interactors/pitchGridInteractor.ts(1285,27): error TS7005: Variable 'activeChordNotes' implicitly has an 'any[]' type.
+js/components/canvas/PitchGrid/interactors/pitchGridInteractor.ts(1292,42): error TS7005: Variable 'activeChordNotes' implicitly has an 'any[]' type.
+js/components/canvas/PitchGrid/interactors/pitchGridInteractor.ts(1298,43): error TS2345: Argument of type 'string | null' is not assignable to parameter of type 'string | number'.
+  Type 'null' is not assignable to type 'string | number'.
+js/components/canvas/PitchGrid/interactors/pitchGridInteractor.ts(1298,50): error TS7005: Variable 'activeChordNotes' implicitly has an 'any[]' type.
+js/components/canvas/PitchGrid/interactors/pitchGridInteractor.ts(1325,38): error TS7005: Variable 'pitchHoverCtx' implicitly has an 'any' type.
+js/components/canvas/PitchGrid/interactors/pitchGridInteractor.ts(1327,35): error TS7005: Variable 'pitchHoverCtx' implicitly has an 'any' type.
+js/components/canvas/PitchGrid/interactors/pitchGridInteractor.ts(1337,9): error TS18046: 'store.eraseInPitchArea' is of type 'unknown'.
+js/components/canvas/PitchGrid/interactors/pitchGridInteractor.ts(1337,15): error TS4111: Property 'eraseInPitchArea' comes from an index signature, so it must be accessed with ['eraseInPitchArea'].
+js/components/canvas/PitchGrid/interactors/pitchGridInteractor.ts(1338,9): error TS18046: 'store.eraseTonicSignAt' is of type 'unknown'.
+js/components/canvas/PitchGrid/interactors/pitchGridInteractor.ts(1338,15): error TS4111: Property 'eraseTonicSignAt' comes from an index signature, so it must be accessed with ['eraseTonicSignAt'].
+js/components/canvas/PitchGrid/interactors/pitchGridInteractor.ts(1344,43): error TS2345: Argument of type 'number' is not assignable to parameter of type 'CanvasSpaceColumn'.
+  Type 'number' is not assignable to type '{ readonly __brand: "CanvasSpace"; }'.
+js/components/canvas/PitchGrid/interactors/pitchGridInteractor.ts(1361,5): error TS18046: 'store.eraseInPitchArea' is of type 'unknown'.
+js/components/canvas/PitchGrid/interactors/pitchGridInteractor.ts(1361,11): error TS4111: Property 'eraseInPitchArea' comes from an index signature, so it must be accessed with ['eraseInPitchArea'].
+js/components/canvas/PitchGrid/interactors/pitchGridInteractor.ts(1367,39): error TS2345: Argument of type 'number' is not assignable to parameter of type 'CanvasSpaceColumn'.
+  Type 'number' is not assignable to type '{ readonly __brand: "CanvasSpace"; }'.
+js/components/canvas/PitchGrid/interactors/pitchGridInteractor.ts(1393,26): error TS7005: Variable 'pitchHoverCtx' implicitly has an 'any' type.
+js/components/canvas/PitchGrid/interactors/pitchGridInteractor.ts(1393,54): error TS2345: Argument of type '{ row: number; columnIndex: number; tonicNumber: number; }' is not assignable to parameter of type 'TonicSign'.
+  Property 'preMacrobeatIndex' is missing in type '{ row: number; columnIndex: number; tonicNumber: number; }' but required in type 'TonicSign'.
+js/components/canvas/PitchGrid/interactors/pitchGridInteractor.ts(1459,7): error TS7005: Variable 'pitchHoverCtx' implicitly has an 'any' type.
+js/components/canvas/PitchGrid/interactors/pitchGridInteractor.ts(1469,31): error TS7005: Variable 'draggedStampShape' implicitly has an 'any' type.
+js/components/canvas/PitchGrid/interactors/pitchGridInteractor.ts(1484,33): error TS7005: Variable 'draggedTripletShape' implicitly has an 'any' type.
+js/components/canvas/PitchGrid/interactors/pitchGridInteractor.ts(1510,26): error TS7005: Variable 'activeNote' implicitly has an 'any' type.
+js/components/canvas/PitchGrid/interactors/pitchGridInteractor.ts(1511,41): error TS7005: Variable 'activeChordNotes' implicitly has an 'any[]' type.
+js/components/canvas/PitchGrid/interactors/pitchGridInteractor.ts(1516,7): error TS7005: Variable 'activePreviewPitches' implicitly has an 'any[]' type.
+js/components/canvas/PitchGrid/interactors/pitchGridInteractor.ts(1522,29): error TS7005: Variable 'activeNote' implicitly has an 'any' type.
+js/components/canvas/PitchGrid/interactors/pitchGridInteractor.ts(1524,50): error TS7005: Variable 'activeNote' implicitly has an 'any' type.
+js/components/canvas/PitchGrid/interactors/pitchGridInteractor.ts(1525,60): error TS7005: Variable 'activeNote' implicitly has an 'any' type.
+js/components/canvas/PitchGrid/interactors/pitchGridInteractor.ts(1525,100): error TS2532: Object is possibly 'undefined'.
+js/components/canvas/PitchGrid/interactors/pitchGridInteractor.ts(1527,25): error TS7005: Variable 'activePreviewPitches' implicitly has an 'any[]' type.
+js/components/canvas/PitchGrid/interactors/pitchGridInteractor.ts(1531,102): error TS2532: Object is possibly 'undefined'.
+js/components/canvas/PitchGrid/interactors/pitchGridInteractor.ts(1543,7): error TS7005: Variable 'activeNote' implicitly has an 'any' type.
+js/components/canvas/PitchGrid/interactors/pitchGridInteractor.ts(1548,3): error TS7005: Variable 'activeChordNotes' implicitly has an 'any[]' type.
+js/components/canvas/PitchGrid/interactors/pitchGridInteractor.ts(1562,7): error TS7005: Variable 'activeNote' implicitly has an 'any' type.
+js/components/canvas/PitchGrid/interactors/pitchGridInteractor.ts(1565,3): error TS7005: Variable 'activeChordNotes' implicitly has an 'any[]' type.
+js/components/canvas/PitchGrid/interactors/pitchGridInteractor.ts(1583,9): error TS7005: Variable 'previousTool' implicitly has an 'any' type.
+js/components/canvas/PitchGrid/interactors/pitchGridInteractor.ts(1597,37): error TS7006: Parameter 'clickX' implicitly has an 'any' type.
+js/components/canvas/PitchGrid/interactors/pitchGridInteractor.ts(1698,32): error TS7006: Parameter 'ctx' implicitly has an 'any' type.
+js/components/canvas/PitchGrid/interactors/pitchGridInteractor.ts(1698,37): error TS7006: Parameter 'xPosition' implicitly has an 'any' type.
+js/components/canvas/PitchGrid/interactors/pitchGridInteractor.ts(1698,48): error TS7006: Parameter 'ratio' implicitly has an 'any' type.
+js/components/canvas/PitchGrid/interactors/pitchGridInteractor.ts(1743,31): error TS2339: Property 'getContext' does not exist on type 'HTMLElement'.
+js/components/canvas/PitchGrid/renderers/gridLines.ts(117,60): error TS2345: Argument of type '{ columnIndex: number; }[]' is not assignable to parameter of type 'TonicSign[]'.
+  Type '{ columnIndex: number; }' is not assignable to type 'TonicSign'.
+    Types of property 'columnIndex' are incompatible.
+      Type 'number' is not assignable to type 'CanvasSpaceColumn'.
+        Type 'number' is not assignable to type '{ readonly __brand: "CanvasSpace"; }'.
+js/components/canvas/PitchGrid/renderers/gridLines.ts(120,69): error TS2345: Argument of type '{ columnIndex: number; }[]' is not assignable to parameter of type 'TonicSign[]'.
+  Type '{ columnIndex: number; }' is not assignable to type 'TonicSign'.
+    Types of property 'columnIndex' are incompatible.
+      Type 'number' is not assignable to type 'CanvasSpaceColumn'.
+        Type 'number' is not assignable to type '{ readonly __brand: "CanvasSpace"; }'.
+js/components/canvas/PitchGrid/renderers/notes.ts(515,27): error TS2339: Property 'startX' does not exist on type 'ModulationSegment'.
+js/components/canvas/PitchGrid/renderers/notes.ts(515,59): error TS2339: Property 'endX' does not exist on type 'ModulationSegment'.
+js/components/draw/drawToolsController.ts(230,19): error TS2339: Property 'value' does not exist on type 'Element'.
+js/components/draw/drawToolsController.ts(232,65): error TS2339: Property 'value' does not exist on type 'Element'.
+js/components/draw/drawToolsController.ts(239,21): error TS2339: Property 'value' does not exist on type 'Element'.
+js/components/draw/drawToolsController.ts(241,68): error TS2339: Property 'value' does not exist on type 'Element'.
+js/components/draw/drawToolsController.ts(321,17): error TS2339: Property 'value' does not exist on type 'Element'.
+js/components/draw/drawToolsController.ts(323,54): error TS2339: Property 'value' does not exist on type 'Element'.
+js/components/draw/drawToolsController.ts(361,9): error TS2322: Type 'boolean' is not assignable to type 'never'.
+js/components/draw/drawToolsController.ts(389,17): error TS2339: Property 'value' does not exist on type 'Element'.
+js/components/draw/drawToolsController.ts(391,56): error TS2339: Property 'value' does not exist on type 'Element'.
+js/components/draw/drawToolsController.ts(424,17): error TS2339: Property 'value' does not exist on type 'Element'.
+js/components/draw/drawToolsController.ts(426,61): error TS2339: Property 'value' does not exist on type 'Element'.
+js/components/harmony/clefRangeController.ts(65,26): error TS4111: Property 'index' comes from an index signature, so it must be accessed with ['index'].
+js/components/harmony/clefRangeController.ts(67,7): error TS2531: Object is possibly 'null'.
+js/components/harmony/clefRangeController.ts(105,18): error TS2531: Object is possibly 'null'.
+js/components/harmony/clefRangeController.ts(107,11): error TS2531: Object is possibly 'null'.
+js/components/harmony/clefRangeController.ts(138,13): error TS2531: Object is possibly 'null'.
+js/components/harmony/clefRangeController.ts(139,11): error TS2531: Object is possibly 'null'.
+js/components/harmony/clefRangeController.ts(200,35): error TS2345: Argument of type 'WheelOption | undefined' is not assignable to parameter of type 'WheelOption'.
+  Type 'undefined' is not assignable to type 'WheelOption'.
+js/components/harmony/clefRangeController.ts(221,22): error TS4111: Property 'distance' comes from an index signature, so it must be accessed with ['distance'].
+js/components/harmony/clefRangeController.ts(278,5): error TS2322: Type 'HTMLElement | null' is not assignable to type 'HTMLInputElement | null'.
+  Type 'HTMLElement' is missing the following properties from type 'HTMLInputElement': accept, align, alt, autocomplete, and 55 more.
+js/components/harmony/clefRangeController.ts(339,31): error TS2531: Object is possibly 'null'.
+js/components/harmony/clefRangeController.ts(359,10): error TS2554: Expected 1 arguments, but got 0.
+js/components/harmony/clefRangeController.ts(379,27): error TS2531: Object is possibly 'null'.
+js/components/harmony/clefRangeController.ts(383,7): error TS2531: Object is possibly 'null'.
+js/components/harmony/clefRangeController.ts(390,24): error TS2531: Object is possibly 'null'.
+js/components/harmony/clefRangeController.ts(394,7): error TS2531: Object is possibly 'null'.
+js/components/harmony/clefRangeController.ts(402,9): error TS2339: Property 'full' does not exist on type '{}'.
+js/components/harmony/clefRangeController.ts(407,28): error TS7006: Parameter 'topNote' implicitly has an 'any' type.
+js/components/harmony/clefRangeController.ts(407,37): error TS7006: Parameter 'bottomNote' implicitly has an 'any' type.
+js/components/harmony/clefRangeController.ts(417,9): error TS2339: Property 'treble' does not exist on type '{}'.
+js/components/harmony/clefRangeController.ts(418,9): error TS2339: Property 'alto' does not exist on type '{}'.
+js/components/harmony/clefRangeController.ts(419,9): error TS2339: Property 'bass' does not exist on type '{}'.
+js/components/harmony/clefRangeController.ts(423,34): error TS7006: Parameter 'range' implicitly has an 'any' type.
+js/components/harmony/clefRangeController.ts(444,41): error TS4111: Property 'preset' comes from an index signature, so it must be accessed with ['preset'].
+js/components/harmony/clefRangeController.ts(445,23): error TS4111: Property 'preset' comes from an index signature, so it must be accessed with ['preset'].
+js/components/harmony/clefRangeController.ts(484,10): error TS2554: Expected 1 arguments, but got 0.
+js/components/harmony/clefRangeController.ts(498,10): error TS2322: Type 'number | null' is not assignable to type 'number | undefined'.
+  Type 'null' is not assignable to type 'number | undefined'.
+js/components/harmony/clefRangeController.ts(526,20): error TS7006: Parameter 'isLocked' implicitly has an 'any' type.
+js/components/harmony/clefRangeController.ts(528,5): error TS18046: 'store.setPitchRangeLock' is of type 'unknown'.
+js/components/harmony/clefRangeController.ts(528,11): error TS4111: Property 'setPitchRangeLock' comes from an index signature, so it must be accessed with ['setPitchRangeLock'].
+js/components/harmony/clefRangeController.ts(542,17): error TS7006: Parameter 'range' implicitly has an 'any' type.
+js/components/harmony/clefRangeController.ts(560,17): error TS7006: Parameter 'metadata' implicitly has an 'any' type.
+js/components/harmony/clefRangeController.ts(568,40): error TS18048: 'bottomRow' is possibly 'undefined'.
+js/components/harmony/clefRangeController.ts(568,61): error TS18048: 'topRow' is possibly 'undefined'.
+js/components/harmony/clefRangeController.ts(584,5): error TS2531: Object is possibly 'null'.
+js/components/harmony/clefRangeController.ts(585,5): error TS2531: Object is possibly 'null'.
+js/components/harmony/clefRangeController.ts(589,17): error TS7006: Parameter 'noteName' implicitly has an 'any' type.
+js/components/harmony/clefRangeController.ts(594,23): error TS7006: Parameter 'picker' implicitly has an 'any' type.
+js/components/harmony/clefRangeController.ts(594,31): error TS7006: Parameter 'targetIndex' implicitly has an 'any' type.
+js/components/harmony/clefRangeController.ts(600,22): error TS7006: Parameter 'currentTime' implicitly has an 'any' type.
+js/components/harmony/clefRangeController.ts(625,18): error TS7006: Parameter 'preset' implicitly has an 'any' type.
+js/components/harmony/clefRangeController.ts(674,26): error TS7006: Parameter 'targetTopIndex' implicitly has an 'any' type.
+js/components/harmony/clefRangeController.ts(674,42): error TS7006: Parameter 'targetBottomIndex' implicitly has an 'any' type.
+js/components/harmony/clefRangeController.ts(675,27): error TS2531: Object is possibly 'null'.
+js/components/harmony/clefRangeController.ts(676,30): error TS2531: Object is possibly 'null'.
+js/components/harmony/clefRangeController.ts(708,22): error TS7006: Parameter 'currentTime' implicitly has an 'any' type.
+js/components/harmony/clefRangeController.ts(730,7): error TS2531: Object is possibly 'null'.
+js/components/harmony/clefRangeController.ts(731,7): error TS2531: Object is possibly 'null'.
+js/components/harmony/clefRangeController.ts(745,12): error TS2554: Expected 1 arguments, but got 0.
+js/components/harmony/clefRangeController.ts(764,9): error TS2531: Object is possibly 'null'.
+js/components/harmony/clefRangeController.ts(764,24): error TS2341: Property 'selectedIndex' is private and only accessible within class 'WheelPicker'.
+js/components/harmony/clefRangeController.ts(765,9): error TS2531: Object is possibly 'null'.
+js/components/harmony/clefRangeController.ts(765,27): error TS2341: Property 'selectedIndex' is private and only accessible within class 'WheelPicker'.
+js/components/harmony/clefRangeController.ts(766,9): error TS2531: Object is possibly 'null'.
+js/components/harmony/clefRangeController.ts(767,9): error TS2531: Object is possibly 'null'.
+js/components/harmony/clefRangeController.ts(773,14): error TS2554: Expected 1 arguments, but got 0.
+js/components/harmony/clefRangeController.ts(804,23): error TS7006: Parameter 'topIndex' implicitly has an 'any' type.
+js/components/harmony/clefRangeController.ts(804,33): error TS7006: Parameter 'bottomIndex' implicitly has an 'any' type.
+js/components/harmony/clefRangeController.ts(823,24): error TS7006: Parameter 'topIndex' implicitly has an 'any' type.
+js/components/harmony/clefRangeController.ts(823,34): error TS7006: Parameter 'bottomIndex' implicitly has an 'any' type.
+js/components/harmony/clefRangeController.ts(859,39): error TS2339: Property 'offsetHeight' does not exist on type 'Element'.
+js/components/rhythm/stampsToolbar/stampsToolbar.ts(88,41): error TS2339: Property 'dataset' does not exist on type 'Element'.
+js/components/rhythm/stampsToolbar/tripletsToolbar.ts(109,41): error TS2339: Property 'dataset' does not exist on type 'Element'.
+js/components/toolbar/initializers/audioControlsInitializer.ts(151,38): error TS2339: Property 'offsetHeight' does not exist on type 'Element'.
+js/components/toolbar/initializers/audioControlsInitializer.ts(156,40): error TS2339: Property 'offsetHeight' does not exist on type 'Element'.
+js/components/toolbar/initializers/audioControlsInitializer.ts(162,41): error TS2339: Property 'offsetHeight' does not exist on type 'Element'.
+js/components/toolbar/initializers/audioControlsInitializer.ts(312,21): error TS2339: Property 'style' does not exist on type 'Element'.
+js/components/toolbar/initializers/audioControlsInitializer.ts(313,21): error TS2339: Property 'style' does not exist on type 'Element'.
+js/components/toolbar/initializers/audioControlsInitializer.ts(314,21): error TS2339: Property 'style' does not exist on type 'Element'.
+js/components/toolbar/initializers/audioControlsInitializer.ts(326,25): error TS2339: Property 'style' does not exist on type 'Element'.
+js/components/toolbar/initializers/audioControlsInitializer.ts(327,25): error TS2339: Property 'style' does not exist on type 'Element'.
+js/components/toolbar/initializers/fileActionsInitializer.ts(122,15): error TS2322: Type 'number' is not assignable to type 'CanvasSpaceColumn'.
+  Type 'number' is not assignable to type '{ readonly __brand: "CanvasSpace"; }'.
+js/components/toolbar/initializers/fileActionsInitializer.ts(123,15): error TS2322: Type 'number' is not assignable to type 'CanvasSpaceColumn'.
+  Type 'number' is not assignable to type '{ readonly __brand: "CanvasSpace"; }'.
+js/components/toolbar/initializers/toolSelectorInitializer.ts(202,64): error TS2345: Argument of type 'string | undefined' is not assignable to parameter of type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+js/components/toolbar/initializers/toolSelectorInitializer.ts(612,41): error TS2345: Argument of type 'string | undefined' is not assignable to parameter of type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+js/components/toolbar/initializers/toolSelectorInitializer.ts(619,35): error TS2345: Argument of type 'string | undefined' is not assignable to parameter of type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+js/components/toolbar/initializers/toolSelectorInitializer.ts(844,16): error TS2339: Property 'style' does not exist on type 'Element'.
+js/components/toolbar/initializers/toolSelectorInitializer.ts(859,49): error TS2367: This comparison appears to be unintentional because the types '"off" | "sharps" | "flats"' and '"modal"' have no overlap.
+js/components/ui/positionEffectsController.ts(188,5): error TS2322: Type 'number | undefined' is not assignable to type 'number'.
+  Type 'undefined' is not assignable to type 'number'.
+js/components/ui/positionEffectsController.ts(189,5): error TS2322: Type 'number | undefined' is not assignable to type 'number'.
+  Type 'undefined' is not assignable to type 'number'.
+js/rhythm/modulationMapping.ts(115,5): error TS2322: Type 'number | null' is not assignable to type 'CanvasSpaceColumn | null'.
+  Type 'number' is not assignable to type 'CanvasSpaceColumn'.
+    Type 'number' is not assignable to type '{ readonly __brand: "CanvasSpace"; }'.
+js/rhythm/modulationMapping.ts(203,9): error TS2322: Type '{ columnIndex: number; id: string; measureIndex: number; ratio: number; active: boolean; xPosition: number | null; macrobeatIndex: number | null; xCanvas?: number | undefined; }[]' is not assignable to type 'MarkerWithColumn[]'.
+  Type '{ columnIndex: number; id: string; measureIndex: number; ratio: ModulationRatio; active: boolean; xPosition: number | null; macrobeatIndex: number | null; xCanvas?: number; }' is not assignable to type 'MarkerWithColumn'.
+    Type '{ columnIndex: number; id: string; measureIndex: number; ratio: ModulationRatio; active: boolean; xPosition: number | null; macrobeatIndex: number | null; xCanvas?: number; }' is not assignable to type 'ModulationMarker'.
+      Types of property 'columnIndex' are incompatible.
+        Type 'number' is not assignable to type 'CanvasSpaceColumn'.
+          Type 'number' is not assignable to type '{ readonly __brand: "CanvasSpace"; }'.
+js/rhythm/stampPlacements.ts(23,43): error TS2345: Argument of type 'number' is not assignable to parameter of type 'CanvasSpaceColumn'.
+  Type 'number' is not assignable to type '{ readonly __brand: "CanvasSpace"; }'.
+js/rhythm/stampPlacements.ts(33,34): error TS2345: Argument of type 'number' is not assignable to parameter of type 'CanvasSpaceColumn'.
+  Type 'number' is not assignable to type '{ readonly __brand: "CanvasSpace"; }'.
+js/rhythm/stampPlacements.ts(54,27): error TS2345: Argument of type 'number' is not assignable to parameter of type 'CanvasSpaceColumn'.
+  Type 'number' is not assignable to type '{ readonly __brand: "CanvasSpace"; }'.
+js/services/annotationService.ts(57,5): error TS2322: Type 'HTMLElement | null' is not assignable to type 'HTMLCanvasElement | null'.
+  Type 'HTMLElement' is missing the following properties from type 'HTMLCanvasElement': height, width, captureStream, getContext, and 3 more.
+js/services/annotationService.ts(76,5): error TS2531: Object is possibly 'null'.
+js/services/annotationService.ts(77,5): error TS2531: Object is possibly 'null'.
+js/services/annotationService.ts(78,5): error TS2531: Object is possibly 'null'.
+js/services/annotationService.ts(79,5): error TS2531: Object is possibly 'null'.
+js/services/annotationService.ts(80,5): error TS2531: Object is possibly 'null'.
+js/services/annotationService.ts(81,5): error TS2531: Object is possibly 'null'.
+js/services/annotationService.ts(87,17): error TS7006: Parameter 'e' implicitly has an 'any' type.
+js/services/annotationService.ts(93,24): error TS18047: 'activeElement' is possibly 'null'.
+js/services/annotationService.ts(93,38): error TS2339: Property 'contentEditable' does not exist on type 'Element'.
+js/services/annotationService.ts(94,21): error TS18047: 'activeElement' is possibly 'null'.
+js/services/annotationService.ts(125,40): error TS2339: Property 'width' does not exist on type 'HTMLElement'.
+js/services/annotationService.ts(126,41): error TS2339: Property 'height' does not exist on type 'HTMLElement'.
+js/services/annotationService.ts(147,16): error TS7006: Parameter 'canvasX' implicitly has an 'any' type.
+js/services/annotationService.ts(147,25): error TS7006: Parameter 'canvasY' implicitly has an 'any' type.
+js/services/annotationService.ts(158,16): error TS7006: Parameter 'col' implicitly has an 'any' type.
+js/services/annotationService.ts(158,21): error TS7006: Parameter 'row' implicitly has an 'any' type.
+js/services/annotationService.ts(166,11): error TS7006: Parameter 'toolName' implicitly has an 'any' type.
+js/services/annotationService.ts(166,21): error TS7006: Parameter 'settings' implicitly has an 'any' type.
+js/services/annotationService.ts(168,10): error TS2339: Property 'toolSettings' does not exist on type 'AnnotationService'.
+js/services/annotationService.ts(190,19): error TS7006: Parameter 'e' implicitly has an 'any' type.
+js/services/annotationService.ts(191,36): error TS2339: Property 'toolSettings' does not exist on type 'AnnotationService'.
+js/services/annotationService.ts(193,18): error TS2531: Object is possibly 'null'.
+js/services/annotationService.ts(209,12): error TS2339: Property 'tempEraserMode' does not exist on type 'AnnotationService'.
+js/services/annotationService.ts(236,70): error TS2345: Argument of type '{}' is not assignable to parameter of type 'GeometryPoint[]'.
+  Type '{}' is missing the following properties from type 'GeometryPoint[]': length, pop, push, concat, and 29 more.
+js/services/annotationService.ts(237,73): error TS2345: Argument of type '{}' is not assignable to parameter of type 'GeometryPoint[]'.
+  Type '{}' is missing the following properties from type 'GeometryPoint[]': length, pop, push, concat, and 29 more.
+js/services/annotationService.ts(243,11): error TS2353: Object literal may only specify known properties, and 'canvasX' does not exist in type '{ x: number; y: number; }'.
+js/services/annotationService.ts(248,11): error TS2353: Object literal may only specify known properties, and 'col' does not exist in type '{ dx: number; dy: number; }'.
+js/services/annotationService.ts(257,29): error TS4111: Property 'type' comes from an index signature, so it must be accessed with ['type'].
+js/services/annotationService.ts(257,57): error TS4111: Property 'type' comes from an index signature, so it must be accessed with ['type'].
+js/services/annotationService.ts(261,21): error TS4111: Property 'type' comes from an index signature, so it must be accessed with ['type'].
+js/services/annotationService.ts(263,13): error TS2353: Object literal may only specify known properties, and 'startCol' does not exist in type '{ x: number; y: number; }'.
+js/services/annotationService.ts(263,40): error TS18046: 'clicked.startCol' is of type 'unknown'.
+js/services/annotationService.ts(263,48): error TS4111: Property 'startCol' comes from an index signature, so it must be accessed with ['startCol'].
+js/services/annotationService.ts(264,40): error TS18046: 'clicked.startRow' is of type 'unknown'.
+js/services/annotationService.ts(264,48): error TS4111: Property 'startRow' comes from an index signature, so it must be accessed with ['startRow'].
+js/services/annotationService.ts(265,38): error TS18046: 'clicked.endCol' is of type 'unknown'.
+js/services/annotationService.ts(265,46): error TS4111: Property 'endCol' comes from an index signature, so it must be accessed with ['endCol'].
+js/services/annotationService.ts(266,38): error TS18046: 'clicked.endRow' is of type 'unknown'.
+js/services/annotationService.ts(266,46): error TS4111: Property 'endRow' comes from an index signature, so it must be accessed with ['endRow'].
+js/services/annotationService.ts(268,28): error TS4111: Property 'type' comes from an index signature, so it must be accessed with ['type'].
+js/services/annotationService.ts(270,13): error TS2353: Object literal may only specify known properties, and 'col' does not exist in type '{ x: number; y: number; }'.
+js/services/annotationService.ts(270,35): error TS18046: 'clicked.col' is of type 'unknown'.
+js/services/annotationService.ts(270,43): error TS4111: Property 'col' comes from an index signature, so it must be accessed with ['col'].
+js/services/annotationService.ts(271,35): error TS18046: 'clicked.row' is of type 'unknown'.
+js/services/annotationService.ts(271,43): error TS4111: Property 'row' comes from an index signature, so it must be accessed with ['row'].
+js/services/annotationService.ts(287,5): error TS2739: Type '{ col: number; row: number; }' is missing the following properties from type '{ x: number; y: number; }': x, y
+js/services/annotationService.ts(288,25): error TS2739: Type '{ col: number; row: number; }' is missing the following properties from type '{ x: number; y: number; }': x, y
+js/services/annotationService.ts(298,31): error TS2339: Property 'toolSettings' does not exist on type 'AnnotationService'.
+js/services/annotationService.ts(316,31): error TS2339: Property 'toolSettings' does not exist on type 'AnnotationService'.
+js/services/annotationService.ts(328,19): error TS7006: Parameter 'e' implicitly has an 'any' type.
+js/services/annotationService.ts(329,18): error TS2531: Object is possibly 'null'.
+js/services/annotationService.ts(337,14): error TS2339: Property 'tempEraserMode' does not exist on type 'AnnotationService'.
+js/services/annotationService.ts(354,11): error TS2531: Object is possibly 'null'.
+js/services/annotationService.ts(358,11): error TS2531: Object is possibly 'null'.
+js/services/annotationService.ts(361,11): error TS2531: Object is possibly 'null'.
+js/services/annotationService.ts(365,11): error TS2531: Object is possibly 'null'.
+js/services/annotationService.ts(373,13): error TS2531: Object is possibly 'null'.
+js/services/annotationService.ts(379,13): error TS2531: Object is possibly 'null'.
+js/services/annotationService.ts(399,57): error TS2339: Property 'canvasX' does not exist on type '{ x: number; y: number; }'.
+js/services/annotationService.ts(400,57): error TS2339: Property 'canvasY' does not exist on type '{ x: number; y: number; }'.
+js/services/annotationService.ts(409,21): error TS2531: Object is possibly 'null'.
+js/services/annotationService.ts(409,45): error TS2339: Property 'col' does not exist on type '{ dx: number; dy: number; }'.
+js/services/annotationService.ts(410,21): error TS2531: Object is possibly 'null'.
+js/services/annotationService.ts(410,45): error TS2339: Property 'row' does not exist on type '{ dx: number; dy: number; }'.
+js/services/annotationService.ts(419,40): error TS2339: Property 'columnIndex' does not exist on type 'PlacedNote | StampPlacement | TripletPlacement'.
+  Property 'columnIndex' does not exist on type 'PlacedNote'.
+js/services/annotationService.ts(420,13): error TS7053: Element implicitly has an 'any' type because expression of type '"columnIndex" | "startColumnIndex"' can't be used to index type 'PlacedNote | StampPlacement | TripletPlacement'.
+  Property 'columnIndex' does not exist on type 'PlacedNote | StampPlacement | TripletPlacement'.
+js/services/annotationService.ts(421,27): error TS2339: Property 'endColumnIndex' does not exist on type 'PlacedNote | StampPlacement | TripletPlacement'.
+  Property 'endColumnIndex' does not exist on type 'StampPlacement'.
+js/services/annotationService.ts(422,25): error TS2339: Property 'endColumnIndex' does not exist on type 'PlacedNote | StampPlacement | TripletPlacement'.
+  Property 'endColumnIndex' does not exist on type 'StampPlacement'.
+js/services/annotationService.ts(426,23): error TS2339: Property 'startColumn' does not exist on type 'PlacedNote | StampPlacement | TripletPlacement'.
+  Property 'startColumn' does not exist on type 'PlacedNote'.
+js/services/annotationService.ts(427,23): error TS2339: Property 'endColumn' does not exist on type 'PlacedNote | StampPlacement | TripletPlacement'.
+  Property 'endColumn' does not exist on type 'PlacedNote'.
+js/services/annotationService.ts(430,23): error TS2339: Property 'column' does not exist on type 'PlacedNote | StampPlacement | TripletPlacement'.
+  Property 'column' does not exist on type 'PlacedNote'.
+js/services/annotationService.ts(435,9): error TS2531: Object is possibly 'null'.
+js/services/annotationService.ts(435,33): error TS2339: Property 'col' does not exist on type '{ dx: number; dy: number; }'.
+js/services/annotationService.ts(436,9): error TS2531: Object is possibly 'null'.
+js/services/annotationService.ts(436,33): error TS2339: Property 'row' does not exist on type '{ dx: number; dy: number; }'.
+js/services/annotationService.ts(440,38): error TS2339: Property 'columnIndex' does not exist on type 'PlacedNote | StampPlacement | TripletPlacement'.
+  Property 'columnIndex' does not exist on type 'PlacedNote'.
+js/services/annotationService.ts(440,76): error TS2339: Property 'columnIndex' does not exist on type 'PlacedNote | StampPlacement | TripletPlacement'.
+  Property 'columnIndex' does not exist on type 'PlacedNote'.
+js/services/annotationService.ts(441,23): error TS2339: Property 'startColumnIndex' does not exist on type 'PlacedNote | StampPlacement | TripletPlacement'.
+  Property 'startColumnIndex' does not exist on type 'StampPlacement'.
+js/services/annotationService.ts(441,66): error TS2339: Property 'startColumnIndex' does not exist on type 'PlacedNote | StampPlacement | TripletPlacement'.
+  Property 'startColumnIndex' does not exist on type 'StampPlacement'.
+js/services/annotationService.ts(442,25): error TS2339: Property 'column' does not exist on type 'PlacedNote | StampPlacement | TripletPlacement'.
+  Property 'column' does not exist on type 'PlacedNote'.
+js/services/annotationService.ts(457,61): error TS2531: Object is possibly 'null'.
+js/services/annotationService.ts(457,77): error TS2339: Property 'startCol' does not exist on type '{ x: number; y: number; }'.
+js/services/annotationService.ts(458,61): error TS2531: Object is possibly 'null'.
+js/services/annotationService.ts(458,77): error TS2339: Property 'startRow' does not exist on type '{ x: number; y: number; }'.
+js/services/annotationService.ts(459,59): error TS2531: Object is possibly 'null'.
+js/services/annotationService.ts(459,75): error TS2339: Property 'endCol' does not exist on type '{ x: number; y: number; }'.
+js/services/annotationService.ts(460,59): error TS2531: Object is possibly 'null'.
+js/services/annotationService.ts(460,75): error TS2339: Property 'endRow' does not exist on type '{ x: number; y: number; }'.
+js/services/annotationService.ts(462,56): error TS2531: Object is possibly 'null'.
+js/services/annotationService.ts(462,72): error TS2339: Property 'col' does not exist on type '{ x: number; y: number; }'.
+js/services/annotationService.ts(463,56): error TS2531: Object is possibly 'null'.
+js/services/annotationService.ts(463,72): error TS2339: Property 'row' does not exist on type '{ x: number; y: number; }'.
+js/services/annotationService.ts(507,17): error TS7006: Parameter 'e' implicitly has an 'any' type.
+js/services/annotationService.ts(539,14): error TS2339: Property 'tempEraserMode' does not exist on type 'AnnotationService'.
+js/services/annotationService.ts(540,12): error TS2339: Property 'tempEraserMode' does not exist on type 'AnnotationService'.
+js/services/annotationService.ts(580,20): error TS7006: Parameter 'e' implicitly has an 'any' type.
+js/services/annotationService.ts(586,21): error TS7006: Parameter 'e' implicitly has an 'any' type.
+js/services/annotationService.ts(587,18): error TS2531: Object is possibly 'null'.
+js/services/annotationService.ts(593,18): error TS4111: Property 'type' comes from an index signature, so it must be accessed with ['type'].
+js/services/annotationService.ts(598,22): error TS7006: Parameter 'annotation' implicitly has an 'any' type.
+js/services/annotationService.ts(614,24): error TS7006: Parameter 'col' implicitly has an 'any' type.
+js/services/annotationService.ts(614,29): error TS7006: Parameter 'row' implicitly has an 'any' type.
+js/services/annotationService.ts(614,34): error TS7006: Parameter 'widthCols' implicitly has an 'any' type.
+js/services/annotationService.ts(614,45): error TS7006: Parameter 'heightRows' implicitly has an 'any' type.
+js/services/annotationService.ts(630,47): error TS2339: Property 'toolSettings' does not exist on type 'AnnotationService'.
+js/services/annotationService.ts(634,5): error TS2322: Type 'boolean' is not assignable to type 'string'.
+js/services/annotationService.ts(672,24): error TS2531: Object is possibly 'null'.
+js/services/annotationService.ts(683,5): error TS18047: 'selection' is possibly 'null'.
+js/services/annotationService.ts(684,5): error TS18047: 'selection' is possibly 'null'.
+js/services/annotationService.ts(745,11): error TS7034: Variable 'selectedItems' implicitly has type 'any[]' in some locations where its type cannot be determined.
+js/services/annotationService.ts(750,38): error TS2339: Property 'shiftKey' does not exist on type 'Event'.
+js/services/annotationService.ts(762,29): error TS2551: Property 'columnIndex' does not exist on type 'PlacedNote'. Did you mean 'endColumnIndex'?
+js/services/annotationService.ts(762,62): error TS2551: Property 'columnIndex' does not exist on type 'PlacedNote'. Did you mean 'endColumnIndex'?
+js/services/annotationService.ts(784,14): error TS7005: Variable 'selectedItems' implicitly has an 'any[]' type.
+js/services/annotationService.ts(808,14): error TS7005: Variable 'selectedItems' implicitly has an 'any[]' type.
+js/services/annotationService.ts(824,43): error TS2339: Property 'column' does not exist on type 'TripletPlacement'.
+js/services/annotationService.ts(831,54): error TS2339: Property 'column' does not exist on type 'TripletPlacement'.
+js/services/annotationService.ts(831,72): error TS2339: Property 'tripletId' does not exist on type 'TripletPlacement'.
+js/services/annotationService.ts(832,14): error TS7005: Variable 'selectedItems' implicitly has an 'any[]' type.
+js/services/annotationService.ts(848,36): error TS2339: Property 'columnIndex' does not exist on type 'PlacedNote | StampPlacement | TripletPlacement'.
+  Property 'columnIndex' does not exist on type 'PlacedNote'.
+js/services/annotationService.ts(848,74): error TS2339: Property 'columnIndex' does not exist on type 'PlacedNote | StampPlacement | TripletPlacement'.
+  Property 'columnIndex' does not exist on type 'PlacedNote'.
+js/services/annotationService.ts(849,21): error TS2339: Property 'startColumnIndex' does not exist on type 'PlacedNote | StampPlacement | TripletPlacement'.
+  Property 'startColumnIndex' does not exist on type 'StampPlacement'.
+js/services/annotationService.ts(849,64): error TS2339: Property 'startColumnIndex' does not exist on type 'PlacedNote | StampPlacement | TripletPlacement'.
+  Property 'startColumnIndex' does not exist on type 'StampPlacement'.
+js/services/annotationService.ts(850,23): error TS2339: Property 'column' does not exist on type 'PlacedNote | StampPlacement | TripletPlacement'.
+  Property 'column' does not exist on type 'PlacedNote'.
+js/services/annotationService.ts(882,34): error TS2339: Property 'columnIndex' does not exist on type 'PlacedNote | StampPlacement | TripletPlacement'.
+  Property 'columnIndex' does not exist on type 'PlacedNote'.
+js/services/annotationService.ts(882,72): error TS2339: Property 'columnIndex' does not exist on type 'PlacedNote | StampPlacement | TripletPlacement'.
+  Property 'columnIndex' does not exist on type 'PlacedNote'.
+js/services/annotationService.ts(883,19): error TS2339: Property 'startColumnIndex' does not exist on type 'PlacedNote | StampPlacement | TripletPlacement'.
+  Property 'startColumnIndex' does not exist on type 'StampPlacement'.
+js/services/annotationService.ts(883,62): error TS2339: Property 'startColumnIndex' does not exist on type 'PlacedNote | StampPlacement | TripletPlacement'.
+  Property 'startColumnIndex' does not exist on type 'StampPlacement'.
+js/services/annotationService.ts(884,21): error TS2339: Property 'column' does not exist on type 'PlacedNote | StampPlacement | TripletPlacement'.
+  Property 'column' does not exist on type 'PlacedNote'.
+js/services/annotationService.ts(893,28): error TS7006: Parameter 'canvasX' implicitly has an 'any' type.
+js/services/annotationService.ts(893,37): error TS7006: Parameter 'canvasY' implicitly has an 'any' type.
+js/services/annotationService.ts(900,9): error TS7034: Variable 'clickedItemId' implicitly has type 'any' in some locations where its type cannot be determined.
+js/services/annotationService.ts(904,39): error TS2551: Property 'columnIndex' does not exist on type 'PlacedNote'. Did you mean 'endColumnIndex'?
+js/services/annotationService.ts(909,50): error TS2551: Property 'columnIndex' does not exist on type 'PlacedNote'. Did you mean 'endColumnIndex'?
+js/services/annotationService.ts(916,42): error TS2339: Property 'column' does not exist on type 'StampPlacement'.
+js/services/annotationService.ts(921,55): error TS2339: Property 'column' does not exist on type 'StampPlacement'.
+js/services/annotationService.ts(929,44): error TS2339: Property 'column' does not exist on type 'TripletPlacement'.
+js/services/annotationService.ts(934,61): error TS2339: Property 'column' does not exist on type 'TripletPlacement'.
+js/services/annotationService.ts(934,79): error TS2339: Property 'tripletId' does not exist on type 'TripletPlacement'.
+js/services/annotationService.ts(942,29): error TS7005: Variable 'clickedItemId' implicitly has an 'any' type.
+js/services/annotationService.ts(949,42): error TS2339: Property 'columnIndex' does not exist on type 'PlacedNote | StampPlacement | TripletPlacement'.
+  Property 'columnIndex' does not exist on type 'PlacedNote'.
+js/services/annotationService.ts(949,67): error TS2339: Property 'column' does not exist on type 'PlacedNote | StampPlacement | TripletPlacement'.
+  Property 'column' does not exist on type 'PlacedNote'.
+js/services/annotationService.ts(990,22): error TS7006: Parameter 'annotation' implicitly has an 'any' type.
+js/services/annotationService.ts(999,5): error TS18047: 'ctx' is possibly 'null'.
+js/services/annotationService.ts(1000,5): error TS18047: 'ctx' is possibly 'null'.
+js/services/annotationService.ts(1001,5): error TS18047: 'ctx' is possibly 'null'.
+js/services/annotationService.ts(1002,5): error TS18047: 'ctx' is possibly 'null'.
+js/services/annotationService.ts(1003,5): error TS18047: 'ctx' is possibly 'null'.
+js/services/annotationService.ts(1006,14): error TS2339: Property 'toolSettings' does not exist on type 'AnnotationService'.
+js/services/annotationService.ts(1007,7): error TS18047: 'ctx' is possibly 'null'.
+js/services/annotationService.ts(1008,7): error TS18047: 'ctx' is possibly 'null'.
+js/services/annotationService.ts(1011,5): error TS18047: 'ctx' is possibly 'null'.
+js/services/annotationService.ts(1019,13): error TS7006: Parameter 'annotation' implicitly has an 'any' type.
+js/services/annotationService.ts(1023,5): error TS18047: 'ctx' is possibly 'null'.
+js/services/annotationService.ts(1027,7): error TS18047: 'ctx' is possibly 'null'.
+js/services/annotationService.ts(1028,7): error TS18047: 'ctx' is possibly 'null'.
+js/services/annotationService.ts(1029,7): error TS18047: 'ctx' is possibly 'null'.
+js/services/annotationService.ts(1030,7): error TS18047: 'ctx' is possibly 'null'.
+js/services/annotationService.ts(1031,7): error TS18047: 'ctx' is possibly 'null'.
+js/services/annotationService.ts(1032,7): error TS18047: 'ctx' is possibly 'null'.
+js/services/annotationService.ts(1033,7): error TS18047: 'ctx' is possibly 'null'.
+js/services/annotationService.ts(1034,7): error TS18047: 'ctx' is possibly 'null'.
+js/services/annotationService.ts(1035,7): error TS18047: 'ctx' is possibly 'null'.
+js/services/annotationService.ts(1040,7): error TS18047: 'ctx' is possibly 'null'.
+js/services/annotationService.ts(1041,7): error TS18047: 'ctx' is possibly 'null'.
+js/services/annotationService.ts(1042,7): error TS18047: 'ctx' is possibly 'null'.
+js/services/annotationService.ts(1043,7): error TS18047: 'ctx' is possibly 'null'.
+js/services/annotationService.ts(1044,7): error TS18047: 'ctx' is possibly 'null'.
+js/services/annotationService.ts(1045,7): error TS18047: 'ctx' is possibly 'null'.
+js/services/annotationService.ts(1046,7): error TS18047: 'ctx' is possibly 'null'.
+js/services/annotationService.ts(1047,7): error TS18047: 'ctx' is possibly 'null'.
+js/services/annotationService.ts(1048,7): error TS18047: 'ctx' is possibly 'null'.
+js/services/annotationService.ts(1051,5): error TS18047: 'ctx' is possibly 'null'.
+js/services/annotationService.ts(1052,5): error TS18047: 'ctx' is possibly 'null'.
+js/services/annotationService.ts(1053,5): error TS18047: 'ctx' is possibly 'null'.
+js/services/annotationService.ts(1078,5): error TS18047: 'ctx' is possibly 'null'.
+js/services/annotationService.ts(1079,5): error TS18047: 'ctx' is possibly 'null'.
+js/services/annotationService.ts(1080,5): error TS18047: 'ctx' is possibly 'null'.
+js/services/annotationService.ts(1081,5): error TS18047: 'ctx' is possibly 'null'.
+js/services/annotationService.ts(1092,5): error TS18047: 'ctx' is possibly 'null'.
+js/services/annotationService.ts(1095,17): error TS7006: Parameter 'ctx' implicitly has an 'any' type.
+js/services/annotationService.ts(1095,22): error TS7006: Parameter 'x' implicitly has an 'any' type.
+js/services/annotationService.ts(1095,25): error TS7006: Parameter 'y' implicitly has an 'any' type.
+js/services/annotationService.ts(1095,28): error TS7006: Parameter 'angle' implicitly has an 'any' type.
+js/services/annotationService.ts(1095,35): error TS7006: Parameter 'type' implicitly has an 'any' type.
+js/services/annotationService.ts(1134,12): error TS7006: Parameter 'ctx' implicitly has an 'any' type.
+js/services/annotationService.ts(1134,17): error TS7006: Parameter 'text' implicitly has an 'any' type.
+js/services/annotationService.ts(1134,23): error TS7006: Parameter 'maxWidth' implicitly has an 'any' type.
+js/services/annotationService.ts(1137,11): error TS7034: Variable 'wrappedLines' implicitly has type 'any[]' in some locations where its type cannot be determined.
+js/services/annotationService.ts(1139,24): error TS7006: Parameter 'paragraph' implicitly has an 'any' type.
+js/services/annotationService.ts(1149,22): error TS7006: Parameter 'word' implicitly has an 'any' type.
+js/services/annotationService.ts(1149,28): error TS7006: Parameter 'index' implicitly has an 'any' type.
+js/services/annotationService.ts(1168,12): error TS7005: Variable 'wrappedLines' implicitly has an 'any[]' type.
+js/services/annotationService.ts(1171,12): error TS7006: Parameter 'annotation' implicitly has an 'any' type.
+js/services/annotationService.ts(1175,5): error TS18047: 'ctx' is possibly 'null'.
+js/services/annotationService.ts(1182,5): error TS18047: 'ctx' is possibly 'null'.
+js/services/annotationService.ts(1183,5): error TS18047: 'ctx' is possibly 'null'.
+js/services/annotationService.ts(1200,7): error TS18047: 'ctx' is possibly 'null'.
+js/services/annotationService.ts(1202,7): error TS18047: 'ctx' is possibly 'null'.
+js/services/annotationService.ts(1207,7): error TS18047: 'ctx' is possibly 'null'.
+js/services/annotationService.ts(1209,7): error TS18047: 'ctx' is possibly 'null'.
+js/services/annotationService.ts(1214,7): error TS18047: 'ctx' is possibly 'null'.
+js/services/annotationService.ts(1216,7): error TS18047: 'ctx' is possibly 'null'.
+js/services/annotationService.ts(1220,5): error TS18047: 'ctx' is possibly 'null'.
+js/services/annotationService.ts(1233,5): error TS18047: 'ctx' is possibly 'null'.
+js/services/annotationService.ts(1236,28): error TS7006: Parameter 'ctx' implicitly has an 'any' type.
+js/services/annotationService.ts(1236,33): error TS7006: Parameter 'text' implicitly has an 'any' type.
+js/services/annotationService.ts(1236,39): error TS7006: Parameter 'x' implicitly has an 'any' type.
+js/services/annotationService.ts(1236,42): error TS7006: Parameter 'y' implicitly has an 'any' type.
+js/services/annotationService.ts(1236,45): error TS7006: Parameter 'fontSize' implicitly has an 'any' type.
+js/services/annotationService.ts(1236,55): error TS7006: Parameter 'settings' implicitly has an 'any' type.
+js/services/annotationService.ts(1236,65): error TS7006: Parameter 'fontFamily' implicitly has an 'any' type.
+js/services/annotationService.ts(1267,26): error TS7006: Parameter 'text' implicitly has an 'any' type.
+js/services/annotationService.ts(1267,32): error TS7006: Parameter 'format' implicitly has an 'any' type.
+js/services/annotationService.ts(1313,22): error TS7006: Parameter 'text' implicitly has an 'any' type.
+js/services/annotationService.ts(1395,21): error TS7006: Parameter 'x' implicitly has an 'any' type.
+js/services/annotationService.ts(1395,24): error TS7006: Parameter 'y' implicitly has an 'any' type.
+js/services/annotationService.ts(1395,27): error TS7006: Parameter 'width' implicitly has an 'any' type.
+js/services/annotationService.ts(1395,34): error TS7006: Parameter 'height' implicitly has an 'any' type.
+js/services/annotationService.ts(1409,5): error TS18047: 'ctx' is possibly 'null'.
+js/services/annotationService.ts(1411,7): error TS18047: 'ctx' is possibly 'null'.
+js/services/annotationService.ts(1412,7): error TS18047: 'ctx' is possibly 'null'.
+js/services/annotationService.ts(1413,7): error TS18047: 'ctx' is possibly 'null'.
+js/services/annotationService.ts(1414,7): error TS18047: 'ctx' is possibly 'null'.
+js/services/annotationService.ts(1415,7): error TS18047: 'ctx' is possibly 'null'.
+js/services/annotationService.ts(1417,5): error TS18047: 'ctx' is possibly 'null'.
+js/services/annotationService.ts(1420,12): error TS7006: Parameter 'annotation' implicitly has an 'any' type.
+js/services/annotationService.ts(1420,24): error TS7006: Parameter 'isHighlighter' implicitly has an 'any' type.
+js/services/annotationService.ts(1426,5): error TS18047: 'ctx' is possibly 'null'.
+js/services/annotationService.ts(1429,7): error TS18047: 'ctx' is possibly 'null'.
+js/services/annotationService.ts(1430,7): error TS18047: 'ctx' is possibly 'null'.
+js/services/annotationService.ts(1432,7): error TS18047: 'ctx' is possibly 'null'.
+js/services/annotationService.ts(1435,5): error TS18047: 'ctx' is possibly 'null'.
+js/services/annotationService.ts(1436,5): error TS18047: 'ctx' is possibly 'null'.
+js/services/annotationService.ts(1437,5): error TS18047: 'ctx' is possibly 'null'.
+js/services/annotationService.ts(1439,5): error TS18047: 'ctx' is possibly 'null'.
+js/services/annotationService.ts(1440,5): error TS18047: 'ctx' is possibly 'null'.
+js/services/annotationService.ts(1443,7): error TS18047: 'ctx' is possibly 'null'.
+js/services/annotationService.ts(1446,5): error TS18047: 'ctx' is possibly 'null'.
+js/services/annotationService.ts(1447,5): error TS18047: 'ctx' is possibly 'null'.
+js/services/annotationService.ts(1450,17): error TS7006: Parameter 'annotation' implicitly has an 'any' type.
+js/services/annotationService.ts(1456,5): error TS18047: 'ctx' is possibly 'null'.
+js/services/annotationService.ts(1457,5): error TS18047: 'ctx' is possibly 'null'.
+js/services/annotationService.ts(1458,5): error TS18047: 'ctx' is possibly 'null'.
+js/services/annotationService.ts(1459,5): error TS18047: 'ctx' is possibly 'null'.
+js/services/annotationService.ts(1461,5): error TS18047: 'ctx' is possibly 'null'.
+js/services/annotationService.ts(1462,5): error TS18047: 'ctx' is possibly 'null'.
+js/services/annotationService.ts(1465,7): error TS18047: 'ctx' is possibly 'null'.
+js/services/annotationService.ts(1469,5): error TS18047: 'ctx' is possibly 'null'.
+js/services/annotationService.ts(1470,5): error TS18047: 'ctx' is possibly 'null'.
+js/services/annotationService.ts(1471,5): error TS18047: 'ctx' is possibly 'null'.
+js/services/annotationService.ts(1474,18): error TS7006: Parameter 'size' implicitly has an 'any' type.
+js/services/annotationService.ts(1488,15): error TS7006: Parameter 'style' implicitly has an 'any' type.
+js/services/annotationService.ts(1498,16): error TS7006: Parameter 'size' implicitly has an 'any' type.
+js/services/annotationService.ts(1512,15): error TS7006: Parameter 'x' implicitly has an 'any' type.
+js/services/annotationService.ts(1512,18): error TS7006: Parameter 'y' implicitly has an 'any' type.
+js/services/annotationService.ts(1530,9): error TS2531: Object is possibly 'null'.
+js/services/annotationService.ts(1530,36): error TS7053: Element implicitly has an 'any' type because expression of type 'string' can't be used to index type '{ nw: string; n: string; ne: string; e: string; se: string; s: string; sw: string; w: string; }'.
+  No index signature with a parameter of type 'string' was found on type '{ nw: string; n: string; ne: string; e: string; se: string; s: string; sw: string; w: string; }'.
+js/services/annotationService.ts(1537,52): error TS2345: Argument of type '{}' is not assignable to parameter of type 'GeometryPoint[]'.
+  Type '{}' is missing the following properties from type 'GeometryPoint[]': length, pop, push, concat, and 29 more.
+js/services/annotationService.ts(1538,55): error TS2345: Argument of type '{}' is not assignable to parameter of type 'GeometryPoint[]'.
+  Type '{}' is missing the following properties from type 'GeometryPoint[]': length, pop, push, concat, and 29 more.
+js/services/annotationService.ts(1541,9): error TS2531: Object is possibly 'null'.
+js/services/annotationService.ts(1549,35): error TS4111: Property 'type' comes from an index signature, so it must be accessed with ['type'].
+js/services/annotationService.ts(1549,66): error TS4111: Property 'type' comes from an index signature, so it must be accessed with ['type'].
+js/services/annotationService.ts(1550,7): error TS2531: Object is possibly 'null'.
+js/services/annotationService.ts(1554,43): error TS2339: Property 'toolSettings' does not exist on type 'AnnotationService'.
+js/services/annotationService.ts(1564,21): error TS7006: Parameter 'x' implicitly has an 'any' type.
+js/services/annotationService.ts(1564,24): error TS7006: Parameter 'y' implicitly has an 'any' type.
+js/services/annotationService.ts(1596,19): error TS7006: Parameter 'x' implicitly has an 'any' type.
+js/services/annotationService.ts(1596,22): error TS7006: Parameter 'y' implicitly has an 'any' type.
+js/services/annotationService.ts(1603,11): error TS18048: 'annotation' is possibly 'undefined'.
+js/services/annotationService.ts(1603,22): error TS4111: Property 'type' comes from an index signature, so it must be accessed with ['type'].
+js/services/annotationService.ts(1605,11): error TS18048: 'annotation' is possibly 'undefined'.
+js/services/annotationService.ts(1605,22): error TS4111: Property 'startX' comes from an index signature, so it must be accessed with ['startX'].
+js/services/annotationService.ts(1605,30): error TS18048: 'annotation' is possibly 'undefined'.
+js/services/annotationService.ts(1605,41): error TS4111: Property 'startY' comes from an index signature, so it must be accessed with ['startY'].
+js/services/annotationService.ts(1606,11): error TS18048: 'annotation' is possibly 'undefined'.
+js/services/annotationService.ts(1606,22): error TS4111: Property 'endX' comes from an index signature, so it must be accessed with ['endX'].
+js/services/annotationService.ts(1606,28): error TS18048: 'annotation' is possibly 'undefined'.
+js/services/annotationService.ts(1606,39): error TS4111: Property 'endY' comes from an index signature, so it must be accessed with ['endY'].
+js/services/annotationService.ts(1610,18): error TS18048: 'annotation' is possibly 'undefined'.
+js/services/annotationService.ts(1610,29): error TS4111: Property 'type' comes from an index signature, so it must be accessed with ['type'].
+js/services/annotationService.ts(1612,25): error TS18048: 'annotation' is possibly 'undefined'.
+js/services/annotationService.ts(1612,36): error TS4111: Property 'width' comes from an index signature, so it must be accessed with ['width'].
+js/services/annotationService.ts(1613,26): error TS18048: 'annotation' is possibly 'undefined'.
+js/services/annotationService.ts(1613,37): error TS4111: Property 'height' comes from an index signature, so it must be accessed with ['height'].
+js/services/annotationService.ts(1617,25): error TS18048: 'annotation' is possibly 'undefined'.
+js/services/annotationService.ts(1617,25): error TS18046: 'annotation.text' is of type 'unknown'.
+js/services/annotationService.ts(1617,36): error TS4111: Property 'text' comes from an index signature, so it must be accessed with ['text'].
+js/services/annotationService.ts(1618,28): error TS18048: 'annotation' is possibly 'undefined'.
+js/services/annotationService.ts(1618,28): error TS18046: 'annotation.settings' is of type 'unknown'.
+js/services/annotationService.ts(1618,39): error TS4111: Property 'settings' comes from an index signature, so it must be accessed with ['settings'].
+js/services/annotationService.ts(1621,11): error TS2531: Object is possibly 'null'.
+js/services/annotationService.ts(1623,25): error TS7006: Parameter 'line' implicitly has an 'any' type.
+js/services/annotationService.ts(1624,29): error TS2531: Object is possibly 'null'.
+js/services/annotationService.ts(1625,34): error TS2345: Argument of type 'unknown' is not assignable to parameter of type 'number'.
+js/services/annotationService.ts(1630,18): error TS18048: 'annotation' is possibly 'undefined'.
+js/services/annotationService.ts(1630,18): error TS18046: 'annotation.x' is of type 'unknown'.
+js/services/annotationService.ts(1630,29): error TS4111: Property 'x' comes from an index signature, so it must be accessed with ['x'].
+js/services/annotationService.ts(1630,39): error TS18048: 'annotation' is possibly 'undefined'.
+js/services/annotationService.ts(1630,39): error TS18046: 'annotation.x' is of type 'unknown'.
+js/services/annotationService.ts(1630,50): error TS4111: Property 'x' comes from an index signature, so it must be accessed with ['x'].
+js/services/annotationService.ts(1630,54): error TS18046: 'textWidth' is of type 'unknown'.
+js/services/annotationService.ts(1631,26): error TS18048: 'annotation' is possibly 'undefined'.
+js/services/annotationService.ts(1631,26): error TS18046: 'annotation.y' is of type 'unknown'.
+js/services/annotationService.ts(1631,37): error TS4111: Property 'y' comes from an index signature, so it must be accessed with ['y'].
+js/services/annotationService.ts(1631,47): error TS18048: 'annotation' is possibly 'undefined'.
+js/services/annotationService.ts(1631,47): error TS18046: 'annotation.y' is of type 'unknown'.
+js/services/annotationService.ts(1631,58): error TS4111: Property 'y' comes from an index signature, so it must be accessed with ['y'].
+js/services/annotationService.ts(1631,62): error TS18046: 'textHeight' is of type 'unknown'.
+js/services/annotationService.ts(1640,20): error TS7006: Parameter 'x' implicitly has an 'any' type.
+js/services/annotationService.ts(1640,23): error TS7006: Parameter 'y' implicitly has an 'any' type.
+js/services/annotationService.ts(1649,5): error TS2531: Object is possibly 'null'.
+js/services/annotationService.ts(1650,5): error TS2531: Object is possibly 'null'.
+js/services/annotationService.ts(1651,5): error TS2531: Object is possibly 'null'.
+js/services/annotationService.ts(1652,5): error TS2531: Object is possibly 'null'.
+js/services/annotationService.ts(1655,26): error TS7006: Parameter 'annotation' implicitly has an 'any' type.
+js/services/annotationService.ts(1657,47): error TS2339: Property 'drawToolsController' does not exist on type 'Window & typeof globalThis'.
+js/services/annotationService.ts(1659,14): error TS2339: Property 'drawToolsController' does not exist on type 'Window & typeof globalThis'.
+js/services/annotationService.ts(1661,14): error TS2339: Property 'drawToolsController' does not exist on type 'Window & typeof globalThis'.
+js/services/annotationService.ts(1662,53): error TS2339: Property 'drawToolsController' does not exist on type 'Window & typeof globalThis'.
+js/services/annotationService.ts(1664,14): error TS2339: Property 'drawToolsController' does not exist on type 'Window & typeof globalThis'.
+js/services/annotationService.ts(1666,14): error TS2339: Property 'drawToolsController' does not exist on type 'Window & typeof globalThis'.
+js/services/annotationService.ts(1674,58): error TS2339: Property 'toolSettings' does not exist on type 'AnnotationService'.
+js/services/annotationService.ts(1675,52): error TS2339: Property 'toolSettings' does not exist on type 'AnnotationService'.
+js/services/annotationService.ts(1677,64): error TS2339: Property 'toolSettings' does not exist on type 'AnnotationService'.
+js/services/annotationService.ts(1678,52): error TS2339: Property 'toolSettings' does not exist on type 'AnnotationService'.
+js/services/annotationService.ts(1688,16): error TS7006: Parameter 'x' implicitly has an 'any' type.
+js/services/annotationService.ts(1688,19): error TS7006: Parameter 'y' implicitly has an 'any' type.
+js/services/annotationService.ts(1696,22): error TS4111: Property 'type' comes from an index signature, so it must be accessed with ['type'].
+js/services/annotationService.ts(1699,35): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(index: number, options: RendererOptions): number', gave the following error.
+    Argument of type 'unknown' is not assignable to parameter of type 'number'.
+  Overload 2 of 2, '(index: number, options: RendererOptions): number', gave the following error.
+    Argument of type 'unknown' is not assignable to parameter of type 'number'.
+js/services/annotationService.ts(1699,46): error TS4111: Property 'startCol' comes from an index signature, so it must be accessed with ['startCol'].
+js/services/annotationService.ts(1700,32): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(rowIndex: number, options: RendererOptions): number', gave the following error.
+    Argument of type 'unknown' is not assignable to parameter of type 'number'.
+  Overload 2 of 2, '(rowIndex: number, options: RendererOptions): number', gave the following error.
+    Argument of type 'unknown' is not assignable to parameter of type 'number'.
+js/services/annotationService.ts(1700,43): error TS4111: Property 'startRow' comes from an index signature, so it must be accessed with ['startRow'].
+js/services/annotationService.ts(1701,33): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(index: number, options: RendererOptions): number', gave the following error.
+    Argument of type 'unknown' is not assignable to parameter of type 'number'.
+  Overload 2 of 2, '(index: number, options: RendererOptions): number', gave the following error.
+    Argument of type 'unknown' is not assignable to parameter of type 'number'.
+js/services/annotationService.ts(1701,44): error TS4111: Property 'endCol' comes from an index signature, so it must be accessed with ['endCol'].
+js/services/annotationService.ts(1702,30): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(rowIndex: number, options: RendererOptions): number', gave the following error.
+    Argument of type 'unknown' is not assignable to parameter of type 'number'.
+  Overload 2 of 2, '(rowIndex: number, options: RendererOptions): number', gave the following error.
+    Argument of type 'unknown' is not assignable to parameter of type 'number'.
+js/services/annotationService.ts(1702,41): error TS4111: Property 'endRow' comes from an index signature, so it must be accessed with ['endRow'].
+js/services/annotationService.ts(1710,29): error TS4111: Property 'type' comes from an index signature, so it must be accessed with ['type'].
+js/services/annotationService.ts(1713,34): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(index: number, options: RendererOptions): number', gave the following error.
+    Argument of type 'unknown' is not assignable to parameter of type 'number'.
+  Overload 2 of 2, '(index: number, options: RendererOptions): number', gave the following error.
+    Argument of type 'unknown' is not assignable to parameter of type 'number'.
+js/services/annotationService.ts(1713,45): error TS4111: Property 'col' comes from an index signature, so it must be accessed with ['col'].
+js/services/annotationService.ts(1714,31): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(rowIndex: number, options: RendererOptions): number', gave the following error.
+    Argument of type 'unknown' is not assignable to parameter of type 'number'.
+  Overload 2 of 2, '(rowIndex: number, options: RendererOptions): number', gave the following error.
+    Argument of type 'unknown' is not assignable to parameter of type 'number'.
+js/services/annotationService.ts(1714,42): error TS4111: Property 'row' comes from an index signature, so it must be accessed with ['row'].
+js/services/annotationService.ts(1715,37): error TS18046: 'annotation.col' is of type 'unknown'.
+js/services/annotationService.ts(1715,48): error TS4111: Property 'col' comes from an index signature, so it must be accessed with ['col'].
+js/services/annotationService.ts(1715,54): error TS18046: 'annotation.widthCols' is of type 'unknown'.
+js/services/annotationService.ts(1715,65): error TS4111: Property 'widthCols' comes from an index signature, so it must be accessed with ['widthCols'].
+js/services/annotationService.ts(1716,34): error TS18046: 'annotation.row' is of type 'unknown'.
+js/services/annotationService.ts(1716,45): error TS4111: Property 'row' comes from an index signature, so it must be accessed with ['row'].
+js/services/annotationService.ts(1716,51): error TS18046: 'annotation.heightRows' is of type 'unknown'.
+js/services/annotationService.ts(1716,62): error TS4111: Property 'heightRows' comes from an index signature, so it must be accessed with ['heightRows'].
+js/services/annotationService.ts(1724,29): error TS4111: Property 'type' comes from an index signature, so it must be accessed with ['type'].
+js/services/annotationService.ts(1724,61): error TS4111: Property 'type' comes from an index signature, so it must be accessed with ['type'].
+js/services/annotationService.ts(1727,29): error TS18046: 'annotation.path' is of type 'unknown'.
+js/services/annotationService.ts(1727,40): error TS4111: Property 'path' comes from an index signature, so it must be accessed with ['path'].
+js/services/annotationService.ts(1728,36): error TS18046: 'annotation.path' is of type 'unknown'.
+js/services/annotationService.ts(1728,47): error TS4111: Property 'path' comes from an index signature, so it must be accessed with ['path'].
+js/services/annotationService.ts(1729,33): error TS18046: 'annotation.path' is of type 'unknown'.
+js/services/annotationService.ts(1729,44): error TS4111: Property 'path' comes from an index signature, so it must be accessed with ['path'].
+js/services/annotationService.ts(1749,21): error TS7006: Parameter 'point1' implicitly has an 'any' type.
+js/services/annotationService.ts(1749,29): error TS7006: Parameter 'point2' implicitly has an 'any' type.
+js/services/annotationService.ts(1770,25): error TS7006: Parameter 'px' implicitly has an 'any' type.
+js/services/annotationService.ts(1770,29): error TS7006: Parameter 'py' implicitly has an 'any' type.
+js/services/annotationService.ts(1770,33): error TS7006: Parameter 'x1' implicitly has an 'any' type.
+js/services/annotationService.ts(1770,37): error TS7006: Parameter 'y1' implicitly has an 'any' type.
+js/services/annotationService.ts(1770,41): error TS7006: Parameter 'x2' implicitly has an 'any' type.
+js/services/annotationService.ts(1770,45): error TS7006: Parameter 'y2' implicitly has an 'any' type.
+js/services/annotationService.ts(1796,22): error TS7006: Parameter 'x' implicitly has an 'any' type.
+js/services/annotationService.ts(1796,25): error TS7006: Parameter 'y' implicitly has an 'any' type.
+js/services/annotationService.ts(1804,19): error TS7006: Parameter 'annotations' implicitly has an 'any' type.
+js/services/annotationService.ts(1809,25): error TS7006: Parameter 'type' implicitly has an 'any' type.
+js/services/annotationService.ts(1815,10): error TS18047: 'selection' is possibly 'null'.
+js/services/annotationService.ts(1817,19): error TS18047: 'selection' is possibly 'null'.
+js/services/annotationService.ts(1840,5): error TS18047: 'selection' is possibly 'null'.
+js/services/annotationService.ts(1841,5): error TS18047: 'selection' is possibly 'null'.
+js/services/annotationService.ts(1844,17): error TS2339: Property 'focus' does not exist on type 'Element'.
+js/services/layoutService.ts(880,23): error TS2345: Argument of type 'Element' is not assignable to parameter of type 'HTMLElement'.
+  Type 'Element' is missing the following properties from type 'HTMLElement': accessKey, accessKeyLabel, autocapitalize, autocorrect, and 129 more.
+js/services/layoutService.ts(934,23): error TS2345: Argument of type 'Element' is not assignable to parameter of type 'HTMLElement'.
+  Type 'Element' is missing the following properties from type 'HTMLElement': accessKey, accessKeyLabel, autocapitalize, autocorrect, and 129 more.
+js/services/layoutService.ts(973,34): error TS2339: Property 'style' does not exist on type 'Element'.
+js/services/layoutService.ts(1123,23): error TS2345: Argument of type 'Element' is not assignable to parameter of type 'HTMLElement'.
+  Type 'Element' is missing the following properties from type 'HTMLElement': accessKey, accessKeyLabel, autocapitalize, autocorrect, and 129 more.
+js/services/layoutService.ts(1373,5): error TS18047: 'drumGridWrapper' is possibly 'null'.
+js/services/transportService.ts(181,5): error TS2322: Type 'number | undefined' is not assignable to type 'number'.
+  Type 'undefined' is not assignable to type 'number'.
+js/services/transportService.ts(207,33): error TS18048: 'baseEndTime' is possibly 'undefined'.
+js/services/transportService.ts(207,47): error TS18048: 'modulationStartTime' is possibly 'undefined'.
+js/services/transportService.ts(212,25): error TS18048: 'adjustedEndTime' is possibly 'undefined'.
+js/services/transportService.ts(218,3): error TS2322: Type 'number | undefined' is not assignable to type 'number'.
+  Type 'undefined' is not assignable to type 'number'.
+js/services/transportService.ts(259,19): error TS2532: Object is possibly 'undefined'.
+js/services/transportService.ts(340,47): error TS2551: Property 'columnIndex' does not exist on type 'PlacedNote'. Did you mean 'endColumnIndex'?
+js/services/transportService.ts(341,12): error TS18047: 'selectedNoteIds' is possibly 'null'.
+js/services/transportService.ts(403,47): error TS2345: Argument of type 'number | undefined' is not assignable to parameter of type 'number'.
+  Type 'undefined' is not assignable to type 'number'.
+js/services/transportService.ts(404,29): error TS2345: Argument of type 'number | undefined' is not assignable to parameter of type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+js/services/transportService.ts(407,68): error TS2345: Argument of type 'number | undefined' is not assignable to parameter of type 'string | number'.
+  Type 'undefined' is not assignable to type 'string | number'.
+js/services/transportService.ts(468,32): error TS18046: 'stampData' is of type 'unknown'.
+js/services/transportService.ts(468,49): error TS18046: 'stampData' is of type 'unknown'.
+js/services/transportService.ts(468,69): error TS18046: 'stampData' is of type 'unknown'.
+js/services/transportService.ts(469,12): error TS18047: 'selectedStampIds' is possibly 'null'.
+js/services/transportService.ts(475,32): error TS18046: 'stampData' is of type 'unknown'.
+js/services/transportService.ts(481,68): error TS18046: 'stampData' is of type 'unknown'.
+js/services/transportService.ts(486,51): error TS18046: 'stampData' is of type 'unknown'.
+js/services/transportService.ts(486,70): error TS18046: 'stampData' is of type 'unknown'.
+js/services/transportService.ts(496,24): error TS18046: 'stampData' is of type 'unknown'.
+js/services/transportService.ts(502,47): error TS18046: 'stampData' is of type 'unknown'.
+js/services/transportService.ts(508,48): error TS18046: 'stampData' is of type 'unknown'.
+js/services/transportService.ts(512,57): error TS18046: 'stampData' is of type 'unknown'.
+js/services/transportService.ts(512,125): error TS18046: 'stampData' is of type 'unknown'.
+js/services/transportService.ts(513,16): error TS18046: 'stampData' is of type 'unknown'.
+js/services/transportService.ts(514,15): error TS18046: 'stampData' is of type 'unknown'.
+js/services/transportService.ts(515,18): error TS18046: 'stampData' is of type 'unknown'.
+js/services/transportService.ts(516,16): error TS18046: 'stampData' is of type 'unknown'.
+js/services/transportService.ts(519,26): error TS18046: 'stampData' is of type 'unknown'.
+js/services/transportService.ts(536,36): error TS18046: 'tripletData' is of type 'unknown'.
+js/services/transportService.ts(536,55): error TS18046: 'tripletData' is of type 'unknown'.
+js/services/transportService.ts(536,77): error TS18046: 'tripletData' is of type 'unknown'.
+js/services/transportService.ts(537,12): error TS18047: 'selectedTripletIds' is possibly 'null'.
+js/services/transportService.ts(543,25): error TS18046: 'tripletData' is of type 'unknown'.
+js/services/transportService.ts(552,68): error TS18046: 'tripletData' is of type 'unknown'.
+js/services/transportService.ts(558,16): error TS18046: 'tripletData' is of type 'unknown'.
+js/services/transportService.ts(559,16): error TS18046: 'tripletData' is of type 'unknown'.
+js/services/transportService.ts(560,23): error TS18046: 'tripletData' is of type 'unknown'.
+js/services/transportService.ts(561,26): error TS18046: 'tripletData' is of type 'unknown'.
+js/services/transportService.ts(562,21): error TS18046: 'tripletData' is of type 'unknown'.
+js/services/transportService.ts(565,53): error TS18046: 'tripletData' is of type 'unknown'.
+js/services/transportService.ts(565,74): error TS18046: 'tripletData' is of type 'unknown'.
+js/services/transportService.ts(576,24): error TS18046: 'tripletData' is of type 'unknown'.
+js/services/transportService.ts(582,18): error TS18046: 'tripletData' is of type 'unknown'.
+js/services/transportService.ts(590,47): error TS18046: 'tripletData' is of type 'unknown'.
+js/services/transportService.ts(596,48): error TS18046: 'tripletData' is of type 'unknown'.
+js/services/transportService.ts(600,59): error TS18046: 'tripletData' is of type 'unknown'.
+js/services/transportService.ts(600,127): error TS18046: 'tripletData' is of type 'unknown'.
+js/services/transportService.ts(601,16): error TS18046: 'tripletData' is of type 'unknown'.
+js/services/transportService.ts(602,18): error TS18046: 'tripletData' is of type 'unknown'.
+js/services/transportService.ts(603,34): error TS18046: 'tripletData' is of type 'unknown'.
+js/services/transportService.ts(604,16): error TS18046: 'tripletData' is of type 'unknown'.
+js/services/transportService.ts(607,26): error TS18046: 'tripletData' is of type 'unknown'.
+js/services/transportService.ts(625,30): error TS2339: Property 'getContext' does not exist on type 'HTMLElement'.
+js/services/transportService.ts(630,22): error TS7006: Parameter 'marker' implicitly has an 'any' type.
+js/services/transportService.ts(653,39): error TS2365: Operator '>' cannot be applied to types 'Time' and 'number'.
+js/services/transportService.ts(658,40): error TS2362: The left-hand side of an arithmetic operation must be of type 'any', 'number', 'bigint' or an enum type.
+js/services/transportService.ts(672,48): error TS2345: Argument of type 'HTMLElement' is not assignable to parameter of type 'HTMLCanvasElement'.
+  Type 'HTMLElement' is missing the following properties from type 'HTMLCanvasElement': height, width, captureStream, getContext, and 3 more.
+js/services/transportService.ts(673,50): error TS2345: Argument of type 'HTMLElement' is not assignable to parameter of type 'HTMLCanvasElement'.
+  Type 'HTMLElement' is missing the following properties from type 'HTMLCanvasElement': height, width, captureStream, getContext, and 3 more.
+js/services/transportService.ts(678,28): error TS2362: The left-hand side of an arithmetic operation must be of type 'any', 'number', 'bigint' or an enum type.
+js/services/transportService.ts(678,53): error TS2363: The right-hand side of an arithmetic operation must be of type 'any', 'number', 'bigint' or an enum type.
+js/services/transportService.ts(680,25): error TS2365: Operator '+' cannot be applied to types 'number' and 'Time'.
+js/services/transportService.ts(680,40): error TS2363: The right-hand side of an arithmetic operation must be of type 'any', 'number', 'bigint' or an enum type.
+js/services/transportService.ts(689,28): error TS2532: Object is possibly 'undefined'.
+js/services/transportService.ts(689,58): error TS2532: Object is possibly 'undefined'.
+js/services/transportService.ts(692,29): error TS18048: 'colEndTime' is possibly 'undefined'.
+js/services/transportService.ts(692,42): error TS18048: 'colStartTime' is possibly 'undefined'.
+js/services/transportService.ts(693,45): error TS18048: 'colStartTime' is possibly 'undefined'.
+js/services/transportService.ts(782,51): error TS2345: Argument of type 'HTMLElement' is not assignable to parameter of type 'HTMLCanvasElement'.
+  Type 'HTMLElement' is missing the following properties from type 'HTMLCanvasElement': height, width, captureStream, getContext, and 3 more.
+js/services/transportService.ts(818,12): error TS2339: Property 'drumVolumeNode' does not exist on type 'Window & typeof globalThis'.
+js/services/transportService.ts(820,12): error TS2339: Property 'transportService' does not exist on type 'Window & typeof globalThis'.
+js/services/transportService.ts(849,98): error TS2345: Argument of type 'null' is not assignable to parameter of type 'string | undefined'.
+js/services/transportService.ts(895,34): error TS2365: Operator '+' cannot be applied to types 'Time' and 'number'.
+js/services/transportService.ts(898,9): error TS2322: Type 'Time' is not assignable to type 'number'.
+  Type 'string' is not assignable to type 'number'.
+js/services/transportService.ts(899,9): error TS2322: Type 'Time' is not assignable to type 'number'.
+  Type 'string' is not assignable to type 'number'.
+js/services/transportService.ts(912,97): error TS2345: Argument of type 'null' is not assignable to parameter of type 'string | undefined'.
+js/services/transportService.ts(1069,34): error TS2339: Property 'getContext' does not exist on type 'HTMLElement'.
+js/services/transportService.ts(1070,49): error TS2345: Argument of type 'HTMLElement' is not assignable to parameter of type 'HTMLCanvasElement'.
+  Type 'HTMLElement' is missing the following properties from type 'HTMLCanvasElement': height, width, captureStream, getContext, and 3 more.
+js/services/transportService.ts(1070,89): error TS2345: Argument of type 'HTMLElement' is not assignable to parameter of type 'HTMLCanvasElement'.
+  Type 'HTMLElement' is missing the following properties from type 'HTMLCanvasElement': height, width, captureStream, getContext, and 3 more.

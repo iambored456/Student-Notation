@@ -74,9 +74,9 @@
     grid-row: 1;
     min-width: var(--slider-thumb-total);
     width: var(--slider-thumb-total);
+    min-height: clamp(60px, 12dvh, 150px);
     height: 100%;
     max-height: 100%;
-    min-height: 0;
     overflow: hidden;
     padding: var(--space-010) 0;
 }

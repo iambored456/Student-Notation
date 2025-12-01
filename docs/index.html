@@ -11,8 +11,8 @@
 <link rel="manifest" href="/Student-Notation/site.webmanifest" />
 <meta name="theme-color" content="#ffffff" />
 <style id="print-style-rules"></style>
-  <script type="module" crossorigin src="/Student-Notation/assets/index-BRU_bVeE.js"></script>
-  <link rel="stylesheet" crossorigin href="/Student-Notation/assets/index-1XvhkCUz.css">
+  <script type="module" crossorigin src="/Student-Notation/assets/index-CMrCsIiG.js"></script>
+  <link rel="stylesheet" crossorigin href="/Student-Notation/assets/index-D3RMVaDM.css">
 </head>
 <body>
 <!-- Sidebar for File/App Actions -->
@@ -59,10 +59,42 @@
             <div class="primary-toolbar-cell primary-toolbar-notebank">
                 <div id="note-bank-container">
                     <div class="note-bank-column">
-                        <div class="note-pair" data-color="#4a90e2"><div class="note circle-note" data-type="circle"></div><div class="note oval-note" data-type="oval"></div></div>
-                        <div class="note-pair" data-color="#2d2d2d"><div class="note circle-note" data-type="circle"></div><div class="note oval-note" data-type="oval"></div></div>
-                        <div class="note-pair" data-color="#d66573"><div class="note circle-note" data-type="circle"></div><div class="note oval-note" data-type="oval"></div></div>
-                        <div class="note-pair" data-color="#68a03f"><div class="note circle-note" data-type="circle"></div><div class="note oval-note" data-type="oval"></div></div>
+                        <div class="note-pair" data-color="#4a90e2">
+                            <div class="note circle-note" data-type="circle"></div>
+                            <div class="note oval-note" data-type="oval"></div>
+                            <div class="note diamond-note" data-type="diamond" aria-label="Sixteenth note jewel">
+                                <svg class="diamond-icon" viewBox="0 0 120 120" aria-hidden="true" focusable="false">
+                                    <path d="M60 5 L35 48.3 L35 71.7 L60 115 L85 71.7 L85 48.3 Z" />
+                                </svg>
+                            </div>
+                        </div>
+                        <div class="note-pair" data-color="#2d2d2d">
+                            <div class="note circle-note" data-type="circle"></div>
+                            <div class="note oval-note" data-type="oval"></div>
+                            <div class="note diamond-note" data-type="diamond" aria-label="Sixteenth note jewel">
+                                <svg class="diamond-icon" viewBox="0 0 120 120" aria-hidden="true" focusable="false">
+                                    <path d="M60 5 L35 48.3 L35 71.7 L60 115 L85 71.7 L85 48.3 Z" />
+                                </svg>
+                            </div>
+                        </div>
+                        <div class="note-pair" data-color="#d66573">
+                            <div class="note circle-note" data-type="circle"></div>
+                            <div class="note oval-note" data-type="oval"></div>
+                            <div class="note diamond-note" data-type="diamond" aria-label="Sixteenth note jewel">
+                                <svg class="diamond-icon" viewBox="0 0 120 120" aria-hidden="true" focusable="false">
+                                    <path d="M60 5 L35 48.3 L35 71.7 L60 115 L85 71.7 L85 48.3 Z" />
+                                </svg>
+                            </div>
+                        </div>
+                        <div class="note-pair" data-color="#68a03f">
+                            <div class="note circle-note" data-type="circle"></div>
+                            <div class="note oval-note" data-type="oval"></div>
+                            <div class="note diamond-note" data-type="diamond" aria-label="Sixteenth note jewel">
+                                <svg class="diamond-icon" viewBox="0 0 120 120" aria-hidden="true" focusable="false">
+                                    <path d="M60 5 L35 48.3 L35 71.7 L60 115 L85 71.7 L85 48.3 Z" />
+                                </svg>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -276,7 +308,7 @@
                                        <h4 class="panel-section-title">Select Range</h4>
                                        <div class="clef-wheels-wrapper">
                                            <div class="clef-picker-column">
-                                               <div class="clef-wheel" id="clef-top-wheel" tabindex="0" aria-label="Select top note">
+                                               <div class="clef-wheel" id="clef-bottom-wheel" tabindex="0" aria-label="Select bottom note">
                                                    <div class="clef-wheel-viewport">
                                                        <div class="clef-wheel-options"></div>
                                                    </div>
@@ -284,7 +316,7 @@
                                                </div>
                                            </div>
                                            <div class="clef-picker-column">
-                                               <div class="clef-wheel" id="clef-bottom-wheel" tabindex="0" aria-label="Select bottom note">
+                                               <div class="clef-wheel" id="clef-top-wheel" tabindex="0" aria-label="Select top note">
                                                    <div class="clef-wheel-viewport">
                                                        <div class="clef-wheel-options"></div>
                                                    </div>
@@ -297,7 +329,6 @@
                                        <h4 class="panel-section-title">Range Info</h4>
                                        <div class="clef-summary-column">
                                            <div class="clef-summary-card">
-                                               <h4>Active Range</h4>
                                                <div class="clef-summary-label" id="clef-range-label">C8 - C1</div>
                                                <div class="clef-summary-metadata">
                                                    <span id="clef-range-count">88 pitches</span>
@@ -305,7 +336,7 @@
                                                <div class="clef-lock-row">
                                                    <label class="clef-lock-label">
                                                        <input type="checkbox" id="clef-lock-toggle">
-                                                       Lock Range (trim + constrain zoom)
+                                                       Lock Range
                                                    </label>
                                                </div>
                                            </div>
@@ -395,7 +426,7 @@
                                 <button class="harmony-preset-button" data-chord-intervals="[&quot;1P&quot;, &quot;3m&quot;, &quot;5P&quot;]" title="Minor triad">x</button>
                                 <button class="harmony-preset-button" data-chord-intervals="[&quot;1P&quot;, &quot;3m&quot;, &quot;5d&quot;]" title="Diminished triad">x°</button>
                                 <button class="harmony-preset-button" data-chord-intervals="[&quot;1P&quot;, &quot;3M&quot;, &quot;6m&quot;]" title="Augmented triad">X+</button>
-                                <button class="harmony-preset-button" data-chord-intervals="[&quot;1P&quot;, &quot;3M&quot;, &quot;5P&quot;, &quot;7m&quot;]" title="Dominant 7">X7</button>
+                                <button class="harmony-preset-button" data-chord-intervals="[&quot;1P&quot;, &quot;3M&quot;, &quot;5P&quot;, &quot;7m&quot;]" title="Dominant 7">X⁷</button>
                                 <button class="harmony-preset-button" data-chord-intervals="[&quot;1P&quot;, &quot;3m&quot;, &quot;5P&quot;, &quot;7m&quot;]" title="Minor 7">x⁷</button>
                                 <button class="harmony-preset-button" data-chord-intervals="[&quot;1P&quot;, &quot;3M&quot;, &quot;5P&quot;, &quot;7M&quot;]" title="Major 7">Xmaj⁷</button>
                                 <button class="harmony-preset-button" data-chord-intervals="[&quot;1P&quot;, &quot;3m&quot;, &quot;5d&quot;, &quot;7m&quot;]" title="Half-diminished 7">ø⁷</button>
@@ -550,7 +581,87 @@
                                             </button>
                                         </div>
                                         <div class="draw-tool-options" id="arrow-tool-options">
-                                            <!-- Arrow options will be populated here -->
+                                            <div class="draw-option-group">
+                                                <div class="draw-toolbar-row">
+                                                    <!-- Stroke weight popup -->
+                                                    <div class="draw-popup-trigger">
+                                                        <button class="draw-toolbar-button" title="Stroke width">
+                                                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                                <line x1="4" y1="12" x2="20" y2="12"/>
+                                                            </svg>
+                                                        </button>
+                                                        <div class="draw-popup-menu">
+                                                            <div class="draw-option-label">Stroke</div>
+                                                            <input type="range" id="arrow-stroke-weight" min="1" max="20" value="4" aria-label="Arrow stroke weight">
+                                                        </div>
+                                                    </div>
+
+                                                    <!-- Line style popup -->
+                                                    <div class="draw-popup-trigger">
+                                                        <button class="draw-toolbar-button" title="Line style">
+                                                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                                <line x1="4" y1="8" x2="20" y2="8" stroke-dasharray="4 3"/>
+                                                                <line x1="4" y1="16" x2="20" y2="16"/>
+                                                            </svg>
+                                                        </button>
+                                                        <div class="draw-popup-menu">
+                                                            <div class="draw-option-label">Line Style</div>
+                                                            <div class="draw-button-group">
+                                                                <button class="draw-option-button active" data-line-style="solid">Solid</button>
+                                                                <button class="draw-option-button" data-line-style="dashed">Dashed</button>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <div class="draw-toolbar-row">
+                                                    <!-- Left arrowhead popup -->
+                                                    <div class="draw-popup-trigger">
+                                                        <button class="draw-toolbar-button" id="arrow-start-head-trigger" title="Start head">
+                                                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                                <polyline points="9,5 3,12 9,19"/>
+                                                                <line x1="3" y1="12" x2="21" y2="12"/>
+                                                            </svg>
+                                                        </button>
+                                                                <div class="draw-popup-menu">
+                                                                    <div class="draw-option-label">Start</div>
+                                                                    <div class="draw-button-group">
+                                                                    <button class="draw-option-button active" data-arrow-start="none">No head</button>
+                                                                    <button class="draw-option-button" data-arrow-start="filled-arrow">Arrow</button>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+
+                                                    <!-- Swap heads -->
+                                                    <button class="draw-toolbar-button" id="arrow-swap-heads" title="Swap heads">
+                                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                            <polyline points="9 5 15 5 15 11"/>
+                                                            <polyline points="15 19 9 19 9 13"/>
+                                                            <line x1="9" y1="5" x2="5" y2="9"/>
+                                                            <line x1="15" y1="19" x2="19" y2="15"/>
+                                                        </svg>
+                                                    </button>
+
+                                                    <!-- Right arrowhead popup -->
+                                                    <div class="draw-popup-trigger">
+                                                        <button class="draw-toolbar-button" id="arrow-end-head-trigger" title="End head">
+                                                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                                <polyline points="15,5 21,12 15,19"/>
+                                                                <line x1="3" y1="12" x2="21" y2="12"/>
+                                                            </svg>
+                                                        </button>
+                                                                <div class="draw-popup-menu">
+                                                                    <div class="draw-option-label">End</div>
+                                                                    <div class="draw-button-group">
+                                                                    <button class="draw-option-button active" data-arrow-end="filled-arrow">Arrow</button>
+                                                                    <button class="draw-option-button" data-arrow-end="none">No head</button>
+                                                                    </div>
+                                                                    <div class="draw-option-label">Head Size</div>
+                                                                    <input type="range" id="arrow-head-size" min="8" max="32" value="12" aria-label="Arrowhead size">
+                                                                </div>
+                                                            </div>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
 
@@ -566,7 +677,56 @@
                                             </button>
                                         </div>
                                         <div class="draw-tool-options" id="text-tool-options">
-                                            <!-- Text options will be populated here -->
+                                            <div class="draw-option-group draw-toolbar-row">
+                                                <!-- Size popup -->
+                                                <div class="draw-popup-trigger">
+                                                    <button class="draw-toolbar-button" title="Text size">
+                                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                            <path d="M4 18h16"/>
+                                                            <path d="M8 18l4-12 4 12"/>
+                                                            <path d="M10 12h4"/>
+                                                        </svg>
+                                                    </button>
+                                                    <div class="draw-popup-menu">
+                                                        <div class="draw-option-label">Size (px)</div>
+                                                        <input type="number" id="text-size-input" min="8" max="72" value="16" aria-label="Text size (px)">
+                                                    </div>
+                                                </div>
+
+                                                <!-- Colour popup -->
+                                                <div class="draw-popup-trigger">
+                                                    <button class="draw-toolbar-button" title="Text colour">
+                                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                            <path d="M12 3l6 16"/>
+                                                            <path d="M6 19l6-16"/>
+                                                            <path d="M10 12h4"/>
+                                                        </svg>
+                                                    </button>
+                                                    <div class="draw-popup-menu">
+                                                        <div class="draw-option-label">Colour</div>
+                                                        <div class="draw-color-picker">
+                                                            <button class="draw-color-button active" data-color="#000000" style="background-color: #000000;" aria-label="Black text"></button>
+                                                            <button class="draw-color-button" data-color="#4a90e2" style="background-color: #4a90e2;" aria-label="Blue text"></button>
+                                                            <button class="draw-color-button" data-color="#d66573" style="background-color: #d66573;" aria-label="Red text"></button>
+                                                            <button class="draw-color-button" data-color="#68a03f" style="background-color: #68a03f;" aria-label="Green text"></button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <!-- Style buttons -->
+                                                <div class="text-style-rows">
+                                                    <div class="draw-button-group">
+                                                        <button class="draw-option-button" data-text-style="bold">B</button>
+                                                        <button class="draw-option-button" data-text-style="italic">I</button>
+                                                        <button class="draw-option-button" data-text-style="underline">U</button>
+                                                    </div>
+                                                    <div class="draw-button-group">
+                                                        <button class="draw-option-button" data-text-style="background">Bg</button>
+                                                        <button class="draw-option-button" data-text-style="superscript">x<sup>2</sup></button>
+                                                        <button class="draw-option-button" data-text-style="subscript">x<sub>2</sub></button>
+                                                    </div>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
 
@@ -582,7 +742,41 @@
                                             </button>
                                         </div>
                                         <div class="draw-tool-options" id="marker-tool-options">
-                                            <!-- Marker options will be populated here -->
+                                            <div class="draw-option-group draw-toolbar-row">
+                                                <!-- Size popup -->
+                                                <div class="draw-popup-trigger">
+                                                    <button class="draw-toolbar-button" title="Marker size">
+                                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                            <path d="M6 19l12-14"/>
+                                                            <path d="M6 19l-2 4 4-2"/>
+                                                        </svg>
+                                                    </button>
+                                                    <div class="draw-popup-menu">
+                                                        <div class="draw-option-label">Size</div>
+                                                        <input type="range" id="marker-size-input" min="2" max="20" value="6" aria-label="Marker size">
+                                                    </div>
+                                                </div>
+
+                                                <!-- Colours popup -->
+                                                <div class="draw-popup-trigger">
+                                                    <button class="draw-toolbar-button" title="Marker colour">
+                                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                            <path d="M19 4l-7 7"/>
+                                                            <path d="M5 20l3.5-1.5"/>
+                                                            <path d="M16 7l1.5 1.5"/>
+                                                        </svg>
+                                                    </button>
+                                                    <div class="draw-popup-menu">
+                                                        <div class="draw-option-label">Colours</div>
+                                                        <div class="draw-color-picker">
+                                                            <button class="draw-color-button" data-color="#4a90e2" style="background-color: #4a90e2;" aria-label="Blue marker"></button>
+                                                            <button class="draw-color-button" data-color="#2d2d2d" style="background-color: #2d2d2d;" aria-label="Black marker"></button>
+                                                            <button class="draw-color-button" data-color="#d66573" style="background-color: #d66573;" aria-label="Red marker"></button>
+                                                            <button class="draw-color-button" data-color="#68a03f" style="background-color: #68a03f;" aria-label="Green marker"></button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
 
@@ -598,7 +792,38 @@
                                             </button>
                                         </div>
                                         <div class="draw-tool-options" id="highlighter-tool-options">
-                                            <!-- Highlighter options will be populated here -->
+                                            <div class="draw-option-group draw-toolbar-row">
+                                                <!-- Size popup -->
+                                                <div class="draw-popup-trigger">
+                                                    <button class="draw-toolbar-button" title="Highlighter size">
+                                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                            <rect x="5" y="5" width="10" height="10" rx="2"/>
+                                                            <path d="M9 15l-2 4"/>
+                                                        </svg>
+                                                    </button>
+                                                    <div class="draw-popup-menu">
+                                                        <div class="draw-option-label">Size</div>
+                                                        <input type="range" id="highlighter-size-input" min="4" max="30" value="10" aria-label="Highlighter size">
+                                                    </div>
+                                                </div>
+
+                                                <!-- Colours popup -->
+                                                <div class="draw-popup-trigger">
+                                                    <button class="draw-toolbar-button" title="Highlighter colour">
+                                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                            <rect x="7" y="7" width="10" height="10" rx="2"/>
+                                                        </svg>
+                                                    </button>
+                                                    <div class="draw-popup-menu">
+                                                        <div class="draw-option-label">Colours</div>
+                                                        <div class="draw-color-picker">
+                                                            <button class="draw-color-button" data-color="#9fc5ff" style="background-color: #9fc5ff;" aria-label="Light blue highlighter"></button>
+                                                            <button class="draw-color-button" data-color="#c2c2c2" style="background-color: #c2c2c2;" aria-label="Gray highlighter"></button>
+                                                            <button class="draw-color-button" data-color="#ffd166" style="background-color: #ffd166;" aria-label="Yellow highlighter"></button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
 
@@ -612,7 +837,11 @@
                                             </button>
                                         </div>
                                         <div class="draw-tool-options" id="lasso-tool-options">
-                                            <!-- Lasso options will be populated here -->
+                                            <div class="draw-option-group draw-toolbar-row">
+                                                <div class="draw-option-help">
+                                                    Draw around notes to select and drag them as a group.
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -624,14 +853,11 @@
 
             <!-- Rhythm Tab -->
             <div class="tab-panel" id="rhythm-panel">
-                <div class="control-section rhythm-tabs-container">
-                    <div class="rhythm-tabs">
-                        <button class="rhythm-tab-button active" data-rhythm-tab="controls">Controls</button>
-                        <button class="rhythm-tab-button" data-rhythm-tab="stamps">Sixteenths</button>
-                        <button class="rhythm-tab-button" data-rhythm-tab="triplets">Triplets</button>
-                    </div>
-                    <div class="rhythm-tab-content">
-                        <div class="rhythm-tab-panel tempo-tab-panel active" id="controls-panel">
+                <!-- Controls Section (Separate) -->
+                <div class="control-section rhythm-controls-container">
+                    <div class="rhythm-controls-section">
+                        <button class="rhythm-tab-button rhythm-controls-tab-button active" disabled>Controls</button>
+                        <div class="rhythm-controls-content-box">
                             <div class="tempo-content-box">
                                 <div class="tempo-container rhythm-controls-grid">
                                     <div class="tempo-boxes-container tempo-column">
@@ -650,7 +876,7 @@
                                     </div>
                                     <div class="tempo-slider-container tempo-column-2">
                                         <input type="range" id="tempo-slider" min="30" max="240" value="90">
-                                    </div>
+ </div>
                                 </div>
                             </div>
                             <div class="rhythm-structure-container">
@@ -670,21 +896,33 @@
                                 <div class="control-subsection">
                                     <h4>Modulation</h4>
                                     <div class="modulation-controls">
-                                        <button class="toolkit-button modulation-ratio-btn" id="modulation-2-3-btn" data-ratio="2:3" title="Place 2:3 modulation marker">2:3</button>
-                                        <button class="toolkit-button modulation-ratio-btn" id="modulation-3-2-btn" data-ratio="3:2" title="Place 3:2 modulation marker">3:2</button>
+                                        <button class="toolkit-button modulation-ratio-btn" id="modulation-2-3-btn" data-ratio="2:3" title="Place 2:3 modulation marker (33% faster)">2:3 - 33% faster</button>
+                                        <button class="toolkit-button modulation-ratio-btn" id="modulation-3-2-btn" data-ratio="3:2" title="Place 3:2 modulation marker (33% slower)">3:2 - 33% slower</button>
                                         <button class="toolkit-button" id="modulation-clear-btn" title="Clear all modulation markers">Clear</button>
                                     </div>
                                 </div>
                             </div>
                         </div>
-                        <div class="rhythm-tab-panel" id="stamps-panel">
-                            <div id="stamps-toolbar-container" class="stamps-toolbar-container">
-                                <!-- Stamps toolbar will be rendered here by JavaScript -->
-                            </div>
+                    </div>
+                </div>
+
+                <!-- Stamps/Triplets Section (Separate) -->
+                <div class="control-section rhythm-stamps-container">
+                    <div class="rhythm-stamps-controls">
+                        <div class="rhythm-tabs">
+                            <button class="rhythm-tab-button active" data-rhythm-tab="stamps">Sixteenths</button>
+                            <button class="rhythm-tab-button" data-rhythm-tab="triplets">Triplets</button>
                         </div>
-                        <div class="rhythm-tab-panel" id="triplets-panel">
-                            <div id="triplets-toolbar-container" class="triplets-toolbar-container">
-                                <!-- Triplets toolbar will be rendered here by JavaScript -->
+                        <div class="rhythm-tab-content">
+                            <div class="rhythm-tab-panel active" id="stamps-panel">
+                                <div id="stamps-toolbar-container" class="stamps-toolbar-container">
+                                    <!-- Stamps toolbar will be rendered here by JavaScript -->
+                                </div>
+                            </div>
+                            <div class="rhythm-tab-panel" id="triplets-panel">
+                                <div id="triplets-toolbar-container" class="triplets-toolbar-container">
+                                    <!-- Triplets toolbar will be rendered here by JavaScript -->
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -725,7 +963,9 @@
                 <div id="pitch-grid-container">
                     <div id="grid-container">
                         <div id="pitch-canvas-wrapper">
+                            <canvas id="legend-left-canvas"></canvas>
                             <canvas id="notation-grid"></canvas>
+                            <canvas id="legend-right-canvas"></canvas>
                             <canvas id="pitch-paint-canvas"></canvas>
                             <canvas id="playhead-canvas"></canvas>
                             <canvas id="hover-canvas"></canvas>
@@ -737,9 +977,19 @@
                 <div class="grid-scrollbar-inner"></div>
             </div>
             <div id="drum-grid-wrapper">
-                <canvas id="drum-grid"></canvas>
-                <canvas id="drum-playhead-canvas"></canvas>
-                <canvas id="drum-hover-canvas"></canvas>
+                <div class="drum-grid-left-cell">
+                    <!-- Reserved for future drum legends/controls -->
+                </div>
+                <div class="drum-grid-middle-cell">
+                    <div id="drum-canvas-wrapper">
+                        <canvas id="drum-grid"></canvas>
+                        <canvas id="drum-playhead-canvas"></canvas>
+                        <canvas id="drum-hover-canvas"></canvas>
+                    </div>
+                </div>
+                <div class="drum-grid-right-cell">
+                    <!-- Placeholder for alignment with right legend spacing -->
+                </div>
             </div>
         </div>
     </div>
@@ -774,15 +1024,9 @@
                 <canvas id="print-crop-overlay"></canvas>
             </div>
             <div class="print-preview-options">
-                <div class="print-mode-toggle">
-                    <label>
-                        <input type="radio" name="print-mode" id="print-mode-autofit" value="autofit" checked>
-                        <span>Auto-fit</span>
-                    </label>
-                    <label>
-                        <input type="radio" name="print-mode" id="print-mode-custom" value="custom">
-                        <span>Custom Range</span>
-                    </label>
+                <div class="print-info-box">
+                    <p>Prints the three grids in order: button controls, pitch grid, and drum grid.</p>
+                    <p>Use the crop handles on the preview to trim what gets sent to the printer.</p>
                 </div>
 
                 <h3>Layout</h3>
@@ -791,30 +1035,16 @@
                     <button id="print-orientation-toggle" class="toggle-button">Landscape</button>
                 </div>
                 <div class="print-option-row">
-                    <label>Button Grid</label>
-                    <button id="print-buttons-toggle" class="toggle-button active">Include</button>
+                    <label>Left Legend</label>
+                    <button id="print-left-legend-toggle" class="toggle-button active">Include</button>
                 </div>
                 <div class="print-option-row">
-                    <label>Include Drums?</label>
-                    <button id="print-drums-toggle" class="toggle-button active">Include</button>
+                    <label>Right Legend</label>
+                    <button id="print-right-legend-toggle" class="toggle-button active">Include</button>
                 </div>
                 <div class="print-option-row">
-                    <label>Color Mode</label>
+                    <label>Color</label>
                     <button id="print-color-mode-toggle" class="toggle-button active">Color</button>
-                </div>
-
-                <div id="custom-range-controls">
-                    <h3>Pitch Range</h3>
-                    <div class="print-option-row">
-                        <label for="print-top-row-slider">Top Row</label>
-                        <span id="print-top-row-label">C5</span>
-                        <input type="range" id="print-top-row-slider" min="0" max="87" value="36">
-                    </div>
-                    <div class="print-option-row">
-                        <label for="print-bottom-row-slider">Bottom Row</label>
-                        <span id="print-bottom-row-label">G3</span>
-                        <input type="range" id="print-bottom-row-slider" min="0" max="87" value="54">
-                    </div>
                 </div>
             </div>
         </div>
@@ -1139,6 +1369,3 @@
 </script>
 </body>
 </html>
-
-
-

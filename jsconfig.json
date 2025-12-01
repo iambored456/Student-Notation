@@ -7,7 +7,10 @@
       "@services/*": ["js/services/*"],
       "@state/*": ["js/state/*"],
       "@utils/*": ["js/utils/*"],
-      "@/bootstrap/*": ["js/bootstrap/*"]
+      "@/bootstrap/*": ["js/bootstrap/*"],
+      "@/core/*": ["js/core/*"],
+      "@/harmony/*": ["js/harmony/*"],
+      "@/rhythm/*": ["js/rhythm/*"]
     }
   }
 }

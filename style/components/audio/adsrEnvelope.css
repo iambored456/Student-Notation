@@ -7,11 +7,10 @@
     gap: 0;
     overflow: hidden;
     padding: 5px 0 0 5px; /* Top and left padding only */
-    flex: 0 1 300px !important;
+    flex: 0 0 12.5rem;
     min-height: 0;
-    min-width: 0 !important;
-    width: 100% !important;
-    max-width: 300px !important;
+    width: 12.5rem; /* Override .control-section's width: fit-content */
+    min-width: 12.5rem; /* Override .control-section's min-width: fit-content */
     background-color: var(--c-surface);
     border: 1px solid var(--c-border);
     border-radius: var(--border-radius-md);

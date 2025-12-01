@@ -1,0 +1,405 @@
+// Type definitions for Tone.js v15
+// These supplement the types from the 'tone' package
+
+declare module 'tone' {
+  export type Time = number | string;
+  export type Frequency = number | string;
+  export type NormalRange = number;
+  export type Positive = number;
+  export type Seconds = number;
+  export type Decibels = number;
+
+  export interface ToneTime {
+    toSeconds(): Seconds;
+    toNotation(): string;
+  }
+
+  export interface TimeConstructor {
+    (value?: Time): ToneTime;
+    new (value?: Time): ToneTime;
+  }
+
+  export const Time: TimeConstructor;
+
+  export interface ToneAudioNodeOptions {
+    context?: BaseContext;
+  }
+
+  export class ToneAudioNode {
+    constructor(options?: ToneAudioNodeOptions);
+    connect(destination: ToneAudioNode | AudioNode, outputNum?: number, inputNum?: number): this;
+    disconnect(destination?: ToneAudioNode | AudioNode, outputNum?: number, inputNum?: number): this;
+    toDestination(): this;
+    dispose(): this;
+    context: BaseContext;
+  }
+
+  export interface SourceOptions extends ToneAudioNodeOptions {
+    volume?: Decibels;
+    mute?: boolean;
+  }
+
+  export class Source extends ToneAudioNode {
+    constructor(options?: SourceOptions);
+    start(time?: Time, offset?: Time, duration?: Time): this;
+    stop(time?: Time): this;
+    restart(time?: Time, offset?: Time, duration?: Time): this;
+    readonly state: 'started' | 'stopped';
+    volume: Param<'decibels'>;
+    mute: boolean;
+  }
+
+  export interface InstrumentOptions extends SourceOptions {
+    volume?: Decibels;
+  }
+
+  export class Instrument extends Source {
+    constructor(options?: InstrumentOptions);
+    triggerAttack(note: Frequency, time?: Time, velocity?: NormalRange): this;
+    triggerRelease(time?: Time): this;
+    triggerAttackRelease(note: Frequency, duration: Time, time?: Time, velocity?: NormalRange): this;
+    releaseAll(time?: Time): this;
+  }
+
+  export interface SynthOptions extends InstrumentOptions {
+    envelope?: EnvelopeOptions;
+    oscillator?: Record<string, unknown>;
+  }
+
+  export class Synth extends Instrument {
+    constructor(options?: SynthOptions);
+  }
+
+  export interface OmniOscillatorOptions {
+    type?: OscillatorType | string;
+    frequency?: Frequency;
+    detune?: number;
+    phase?: number;
+  }
+
+  export class OmniOscillator extends Source {
+    constructor(options?: OmniOscillatorOptions);
+    type: OscillatorType | string;
+    frequency: Param<'frequency'>;
+    detune: Param<'cents'>;
+    phase: number;
+  }
+
+  export interface EnvelopeOptions {
+    attack?: Time;
+    decay?: Time;
+    sustain?: NormalRange;
+    release?: Time;
+    attackCurve?: 'linear' | 'exponential' | number[];
+    decayCurve?: 'linear' | 'exponential';
+    releaseCurve?: 'linear' | 'exponential' | number[];
+  }
+
+  export class Envelope extends ToneAudioNode {
+    constructor(options?: EnvelopeOptions);
+    triggerAttack(time?: Time, velocity?: NormalRange): this;
+    triggerRelease(time?: Time): this;
+    triggerAttackRelease(duration: Time, time?: Time, velocity?: NormalRange): this;
+    cancel(time?: Time): this;
+    attack: Time;
+    decay: Time;
+    sustain: NormalRange;
+    release: Time;
+  }
+
+  export interface FilterOptions extends ToneAudioNodeOptions {
+    type?: BiquadFilterType;
+    frequency?: Frequency;
+    Q?: Positive;
+    gain?: Decibels;
+    rolloff?: -12 | -24 | -48 | -96;
+  }
+
+  export class Filter extends ToneAudioNode {
+    constructor(options?: FilterOptions);
+    type: BiquadFilterType;
+    frequency: Param<'frequency'>;
+    Q: Param<'positive'>;
+    gain: Param<'decibels'>;
+    rolloff: -12 | -24 | -48 | -96;
+  }
+
+  export interface GainOptions extends ToneAudioNodeOptions {
+    gain?: number;
+  }
+
+  export class Gain extends ToneAudioNode {
+    constructor(options?: GainOptions);
+    gain: Param<'gain'>;
+  }
+
+  export interface UserMediaOptions extends ToneAudioNodeOptions {
+    volume?: Decibels;
+  }
+
+  export class UserMedia extends ToneAudioNode {
+    constructor(options?: UserMediaOptions);
+    open(): Promise<void>;
+    close(): Promise<void>;
+  }
+
+  export interface VolumeOptions extends ToneAudioNodeOptions {
+    volume?: Decibels;
+    mute?: boolean;
+  }
+
+  export class Volume extends ToneAudioNode {
+    constructor(options?: VolumeOptions);
+    volume: Param<'decibels'>;
+    mute: boolean;
+  }
+
+  export interface LFOOptions extends ToneAudioNodeOptions {
+    frequency?: Frequency;
+    min?: number;
+    max?: number;
+    phase?: number;
+    type?: OscillatorType;
+    amplitude?: NormalRange;
+  }
+
+  export class LFO extends ToneAudioNode {
+    constructor(options?: LFOOptions);
+    start(time?: Time): this;
+    stop(time?: Time): this;
+    sync(): this;
+    unsync(): this;
+    frequency: Param<'frequency'>;
+    amplitude: Param<'normalRange'>;
+    type: OscillatorType;
+    phase: number;
+    min: number;
+    max: number;
+  }
+
+  export interface DelayOptions extends ToneAudioNodeOptions {
+    delayTime?: Time;
+    maxDelay?: Seconds;
+  }
+
+  export class Delay extends ToneAudioNode {
+    constructor(options?: DelayOptions);
+    delayTime: Param<'time'>;
+    maxDelay: Seconds;
+  }
+
+  export interface FeedbackDelayOptions extends DelayOptions {
+    feedback?: NormalRange;
+  }
+
+  export class FeedbackDelay extends ToneAudioNode {
+    constructor(options?: FeedbackDelayOptions);
+    delayTime: Param<'time'>;
+    feedback: Param<'normalRange'>;
+  }
+
+  export interface ReverbOptions extends ToneAudioNodeOptions {
+    decay?: Seconds;
+    preDelay?: Seconds;
+  }
+
+  export class Reverb extends ToneAudioNode {
+    constructor(options?: ReverbOptions);
+    ready: Promise<void>;
+    decay: Seconds;
+    preDelay: Seconds;
+    generate(): Promise<void>;
+  }
+
+  export interface Param<TypeName extends string> extends ToneAudioNode {
+    value: number;
+    readonly defaultValue: number;
+    readonly minValue: number;
+    readonly maxValue: number;
+    setValueAtTime(value: number, time: Time): this;
+    linearRampToValueAtTime(value: number, endTime: Time): this;
+    exponentialRampToValueAtTime(value: number, endTime: Time): this;
+    setTargetAtTime(value: number, startTime: Time, timeConstant: number): this;
+    setValueCurveAtTime(values: number[], startTime: Time, duration: Time, scaling?: number): this;
+    cancelScheduledValues(time: Time): this;
+    cancelAndHoldAtTime(time: Time): this;
+    rampTo(value: number, rampTime: Time, startTime?: Time): this;
+    targetRampTo(value: number, rampTime: Time, startTime?: Time): this;
+  }
+
+  export class Transport {
+    static start(time?: Time, offset?: Time): void;
+    static stop(time?: Time): void;
+    static pause(time?: Time): void;
+    static toggle(time?: Time): void;
+    static schedule(callback: (time: Time) => void, time: Time): number;
+    static scheduleOnce(callback: (time: Time) => void, time: Time): number;
+    static scheduleRepeat(callback: (time: Time) => void, interval: Time, startTime?: Time, duration?: Time): number;
+    static clear(eventId: number): void;
+    static cancel(after?: Time): void;
+    static get bpm(): { value: number };
+    static set bpm(bpm: { value: number });
+    static get timeSignature(): number | number[];
+    static set timeSignature(timeSig: number | number[]);
+    static get loop(): boolean;
+    static set loop(loop: boolean);
+    static get loopStart(): Time;
+    static set loopStart(time: Time);
+    static get loopEnd(): Time;
+    static set loopEnd(time: Time);
+    static get state(): 'started' | 'paused' | 'stopped';
+    static get seconds(): Seconds;
+    static set seconds(s: Seconds);
+    static get position(): Time;
+    static set position(time: Time);
+    static get progress(): number;
+    static nextSubdivision(subdivision: Time): Seconds;
+    static syncSignal(signal: any, ratio?: number): void;
+    static unsyncSignal(signal: any): void;
+  }
+
+  export const Transport: Transport;
+
+  export class Destination extends ToneAudioNode {
+    volume: Param<'decibels'>;
+    mute: boolean;
+  }
+
+  export const Destination: Destination;
+
+  export class Context extends BaseContext {
+    readonly rawContext: AudioContext;
+    readonly destination: Destination;
+    readonly state: 'running' | 'suspended' | 'closed';
+    resume(): Promise<void>;
+    close(): Promise<void>;
+    getConstant(value: number): AudioBufferSourceNode;
+  }
+
+  export const context: Context;
+
+  export function now(): Seconds;
+  export function immediate(): Seconds;
+
+  export type OscillatorType =
+    | 'sine'
+    | 'square'
+    | 'sawtooth'
+    | 'triangle'
+    | 'sine2'
+    | 'sine3'
+    | 'sine4'
+    | 'sine5'
+    | 'sine6'
+    | 'sine7'
+    | 'sine8';
+
+  export type BiquadFilterType =
+    | 'lowpass'
+    | 'highpass'
+    | 'bandpass'
+    | 'lowshelf'
+    | 'highshelf'
+    | 'notch'
+    | 'allpass'
+    | 'peaking';
+
+  export class BaseContext {
+    readonly sampleRate: number;
+    readonly currentTime: Seconds;
+    readonly lookAhead: Seconds;
+    readonly updateInterval: Seconds;
+  }
+
+  export interface MeterOptions extends ToneAudioNodeOptions {
+    smoothing?: NormalRange;
+    normalRange?: boolean;
+    channels?: number;
+  }
+
+  export class Meter extends ToneAudioNode {
+    constructor(options?: MeterOptions);
+    getValue(): number | number[];
+    smoothing: NormalRange;
+    normalRange: boolean;
+    channels: number;
+  }
+
+  export interface AnalyserOptions extends ToneAudioNodeOptions {
+    size?: number;
+    type?: 'fft' | 'waveform';
+    smoothing?: NormalRange;
+    channels?: number;
+  }
+
+  export class Analyser extends ToneAudioNode {
+    constructor(options?: AnalyserOptions);
+    getValue(): Float32Array | Float32Array[];
+    size: number;
+    type: 'fft' | 'waveform';
+    smoothing: NormalRange;
+    channels: number;
+  }
+
+  export class Draw {
+    static schedule(callback: () => void, time: Time): void;
+    static cancel(id: number): void;
+  }
+
+  export const Draw: Draw;
+
+  export interface PlayerOptions extends SourceOptions {
+    url?: string | AudioBuffer;
+    loop?: boolean;
+    loopStart?: Time;
+    loopEnd?: Time;
+    autostart?: boolean;
+    playbackRate?: Positive;
+    reverse?: boolean;
+    fadeIn?: Time;
+    fadeOut?: Time;
+  }
+
+  export class Player extends Source {
+    constructor(url?: string | AudioBuffer | PlayerOptions, onload?: () => void);
+    constructor(options?: PlayerOptions);
+    load(url: string | AudioBuffer): Promise<this>;
+    start(time?: Time, offset?: Time, duration?: Time): this;
+    stop(time?: Time): this;
+    restart(time?: Time, offset?: Time, duration?: Time): this;
+    seek(offset: Time, time?: Time): this;
+    reverse: boolean;
+    loop: boolean;
+    loopStart: Time;
+    loopEnd: Time;
+    playbackRate: Positive;
+    buffer: any;
+    loaded: boolean;
+  }
+
+  export interface PlayersOptions extends ToneAudioNodeOptions {
+    urls?: { [note: string]: string | AudioBuffer };
+    volume?: Decibels;
+    mute?: boolean;
+    onload?: () => void;
+    fadeIn?: Time;
+    fadeOut?: Time;
+  }
+
+  export class Players extends ToneAudioNode {
+    constructor(urls?: { [note: string]: string | AudioBuffer }, options?: PlayersOptions);
+    constructor(urls?: { [note: string]: string | AudioBuffer }, onload?: () => void);
+    player(name: string): Player;
+    has(name: string): boolean;
+    add(name: string, url: string | AudioBuffer, callback?: () => void): this;
+    volume: Param<'decibels'>;
+    mute: boolean;
+    fadeIn: Time;
+    fadeOut: Time;
+    readonly loaded: boolean;
+  }
+
+  // Top-level Tone functions
+  export function start(): Promise<void>;
+  export function getContext(): Context;
+}

@@ -27,6 +27,13 @@
     min-width: 0;
     gap: 0;
     height: 100%;
+    /* Default to a vivid neutral accent when no note colour is set (overridden by JS once a note is chosen) */
+    --c-accent: var(--c-accent-neutral, #ffc107);
+    --c-accent-light: var(--c-accent-neutral-light, #ffd54f);
+    --harmony-partial-bg: rgba(var(--c-accent-neutral-rgb, 255, 193, 7), 0.25);
+    --harmony-partial-border: rgba(var(--c-accent-neutral-rgb, 255, 193, 7), 0.4);
+    --harmony-partial-bg-hover: rgba(var(--c-accent-neutral-rgb, 255, 193, 7), 0.4);
+    --harmony-partial-border-hover: rgba(var(--c-accent-neutral-rgb, 255, 193, 7), 0.6);
 }
 
 .pitch-tabs {
@@ -102,7 +109,7 @@
     background-color: var(--c-surface);
     border: 1px solid var(--c-border);
     border-radius: var(--border-radius-md);
-    padding: var(--space-015);
+    padding: clamp(0.25rem, 1dvh, var(--space-015));
     box-shadow: var(--box-shadow-sm);
     position: relative;
     z-index: 1;
@@ -137,21 +144,34 @@
 }
 
 /* --- Harmony Preset Button Styles --- */
-.harmony-preset-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--space-015); flex: 1; }
+.harmony-preset-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: clamp(0.125rem, 0.5dvh, var(--space-015));
+    flex: 1;
+    grid-auto-rows: 1fr; /* keep all four rows even and fill available height */
+    align-content: stretch;
+}
 .harmony-preset-grid.chords-grid-6col {
     grid-template-columns: repeat(6, 1fr);
     grid-auto-rows: 1fr;
-    gap: var(--space-015);
+    gap: clamp(2px, 0.3dvh, var(--space-015));
 }
 .harmony-preset-button {
-    background-color: transparent; color: var(--c-text);
-    border: 1px solid var(--c-border); border-radius: var(--border-radius-sm);
-    font-size: 18px; font-weight: bold; min-height: 40px;
+    background-color: transparent;
+    color: var(--c-text);
+    border: 1px solid var(--c-border);
+    border-radius: var(--border-radius-sm);
+    font-size: clamp(14px, 2.4dvh, 22px);
+    font-weight: bold;
+    min-height: clamp(28px, 3.5dvh, 40px);
+    padding: clamp(2px, 0.3dvh, 4px);
+    line-height: 1.1;
 }
 .chords-grid-6col .harmony-preset-button {
-    font-size: 14px;
-    min-height: 32px;
-    padding: 2px 4px;
+    font-size: clamp(14px, 2.4dvh, 18px);
+    min-height: clamp(20px, 2.5dvh, 32px);
+    padding: clamp(1px, 0.2dvh, 2px) clamp(2px, 0.3dvw, 4px);
 }
 
 /* --- Intervals Panel Layout --- */
@@ -164,7 +184,7 @@
 .intervals-panel-section {
     display: flex;
     flex-direction: column;
-    gap: var(--space-015);
+    gap: 0;
     align-items: flex-start;
 }
 
@@ -220,14 +240,14 @@
 /* --- Chords Panel Layout (now includes intervals) --- */
 .chords-layout {
     display: flex;
-    gap: var(--space-025);
-    align-items: flex-start;
+    gap: clamp(0.125rem, 0.5dvw, var(--space-025));
+    align-items: stretch; /* allow columns to fill available height */
 }
 
 .chords-panel-section {
     display: flex;
     flex-direction: column;
-    gap: var(--space-015);
+    gap: 0;
     align-items: flex-start;
 }
 
@@ -236,9 +256,13 @@
     flex: 0 0 auto;
 }
 
-.chords-panel-section.intervals-grid-section,
+.chords-panel-section.intervals-grid-section {
+    flex: 0 0 auto; /* shrink to content width */
+}
+
 .chords-panel-section.chords-grid-section {
     flex: 1;
+    min-height: 0;
 }
 
 .chord-inversion-column {
@@ -565,9 +589,9 @@
 .panel-section-title {
     margin: 0;
     color: var(--c-text-muted);
-    font-size: 0.75em;
+    font-size: clamp(0.55rem, 1dvh, 0.75rem);
     text-transform: uppercase;
-    letter-spacing: 0.5px;
+    letter-spacing: 0.3px;
     font-weight: 600;
 }
 
@@ -579,11 +603,25 @@
 .intervals-grid-column,
 .chords-grid-column {
     flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.intervals-grid-column {
+    width: max-content;
+    max-width: 100%;
+}
+
+/* Ensure the chords grid grows to fill its column, making buttons taller */
+.chords-grid-column .chords-grid {
+    flex: 1;
 }
 
 /* --- Intervals 4x4 Grid Specific Styles --- */
 .intervals-4x4-grid {
     gap: 2px;
+    width: max-content;
 }
 .intervals-4x4-grid .harmony-preset-button {
     width: 40px;
@@ -620,16 +658,16 @@
 
 /* Style for partial chord matches - lighter highlighting */
 .harmony-preset-button.partial-match {
-    background-color: rgba(99, 169, 253, 0.25); /* 25% opacity of --c-accent-light */
+    background-color: var(--harmony-partial-bg, rgba(99, 169, 253, 0.25)); /* 25% opacity of --c-accent-light */
     color: var(--c-text, #212529);
-    border-color: rgba(74, 144, 226, 0.4); /* 40% opacity of --c-accent */
+    border-color: var(--harmony-partial-border, rgba(74, 144, 226, 0.4)); /* 40% opacity of --c-accent */
     font-weight: 500;
     opacity: 0.7;
 }
 
 .harmony-preset-button.partial-match:hover {
-    background-color: rgba(99, 169, 253, 0.4); /* Slightly stronger on hover */
-    border-color: rgba(74, 144, 226, 0.6);
+    background-color: var(--harmony-partial-bg-hover, rgba(99, 169, 253, 0.4)); /* Slightly stronger on hover */
+    border-color: var(--harmony-partial-border-hover, rgba(74, 144, 226, 0.6));
     opacity: 0.85;
 }
 

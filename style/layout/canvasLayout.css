@@ -101,6 +101,142 @@
   display: none;
 }
 
+#drum-grid-wrapper {
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  gap: 0;
+  flex: 0 0 auto;
+  width: fit-content; /* Will be set by JavaScript to match pitch-grid-container */
+  min-width: fit-content;
+  min-height: 90px;
+  overflow-x: visible;
+  overflow-y: hidden;
+  position: relative;
+  background-color: var(--c-surface);
+  border-radius: 0 0 var(--border-radius-md) var(--border-radius-md);
+  border-top: 2px solid var(--c-border-strong);
+}
+
+#drum-grid-wrapper > * {
+  pointer-events: auto;
+}
+
+.drum-grid-left-cell,
+.drum-grid-middle-cell,
+.drum-grid-right-cell {
+  display: flex;
+  align-items: stretch;
+  justify-content: stretch;
+  flex: 0 0 auto;
+  padding: 0;
+  gap: 0;
+  min-height: 0;
+  background-color: var(--c-surface);
+  box-sizing: border-box;
+}
+
+.drum-grid-left-cell {
+  border-right: 2px solid var(--c-border-strong);
+  border-bottom: 2px solid var(--c-border-strong);
+  position: relative;
+  align-items: stretch;
+}
+
+.drum-grid-middle-cell {
+  position: relative;
+  flex: 0 0 auto;
+  min-width: 0;
+  border-right: 2px solid var(--c-border-strong);
+  border-bottom: 2px solid var(--c-border-strong);
+}
+
+.drum-grid-right-cell {
+  border-bottom: 2px solid var(--c-border-strong);
+}
+
+#drum-canvas-wrapper {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.drum-volume-control {
+  position: absolute;
+  top: 50%;
+  left: 100%;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-025) var(--space-035);
+  min-width: 140px;
+  border: 1px solid var(--c-border);
+  border-radius: var(--border-radius-md);
+  background-color: var(--c-surface);
+  box-shadow: var(--box-shadow-sm);
+  z-index: 1001;
+  visibility: hidden;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease, visibility 0.2s ease;
+}
+
+.drum-volume-control.visible {
+  visibility: visible;
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.drum-volume-slider {
+  width: 120px;
+}
+
+.drum-left-content {
+  display: grid;
+  grid-template-columns: 3fr 1fr; /* second column = 1/4 of parent width */
+  grid-template-rows: repeat(3, 1fr);
+  align-items: center;
+  justify-items: center;
+  width: 100%;
+  height: 100%;
+  padding: var(--space-2);
+  box-sizing: border-box;
+  gap: var(--space-1);
+}
+
+.drum-volume-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  border: 1px solid var(--c-border);
+  border-radius: var(--border-radius-sm);
+  background: var(--c-surface);
+  color: var(--c-text);
+  cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.drum-volume-button:hover {
+  background: var(--c-surface-muted);
+  border-color: var(--c-border-strong);
+}
+
+.drum-volume-icon svg {
+  width: 24px;
+  height: 24px;
+}
+
+.drum-track-label {
+  font-family: 'Atkinson Hyperlegible', sans-serif;
+  font-size: 0.9rem;
+  color: var(--c-text-muted);
+  font-weight: 700;
+}
+
 #grid-scrollbar-proxy {
   position: sticky;
   left: 0;
@@ -282,7 +418,7 @@
   height: 100%;
 }
 
-#notation-grid, #playhead-canvas, #hover-canvas, #pitch-paint-canvas {
+#notation-grid, #playhead-canvas, #hover-canvas, #pitch-paint-canvas, #legend-left-canvas, #legend-right-canvas {
   position: absolute; top: 0; left: 0; display: block;
 }
 
@@ -291,20 +427,21 @@
   cursor: crosshair;
 }
 
-
-
-#drum-grid-wrapper {
-  flex: 0 0 auto;
-  width: fit-content; /* Will be set by JavaScript to match pitch-grid-container */
-  min-width: fit-content;
-  min-height: 90px;
-  overflow-x: visible;
-  overflow-y: hidden;
-  position: relative;
-  background-color: var(--c-surface);
-  border-radius: 0 0 var(--border-radius-md) var(--border-radius-md);
-  border-top: 2px solid var(--c-border-strong);
+/* Legend canvases are positioned on the left and right edges */
+#legend-left-canvas {
+  left: 0;
+  pointer-events: none;
+  z-index: 10; /* Above main grid */
 }
+
+#legend-right-canvas {
+  left: auto;
+  right: 0;
+  pointer-events: none;
+  z-index: 10; /* Above main grid */
+}
+
+
 
 #drum-grid, #drum-playhead-canvas, #drum-hover-canvas {
   display: block;
