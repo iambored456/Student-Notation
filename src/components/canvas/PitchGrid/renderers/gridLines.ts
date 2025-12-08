@@ -24,7 +24,7 @@ function getAnacrusisColors(): typeof DEFAULT_ANACRUSIS_COLORS {
   return cachedAnacrusisColors;
 }
 
-type Range = { start: number; end: number };
+interface Range { start: number; end: number }
 
 function mergeRanges(ranges: Range[]): Range[] {
   if (ranges.length === 0) {return [];}
@@ -105,7 +105,7 @@ function getAnacrusisEndColumn(): number | null {
   return mbInfo.endColumn + 1;
 }
 
-type GridRenderOptions = Pick<AppState,
+interface GridRenderOptions extends Pick<AppState,
   | 'columnWidths'
   | 'musicalColumnWidths'
   | 'cellHeight'
@@ -113,10 +113,10 @@ type GridRenderOptions = Pick<AppState,
   | 'accidentalMode'
   | 'showFrequencyLabels'
   | 'fullRowData'
-> & {
+> {
   viewportHeight: number;
   baseMicrobeatPx?: number;
-};
+}
 
 function drawHorizontalMusicLines(ctx: CanvasRenderingContext2D, options: GridRenderOptions, startRow: number, endRow: number): void {
   // Draw simple horizontal lines across the entire musical canvas (canvas-space)
@@ -203,11 +203,11 @@ export function drawVerticalLines(
   // drawGhostLines(ctx, options);
 }
 
-type VerticalOptions = GridRenderOptions & {
+interface VerticalOptions extends GridRenderOptions {
   placedTonicSigns: { columnIndex: number }[];
   macrobeatGroupings: number[];
   macrobeatBoundaryStyles: string[];
-};
+}
 
 function drawRegularVerticalLines(ctx: CanvasRenderingContext2D, options: VerticalOptions): void {
   const { columnWidths, macrobeatGroupings, macrobeatBoundaryStyles, placedTonicSigns } = options;

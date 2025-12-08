@@ -5,7 +5,7 @@ import { Scale, Note } from 'tonal';
 import { getPlacedTonicSigns } from '@state/selectors.ts';
 import logger from '@utils/logger.ts';
 import { SIDE_COLUMN_WIDTH } from '../../../../core/constants.ts';
-import type { AppState, PitchRowData, TonicSign } from '../../../../../types/state.js';
+import type { AppState, PitchRowData } from '../../../../../types/state.js';
 
 type ExtendedPitchRow = PitchRowData & { isDummy?: boolean };
 interface LegendOptions {
@@ -18,31 +18,6 @@ interface LegendOptions {
 
 // Import MODE_NAMES for modal scale support
 const MODE_NAMES = ['major', 'dorian', 'phrygian', 'lydian', 'mixolydian', 'minor', 'locrian'] as const;
-
-// Helper function to detect leftmost and rightmost tonic shapes
-function getTonicInfo(state: AppState): { leftTonic: TonicSign | null; rightTonic: TonicSign | null } {
-  const placedTonicSigns = getPlacedTonicSigns(state);
-
-  if (placedTonicSigns.length === 0) {
-    return { leftTonic: null, rightTonic: null };
-  }
-
-  // Find leftmost tonic (lowest columnIndex)
-  const leftTonic = placedTonicSigns.reduce((min, tonic) =>
-    tonic.columnIndex < min.columnIndex ? tonic : min
-  );
-
-  // Find rightmost tonic (highest columnIndex)
-  const rightTonic = placedTonicSigns.reduce((max, tonic) =>
-    tonic.columnIndex > max.columnIndex ? tonic : max
-  );
-
-  // If only one tonic, it affects both legends
-  return {
-    leftTonic,
-    rightTonic: placedTonicSigns.length === 1 ? leftTonic : rightTonic
-  };
-}
 
 // Helper function to extract tonic note from pitch at given row
 function getTonicNoteFromRow(rowIndex: number, fullRowData: ExtendedPitchRow[]): string | null {
@@ -85,35 +60,6 @@ function getModalScaleNotes(tonicNote: string | null, tonicNumber?: number | nul
     logger.warn('LegendRenderer', `Could not generate ${modeName} scale`, { tonic: tonicNote, error }, 'grid');
     return [];
   }
-}
-
-// Helper function to check if a pitch belongs to a scale
-function isPitchInScale(pitchName: string, scaleNotes: string[]): boolean {
-  if (!pitchName || !scaleNotes.length) {return false;}
-
-  // Extract base note name without octave
-  const baseNote = pitchName.replace(/\d+$/, '');
-
-  // Handle enharmonic equivalents
-  const notesToCheck = baseNote.includes('/') ?
-    baseNote.split('/') : [baseNote];
-
-  // Normalize flats and sharps
-  const normalizedNotesToCheck = notesToCheck.map(note =>
-    note.replace(/♭/g, 'b').replace(/♯/g, '#')
-  );
-
-  // Check if any enharmonic equivalent is in the scale
-  return normalizedNotesToCheck.some(note =>
-    scaleNotes.some(scaleNote => {
-      // Use Note.enharmonic to handle enharmonic equivalents
-      try {
-        return Note.enharmonic(note) === Note.enharmonic(scaleNote) || note === scaleNote;
-      } catch {
-        return note === scaleNote;
-      }
-    })
-  );
 }
 
 // Normalize notation used across the app into standard b/# spellings without octave numbers
@@ -270,6 +216,7 @@ export function drawLegends(ctx: CanvasRenderingContext2D, options: LegendOption
     // Total legend width, split 50/50 between columns A and B
     const totalLegendWidth = SIDE_COLUMN_WIDTH * 2 * cellWidth;
     const colWidthsPx = [totalLegendWidth / 2, totalLegendWidth / 2];
+    let cumulativeX = xStart;
 
     let filteredCount = 0;
     let totalCount = 0;
@@ -496,12 +443,7 @@ export function drawLegendsToSeparateCanvases(
             bgColor = '#ffffff';
           }
 
-          let textAlpha = 'FF';
-          if (shouldHideAccidental) {
-            textAlpha = '00';
-          } else if (focusColours && !isFocused) {
-            textAlpha = '55';
-          }
+          const textAlpha = shouldHideAccidental ? '00' : (focusColours && !isFocused ? '55' : 'FF');
 
           if (focusColours && focusSet.size > 0) {
             totalCount += 1;
@@ -522,14 +464,12 @@ export function drawLegendsToSeparateCanvases(
           const textX = cumulativeX + colWidth / 2;
           const textY = y;
 
-          const textAlphaSingle = shouldHideAccidental ? '00' : (focusColours && !isFocused ? '55' : 'FF');
-
-          ctx.strokeStyle = `#212529${textAlphaSingle}`;
+          ctx.strokeStyle = `#212529${textAlpha}`;
           ctx.lineWidth = 2.5;
           ctx.lineJoin = 'round';
           ctx.strokeText(pitchToDraw, textX, textY);
 
-          ctx.fillStyle = `#ffffff${textAlphaSingle}`;
+          ctx.fillStyle = `#ffffff${textAlpha}`;
           ctx.fillText(pitchToDraw, textX, textY);
         }
       }

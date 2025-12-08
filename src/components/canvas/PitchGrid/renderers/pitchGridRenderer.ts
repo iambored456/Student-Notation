@@ -47,7 +47,6 @@ export function drawPitchGrid(ctx: CanvasRenderingContext2D, options: PitchGridR
 
   // Replicate tonic signs across visible octaves so they persist through vertical scroll
   const tonicModulo = (row: number) => ((row % 12) + 12) % 12;
-  const baseTonicRows = fullOptions.placedTonicSigns.map(sign => tonicModulo(sign.row));
   const visibleTonicSigns = fullOptions.placedTonicSigns.flatMap(sign => {
     const baseModulo = tonicModulo(sign.row);
     const replicas: TonicSign[] = [];

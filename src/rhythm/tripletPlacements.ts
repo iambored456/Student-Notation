@@ -2,7 +2,7 @@
 import { getTripletStampById, GROUP_WIDTH_CELLS } from './triplets.js';
 import store from '@state/index.ts';
 import logger from '@utils/logger.ts';
-import { isWithinTonicSpan, type TonicSign } from '@utils/tonicColumnUtils.ts';
+import { type TonicSign } from '@utils/tonicColumnUtils.ts';
 import { getPlacedTonicSigns } from '@state/selectors.ts';
 import { timeToCanvas } from '../services/columnMapService.ts';
 import type { TripletPlacement } from '../../types/state.js';
