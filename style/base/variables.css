@@ -19,6 +19,9 @@
   --c-accent-light: #63a9fd;    /* Subtle accent highlight - DYNAMIC: changes to note color */
   --c-accent-rgb: 74, 144, 226; /* Accent in rgb for box-shadows */
   --c-accent-general: #ffc107;  /* General accent for toggleable UI elements */
+  --c-anacrusis-border: #cfd6de; /* Light outline for pickup beats */
+  --c-anacrusis-bg: rgba(207, 214, 222, 0.32); /* Soft wash to separate pickup area */
+  --c-anacrusis-accent: #aab4c2; /* Muted accent for pickup labels/buttons */
 
   /* Neutral UI Accent - STATIC: never changes with note selection */
   --c-accent-neutral: #ffc107;        /* Yellow - for non-note-related controls */

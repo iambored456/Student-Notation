@@ -34,8 +34,7 @@ export default tseslint.config(
       'dist/**',
       'docs/**',
       '*.config.js',
-      '*.config.cjs',
-      '*.config.ts'
+      '*.config.cjs'
     ]
   },
   // JavaScript files configuration
@@ -64,7 +63,7 @@ export default tseslint.config(
   // TypeScript files configuration with type-aware linting
   {
     files: ['**/*.ts'],
-    ignores: ['js/services/timbreEffects/**/*.ts'], // Excluded from tsconfig
+    ignores: ['src/services/timbreEffects/**/*.ts'], // Excluded from tsconfig
     extends: [
       ...tseslint.configs.recommendedTypeChecked,
       ...tseslint.configs.stylisticTypeChecked

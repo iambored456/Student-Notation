@@ -152,35 +152,6 @@ export interface AnacrusisCache {
   boundaryStyles: MacrobeatBoundaryStyle[];
 }
 
-export interface PaintPoint {
-  musicalTime: number;
-  midi: number;
-  color: [number, number, number];
-  timestamp: number;
-  thickness: number;
-}
-
-export interface PaintSettings {
-  thickness: number;
-  opacity: number;
-  minClarity: number;
-  colorMode: 'chromatic' | 'shapenote';
-  playbackEnabled: boolean;
-}
-
-export interface PaintState {
-  isMicPaintActive: boolean;
-  isDetecting: boolean;
-  detectedPitch: {
-    frequency: number;
-    clarity: number;
-    midi: number;
-    pitchClass: number;
-  };
-  paintHistory: PaintPoint[];
-  paintSettings: PaintSettings;
-}
-
 export interface PitchRange {
   topIndex: number;
   bottomIndex: number;
@@ -256,9 +227,6 @@ export interface AppState {
   selectedTimbre?: string;
   colorPalette: Record<string, { primary: string; light: string }>;
 
-  // Paint
-  paint: PaintState;
-
   // UI & View State
   selectedTool: string;
   previousTool: string;
@@ -278,11 +246,9 @@ export interface AppState {
   logicRows: number;
   cellWidth: number;
   cellHeight: number;
-  /** Canvas-space: musical columns only (0 = first beat). Legend widths stored separately. */
+  /** Canvas-space: musical columns only (0 = first beat). Legend widths are constants (SIDE_COLUMN_WIDTH). */
   columnWidths: number[];
-  /** DEPRECATED: Will be removed. Use columnWidths directly. */
-  musicalColumnWidths: number[];
-  degreeDisplayMode: 'off' | 'sharps' | 'flats';
+  degreeDisplayMode: 'off' | 'diatonic' | 'modal';
   accidentalMode: AccidentalMode;
   showFrequencyLabels: boolean;
   focusColours: boolean;
@@ -340,14 +306,6 @@ export interface Store {
   setADSR(color: string, adsr: Partial<TimbreState['adsr']>): void;
   setAdsrTimeAxisScale(scale: number): void;
   setAdsrComponentWidth(widthPercent: number): void;
-
-  // Paint action methods
-  setPaintSettings(settings: Partial<PaintSettings>): void;
-  setMicPaintActive(active: boolean): void;
-  addPaintPoint(point: PaintPoint): void;
-  clearPaintHistory(): void;
-  setPaintDetectionState(isDetecting: boolean): void;
-  setDetectedPitch(pitchData: { frequency: number; clarity: number; midi: number; pitchClass: number; timestamp?: number }): void;
 
   // Rhythm action methods
   increaseMacrobeatCount(): void;

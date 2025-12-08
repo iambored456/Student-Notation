@@ -18,6 +18,106 @@ declare module '@services/columnMap.ts' {
   ): number;
 }
 
+declare module '@services/columnMapService.ts' {
+  export interface ColumnEntry {
+    visualIndex: number;
+    canvasIndex: number | null;
+    timeIndex: number | null;
+    type: 'legend-left' | 'legend-right' | 'tonic' | 'beat';
+    widthMultiplier: number;
+    xOffsetUnmodulated: number;
+    macrobeatIndex: number | null;
+    beatInMacrobeat: number | null;
+    isMacrobeatStart: boolean;
+    isMacrobeatEnd: boolean;
+    isPlayable: boolean;
+    tonicSignUuid: string | null;
+  }
+
+  export interface MacrobeatBoundary {
+    macrobeatIndex: number;
+    visualColumn: number;
+    canvasColumn: number;
+    timeColumn: number;
+    boundaryType: 'solid' | 'dashed' | 'anacrusis';
+    isMeasureStart: boolean;
+  }
+
+  export interface ColumnMap {
+    entries: ColumnEntry[];
+    visualToCanvas: Map<number, number | null>;
+    visualToTime: Map<number, number | null>;
+    canvasToVisual: Map<number, number>;
+    canvasToTime: Map<number, number | null>;
+    timeToCanvas: Map<number, number>;
+    timeToVisual: Map<number, number>;
+    macrobeatBoundaries: MacrobeatBoundary[];
+    totalVisualColumns: number;
+    totalCanvasColumns: number;
+    totalTimeColumns: number;
+    totalWidthUnmodulated: number;
+  }
+
+  export function visualToCanvas(visualIndex: number, state: AppState): number | null;
+  export function visualToTime(visualIndex: number, state: AppState): number | null;
+  export function canvasToVisual(canvasIndex: number, state: AppState): number;
+  export function canvasToTime(canvasIndex: number, state: AppState): number | null;
+  export function timeToCanvas(timeIndex: number, state: AppState): number;
+  export function timeToVisual(timeIndex: number, state: AppState): number;
+  export function batchCanvasToVisual(canvasIndices: number[], state: AppState): number[];
+  export function batchVisualToCanvas(visualIndices: number[], state: AppState): (number | null)[];
+  export function getColumnEntry(visualIndex: number, state: AppState): ColumnEntry | null;
+  export function getColumnEntryByCanvas(canvasIndex: number, state: AppState): ColumnEntry | null;
+  export function isPlayableColumn(canvasIndex: number, state: AppState): boolean;
+  export function getColumnType(canvasIndex: number, state: AppState): ColumnEntry['type'] | null;
+  export function getMacrobeatBoundaries(state: AppState): MacrobeatBoundary[];
+  export function getMacrobeatBoundary(macrobeatIndex: number, state: AppState): MacrobeatBoundary | null;
+  export function getCanvasColumnWidths(state: AppState): number[];
+  export function getTotalCanvasWidth(state: AppState): number;
+
+  const columnMapService: {
+    getColumnMap(state: AppState): ColumnMap;
+    invalidate(): void;
+  };
+  export default columnMapService;
+}
+
+declare module '@services/pixelMapService.ts' {
+  export interface ColumnPixelPosition {
+    canvasIndex: number;
+    xStart: number;
+    xEnd: number;
+    width: number;
+    modulationScale: number;
+  }
+
+  export interface PixelMap {
+    columnPositions: Map<number, ColumnPixelPosition>;
+    totalPixelWidth: number;
+  }
+
+  export interface RenderOptions {
+    cellWidth: number;
+    modulationMarkers?: ModulationMarker[];
+    baseMicrobeatPx?: number;
+    columnWidths?: number[];
+    state?: AppState;
+  }
+
+  export function getColumnX(canvasIndex: number, options: RenderOptions): number;
+  export function getColumnFromX(pixelX: number, options: RenderOptions): number;
+  export function getColumnPixelPosition(canvasIndex: number, options: RenderOptions): ColumnPixelPosition;
+  export function getTotalPixelWidth(options: RenderOptions): number;
+
+  const pixelMapService: {
+    getColumnPixelPosition(canvasIndex: number, options: RenderOptions, state: AppState): ColumnPixelPosition;
+    columnToPixelX(canvasIndex: number, options: RenderOptions, state: AppState): number;
+    pixelXToColumn(pixelX: number, options: RenderOptions, state: AppState): number;
+    invalidate(): void;
+  };
+  export default pixelMapService;
+}
+
 declare module '@components/canvas/pitchGrid/renderers/rendererUtils.js' {
   export interface RendererOptions {
     cellWidth: number;
@@ -38,23 +138,6 @@ declare module '@components/rhythm/glyphs/diamond.js' {
 // with their own type definitions, so no ambient declarations needed here
 
 // Note: drawToolsController is now a TypeScript file with its own type definitions
-
-declare module '@components/pitchPaint/paintModal.js' {
-  interface PaintModal {
-    open(): void;
-    close(): void;
-  }
-  const paintModal: PaintModal;
-  export default paintModal;
-}
-
-// Note: paintCanvas, paintPlayheadRenderer, and paintControls are now TypeScript files
-// with their own type definitions
-
-// Note: rhythmUI, stampsToolbar, and tripletsToolbar are now TypeScript files
-// with their own type definitions, so no ambient declarations needed
-
-// Note: meterController is now a TypeScript file with its own type definitions
 
 declare module '@components/toolbar/initializers/toolSelectorInitializer.js' {
   export function initToolbar(): void;

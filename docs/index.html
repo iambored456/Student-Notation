@@ -11,8 +11,8 @@
 <link rel="manifest" href="/Student-Notation/site.webmanifest" />
 <meta name="theme-color" content="#ffffff" />
 <style id="print-style-rules"></style>
-  <script type="module" crossorigin src="/Student-Notation/assets/index-CMrCsIiG.js"></script>
-  <link rel="stylesheet" crossorigin href="/Student-Notation/assets/index-D3RMVaDM.css">
+  <script type="module" crossorigin src="/Student-Notation/assets/index-Dci24_p9.js"></script>
+  <link rel="stylesheet" crossorigin href="/Student-Notation/assets/index-Ub8eVL1z.css">
 </head>
 <body>
 <!-- Sidebar for File/App Actions -->
@@ -241,7 +241,6 @@
                     <div class="pitch-tabs">
                         <button class="pitch-tab-button active" data-pitch-tab="range">Range</button>
                         <button class="pitch-tab-button" data-pitch-tab="chords">Chords</button>
-                        <button class="pitch-tab-button" data-pitch-tab="mic-paint">Mic Paint</button>
                         <button class="pitch-tab-button" data-pitch-tab="draw">Draw</button>
                     </div>
                     <div class="pitch-tab-content">
@@ -249,7 +248,7 @@
                             <div class="range-content-box">
                                 <div class="range-layout">
                                    <div class="range-panel-section modes-section">
-                                       <h4 class="panel-section-title">Modes</h4>
+                                       <!-- <h4 class="panel-section-title">Modes</h4> -->
                                        <div class="tonic-modes-container">
                                            <div class="tonic-modes-grid">
                                                <button class="tonic-mode-button" data-tonic="1">
@@ -284,20 +283,15 @@
                                        </div>
                                    </div>
                                    <div class="range-panel-section degrees-section">
-                                       <h4 class="panel-section-title">Degrees</h4>
-                                       <div class="two-state-toggle" id="degree-visibility-toggle">
-                                           <div class="two-state-slider"></div>
-                                           <div class="toggle-labels">
-                                               <span class="toggle-label">Show</span>
-                                               <span class="toggle-label">Hide</span>
-                                           </div>
+                                       <!-- <h4 class="panel-section-title">Degrees</h4> -->
+                                       <div class="degree-visibility-toggle-container">
+                                           <button class="degree-visibility-button" id="degree-visibility-toggle" type="button">
+                                               Show Degrees
+                                           </button>
                                        </div>
-                                       <div class="two-state-toggle" id="degree-mode-toggle">
-                                           <div class="two-state-slider"></div>
-                                           <div class="toggle-labels">
-                                               <span class="toggle-label">Scale</span>
-                                               <span class="toggle-label">Mode</span>
-                                           </div>
+                                       <div class="degree-mode-toggle-container" id="degree-mode-toggle">
+                                           <button class="degree-mode-button" data-mode="diatonic" type="button">Scale</button>
+                                           <button class="degree-mode-button" data-mode="modal" type="button">Mode</button>
                                        </div>
                                        <label class="checkbox-label">
                                            <input type="checkbox" id="focus-colours-toggle" class="toolkit-checkbox">
@@ -305,7 +299,7 @@
                                        </label>
                                    </div>
                                    <div class="range-panel-section wheels-section">
-                                       <h4 class="panel-section-title">Select Range</h4>
+                                       <!-- <h4 class="panel-section-title">Select Range</h4> -->
                                        <div class="clef-wheels-wrapper">
                                            <div class="clef-picker-column">
                                                <div class="clef-wheel" id="clef-bottom-wheel" tabindex="0" aria-label="Select bottom note">
@@ -326,7 +320,7 @@
                                        </div>
                                    </div>
                                    <div class="range-panel-section summary-section">
-                                       <h4 class="panel-section-title">Range Info</h4>
+                                       <!-- <h4 class="panel-section-title">Range Info</h4> -->
                                        <div class="clef-summary-column">
                                            <div class="clef-summary-card">
                                                <div class="clef-summary-label" id="clef-range-label">C8 - C1</div>
@@ -343,7 +337,7 @@
                                        </div>
                                    </div>
                                    <div class="range-panel-section presets-section">
-                                       <h4 class="panel-section-title">Presets</h4>
+                                       <!-- <h4 class="panel-section-title">Presets</h4> -->
                                        <div class="clef-presets-column">
                                            <div class="clef-preset-buttons">
                                                <button class="toolkit-button clef-preset-button" id="clef-full-range-button" type="button">
@@ -452,121 +446,6 @@
                 </div>
             </div>
         </div>
-        <div class="pitch-tab-panel" id="mic-paint-panel">
-                            <div class="paint-content-box">
-                                <div class="paint-layout-grid">
-                                    <div class="paint-main-controls">
-                                        <div class="paint-buttons-column">
-                                            <button class="toolkit-button" id="mic-paint-toggle">Mic Paint (OFF)</button>
-                                            <button class="toolkit-button" id="paint-clear-btn" disabled>Clear Paint</button>
-                                            <select id="mic-device-select" class="mic-device-selector">
-                                                <option value="default">Default Device</option>
-                                                <option value="detecting">Detecting devices...</option>
-                                            </select>
-                                        </div>
-                                    </div>
-                                    <div class="paint-toggles-controls">
-                                        <div class="paint-color-toggle-container">
-                                            <h5>Colour</h5>
-                                            <div class="two-state-toggle" id="paint-color-toggle">
-                                                <div class="two-state-slider"></div>
-                                                <div class="toggle-labels">
-                                                    <span class="toggle-label">Chromatic</span>
-                                                    <span class="toggle-label">Shape Note</span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="paint-playback-toggle-container">
-                                            <h5>Playback</h5>
-                                            <div class="two-state-toggle active" id="paint-playback-toggle">
-                                                <div class="two-state-slider"></div>
-                                                <div class="toggle-labels">
-                                                    <span class="toggle-label">Off</span>
-                                                    <span class="toggle-label">On</span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="paint-settings-controls">
-                                        <div class="paint-settings-box">
-                                            <h5>Trail Settings</h5>
-                                            <div class="paint-control-group">
-                                                <label for="sidebar-trail-thickness">Thickness</label>
-                                                <select id="sidebar-trail-thickness" class="paint-control-select">
-                                                    <option value="2">2px</option>
-                                                    <option value="4">4px</option>
-                                                    <option value="6" selected>6px</option>
-                                                    <option value="8">8px</option>
-                                                    <option value="10">10px</option>
-                                                    <option value="12">12px</option>
-                                                    <option value="14">14px</option>
-                                                    <option value="16">16px</option>
-                                                    <option value="18">18px</option>
-                                                    <option value="20">20px</option>
-                                                </select>
-                                            </div>
-                                            <div class="paint-control-group">
-                                                <label for="sidebar-trail-opacity">Opacity</label>
-                                                <select id="sidebar-trail-opacity" class="paint-control-select">
-                                                    <option value="5">5%</option>
-                                                    <option value="10">10%</option>
-                                                    <option value="15">15%</option>
-                                                    <option value="20">20%</option>
-                                                    <option value="25">25%</option>
-                                                    <option value="30">30%</option>
-                                                    <option value="35">35%</option>
-                                                    <option value="40">40%</option>
-                                                    <option value="45">45%</option>
-                                                    <option value="50">50%</option>
-                                                    <option value="55">55%</option>
-                                                    <option value="60">60%</option>
-                                                    <option value="65">65%</option>
-                                                    <option value="70">70%</option>
-                                                    <option value="75">75%</option>
-                                                    <option value="80" selected>80%</option>
-                                                    <option value="85">85%</option>
-                                                    <option value="90">90%</option>
-                                                    <option value="95">95%</option>
-                                                    <option value="100">100%</option>
-                                                </select>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="mic-meter-container-vertical">
-                                        <div class="mic-meter-wrapper-vertical" id="mic-meter-wrapper">
-                                            <div class="meter-placeholder" id="meter-placeholder">
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="meter-settings-panel hidden" id="meter-settings-panel">
-                                    <div class="meter-setting-group">
-                                        <label for="meter-size-select">Size:</label>
-                                        <select id="meter-size-select" class="meter-control">
-                                            <option value="compact">Compact</option>
-                                            <option value="wide" selected>Wide</option>
-                                        </select>
-                                    </div>
-                                    <div class="meter-setting-group">
-                                        <label for="meter-fps-select">Frame Rate:</label>
-                                        <select id="meter-fps-select" class="meter-control">
-                                            <option value="12">12 FPS</option>
-                                            <option value="20">20 FPS</option>
-                                            <option value="30" selected>30 FPS</option>
-                                            <option value="60">60 FPS</option>
-                                        </select>
-                                    </div>
-                                    <div class="meter-setting-group">
-                                        <label for="meter-battery-saver">Battery Saver:</label>
-                                        <input type="checkbox" id="meter-battery-saver" class="meter-control">
-                                    </div>
-                                    <div class="meter-setting-group">
-                                        <button class="toolkit-button" id="meter-calibrate-btn">Auto-Calibrate</button>
-                                        <button class="toolkit-button" id="meter-reset-btn">Reset</button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
                         <div class="pitch-tab-panel" id="draw-panel">
                             <div class="draw-content-box">
                                 <div class="draw-layout-grid">
@@ -966,7 +845,6 @@
                             <canvas id="legend-left-canvas"></canvas>
                             <canvas id="notation-grid"></canvas>
                             <canvas id="legend-right-canvas"></canvas>
-                            <canvas id="pitch-paint-canvas"></canvas>
                             <canvas id="playhead-canvas"></canvas>
                             <canvas id="hover-canvas"></canvas>
                         </div>

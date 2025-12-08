@@ -1,15 +1,17 @@
 /* style/components/_note-bank.css */
 #note-bank-container {
-  --note-size: clamp(18px, 3vw, 28px);
+  --note-size-max: clamp(18px, 3vw, 28px);
+  --note-size: var(--note-size-max);
   display: grid;
-  grid-template-rows: repeat(4, var(--note-size));
-  grid-auto-rows: var(--note-size);
+  grid-template-rows: repeat(4, minmax(0, 1fr));
+  grid-auto-rows: minmax(0, 1fr);
   gap: var(--space-030);
   align-content: stretch;
   justify-items: stretch;
   min-height: 0;
-  max-height: calc(var(--note-size) * 4 + var(--space-030) * 3);
-  align-self: center;
+  height: 100%;
+  max-height: 100%;
+  align-self: stretch;
 }
 
 .note-bank-column {
@@ -21,14 +23,18 @@
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: var(--space-020);
   place-items: center;
-  min-block-size: calc(var(--note-size) + var(--space-020) * 3);
-  padding-block: calc(var(--space-020) * 1.25) calc(var(--space-020) * 1.75);
-  padding-inline: var(--space-010);
+  height: 100%;
+  min-height: 0;
+  box-sizing: border-box;
+  /* Fit notes inside whatever row height we get from the parent */
+  --note-size: min(
+    var(--note-size-max),
+    calc(100% - 4px) /* account for borders only */
+  );
   border-radius: var(--border-radius-md);
   border: 2px solid transparent;
   background-color: transparent;
   min-width: 0;
-  min-height: 0;
 }
 
 .note {
@@ -67,7 +73,7 @@
   border: 0;
   border-radius: 0;
   background: none;
-  padding: var(--space-005);
+  padding: 0;
   aspect-ratio: 1 / 1;
   inline-size: var(--note-size);
   block-size: var(--note-size);
@@ -83,8 +89,8 @@
 }
 
 .diamond-icon {
-  width: 90%;
-  height: 90%;
+  width: 100%;
+  height: 100%;
   display: block;
 }
 

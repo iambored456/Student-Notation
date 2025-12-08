@@ -14,11 +14,11 @@ export default defineConfig({
   },
   resolve: {
     alias: {
-      '@': fileURLToPath(new URL('./js', import.meta.url)),
-      '@components': fileURLToPath(new URL('./js/components', import.meta.url)),
-      '@services': fileURLToPath(new URL('./js/services', import.meta.url)),
-      '@state': fileURLToPath(new URL('./js/state', import.meta.url)),
-      '@utils': fileURLToPath(new URL('./js/utils', import.meta.url)),
+      '@': fileURLToPath(new URL('./src', import.meta.url)),
+      '@components': fileURLToPath(new URL('./src/components', import.meta.url)),
+      '@services': fileURLToPath(new URL('./src/services', import.meta.url)),
+      '@state': fileURLToPath(new URL('./src/state', import.meta.url)),
+      '@utils': fileURLToPath(new URL('./src/utils', import.meta.url)),
       tone: 'tone/build/Tone.js'
     }
   },

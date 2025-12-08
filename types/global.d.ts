@@ -1,12 +1,6 @@
 /* Global ambient declarations for browser-only helpers exposed on window */
 declare global {
-  interface PaintPlaybackService {
-    onTransportStart?: () => void;
-    onTransportStop?: () => void;
-  }
-
   interface Window {
-    PaintPlaybackService?: PaintPlaybackService;
     initAudio?: () => Promise<void>;
     scheduleCell?: (...args: unknown[]) => void;
     stateGuard?: {

@@ -368,7 +368,7 @@
 
 .draw-option-help {
     max-width: 220px;
-    word-break: break-word;
+    overflow-wrap: anywhere;
     white-space: normal;
 }
 

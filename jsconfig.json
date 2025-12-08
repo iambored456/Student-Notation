@@ -2,15 +2,14 @@
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
-      "@/*": ["js/*"],
-      "@components/*": ["js/components/*"],
-      "@services/*": ["js/services/*"],
-      "@state/*": ["js/state/*"],
-      "@utils/*": ["js/utils/*"],
-      "@/bootstrap/*": ["js/bootstrap/*"],
-      "@/core/*": ["js/core/*"],
-      "@/harmony/*": ["js/harmony/*"],
-      "@/rhythm/*": ["js/rhythm/*"]
+      "@/*": ["src/*"],
+      "@components/*": ["src/components/*"],
+      "@services/*": ["src/services/*"],
+      "@state/*": ["src/state/*"],
+      "@utils/*": ["src/utils/*"],
+      "@/bootstrap/*": ["src/bootstrap/*"],
+      "@/core/*": ["src/core/*"],
+      "@/rhythm/*": ["src/rhythm/*"]
     }
   }
 }

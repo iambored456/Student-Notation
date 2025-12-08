@@ -1,57 +1,47 @@
-Live link: https://iambored456.github.io/Student-Notation/
+# Student Notation
+Accessible music theory without needing to read traditional staff notation.
 
-## Contributor Notes
-- All directories and files use camelCase (e.g., `components/toolbar`, `paintControls.js`). Please follow this when adding or renaming anything to keep imports predictable across platforms.
-- Large renames should happen feature-by-feature so related imports are updated together. After each batch, run `npx vite` to confirm case-sensitive files resolve correctly.
+[Live app](https://iambored456.github.io/Student-Notation/)
 
-## Module Aliases
-Vite now exposes several import aliases to reduce long relative paths:
+## What is this?
+Student Notation is a grid-based music sketchpad built by a music educator and hobby coder. Instead of relying on Western staff notation, it uses labeled cells and simple visuals so learners can explore pitch, rhythm, and timbre, hear the results instantly, and connect theory to sound.
 
-| Alias | Resolves to | Intended usage |
-| --- | --- | --- |
-| `@` | `/js` | Entry point for general modules while the project still lives under `/js`. |
-| `@components` | `/js/components` | UI components and renderers. |
-| `@services` | `/js/services` | Shared services (layout, transport, paint playback, etc.). |
-| `@state` | `/js/state` | Store, actions, selectors. |
-| `@utils` | `/js/utils` | Generic helpers and diagnostics. |
+## Who it’s for
+- Students who want to access music theory without needing to read Western Standard Music Notation
+- Music educators who want a visually intuitive way to demonstrate ideas in class
+- Folks interested in alternative music notation systems
 
-Editor tooling: `jsconfig.json` mirrors these aliases so VS Code (and other TS-aware editors) resolve the same paths without extra setup.
+## What you can do
+- Sketch melodies and rhythms on a labeled grid instead of staff notation
+- Hear ideas immediately with Tone.js transport controls; tweak tempo/looping
+- Toggle toolbars for drawing, editing, zooming, and layout tweaks on desktop or touch
+- Print or export grids/legends for handouts or sharing (html2canvas snapshots)
+- Mobile/touch: tap-and-hold to place notes with a ghost overlay, then drag to resize once placed
 
-When files move into a future `src/` directory, update the alias targets in `vite.config.js` but keep the same alias names to avoid touching every import.
+## Quick start (local dev)
+- Prereq: Node 18+
+- Install: `npm install`
+- Run: `npm run dev` then open the Vite URL (usually http://localhost:5173)
+- Build: `npm run build`
+- Lint/Typecheck: `npm run lint`, `npm run typecheck`
 
-## Bootstrap Strategy
-- `js/core/main.js` remains the single entry ('bootstrap') that wires services, UI, and listeners.
-- Each subsystem (toolbar, canvas, rhythm, paint, audio, diagnostics) should expose an `initXYZ()` in `js/bootstrap/<area>/`. `main.js` only orchestrates these in order, passing shared `store`, layout services, or Tone context as needed.
-- Current initializers: `js/bootstrap/ui/initUiComponents.js`, `js/bootstrap/audio/initAudioComponents.js`, `js/bootstrap/rhythm/initRhythmUi.js`, `js/bootstrap/canvas/initCanvasServices.js`, `js/bootstrap/paint/initPaintSystem.js`, `js/bootstrap/draw/initDrawSystem.js`, and `js/bootstrap/input/initInputAndDiagnostics.js`.
-- New functionality (e.g., future tutorial engines) should add a new initializer rather than expanding `main.js` directly.
-- Document cross-feature dependencies inside each initializer so they remain loosely coupled and testable.
+## Tech stack
+- Vite + TypeScript modules
+- Tone.js for synthesis/transport
+- html2canvas for printable snapshots
+- Plain CSS for styling
 
-## Mobile-Only Interactions
-- `initDeviceProfileService()` now runs during bootstrap and keeps `store.state.deviceProfile` in sync with the current viewport (`isMobile`, `isTouch`, `orientation`, `width`, `height`).
-- The `<html>` and `<body>` tags automatically toggle the CSS classes `is-mobile`, `is-touch`, `orientation-portrait`, and `orientation-landscape`, so pure-style tweaks can rely on media-query like hooks without duplicating logic.
-- On touch devices, placing a pitch-grid note now follows a “tap, hold for ~0.3s, release to commit” flow. The hold draws the same ghost-note overlay you’d get from mouse hover, preventing accidental taps while still keeping the drag-to-resize behavior once the note exists.
-- Utilities exported from `@services/deviceProfileService.js` simplify runtime checks:
-  ```js
-  import { isMobileSession, onDeviceProfileChange } from '@services/deviceProfileService.js';
+## Roadmap ideas
+- Guided lesson modes for common theory topics
+- Better sharing (saved states, links, or exports)
+- More mobile-specific gestures and accessibility aids
 
-  if (isMobileSession()) {
-      enableMobileGestures();
-  }
+## For developers
+- Use camelCase for all dirs/files to keep imports consistent across platforms. Large renames should happen feature-by-feature; after each batch run `npm run dev` to confirm case-sensitive paths resolve.
+- Path aliases (Vite + `jsconfig.json`): `@ -> src`, `@components -> src/components`, `@services -> src/services`, `@state -> src/state`, `@utils -> src/utils`, `tone -> tone/build/Tone.js`.
+- Bootstrap pattern: `src/core/main.ts` orchestrates subsystem initializers in `src/bootstrap/*` (UI, audio, rhythm, canvas, draw, input/diagnostics, state). Add new init files rather than bloating `main.ts`; document cross-feature dependencies in each initializer.
+- Mobile profile: `initDeviceProfileService()` syncs `store.state.deviceProfile` and toggles `<html>/<body>` classes (`is-mobile`, `is-touch`, `orientation-portrait`, `orientation-landscape`). Gate mobile-specific behavior off this instead of ad-hoc `matchMedia` checks.
+- Environment variables: Vite reads `.env` files and only exposes `VITE_*` to browser code via `import.meta.env`. None are required today; use them to set deployment defaults (e.g., `VITE_LESSON_MODE=voice`).
 
-  onDeviceProfileChange(profile => {
-      if (profile.isMobile) {
-          showTapHint();
-      } else {
-          hideTapHint();
-      }
-  });
-  ```
-- Prefer gating new interactions with `store.state.deviceProfile.isMobile` or the helper above so there is a single source of truth (vs. scattering `matchMedia` checks across components).
-
-## Environment Variables
-- Vite reads `.env` files and only exposes variables prefixed with `VITE_` to browser code via `import.meta.env`.
-- No env files are required today, but when lessons or tutorials need configurable behavior you can add, for example, `VITE_LESSON_MODE=voice` in `.env` and read it where voice playback is initialized:
-  ```js
-  const lessonMode = import.meta.env.VITE_LESSON_MODE ?? 'text';
-  ```
-- Keep runtime user toggles in the store/UI; env vars simply set defaults per deployment (dev vs. tutorial builds, etc.).
+## License
+MIT

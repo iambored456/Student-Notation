@@ -93,8 +93,8 @@
 /* --- Triplet Buttons --- */
 .triplet-button {
     position: relative;
-    width: clamp(40px, 5dvw, 60px);
-    height: clamp(40px, 5dvh, 60px);
+    width: clamp(32px, 4dvw, 48px);
+    height: clamp(32px, 4dvw, 48px);  /* Use dvw (not dvh) to match width */
     min-width: 0;
     min-height: 0;
     background-color: var(--c-surface);
@@ -127,11 +127,16 @@
 
 .triplet-button svg {
     flex-shrink: 0;
+    width: 100%;
+    height: 100%;
+    max-width: 100%;
+    max-height: 100%;
 }
 
 .triplet-button-wide {
     /* Quarter triplet buttons are wider to show their 2-cell span */
-    width: clamp(80px, 10dvw, 120px);
+    width: clamp(64px, 8dvw, 96px);
+    height: clamp(32px, 4dvw, 48px);  /* Maintain 2:1 aspect ratio (width is 2x height) */
     min-width: 0;
     position: relative;
 }

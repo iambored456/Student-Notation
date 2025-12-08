@@ -105,12 +105,12 @@
 }
 
 .boundary-diamond {
-  width: 100%;
-  height: 100%; /* Explicit height for rendering/capture tools */
+  width: 80%;
+  height: 80%; /* Explicit height for rendering/capture tools */
   aspect-ratio: 1;
   display: block;
   transform: rotate(45deg);
-  border: 2px solid var(--rhythm-boundary-color);
+  border: 1.5px solid var(--rhythm-boundary-color);
   border-radius: 2px;
   box-sizing: border-box;
   background-color: transparent;
@@ -122,9 +122,13 @@
   border-color: var(--rhythm-boundary-color);
 }
 
-.boundary-diamond[data-style='dashed'],
-.boundary-diamond[data-style='anacrusis'] {
+.boundary-diamond[data-style='dashed'] {
   background-color: transparent;
+}
+
+.boundary-diamond[data-style='anacrusis'] {
+  border-color: var(--c-anacrusis-border);
+  background-color: var(--c-anacrusis-bg);
 }
 
 .rhythm-ui-button--boundary:hover .boundary-diamond,
@@ -164,14 +168,35 @@
 .grouping-segment[data-next-boundary-style='dashed']::after {
   content: '';
   position: absolute;
-  top: 15%;
-  bottom: 15%;
+  top: 0;
+  bottom: 0;
   right: 0;
   border-right: 2px solid var(--rhythm-boundary-color);
 }
 
 .grouping-segment[data-next-boundary-style='dashed']::after {
   border-right-style: dashed;
+}
+
+.grouping-segment[data-next-boundary-style='anacrusis']::after {
+  border-right: 2px dashed var(--c-anacrusis-border);
+}
+
+.grouping-segment[data-has-left-divider='true']::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  border-left: 2px solid var(--rhythm-boundary-color);
+}
+
+.grouping-segment[data-prev-boundary-style='dashed'][data-has-left-divider='true']::before {
+  border-left-style: dashed;
+}
+
+.grouping-segment[data-prev-boundary-style='anacrusis'][data-has-left-divider='true']::before {
+  border-left: 2px dashed var(--c-anacrusis-border);
 }
 
 .macrobeat-adjust-group {
@@ -197,7 +222,9 @@
 }
 
 .time-signature-label.anacrusis-label {
-  color: var(--c-border);
+  color: var(--c-anacrusis-accent);
+  border-color: var(--c-anacrusis-border);
+  background-color: var(--c-anacrusis-bg);
 }
 
 .time-signature-bracket {

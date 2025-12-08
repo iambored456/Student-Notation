@@ -7,15 +7,14 @@
     "allowImportingTsExtensions": true,
     "baseUrl": ".",
     "paths": {
-      "@/*": ["js/*"],
-      "@components/*": ["js/components/*"],
-      "@services/*": ["js/services/*"],
-      "@state/*": ["js/state/*"],
-      "@utils/*": ["js/utils/*"],
-      "@/bootstrap/*": ["js/bootstrap/*"],
-      "@/core/*": ["js/core/*"],
-      "@/harmony/*": ["js/harmony/*"],
-      "@/rhythm/*": ["js/rhythm/*"]
+      "@/*": ["src/*"],
+      "@components/*": ["src/components/*"],
+      "@services/*": ["src/services/*"],
+      "@state/*": ["src/state/*"],
+      "@utils/*": ["src/utils/*"],
+      "@/bootstrap/*": ["src/bootstrap/*"],
+      "@/core/*": ["src/core/*"],
+      "@/rhythm/*": ["src/rhythm/*"]
     },
     "resolveJsonModule": true,
     "useDefineForClassFields": true,
@@ -30,8 +29,8 @@
     "types": ["vite/client"]
   },
   "include": [
-    "js/**/*.ts",
-    "js/**/*.tsx",
+    "src/**/*.ts",
+    "src/**/*.tsx",
     "types/**/*.d.ts",
     "vite.config.ts"
   ],
@@ -39,7 +38,7 @@
     "node_modules",
     "dist",
     "docs",
-    "js/services/effectsCoordinator.ts",
-    "js/services/timbreEffects/**/*"
+    "src/services/effectsCoordinator.ts",
+    "src/services/timbreEffects/**/*"
   ]
 }

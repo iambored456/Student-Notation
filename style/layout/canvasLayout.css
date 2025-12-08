@@ -364,9 +364,9 @@
 }
 
 #boundary-buttons-row {
-  flex: 0 0 auto;
-  align-items: flex-end;
-  min-height: calc(var(--rhythm-ui-button-size) * 1.5);
+  flex: 1 1 0;
+  align-items: center;
+  min-height: 0;
   position: relative;
   pointer-events: auto;
 }
@@ -374,6 +374,11 @@
 #beat-line-button-layer .time-signature-label {
   position: absolute;
   top: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
   padding: var(--space-010) var(--space-040);
   border: 1px solid var(--c-border);
   border-radius: var(--border-radius-sm);
@@ -386,8 +391,9 @@
 }
 
 #beat-line-button-layer .time-signature-label.anacrusis {
-  border-color: var(--c-warning);
-  color: var(--c-warning);
+  border-color: var(--c-anacrusis-border);
+  color: var(--c-anacrusis-accent);
+  background-color: var(--c-anacrusis-bg);
 }
 
 #pitch-grid-wrapper {
@@ -418,11 +424,11 @@
   height: 100%;
 }
 
-#notation-grid, #playhead-canvas, #hover-canvas, #pitch-paint-canvas, #legend-left-canvas, #legend-right-canvas {
+#notation-grid, #playhead-canvas, #hover-canvas, #legend-left-canvas, #legend-right-canvas {
   position: absolute; top: 0; left: 0; display: block;
 }
 
-#playhead-canvas, #hover-canvas, #drum-hover-canvas, #pitch-paint-canvas {
+#playhead-canvas, #hover-canvas, #drum-hover-canvas {
   pointer-events: none;
   cursor: crosshair;
 }

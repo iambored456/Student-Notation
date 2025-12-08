@@ -10,4 +10,13 @@ vite.config.js
 Student-Notation.zip
 .claude/
 
-
+      docs/
+      ./dist/
+     typecheck.log
+     .py
+      .DS_Store
+      .vscode/
+      .swp
+      .swo
+      .zip
+      checkpoint

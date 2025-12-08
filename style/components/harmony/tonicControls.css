@@ -212,81 +212,21 @@
 .degree-visibility-toggle-container {
     display: flex;
     flex-direction: column;
-    align-items: center;
-    gap: var(--space-015);
+    align-items: stretch;
+    gap: var(--space-010);
     justify-content: center;
-}
-
-.degree-visibility-toggle-container .toggle-text {
-    font-size: 0.8em;
-    font-weight: 500;
-    color: var(--c-text);
+    width: 100%;
 }
 
 .degree-mode-toggle-container {
-    display: flex;
-    justify-content: center;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-010);
+    width: 100%;
 }
 
-/* --- Degree Mode Toggle Switch (styled like paint controls) --- */
-.degree-toggle-container .two-state-toggle {
-    position: relative;
-    width: 120px;
-    height: 30px;
-    background-color: var(--c-gridline);
-    border: 2px solid var(--c-border);
-    border-radius: 15px;
-    cursor: pointer;
-    user-select: none;
-    transition: all 0.3s ease;
-}
-
-.degree-toggle-container .two-state-toggle.disabled {
-    opacity: 0.5;
-    background-color: var(--c-border);
-}
-
-.degree-toggle-container .two-state-slider {
-    position: absolute;
-    top: 2px;
-    left: 2px;
-    width: 56px;
-    height: 26px;
-    background-color: var(--c-accent-neutral);
-    border-radius: 13px;
-    transition: transform 0.3s ease;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-}
-
-.degree-toggle-container .two-state-toggle.active .two-state-slider {
-    transform: translateX(60px);
-}
-
-.degree-toggle-container .toggle-labels {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    height: 100%;
-    padding: 0 var(--space-025);
-    pointer-events: none;
-}
-
-.degree-toggle-container .toggle-label {
-    font-size: 0.7em;
-    font-weight: 600;
-    color: var(--c-text-muted);
-    transition: color 0.3s ease;
-    z-index: 1;
-}
-
-.degree-toggle-container .two-state-toggle:not(.active) .toggle-label:first-child,
-.degree-toggle-container .two-state-toggle.active .toggle-label:last-child {
-    color: var(--c-surface);
-}
-
-.degree-toggle-container .two-state-toggle.disabled .toggle-label {
-    color: var(--c-text-muted);
-    opacity: 0.7;
+.degree-mode-toggle-container.disabled {
+    opacity: 0.75;
 }
 
 /* --- Focus Colours Container --- */
