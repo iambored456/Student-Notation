@@ -237,7 +237,13 @@ export const noteActions = {
     });
 
     const uuid = generateUUID();
-    const groupWithId = tonicSignGroup.map(sign => ({ ...sign, uuid }));
+    // Calculate globalRow at creation time to preserve absolute position during pitch range changes
+    const topIndex = this.state.pitchRange?.topIndex ?? 0;
+    const groupWithId = tonicSignGroup.map(sign => ({
+      ...sign,
+      uuid,
+      globalRow: sign.row + topIndex  // Absolute row in master pitch data
+    }));
     this.state.tonicSignGroups[uuid] = groupWithId;
     logger.debug('TonicPlacement', 'Added tonic group', { uuid, columns: groupWithId.map(s => s.columnIndex) }, 'state');
 

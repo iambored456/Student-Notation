@@ -479,6 +479,13 @@ export function drawTonicShape(
   const { cellWidth, cellHeight, modulationMarkers } = options;
   const y = getRowY(tonicSign.row, options);
 
+  // DIAGNOSTIC: Log Y position calculation for tonic drift debugging
+  console.log('[TONIC Y DIAGNOSTIC]', {
+    inputRow: tonicSign.row,
+    calculatedY: y,
+    cellHeight: cellHeight,
+  });
+
   // Resolve tonic column from column map (source of truth) to avoid drift if groupings change
   let canvasSpaceColumn = tonicSign.columnIndex;
   if (tonicSign.uuid) {

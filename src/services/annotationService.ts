@@ -9,7 +9,7 @@
 import store from '@state/index.ts';
 import logger from '@utils/logger.ts';
 import { getColumnFromX, getRowFromY, getColumnX, getRowY } from '@components/canvas/PitchGrid/renderers/rendererUtils.ts';
-// LayoutService not needed
+import LayoutService from '@services/layoutService.ts';
 import PitchGridController from '@components/canvas/PitchGrid/pitchGrid.ts';
 import { isPointInPolygon, calculateConvexHull, isPointNearHull, polygonIntersectsEllipse, polygonIntersectsRect } from '@utils/geometryUtils.ts';
 
@@ -35,6 +35,7 @@ class AnnotationService {
   selectionDragStart: { col: number; row: number } | null;
   selectionDragTotal: { col: number; row: number } | null;
   lastPointerPosition: { clientX: number; clientY: number } | null;
+  initialDragStartRank: number | null;
 
   constructor() {
     this.canvas = null;
@@ -59,6 +60,7 @@ class AnnotationService {
     this.selectionDragStart = null;
     this.selectionDragTotal = null; // Track total movement to avoid accumulation errors
     this.lastPointerPosition = null;
+    this.initialDragStartRank = null; // Track viewport startRank at drag start to compensate scroll
   }
 
   initialize() {
@@ -76,6 +78,11 @@ class AnnotationService {
     store.on('annotationsChanged', () => {
       this.selectedAnnotation = null;
       this.render();
+    });
+
+    // Listen to scroll events to keep lasso selection in sync with grid
+    store.on('scrollByUnits', (direction: number) => {
+      this.handleSelectionScroll(direction);
     });
 
     logger.initSuccess('AnnotationService');
@@ -170,6 +177,20 @@ class AnnotationService {
   }
 
   /**
+   * Convert canvas pixel coordinates to grid coordinates using a fresh viewport
+   * lookup (avoids cached startRank that can lag during scroll).
+   */
+  canvasToGridFresh(canvasX, canvasY) {
+    const options = this.getRenderOptions();
+    const viewportInfo = LayoutService.getViewportInfo();
+    const halfUnit = options.cellHeight / 2;
+    return {
+      col: getColumnFromX(canvasX, options),
+      row: (canvasY / halfUnit) + viewportInfo.startRank
+    };
+  }
+
+  /**
      * Convert grid coordinates to canvas pixel coordinates
      */
   gridToCanvas(col, row) {
@@ -213,7 +234,7 @@ class AnnotationService {
     this.lastPointerPosition = { clientX: e.clientX, clientY: e.clientY };
 
     // Convert canvas pixels to grid coordinates
-    const gridCoords = this.canvasToGrid(canvasX, canvasY);
+    const gridCoords = this.canvasToGridFresh(canvasX, canvasY);
 
     // Right-click behavior depends on current tool
     if (e.button === 2) {
@@ -267,6 +288,8 @@ class AnnotationService {
           row: 0
         };
         this.lastPointerPosition = { clientX: e.clientX, clientY: e.clientY };
+        // Store initial viewport position for scroll compensation
+        this.initialDragStartRank = LayoutService.getViewportInfo().startRank;
         return;
       }
     }
@@ -351,7 +374,7 @@ class AnnotationService {
     this.lastPointerPosition = { clientX: e.clientX, clientY: e.clientY };
 
     // Convert to grid coordinates
-    const gridCoords = this.canvasToGrid(canvasX, canvasY);
+    const gridCoords = this.canvasToGridFresh(canvasX, canvasY);
 
     // Handle eraser mode
     if (this.tempEraserMode) {
@@ -486,6 +509,7 @@ class AnnotationService {
       this.selectionDragStart = null;
       this.selectionDragTotal = null;
       this.lastPointerPosition = null;
+      this.initialDragStartRank = null;
       store.recordState();
       return;
     }
@@ -578,13 +602,26 @@ class AnnotationService {
   applySelectionDrag(canvasX: number, canvasY: number) {
     if (!this.isDraggingSelection || !this.selectionDragStart || !this.selectionDragTotal) {return;}
     const options = this.getRenderOptions();
+    const currentTopIndex = store.state.pitchRange?.topIndex ?? 0;
 
-    // Convert current pointer to grid space so scrolling is naturally accounted for
-    const currentGrid = this.canvasToGrid(canvasX, canvasY);
+    // Get current viewport info to detect scroll changes
+    const viewportInfo = LayoutService.getViewportInfo();
+    const currentStartRank = viewportInfo.startRank;
+
+    // Calculate how much the viewport has shifted since drag started
+    const rankShift = this.initialDragStartRank !== null
+      ? currentStartRank - this.initialDragStartRank
+      : 0;
+
+    // Convert current pointer to grid space
+    const currentGrid = this.canvasToGridFresh(canvasX, canvasY);
+
+    // Compensate for viewport shift in the row calculation so the drag follows the cursor
+    const compensatedRow = currentGrid.row - rankShift;
 
     // Calculate grid delta from original start position
     const dCol = Math.round(currentGrid.col - this.selectionDragStart.col);
-    const dRow = Math.round(currentGrid.row - this.selectionDragStart.row);
+    const dRow = Math.round(compensatedRow - this.selectionDragStart.row);
 
     // Calculate what movement we need to apply (difference from already applied)
     const movementNeeded = {
@@ -597,19 +634,37 @@ class AnnotationService {
 
     // Move all selected items by the needed amount
     store.state.lassoSelection.selectedItems.forEach(item => {
+      const resolveGlobalRow = (row: number, existingGlobal?: number): number =>
+        typeof existingGlobal === 'number' ? existingGlobal : row + currentTopIndex;
+
       if (item.type === 'note') {
-        item.data.row += movementNeeded.row;
+        const baseGlobal = resolveGlobalRow(item.data.row, item.data.globalRow);
+        const newGlobal = baseGlobal + movementNeeded.row;
+
+        item.data.globalRow = newGlobal;
+        item.data.row = newGlobal - currentTopIndex;
+
         const colIndex = item.data.columnIndex !== undefined ? 'columnIndex' : 'startColumnIndex';
         item.data[colIndex] += movementNeeded.col;
         if (item.data.endColumnIndex !== undefined) {
           item.data.endColumnIndex += movementNeeded.col;
         }
       } else if (item.type === 'stamp') {
-        item.data.row += movementNeeded.row;
+        const baseGlobal = resolveGlobalRow(item.data.row, item.data.globalRow);
+        const newGlobal = baseGlobal + movementNeeded.row;
+
+        item.data.globalRow = newGlobal;
+        item.data.row = newGlobal - currentTopIndex;
+
         item.data.startColumn += movementNeeded.col;
         item.data.endColumn += movementNeeded.col;
       } else if (item.type === 'triplet') {
-        item.data.row += movementNeeded.row;
+        const baseGlobal = resolveGlobalRow(item.data.row, item.data.globalRow);
+        const newGlobal = baseGlobal + movementNeeded.row;
+
+        item.data.globalRow = newGlobal;
+        item.data.row = newGlobal - currentTopIndex;
+
         item.data.column += movementNeeded.col;
       }
     });
@@ -617,6 +672,44 @@ class AnnotationService {
     // Update total movement applied
     this.selectionDragTotal.col = dCol;
     this.selectionDragTotal.row = dRow;
+
+    // Recalculate convex hull from updated positions
+    const points = store.state.lassoSelection.selectedItems.map(item => {
+      const colIndex = item.data.columnIndex !== undefined ? item.data.columnIndex :
+        item.data.startColumnIndex !== undefined ? item.data.startColumnIndex :
+          item.data.column;
+      const x = getColumnX(colIndex, options);
+      const y = getRowY(item.data.row, options);
+      return { x, y };
+    });
+    store.state.lassoSelection.convexHull = calculateConvexHull(points);
+
+    this.render();
+  }
+
+  /**
+   * Handle grid scroll events to keep lasso selection in sync.
+   * When the grid scrolls by N rows, selected items should also move by N rows.
+   */
+  handleSelectionScroll(rowDelta: number) {
+    // Only process if there's an active selection and we're not actively dragging
+    if (!store.state.lassoSelection?.isActive || this.isDraggingSelection) {
+      return;
+    }
+
+    const options = this.getRenderOptions();
+    const currentTopIndex = store.state.pitchRange?.topIndex ?? 0;
+
+    const resolveGlobalRow = (row: number, existingGlobal?: number): number =>
+      typeof existingGlobal === 'number' ? existingGlobal : row + currentTopIndex;
+
+    // Move all selected items by the row delta
+    store.state.lassoSelection.selectedItems.forEach(item => {
+      const baseGlobal = resolveGlobalRow(item.data.row, item.data.globalRow);
+      const newGlobal = baseGlobal + rowDelta;
+      item.data.globalRow = newGlobal;
+      item.data.row = newGlobal - currentTopIndex;
+    });
 
     // Recalculate convex hull from updated positions
     const points = store.state.lassoSelection.selectedItems.map(item => {

@@ -1,6 +1,7 @@
 // js/state/selectors.ts
 import { Note } from 'tonal';
 import columnMapService from '../services/columnMapService.ts';
+import { fullRowData as masterRowData } from './pitchData.js';
 import type { AppState, TonicSign, PlacedNote } from '../../types/state.js';
 
 const MODE_NAMES = ['major', 'dorian', 'phrygian', 'lydian', 'mixolydian', 'minor', 'locrian'];
@@ -69,7 +70,11 @@ export const getKeyContextForColumn = (state: AppState, columnIndex: number): { 
   const latestTonic = relevantTonicSigns.reduce((latest, current) =>
     current.columnIndex > latest.columnIndex ? current : latest
   );
-  const rowData = state.fullRowData[latestTonic.row];
+  const globalRow = typeof latestTonic.globalRow === 'number'
+    ? latestTonic.globalRow
+    : latestTonic.row + (state.pitchRange?.topIndex ?? 0);
+
+  const rowData = masterRowData[globalRow] ?? state.fullRowData[latestTonic.row];
   if (!rowData) {
     return { keyTonic: 'C', keyMode: 'major' };
   }

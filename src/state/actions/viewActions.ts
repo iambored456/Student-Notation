@@ -1,6 +1,7 @@
 // js/state/actions/viewActions.ts
 import { fullRowData as masterRowData } from '../pitchData.js';
 import logger from '@utils/logger.ts';
+import { remapRowPosition } from '@utils/rowCoordinates.ts';
 import type { Store, Annotation, PrintOptions, PlacedNote } from '../../../types/state.js';
 
 interface PitchRange {
@@ -367,15 +368,15 @@ export const viewActions = {
         return;
       }
 
-      const globalRow = typeof note.globalRow === 'number'
-        ? note.globalRow
-        : note.row + oldRange.topIndex;
+      const { globalRow, mappedRow, outsideRange } = remapRowPosition(
+        note,
+        oldRange.topIndex,
+        newTopIndex,
+        newBottomIndex
+      );
 
       note.globalRow = globalRow;
-
-      const relativeRow = globalRow - newTopIndex;
-      const mappedRow = Math.max(0, Math.min(maxRowIndex, relativeRow));
-      const outsideRange = globalRow < newTopIndex || globalRow > newBottomIndex;
+      note.row = mappedRow;
 
       if (outsideRange && shouldTrim) {
         removedNotes += 1;
@@ -387,7 +388,6 @@ export const viewActions = {
         return;
       }
 
-      note.row = mappedRow;
       nextPlacedNotes.push(note);
     });
 
@@ -395,19 +395,44 @@ export const viewActions = {
     this.state.parkedNotes = nextParkedNotes;
 
     // Remap tonic sign groups
+    // Use globalRow to preserve absolute position across pitch range changes (same pattern as notes)
     if (this.state.tonicSignGroups) {
       const updatedGroups: Record<string, unknown[]> = {};
       Object.entries(this.state.tonicSignGroups).forEach(([uuid, group]) => {
         const adjustedGroup = group
           .map(sign => {
             if (typeof sign.row !== 'number') {return null;}
-            const globalRow = sign.row + oldRange.topIndex;
-            const mappedRow = Math.max(0, Math.min(maxRowIndex, globalRow - newTopIndex));
-            const outsideRange = globalRow < newTopIndex || globalRow > newBottomIndex;
+            const { globalRow, mappedRow, outsideRange } = remapRowPosition(
+              sign,
+              oldRange.topIndex,
+              newTopIndex,
+              newBottomIndex
+            );
+
+            // DEBUG: Log tonic remapping with pitch verification
+            const oldPitch = this.state.fullRowData[sign.row]?.toneNote;
+            const newPitch = newFullRowData[mappedRow]?.toneNote;
+            const masterPitch = masterRowData[globalRow]?.toneNote;
+            console.log('[TONIC REMAP DEBUG]', {
+              hasGlobalRow: typeof sign.globalRow === 'number',
+              storedGlobalRow: sign.globalRow,
+              inputRow: sign.row,
+              oldTopIndex: oldRange.topIndex,
+              newTopIndex,
+              calculatedGlobalRow: globalRow,
+              mappedRow,
+              maxRowIndex,
+              oldPitch,
+              newPitch,
+              masterPitch,
+              pitchMatch: oldPitch === newPitch && oldPitch === masterPitch
+            });
+
             if (outsideRange && shouldTrim) {
               return null;
             }
-            return { ...sign, row: mappedRow };
+            // Preserve globalRow for future remappings
+            return { ...sign, row: mappedRow, globalRow };
           })
           .filter(Boolean);
 
@@ -423,16 +448,15 @@ export const viewActions = {
       // Debug logs removed
 
       this.state.stampPlacements = this.state.stampPlacements.filter((placement, index) => {
-        // Use globalRow if available, otherwise calculate from current row
-        const globalRow = typeof placement.globalRow === 'number'
-          ? placement.globalRow
-          : placement.row + oldRange.topIndex;
+        const { globalRow, mappedRow, outsideRange } = remapRowPosition(
+          placement,
+          oldRange.topIndex,
+          newTopIndex,
+          newBottomIndex
+        );
 
-        // Store globalRow for future range changes
         placement.globalRow = globalRow;
-
-        const relativeRow = globalRow - newTopIndex;
-        const outsideRange = globalRow < newTopIndex || globalRow > newBottomIndex;
+        placement.row = mappedRow;
 
         if (index === 0) {
           // Debug logs removed
@@ -443,9 +467,6 @@ export const viewActions = {
           return false;
         }
 
-        // Use relativeRow directly - don't clamp if outside range
-        // This allows stamps to render at their correct position or be off-screen
-        placement.row = relativeRow;
         return true;
       });
     }
@@ -453,25 +474,21 @@ export const viewActions = {
     // Remap triplet placements
     if (Array.isArray(this.state.tripletPlacements)) {
       this.state.tripletPlacements = this.state.tripletPlacements.filter(placement => {
-        // Use globalRow if available, otherwise calculate from current row
-        const globalRow = typeof placement.globalRow === 'number'
-          ? placement.globalRow
-          : placement.row + oldRange.topIndex;
+        const { globalRow, mappedRow, outsideRange } = remapRowPosition(
+          placement,
+          oldRange.topIndex,
+          newTopIndex,
+          newBottomIndex
+        );
 
-        // Store globalRow for future range changes
         placement.globalRow = globalRow;
-
-        const relativeRow = globalRow - newTopIndex;
-        const outsideRange = globalRow < newTopIndex || globalRow > newBottomIndex;
+        placement.row = mappedRow;
 
         if (outsideRange && shouldTrim) {
           removedTriplets += 1;
           return false;
         }
 
-        // Use relativeRow directly - don't clamp if outside range
-        // This allows triplets to render at their correct position or be off-screen
-        placement.row = relativeRow;
         return true;
       });
     }

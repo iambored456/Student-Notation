@@ -34,7 +34,10 @@ function getAnacrusisColors(): typeof DEFAULT_ANACRUSIS_COLORS {
   return cachedAnacrusisColors;
 }
 
-interface Range { start: number; end: number }
+interface Range {
+  start: number;
+  end: number;
+}
 
 function mergeRanges(ranges: Range[]): Range[] {
   if (ranges.length === 0) {return [];}
@@ -116,12 +119,12 @@ type ModulationRendererOptions = Parameters<typeof renderModulationMarkers>[1];
 
 export type VolumeIconState = 'normal' | 'hover' | 'active';
 
-type DrumNote = PlacedNote & {
+interface DrumNote extends PlacedNote {
   isDrum?: boolean;
   drumTrack?: string | number | null;
-};
+}
 
-export type DrumGridRenderOptions = PitchRendererOptions & {
+export interface DrumGridRenderOptions extends PitchRendererOptions {
   placedNotes: DrumNote[];
   placedTonicSigns: TonicSign[];
   columnWidths: number[];
@@ -133,7 +136,7 @@ export type DrumGridRenderOptions = PitchRendererOptions & {
   modulationMarkers?: ModulationMarker[];
   baseMicrobeatPx: number;
   volumeIconState?: VolumeIconState;
-};
+}
 
 function getColumnX(index: number, options: DrumGridRenderOptions): number {
   // Always use the rendererUtils getColumnX (imported as getModulatedColumnX)

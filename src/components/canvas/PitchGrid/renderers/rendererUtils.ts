@@ -114,6 +114,7 @@ export function getRowY(rowIndex: number, options: RendererOptions): number {
   const relativeRowIndex = rowIndex - viewportInfo.startRank;
   const halfUnit = options.cellHeight / 2;
   const yPosition = relativeRowIndex * halfUnit;
+
   return yPosition;
 }
 
@@ -139,8 +140,9 @@ export function getLineStyleFromPitchClass(pc: string): { lineWidth: number; das
 }
 
 export function getVisibleRowRange(): { startRow: number; endRow: number } {
-  const viewportInfo = LayoutService.getViewportInfo();
-  const { startRank, endRank } = viewportInfo; // FIXED: use startRank/endRank instead of startRow/endRow
+  // Use getCachedViewportInfo() to ensure consistency with getRowY() which also uses cached info
+  const viewportInfo = getCachedViewportInfo();
+  const { startRank, endRank } = viewportInfo;
   return { startRow: startRank, endRow: endRank };
 }
 

@@ -48,6 +48,8 @@ export interface TonicSign {
   /** Canvas-space column index (0 = first musical beat) */
   columnIndex: CanvasSpaceColumn;
   row: number;
+  /** Absolute row index in master pitch data (preserved across pitch range changes) */
+  globalRow?: number;
   tonicNumber: number;
   preMacrobeatIndex: number;
   uuid?: string;

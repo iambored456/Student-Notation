@@ -5,7 +5,7 @@ import { Scale, Note } from 'tonal';
 import { getPlacedTonicSigns } from '@state/selectors.ts';
 import logger from '@utils/logger.ts';
 import { SIDE_COLUMN_WIDTH } from '../../../../core/constants.ts';
-import type { AppState, PitchRowData } from '../../../../../types/state.js';
+import type { PitchRowData } from '../../../../../types/state.js';
 
 type ExtendedPitchRow = PitchRowData & { isDummy?: boolean };
 interface LegendOptions {

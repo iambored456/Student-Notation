@@ -9,6 +9,8 @@ import { renderTriplets } from './tripletRenderer.js';
 import { renderModulationMarkers } from './modulationRenderer.js';
 import { renderAnnotations } from './annotationRenderer.js';
 import { getLogicalCanvasWidth, getLogicalCanvasHeight } from '@utils/canvasDimensions.ts';
+import { assertRowIntegrity } from '@utils/rowCoordinates.ts';
+import { fullRowData as masterRowData } from '@state/pitchData.ts';
 import CanvasContextService from '@services/canvasContextService.ts';
 import type { AppState, PlacedNote, TonicSign } from '../../../../../types/state.js';
 
@@ -45,18 +47,22 @@ export function drawPitchGrid(ctx: CanvasRenderingContext2D, options: PitchGridR
   // 1. Get the range of rows that are actually visible
   const { startRow, endRow } = getVisibleRowRange();
 
-  // Replicate tonic signs across visible octaves so they persist through vertical scroll
-  const tonicModulo = (row: number) => ((row % 12) + 12) % 12;
-  const visibleTonicSigns = fullOptions.placedTonicSigns.flatMap(sign => {
-    const baseModulo = tonicModulo(sign.row);
-    const replicas: TonicSign[] = [];
-    for (let row = startRow; row <= endRow; row++) {
-      if (tonicModulo(row) === baseModulo) {
-        replicas.push({ ...sign, row });
-      }
-    }
-    return replicas;
-  });
+  // Filter tonic signs to only those in the visible range
+  // Tonic signs are already stored with their fixed row positions (octave replication happens at placement time)
+  const visibleTonicSigns = fullOptions.placedTonicSigns.filter(sign =>
+    sign.row >= startRow && sign.row <= endRow
+  );
+
+  // DEBUG: Log tonic filtering
+  if (fullOptions.placedTonicSigns.length > 0) {
+    console.log('[TONIC DEBUG] Filtering:', {
+      storedRows: fullOptions.placedTonicSigns.map(s => s.row),
+      storedToneNotes: fullOptions.placedTonicSigns.map(s => fullOptions.fullRowData[s.row]?.toneNote),
+      visibleRange: { startRow, endRow },
+      visibleRows: visibleTonicSigns.map(s => s.row),
+      visibleToneNotes: visibleTonicSigns.map(s => fullOptions.fullRowData[s.row]?.toneNote)
+    });
+  }
 
   // 2. Draw legends to separate canvases
   const legendLeftCtx = CanvasContextService.getLegendLeftContext();
@@ -73,6 +79,28 @@ export function drawPitchGrid(ctx: CanvasRenderingContext2D, options: PitchGridR
   );
 
   const uniqueVisibleTonicSigns = visibleTonicSigns;
+
+  if (process.env['NODE_ENV'] === 'development') {
+    const currentTopIndex = store.state.pitchRange?.topIndex ?? 0;
+    visibleNotes.forEach(note => {
+      assertRowIntegrity(
+        note,
+        fullOptions.fullRowData,
+        masterRowData,
+        currentTopIndex,
+        'pitchGridRenderer:note'
+      );
+    });
+    uniqueVisibleTonicSigns.forEach(sign => {
+      assertRowIntegrity(
+        sign,
+        fullOptions.fullRowData,
+        masterRowData,
+        currentTopIndex,
+        'pitchGridRenderer:tonic'
+      );
+    });
+  }
 
 
   // Draw each visible note

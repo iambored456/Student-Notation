@@ -1,6 +1,7 @@
 // js/components/Canvas/PitchGrid/interactors/pitchGridInteractor.js
 import store from '@state/index.ts';
 import { getMacrobeatInfo, getPlacedTonicSigns } from '@state/selectors.ts';
+import { fullRowData as masterRowData } from '@state/pitchData.ts';
 import { visualToTimeIndex, timeIndexToVisualColumn } from '@services/columnMap.ts';
 import SynthEngine from '@services/synthEngine.ts';
 import rhythmPlaybackService from '../../../../services/rhythmPlaybackService.ts';
@@ -1454,17 +1455,27 @@ function handleMouseMove(e) {
 
       const basePitch = getPitchForRow(rowIndex);
       if (basePitch) {
-        const octaveRows = store.state.fullRowData
-          .map((rowData, index) => ({ ...rowData, index }))
-          .filter(rowData => rowData.toneNote && rowData.toneNote.replace(/\d+$/, '') === basePitch.replace(/\d+$/, ''))
-          .map(rowData => rowData.index);
+        // Search ALL octaves in master pitch data (place tonics on all octaves, even outside current range)
+        const pitchClass = basePitch.replace(/\d+$/, ''); // e.g., "Ab" from "Ab5"
+        const topIndex = store.state.pitchRange?.topIndex ?? 0;
+
+        // Find all matching pitch classes in master data and convert to fullRowData indices
+        const octaveRows = masterRowData
+          .map((rowData, masterIndex) => ({ rowData, masterIndex }))
+          .filter(({ rowData }) => rowData.toneNote && rowData.toneNote.replace(/\d+$/, '') === pitchClass)
+          .map(({ masterIndex }) => masterIndex - topIndex); // Convert to fullRowData-relative index (may be negative or > length)
 
         lastHoveredTonicPoint = snapPoint;
         lastHoveredOctaveRows = octaveRows;
 
+        // Draw ghost preview only for tonics in the visible range
+        const visibleOctaveRows = octaveRows.filter(rowIdx =>
+          rowIdx >= 0 && rowIdx < store.state.fullRowData.length
+        );
+
         pitchHoverCtx.globalAlpha = 0.5;
         const fullOptions = { ...store.state, zoomLevel: LayoutService.getViewportInfo().zoomLevel };
-        octaveRows.forEach(rowIdx => {
+        visibleOctaveRows.forEach(rowIdx => {
           const ghostTonic = { row: rowIdx, columnIndex: snapPoint.drawColumn, tonicNumber: store.state.selectedToolTonicNumber };
           drawTonicShape(pitchHoverCtx, fullOptions, ghostTonic);
         });

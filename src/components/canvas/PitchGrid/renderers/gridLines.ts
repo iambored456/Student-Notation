@@ -24,7 +24,10 @@ function getAnacrusisColors(): typeof DEFAULT_ANACRUSIS_COLORS {
   return cachedAnacrusisColors;
 }
 
-interface Range { start: number; end: number }
+interface Range {
+  start: number;
+  end: number;
+}
 
 function mergeRanges(ranges: Range[]): Range[] {
   if (ranges.length === 0) {return [];}

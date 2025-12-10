@@ -2081,12 +2081,27 @@ const LayoutService = {
 
   scroll(deltaY: number) {
 
+    // Capture viewport info BEFORE scroll for lasso selection sync
+    const viewportBefore = this.getViewportInfo();
+    const startRankBefore = viewportBefore.startRank;
 
     const scrollAmount = (deltaY / viewportHeight) / 4;
 
 
     currentScrollPosition = Math.max(0, Math.min(1, currentScrollPosition + scrollAmount));
 
+    // Emit scrollChanged to invalidate viewport caches
+    store.emit('scrollChanged');
+
+    // Calculate row delta for lasso selection sync
+    const viewportAfter = this.getViewportInfo();
+    const startRankAfter = viewportAfter.startRank;
+    const rowDelta = startRankAfter - startRankBefore;
+
+    // Emit scrollByUnits event if there was actual row movement
+    if (rowDelta !== 0) {
+      store.emit('scrollByUnits', rowDelta);
+    }
 
     store.emit('layoutConfigChanged');
 
@@ -2159,6 +2174,11 @@ const LayoutService = {
       bottomIndex: newBottomIndex
     }, { trimOutsideRange: false, preserveContent: true });
 
+    // Emit scrollChanged to invalidate viewport caches
+    store.emit('scrollChanged');
+
+    // Emit scrollByUnits with the direction for lasso selection sync
+    store.emit('scrollByUnits', direction);
 
   },
 
@@ -2168,6 +2188,9 @@ const LayoutService = {
 
   scrollByPixels(deltaY: number, _deltaX = 0) {
 
+    // Capture viewport info BEFORE scroll for lasso selection sync
+    const viewportBefore = this.getViewportInfo();
+    const startRankBefore = viewportBefore.startRank;
 
     const totalRanks = store.state.fullRowData.length;
 
@@ -2201,9 +2224,18 @@ const LayoutService = {
 
     }
 
+    // Emit scrollChanged to invalidate viewport caches
+    store.emit('scrollChanged');
 
+    // Calculate row delta for lasso selection sync
+    const viewportAfter = this.getViewportInfo();
+    const startRankAfter = viewportAfter.startRank;
+    const rowDelta = startRankAfter - startRankBefore;
 
-
+    // Emit scrollByUnits event if there was actual row movement
+    if (rowDelta !== 0) {
+      store.emit('scrollByUnits', rowDelta);
+    }
 
     store.emit('layoutConfigChanged');
 
