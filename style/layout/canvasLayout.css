@@ -76,7 +76,7 @@
   align-items: center;
   justify-content: center;
   flex: 0 0 auto;
-  background-color: var(--c-surface);
+  background-color: transparent;
   border-bottom: 2px solid var(--c-border-strong);
   border-top: none;
   border-right: none;
@@ -113,7 +113,7 @@
   overflow-x: visible;
   overflow-y: hidden;
   position: relative;
-  background-color: var(--c-surface);
+  background-color: transparent;
   border-radius: 0 0 var(--border-radius-md) var(--border-radius-md);
   border-top: 2px solid var(--c-border-strong);
 }
@@ -152,6 +152,7 @@
 }
 
 .drum-grid-right-cell {
+  background-color: transparent;
   border-bottom: 2px solid var(--c-border-strong);
 }
 
