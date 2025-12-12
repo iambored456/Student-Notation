@@ -113,7 +113,7 @@
 
 .tempo-input {
     width: 45px;
-    background-color: var(--c-bg);
+    background-color: var(--c-surface);
     color: var(--c-text);
     border: 1px solid var(--c-border);
     border-radius: var(--border-radius-sm);

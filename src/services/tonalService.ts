@@ -83,7 +83,9 @@ const TonalService = {
     const { keyTonic, keyMode } = getKeyContextForColumn(state, note.startColumnIndex);
     if (!keyTonic) {return null;}
 
-    const notePitch = state.fullRowData[note.row]?.toneNote;
+    // Use globalRow for pitch lookup (fullRowData is never sliced)
+    const rowIndex = note.globalRow ?? note.row;
+    const notePitch = state.fullRowData[rowIndex]?.toneNote;
     if (!notePitch) {return null;}
 
     const notePitchClass = (Note.pitchClass(notePitch) || notePitch);

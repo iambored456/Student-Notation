@@ -48,6 +48,11 @@ store.on('zoomChanged', () => {
   lastViewportFrame = null;
 });
 
+store.on('pitchRangeChanged', () => {
+  cachedViewportInfo = null;
+  lastViewportFrame = null;
+});
+
 /**
  * Gets or creates a coordinate mapping for modulation markers
  * @param options Render options containing modulation markers
@@ -109,10 +114,40 @@ export function getColumnX(index: number, options: RendererOptions): number {
   return pixelMapService.columnToPixelX(index, pixelOptions, state);
 }
 
+/**
+ * CANVAS Y-COORDINATE MAPPING
+ * ===========================
+ *
+ * Converts a row index to its Y-position on the canvas.
+ *
+ * COORDINATE SYSTEM:
+ *   - Canvas Y=0 is at the TOP of the visible pitch range
+ *   - The first visible row's TOP EDGE (not center) is at Y=0
+ *   - Each row has height = cellHeight (vertical spacing between row centers = halfUnit)
+ *
+ * ROW INDEX TYPES:
+ *   - This function expects a GLOBAL row index (0-104, index into fullRowData)
+ *   - viewportInfo.startRank = pitchRange.topIndex (first visible global row)
+ *   - The function converts global → relative position automatically
+ *
+ * VISUAL LAYOUT:
+ *   Row 0 (first visible):  top=0, center=halfUnit, bottom=cellHeight
+ *   Row 1:                  top=halfUnit, center=2*halfUnit, bottom=1.5*cellHeight
+ *   ...and so on
+ *
+ * @param rowIndex - Global row index (0-104, index into fullRowData/masterRowData)
+ * @param options - Render options containing cellHeight
+ * @returns Y position of row CENTER on canvas in pixels (may be negative if above viewport)
+ *
+ * See src/utils/rowCoordinates.ts for full coordinate system documentation.
+ */
 export function getRowY(rowIndex: number, options: RendererOptions): number {
   const viewportInfo = getCachedViewportInfo();
   const relativeRowIndex = rowIndex - viewportInfo.startRank;
   const halfUnit = options.cellHeight / 2;
+  // Row centers are positioned at halfUnit intervals starting from Y=0
+  // Row 0's CENTER is at Y=0, top edge at -halfUnit, bottom edge at +halfUnit
+  // This allows partial rows to naturally appear at viewport boundaries
   const yPosition = relativeRowIndex * halfUnit;
 
   return yPosition;
@@ -187,14 +222,26 @@ export function getColumnFromX(canvasX: number, options: RendererOptions): numbe
 }
 
 /**
- * Converts a canvas Y position back to a row index
- * @param canvasY Canvas y position
- * @param options Render options
- * @returns Row index (fractional for precision)
+ * INVERSE Y-COORDINATE MAPPING
+ * ============================
+ *
+ * Converts a canvas Y position back to a global row index.
+ * This is the inverse of getRowY().
+ *
+ * @param canvasY - Y position on canvas in pixels
+ * @param options - Render options containing cellHeight
+ * @returns Global row index (fractional for sub-row precision, e.g., 5.3 = between rows 5 and 6)
+ *
+ * USAGE:
+ *   const globalRow = Math.round(getRowFromY(canvasY, options));
+ *   const pitchData = fullRowData[globalRow];
+ *
+ * See src/utils/rowCoordinates.ts for full coordinate system documentation.
  */
 export function getRowFromY(canvasY: number, options: RendererOptions): number {
   const viewportInfo = getCachedViewportInfo();
   const halfUnit = options.cellHeight / 2;
+  // Row 0's center is at Y=0, so directly convert Y position to row index
   const relativeRowIndex = canvasY / halfUnit;
   const rowIndex = relativeRowIndex + viewportInfo.startRank;
   return rowIndex;

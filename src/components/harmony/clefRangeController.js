@@ -727,9 +727,9 @@ class ClefRangeController {
         bottomIndex: currentBottomIndex
       };
 
-      if (masterRowData && masterRowData.length > 0) {
-        store.state.fullRowData = masterRowData.slice(currentTopIndex, currentBottomIndex + 1);
-      }
+      // Note: fullRowData should remain the complete pitch gamut (105 rows)
+      // pitchRange defines which portion is visible/rendered
+      // Do NOT slice fullRowData here
 
       // Update the controller's internal range tracking and summary display during animation
       this.currentRange = { topIndex: currentTopIndex, bottomIndex: currentBottomIndex };

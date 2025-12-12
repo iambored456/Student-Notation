@@ -25,8 +25,17 @@ function createEmptyTriggeredNotes(): TriggeredNotes {
 
 let triggeredNotes: TriggeredNotes = createEmptyTriggeredNotes();
 
+/**
+ * Gets the pitch (toneNote) for a placed note.
+ * Uses globalRow for pitch lookup since fullRowData contains the complete gamut.
+ * Falls back to note.row for legacy notes that don't have globalRow set.
+ *
+ * See src/utils/rowCoordinates.ts for coordinate system documentation.
+ */
 function getPitchForNote(note: PlacedNote): string {
-  const rowData = store.state.fullRowData[note.row];
+  // Use globalRow for pitch lookup (fullRowData is never sliced)
+  const rowIndex = note.globalRow ?? note.row;
+  const rowData = store.state.fullRowData[rowIndex];
   return rowData ? rowData.toneNote : 'C4';
 }
 

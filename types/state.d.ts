@@ -253,6 +253,7 @@ export interface AppState {
   degreeDisplayMode: 'off' | 'diatonic' | 'modal';
   accidentalMode: AccidentalMode;
   showFrequencyLabels: boolean;
+  showOctaveLabels: boolean;
   focusColours: boolean;
   snapZoomToRange: boolean;
   isPitchRangeLocked: boolean;
@@ -355,6 +356,7 @@ export interface Store {
   setChordPosition(position: number): void;
   toggleAccidentalMode(mode: 'flat' | 'sharp'): void;
   toggleFrequencyLabels(): void;
+  toggleOctaveLabels(): void;
   toggleFocusColours(): void;
   setDegreeDisplayMode(mode: 'off' | 'diatonic' | 'modal'): void;
   toggleWaveformExtendedView(): void;

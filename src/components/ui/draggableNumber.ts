@@ -114,7 +114,7 @@ export default class DraggableNumber {
       this.element.style.cssText = [
         `width:${w}px`,
         `height:${h}px`,
-        'background-color: var(--c-bg)',
+        'background-color: var(--c-surface)',
         'color: var(--c-text)',
         'border: 1px solid var(--c-border)',
         'border-radius: var(--border-radius-sm)',
@@ -206,7 +206,7 @@ export default class DraggableNumber {
     // Blur commits value
     this.element.addEventListener('blur', () => {
       if (this.settings.useAppStyling) {
-        this.element.style.backgroundColor = 'var(--c-bg)';
+        this.element.style.backgroundColor = 'var(--c-surface)';
         this.element.style.color = 'var(--c-text)';
       } else {
         this.element.style.backgroundColor = this.colors.fill;

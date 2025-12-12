@@ -1,4 +1,28 @@
 // js/components/harmony/clefRangeController.js
+/**
+ * CLEF RANGE CONTROLLER
+ * =====================
+ *
+ * INTEGRATION WITH ZOOM SYSTEM:
+ * This controller manages clef presets (Treble, Alto, Bass, Full) which define
+ * pitch ranges. When a preset is applied:
+ *
+ * 1. pitchRange is set to {topIndex, bottomIndex}
+ * 2. calculateTargetZoom() computes zoom to fit range in container
+ * 3. animateRangeTransition() smoothly animates both range AND zoom
+ * 4. Result: All rows in range are visible without scrolling ("Fit to Range")
+ *
+ * KEY COUPLING POINTS:
+ * - calculateTargetZoom(top, bottom) → calculates required zoom for range
+ * - LayoutService.setZoomLevel(zoom) → applies zoom during animation
+ * - LayoutService.snapZoomToCurrentRange() → called on wheel commit (when locked)
+ *
+ * FLAGS:
+ * - snapZoomToRange: When true, zoom auto-adjusts to fit range
+ * - isPitchRangeLocked: When true, range is fixed, zoom adjusts to fit
+ *
+ * See: src/services/layoutService.ts for zoom system implementation
+ */
 import store from '@state/index.ts';
 import { fullRowData as masterRowData } from '@state/pitchData.ts';
 import LayoutService from '@services/layoutService.ts';
@@ -264,6 +288,7 @@ class ClefRangeController {
   private currentRange: Range | null = null;
   private lastTopIndex = 0;
   private lastBottomIndex = 0;
+  private zoomAnimationId: number | null = null;
 
   init() {
     if (this.initialized) {return;}
@@ -440,9 +465,9 @@ class ClefRangeController {
       };
     };
 
-    map.treble = resolvePreset('A♭/G♯5', 'C4');
-    map.alto = resolvePreset('B♭/A♯4', 'D3');
-    map.bass = resolvePreset('D♭/C♯4', 'F2');
+    map.treble = resolvePreset('A♭/G♯5', 'B3');
+    map.alto = resolvePreset('B♭/A♯4', 'D♭/C♯3');
+    map.bass = resolvePreset('D♭/C♯4', 'E♭/D♯2');
     this.presetRanges = map;
   }
 
@@ -480,6 +505,7 @@ class ClefRangeController {
   }
 
   commitRangeChange(topIndex: number, bottomIndex: number) {
+    console.log('[CommitRange] Called with top:', topIndex, 'bottom:', bottomIndex);
     recordClefRangeDebug('log', `[CommitRange] Called with top=${topIndex}, bottom=${bottomIndex}`);
 
     const previousRange = this.currentRange || store.state.pitchRange || { topIndex: 0 };
@@ -527,6 +553,7 @@ class ClefRangeController {
       bottomIndex: enforcedRange.bottomIndex
     }, { maintainGlobalStart, trimOutsideRange, preserveContent: !trimOutsideRange });
 
+    console.log('[CommitRange] isLocked:', isLocked);
     if (isLocked) {
       // Auto-enable snap zoom when user interacts with range controls
       recordClefRangeDebug('log', `[CommitRange] Snap zoom currently: ${store.state.snapZoomToRange}`);
@@ -534,21 +561,11 @@ class ClefRangeController {
         recordClefRangeDebug('log', `[CommitRange] Enabling snap zoom`);
         store.setSnapZoomToRange(true);
       }
-
-      recordClefRangeDebug('log', `[CommitRange] Snap zoom now: ${store.state.snapZoomToRange}`);
-      if (LayoutService && typeof LayoutService.snapZoomToCurrentRange === 'function' && store.state.snapZoomToRange) {
-        recordClefRangeDebug('log', `[CommitRange] Calling snapZoomToCurrentRange`);
-        LayoutService.snapZoomToCurrentRange();
-      } else if (LayoutService && typeof LayoutService.recalculateLayout === 'function') {
-        recordClefRangeDebug('log', `[CommitRange] Calling recalculateLayout (snap zoom not enabled)`);
-        LayoutService.recalculateLayout();
-      }
-    } else {
-      // Unlocked: just recalc layout to reflect new slice/zoom if snap is off
-      if (LayoutService && typeof LayoutService.recalculateLayout === 'function') {
-        LayoutService.recalculateLayout();
-      }
     }
+
+    // Always animate zoom to fit the new range when wheels are adjusted
+    console.log('[CommitRange] Starting animated zoom to range');
+    this.animateZoomToRange(enforcedRange.topIndex, enforcedRange.bottomIndex);
 
     recordClefRangeDebug('log', `[CommitRange] Complete`);
   }
@@ -664,21 +681,21 @@ class ClefRangeController {
         return;
 
       case 'treble':
-        // Treble: C4 to G5
+        // Treble: B3 to Ab/G#5
         topNote = 'A♭/G♯5';
-        bottomNote = 'C4';
+        bottomNote = 'B3';
         break;
 
       case 'alto':
-        // Alto: E3 to A4
+        // Alto: Db/C#3 to Bb/A#4
         topNote = 'B♭/A♯4';
-        bottomNote = 'D3';
+        bottomNote = 'D♭/C♯3';
         break;
 
       case 'bass':
-        // Bass: F2 to C4
+        // Bass: Eb/D#2 to Db/C#4
         topNote = 'D♭/C♯4';
-        bottomNote = 'F2';
+        bottomNote = 'E♭/D♯2';
         break;
 
       default:
@@ -766,9 +783,9 @@ class ClefRangeController {
         bottomIndex: currentBottomIndex
       };
 
-      if (masterRowData && masterRowData.length > 0) {
-        store.state.fullRowData = masterRowData.slice(currentTopIndex, currentBottomIndex + 1);
-      }
+      // Note: fullRowData should remain the complete pitch gamut (105 rows)
+      // pitchRange defines which portion is visible/rendered
+      // Do NOT slice fullRowData here
 
       // Update the controller's internal range tracking and summary display during animation
       this.currentRange = { topIndex: currentTopIndex, bottomIndex: currentBottomIndex };
@@ -848,6 +865,62 @@ class ClefRangeController {
     const MIN_ZOOM = 0.1;
     const MAX_ZOOM = 5.0;
     return Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, requiredZoom));
+  }
+
+  animateZoomToRange(topIndex: number, bottomIndex: number, duration = 200) {
+    console.log('[AnimateZoom] Called with topIndex:', topIndex, 'bottomIndex:', bottomIndex);
+
+    // Cancel any in-progress zoom animation
+    if (this.zoomAnimationId !== null) {
+      console.log('[AnimateZoom] Cancelling previous animation');
+      cancelAnimationFrame(this.zoomAnimationId);
+      this.zoomAnimationId = null;
+    }
+
+    const startZoom = LayoutService.getCurrentZoomLevel ? LayoutService.getCurrentZoomLevel() : 1.0;
+    const targetZoom = this.calculateTargetZoom(topIndex, bottomIndex);
+    const zoomDistance = targetZoom - startZoom;
+
+    console.log('[AnimateZoom] startZoom:', startZoom, 'targetZoom:', targetZoom, 'distance:', zoomDistance);
+
+    // Skip animation if zoom change is negligible
+    if (Math.abs(zoomDistance) < 0.001) {
+      console.log('[AnimateZoom] Skipping - zoom change negligible');
+      return;
+    }
+
+    const startTime = performance.now();
+
+    console.log('[AnimateZoom] Starting animation:', Math.round(startZoom * 100) + '%', '->', Math.round(targetZoom * 100) + '%');
+
+    const animate = (currentTime: number) => {
+      const elapsed = currentTime - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+
+      // Ease-out cubic for smooth deceleration
+      const eased = 1 - Math.pow(1 - progress, 3);
+
+      const currentZoom = startZoom + (zoomDistance * eased);
+
+      // Update zoom level
+      if (LayoutService.setZoomLevel) {
+        LayoutService.setZoomLevel(currentZoom);
+      }
+
+      // Trigger canvas redraw
+      document.dispatchEvent(new CustomEvent('canvasResized', {
+        detail: { source: 'clefWheelZoomAnimation' }
+      }));
+
+      if (progress < 1) {
+        this.zoomAnimationId = requestAnimationFrame(animate);
+      } else {
+        this.zoomAnimationId = null;
+        console.log('[AnimateZoom] Animation complete at', Math.round(targetZoom * 100) + '%');
+      }
+    };
+
+    this.zoomAnimationId = requestAnimationFrame(animate);
   }
 
   applyViewPresetRange(topIndex, bottomIndex) {

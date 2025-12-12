@@ -14,10 +14,16 @@ interface LegendOptions {
   cellWidth: number;
   cellHeight: number;
   colorMode?: string;
+  showOctaveLabels?: boolean;
 }
 
 // Import MODE_NAMES for modal scale support
 const MODE_NAMES = ['major', 'dorian', 'phrygian', 'lydian', 'mixolydian', 'minor', 'locrian'] as const;
+
+function stripOctaveSuffix(label: string): string {
+  const withoutOctave = label.replace(/\d+$/, '');
+  return withoutOctave.length > 0 ? withoutOctave : label;
+}
 
 // Helper function to extract tonic note from pitch at given row
 function getTonicNoteFromRow(rowIndex: number, fullRowData: ExtendedPitchRow[]): string | null {
@@ -129,6 +135,8 @@ export function drawLegends(ctx: CanvasRenderingContext2D, options: LegendOption
   const colorMode = rawColorMode ?? 'color';
   const { sharp, flat } = store.state.accidentalMode;
   const { focusColours, showFrequencyLabels } = store.state;
+  const showOctaveLabels = options.showOctaveLabels ?? true;
+  const finalizeLabel = (value: string): string => showOctaveLabels ? value : stripOctaveSuffix(value);
 
   // Focus colours logic - union of all tonic scales
   let focusScale: string[] = [];
@@ -179,15 +187,15 @@ export function drawLegends(ctx: CanvasRenderingContext2D, options: LegendOption
     // If no rowData provided, use the new direct field access
     if (!rowData) {
       // Fallback to old string parsing if rowData not available
-      if (!label.includes('/')) {return label;}
+      if (!label.includes('/')) {return finalizeLabel(label);}
       const octave = label.slice(-1);
       const pitches = label.substring(0, label.length - 1);
       const [flatName, sharpName] = pitches.split('/');
 
-      if (sharp && flat) {return `${flatName}/${sharpName}${octave}`;}
-      if (sharp) {return `${sharpName}${octave}`;}
-      if (flat) {return `${flatName}${octave}`;}
-      return `${sharpName}${octave}`;
+      if (sharp && flat) {return finalizeLabel(`${flatName}/${sharpName}${octave}`);}
+      if (sharp) {return finalizeLabel(`${sharpName}${octave}`);}
+      if (flat) {return finalizeLabel(`${flatName}${octave}`);}
+      return finalizeLabel(`${sharpName}${octave}`);
     }
 
     // NEW: Use direct field access from expanded pitchData structure
@@ -195,7 +203,7 @@ export function drawLegends(ctx: CanvasRenderingContext2D, options: LegendOption
 
     // For natural notes, flatName === sharpName === pitch
     if (!isAccidental) {
-      return flatName; // or sharpName, they're identical for naturals
+      return finalizeLabel(flatName); // or sharpName, they're identical for naturals
     }
 
     // Accidental button logic
@@ -205,7 +213,7 @@ export function drawLegends(ctx: CanvasRenderingContext2D, options: LegendOption
     else if (flat && !sharp) {result = flatName;} // e.g., 'Bb7'
     else {result = sharpName;} // Default fallback
 
-    return result;
+    return finalizeLabel(result);
   };
 
   const isAccidentalHidden = (): boolean => !sharp && !flat;
@@ -315,6 +323,8 @@ export function drawLegendsToSeparateCanvases(
   const colorMode = rawColorMode ?? 'color';
   const { sharp, flat } = store.state.accidentalMode;
   const { focusColours, showFrequencyLabels } = store.state;
+  const showOctaveLabels = options.showOctaveLabels ?? true;
+  const finalizeLabel = (value: string): string => showOctaveLabels ? value : stripOctaveSuffix(value);
 
   // Focus colours logic - union of all tonic scales
   let focusScale: string[] = [];
@@ -373,15 +383,15 @@ export function drawLegendsToSeparateCanvases(
     // If no rowData provided, use the new direct field access
     if (!rowData) {
       // Fallback to old string parsing if rowData not available
-      if (!label.includes('/')) {return label;}
+      if (!label.includes('/')) {return finalizeLabel(label);}
       const octave = label.slice(-1);
       const pitches = label.substring(0, label.length - 1);
       const [flatName, sharpName] = pitches.split('/');
 
-      if (sharp && flat) {return `${flatName}/${sharpName}${octave}`;}
-      if (sharp) {return `${sharpName}${octave}`;}
-      if (flat) {return `${flatName}${octave}`;}
-      return `${sharpName}${octave}`;
+      if (sharp && flat) {return finalizeLabel(`${flatName}/${sharpName}${octave}`);}
+      if (sharp) {return finalizeLabel(`${sharpName}${octave}`);}
+      if (flat) {return finalizeLabel(`${flatName}${octave}`);}
+      return finalizeLabel(`${sharpName}${octave}`);
     }
 
     // NEW: Use direct field access from expanded pitchData structure
@@ -389,7 +399,7 @@ export function drawLegendsToSeparateCanvases(
 
     // For natural notes, flatName === sharpName === pitch
     if (!isAccidental) {
-      return flatName; // or sharpName, they're identical for naturals
+      return finalizeLabel(flatName); // or sharpName, they're identical for naturals
     }
 
     // Accidental button logic
@@ -399,7 +409,7 @@ export function drawLegendsToSeparateCanvases(
     else if (flat && !sharp) {result = flatName;} // e.g., 'Bb7'
     else {result = sharpName;} // Default fallback
 
-    return result;
+    return finalizeLabel(result);
   };
 
   const isAccidentalHidden = (): boolean => !sharp && !flat;
@@ -428,6 +438,7 @@ export function drawLegendsToSeparateCanvases(
 
         if (row.column === colLabel) {
           const y = getRowY(rowIndex, options);
+
           const isAccidental = row.isAccidental ?? row.pitch.includes('/');
           const shouldHideAccidental = !showFrequencyLabels && isAccidental && isAccidentalHidden();
 
@@ -438,12 +449,19 @@ export function drawLegendsToSeparateCanvases(
             continue;
           }
 
+          // BOUNDARY ROW DETECTION
+          // Row 0 (C♯8/D♭8) and row 106 (A♭0/G♯0) are visual padding rows that allow
+          // the complete top/bottom half-cells of C8 and A0 to be visible.
+          // Their backgrounds render normally (white), but text labels are hidden (textAlpha='00').
+          const isBoundaryRow = rowIndex === 0 || rowIndex === fullRowData.length - 1;
+
           let bgColor = colorMode === 'bw' ? '#ffffff' : (row.hex || '#ffffff');
           if (focusColours && !isFocused && !showFrequencyLabels) {
             bgColor = '#ffffff';
           }
 
-          const textAlpha = shouldHideAccidental ? '00' : (focusColours && !isFocused ? '55' : 'FF');
+          // Hide text for boundary rows and hidden accidentals, fade text for unfocused rows when using focus colors
+          const textAlpha = (shouldHideAccidental || isBoundaryRow) ? '00' : (focusColours && !isFocused ? '55' : 'FF');
 
           if (focusColours && focusSet.size > 0) {
             totalCount += 1;

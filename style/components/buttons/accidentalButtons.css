@@ -69,3 +69,20 @@
 .accidental-btn.active:hover {
   filter: brightness(0.95);
 }
+
+.octave-toggle-btn .octave-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.1em;
+  white-space: nowrap;
+}
+
+.octave-toggle-btn .octave-digit {
+  font-weight: 600;
+  transition: opacity 0.15s ease, color 0.15s ease;
+  display: inline-block;
+}
+
+.octave-toggle-btn:not(.active) .octave-digit {
+  opacity: 0.4;
+}

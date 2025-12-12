@@ -53,7 +53,7 @@
   padding: var(--space-015);
   border-radius: var(--border-radius-sm);
   border: 1px solid var(--c-border);
-  background-color: var(--c-bg);
+  background-color: var(--c-surface);
   transition: border-color 0.2s;
 }
 

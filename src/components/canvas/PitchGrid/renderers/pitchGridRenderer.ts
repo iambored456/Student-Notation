@@ -32,6 +32,7 @@ type PitchGridRenderOptions = {
   | 'modulationMarkers'
   | 'accidentalMode'
   | 'showFrequencyLabels'
+  | 'showOctaveLabels'
 >;
 
 export function drawPitchGrid(ctx: CanvasRenderingContext2D, options: PitchGridRenderOptions): void {
@@ -52,17 +53,6 @@ export function drawPitchGrid(ctx: CanvasRenderingContext2D, options: PitchGridR
   const visibleTonicSigns = fullOptions.placedTonicSigns.filter(sign =>
     sign.row >= startRow && sign.row <= endRow
   );
-
-  // DEBUG: Log tonic filtering
-  if (fullOptions.placedTonicSigns.length > 0) {
-    console.log('[TONIC DEBUG] Filtering:', {
-      storedRows: fullOptions.placedTonicSigns.map(s => s.row),
-      storedToneNotes: fullOptions.placedTonicSigns.map(s => fullOptions.fullRowData[s.row]?.toneNote),
-      visibleRange: { startRow, endRow },
-      visibleRows: visibleTonicSigns.map(s => s.row),
-      visibleToneNotes: visibleTonicSigns.map(s => fullOptions.fullRowData[s.row]?.toneNote)
-    });
-  }
 
   // 2. Draw legends to separate canvases
   const legendLeftCtx = CanvasContextService.getLegendLeftContext();

@@ -52,35 +52,6 @@ const getAnimationEffectsManager = (): AnimationEffectsManager | undefined => {
 const getPlacedNotes = (): PlacedNote[] => store.state.placedNotes;
 
 let _invalidDimensionWarningShown = false;
-const _loggedTonicPositions = new Set<string>();
-const _tonicLogState: Record<string, { lastValues: Record<string, number | string | null> }> = {};
-
-function getScrollDiagnostics() {
-  const gridsWrapper = document.getElementById('grids-wrapper');
-  const pitchWrapper = document.getElementById('pitch-grid-wrapper');
-  const pitchContainer = document.getElementById('pitch-grid-container');
-  const buttonGrid = document.getElementById('button-grid');
-  const notationGrid = document.getElementById('notation-grid');
-  const gridScrollbar = document.getElementById('grid-scrollbar-proxy');
-  const canvasRect = notationGrid?.getBoundingClientRect();
-  const wrapperRect = gridsWrapper?.getBoundingClientRect();
-
-  return {
-    gridsWrapperScroll: gridsWrapper ? gridsWrapper.scrollLeft : null,
-    pitchWrapperScroll: pitchWrapper ? pitchWrapper.scrollLeft : null,
-    pitchContainerScroll: pitchContainer ? pitchContainer.scrollLeft : null,
-    buttonGridScroll: buttonGrid ? buttonGrid.scrollLeft : null,
-    scrollbarProxyScroll: gridScrollbar ? gridScrollbar.scrollLeft : null,
-    gridsWrapperWidth: gridsWrapper ? gridsWrapper.clientWidth : null,
-    pitchWrapperWidth: pitchWrapper ? pitchWrapper.clientWidth : null,
-    pitchContainerWidth: pitchContainer ? pitchContainer.clientWidth : null,
-    canvasLeft: canvasRect?.left ?? null,
-    canvasRight: canvasRect?.right ?? null,
-    wrapperLeft: wrapperRect?.left ?? null,
-    wrapperRight: wrapperRect?.right ?? null,
-    canvasTransform: notationGrid ? window.getComputedStyle(notationGrid).transform : null
-  };
-}
 
 const getUuidTimestamp = (value?: string): number => {
   const timestampSegment = value?.split('-')[1];
@@ -479,13 +450,6 @@ export function drawTonicShape(
   const { cellWidth, cellHeight, modulationMarkers } = options;
   const y = getRowY(tonicSign.row, options);
 
-  // DIAGNOSTIC: Log Y position calculation for tonic drift debugging
-  console.log('[TONIC Y DIAGNOSTIC]', {
-    inputRow: tonicSign.row,
-    calculatedY: y,
-    cellHeight: cellHeight,
-  });
-
   // Resolve tonic column from column map (source of truth) to avoid drift if groupings change
   let canvasSpaceColumn = tonicSign.columnIndex;
   if (tonicSign.uuid) {
@@ -496,64 +460,7 @@ export function drawTonicShape(
       typeof e.canvasIndex === 'number'
     );
     if (entry && typeof entry.canvasIndex === 'number') {
-      const logKey = tonicSign.uuid;
-      if (entry.canvasIndex !== canvasSpaceColumn && !_loggedTonicPositions.has(logKey)) {
-        console.log('[TonicShape] Column mismatch', {
-          uuid: tonicSign.uuid,
-          storedColumnIndex: canvasSpaceColumn,
-          resolvedColumnIndex: entry.canvasIndex
-        });
-        _loggedTonicPositions.add(logKey);
-      }
-
-      const scrollInfo = getScrollDiagnostics();
-      const xPos = getColumnX(entry.canvasIndex, options);
-      const screenX = scrollInfo.canvasLeft !== null ? xPos + scrollInfo.canvasLeft : null;
-      const values: Record<string, number | string | null> = {
-        xPos,
-        screenX,
-        columnIndex: entry.canvasIndex,
-        gridsWrapperScroll: scrollInfo.gridsWrapperScroll,
-        pitchWrapperScroll: scrollInfo.pitchWrapperScroll,
-        pitchContainerScroll: scrollInfo.pitchContainerScroll,
-        buttonGridScroll: scrollInfo.buttonGridScroll,
-        scrollbarProxyScroll: scrollInfo.scrollbarProxyScroll,
-        canvasLeft: scrollInfo.canvasLeft,
-        canvasRight: scrollInfo.canvasRight,
-        wrapperLeft: scrollInfo.wrapperLeft,
-        wrapperRight: scrollInfo.wrapperRight,
-        gridsWrapperWidth: scrollInfo.gridsWrapperWidth,
-        pitchWrapperWidth: scrollInfo.pitchWrapperWidth,
-        pitchContainerWidth: scrollInfo.pitchContainerWidth,
-        canvasTransform: scrollInfo.canvasTransform || ''
-      };
-
-      const last = _tonicLogState[logKey]?.lastValues || {};
-      const changed = Object.keys(values).some(k => {
-        const prev = last[k];
-        const next = values[k];
-        if (typeof prev === 'number' && typeof next === 'number') {
-          return Math.abs(prev - next) > 0.5;
-        }
-        return prev !== next;
-      });
-
-      if (changed) {
-        console.log('[TonicShape] draw debug', {
-          uuid: tonicSign.uuid,
-          ...values,
-          totalCanvasColumns: map.totalCanvasColumns
-        });
-        _tonicLogState[logKey] = { lastValues: values };
-      }
-
       canvasSpaceColumn = entry.canvasIndex;
-    } else if (!_loggedTonicPositions.has(`missing-${tonicSign.uuid}`)) {
-      console.log('[TonicShape] No column map entry found for tonic', {
-        uuid: tonicSign.uuid,
-        storedColumnIndex: canvasSpaceColumn
-      });
-      _loggedTonicPositions.add(`missing-${tonicSign.uuid}`);
     }
   }
   const x = getColumnX(canvasSpaceColumn, options);

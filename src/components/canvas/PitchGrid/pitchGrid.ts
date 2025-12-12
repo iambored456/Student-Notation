@@ -22,6 +22,7 @@ type RenderOptions = Pick<AppState,
   | 'modulationMarkers'
   | 'accidentalMode'
   | 'showFrequencyLabels'
+  | 'showOctaveLabels'
 > & {
   placedNotes: PlacedNote[];
   placedTonicSigns: TonicSign[];
@@ -52,6 +53,7 @@ function renderPitchGrid() {
     macrobeatBoundaryStyles: store.state.macrobeatBoundaryStyles,
     accidentalMode: store.state.accidentalMode,
     showFrequencyLabels: store.state.showFrequencyLabels,
+    showOctaveLabels: store.state.showOctaveLabels,
     colorMode: 'color',
     degreeDisplayMode: store.state.degreeDisplayMode,
     zoomLevel: viewportInfo.zoomLevel,

@@ -1,6 +1,42 @@
 /**
- * Shared helpers for mapping row-based items between viewport (relative) space
- * and absolute pitch space.
+ * ROW COORDINATE SYSTEMS
+ * ======================
+ *
+ * This codebase uses TWO row coordinate systems for pitch positioning:
+ *
+ * 1. GLOBAL ROW (absolute position in masterRowData/fullRowData)
+ *    ─────────────────────────────────────────────────────────────
+ *    - Range: 0 to 104 (C8 at index 0, A0 at index 104)
+ *    - Used for: Playback, pitch lookups, data persistence, audio
+ *    - Access: fullRowData[globalRow] (always works, fullRowData is never sliced)
+ *    - Stored on notes/stamps/triplets as: item.globalRow
+ *
+ * 2. VIEWPORT ROW (position relative to current pitchRange)
+ *    ─────────────────────────────────────────────────────────────
+ *    - Range: 0 to (pitchRange.bottomIndex - pitchRange.topIndex)
+ *    - Used for: Canvas Y-coordinate calculations, rendering only
+ *    - Conversion: viewportRow = globalRow - pitchRange.topIndex
+ *    - Stored on notes/stamps/triplets as: item.row
+ *
+ * COORDINATE CONVERSION:
+ *   globalRow   → viewportRow:  viewportRow = globalRow - pitchRange.topIndex
+ *   viewportRow → globalRow:    globalRow = viewportRow + pitchRange.topIndex
+ *
+ * IMPORTANT USAGE RULES:
+ *   ✓ For pitch data lookups:  fullRowData[note.globalRow]
+ *   ✓ For playback/audio:      fullRowData[note.globalRow].toneNote
+ *   ✓ For Y-position rendering: getRowY(note.row, options)  // viewport row
+ *   ✗ AVOID: fullRowData[note.row] (only works if pitchRange.topIndex === 0)
+ *
+ * WHY TWO SYSTEMS?
+ *   - fullRowData contains ALL 105 pitches (never sliced for performance)
+ *   - pitchRange defines which pitches are currently visible/rendered
+ *   - This allows notes outside the viewport to still play back correctly
+ *   - Rendering is virtualized (only visible rows drawn) for performance
+ *
+ * See also:
+ *   - src/state/initialState/index.ts - Pitch data architecture docs
+ *   - src/components/canvas/PitchGrid/renderers/rendererUtils.ts - Y-position mapping
  */
 
 export interface RowPositionedItem {
@@ -43,8 +79,12 @@ export function remapRowPosition(
 }
 
 /**
- * Development-only invariant to catch coordinate drift between viewport and
- * absolute pitch spaces.
+ * Development-only invariant to verify coordinate consistency.
+ *
+ * Since fullRowData now contains the complete gamut (same as masterRowData),
+ * this function verifies that:
+ * 1. item.globalRow (if set) matches the expected pitch
+ * 2. item.row (viewport-relative) + topIndex === item.globalRow
  */
 export function assertRowIntegrity(
   item: RowPositionedItem,
@@ -57,22 +97,34 @@ export function assertRowIntegrity(
     return;
   }
 
-  const globalRow = typeof item.globalRow === 'number'
-    ? item.globalRow
-    : resolveGlobalRow(item.row, currentTopIndex);
+  // Calculate the expected globalRow from viewport row
+  const calculatedGlobalRow = resolveGlobalRow(item.row, currentTopIndex);
 
-  const viewportTone = fullRowData[item.row]?.toneNote;
-  const masterTone = masterRowData[globalRow]?.toneNote;
-
-  if (viewportTone && masterTone && viewportTone !== masterTone) {
-    console.error('[PITCH DRIFT]', {
+  // If item has globalRow set, it should match the calculated value
+  if (typeof item.globalRow === 'number' && item.globalRow !== calculatedGlobalRow) {
+    console.error('[ROW COORDINATE MISMATCH]', {
       source: source || 'rowCoordinates',
       item,
       currentTopIndex,
-      viewportTone,
-      masterTone,
       viewportRow: item.row,
-      globalRow
+      storedGlobalRow: item.globalRow,
+      calculatedGlobalRow,
+      expectedPitch: fullRowData[calculatedGlobalRow]?.toneNote,
+      actualPitch: fullRowData[item.globalRow]?.toneNote
+    });
+  }
+
+  // Verify the pitch at globalRow matches expectations
+  const globalRow = typeof item.globalRow === 'number' ? item.globalRow : calculatedGlobalRow;
+  const pitchAtGlobalRow = fullRowData[globalRow]?.toneNote;
+  const pitchAtMasterRow = masterRowData[globalRow]?.toneNote;
+
+  if (pitchAtGlobalRow !== pitchAtMasterRow) {
+    console.error('[PITCH DATA MISMATCH]', {
+      source: source || 'rowCoordinates',
+      globalRow,
+      fullRowDataPitch: pitchAtGlobalRow,
+      masterRowDataPitch: pitchAtMasterRow
     });
   }
 }

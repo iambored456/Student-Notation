@@ -65,57 +65,47 @@ let lastCalculatedButtonGridHeight = 0;
 let pendingSnapToRange = false;
 let pendingStartRow: number | null = null;
 
+/**
+ * ZOOM-RANGE INTEGRATION
+ * ======================
+ * When pitchRange is active, zoom is calculated to fit ALL rows in that range
+ * within the container height. This ensures "Fit to Range" behavior where
+ * clef presets display all their rows without scrolling.
+ *
+ * Formula: zoom = (2 * containerHeight) / (rowCount * BASE_ABSTRACT_UNIT)
+ *
+ * The "2" factor accounts for halfUnit spacing (each row takes cellHeight/2).
+ */
 function getDynamicMinZoomLevel() {
+  const pitchRange = store.state.pitchRange;
 
-
-  const totalRanks = store.state.fullRowData?.length || 0;
-
+  // Use pitchRange size if set, otherwise use full data length
+  // This ensures clef presets auto-zoom to fit their defined range
+  const totalRanks = pitchRange
+    ? (pitchRange.bottomIndex - pitchRange.topIndex + 1)
+    : (store.state.fullRowData?.length || 0);
 
   if (totalRanks === 0) {
-
-
     return MIN_ZOOM_LEVEL;
-
-
   }
-
-
-
-
 
   const pitchGridContainer = document.getElementById('pitch-grid-container');
-
-
   const fallbackViewport = viewportHeight || window.innerHeight || 0;
-
-
   const containerHeight = pitchGridContainer?.clientHeight || (fallbackViewport ? fallbackViewport * 0.7 : 0);
 
-
-
-
-
   if (!containerHeight || containerHeight <= 0) {
-
-
     return MIN_ZOOM_LEVEL;
-
-
   }
 
-
-
-
-
-  const requiredZoom = (2 * containerHeight) / (totalRanks * BASE_ABSTRACT_UNIT);
-
-
+  // Use (totalRanks - 1) to calculate zoom based on interval count, not row count
+  // Row centers span from 0 * halfUnit to (totalRanks-1) * halfUnit
+  // This ensures the last row's center aligns with the viewport bottom
+  // For 105 rows (0-104), there are 104 intervals between centers
+  const intervalCount = totalRanks - 1;
+  const requiredZoom = (2 * containerHeight) / (intervalCount * BASE_ABSTRACT_UNIT);
   const clampedMin = Math.max(MIN_ZOOM_LEVEL, requiredZoom);
 
-
   return clampedMin;
-
-
 }
 
 
@@ -1250,7 +1240,7 @@ function recalcAndApplyLayout() {
   });
 
   // Size legend canvases separately - they have fixed widths (2 columns each)
-  // and should match the height of the pitch grid container
+  // Use container height to match the container exactly
   resizeCanvasForPixelRatio(legendLeftCanvas, leftLegendWidthPx, pitchContainerHeight, pixelRatio, null);
   resizeCanvasForPixelRatio(legendRightCanvas, rightLegendWidthPx, pitchContainerHeight, pixelRatio, null);
 
@@ -1592,26 +1582,61 @@ const LayoutService = {
 
 
   getCurrentZoomLevel() {
-
-
     return currentZoomLevel;
-
-
   },
 
-
-
-
-
+  /**
+   * ZOOM SYSTEM
+   * ===========
+   *
+   * INTEGRATION WITH CLEF PRESETS:
+   * The zoom level and clef presets are coupled via "Fit to Range" behavior:
+   *
+   * Formula: zoom = (2 * containerHeight) / (rowCount * BASE_ABSTRACT_UNIT)
+   *
+   * This ensures that when a clef preset defines N rows to display,
+   * those N rows exactly fill the container height.
+   *
+   * ENTRY POINTS:
+   * - setZoomLevel(zoom) - Direct zoom set (from animation, user controls)
+   * - snapZoomToCurrentRange() - Calculate and apply zoom for current pitchRange
+   * - getDynamicMinZoomLevel() - Get minimum zoom to prevent gaps
+   *
+   * See: src/components/harmony/clefRangeController.ts for preset logic
+   */
   setZoomLevel(newZoom: number) {
+    const prevZoom = currentZoomLevel;
 
+    // Store the current visible row before zoom changes to preserve scroll position
+    const prevViewportInfo = this.getViewportInfo();
+    const preservedStartRow = prevViewportInfo.startRank;
 
     currentZoomLevel = newZoom;
-
-
     recalcAndApplyLayout();
 
+    // If zoom actually changed, restore scroll position to show the same row
+    if (Math.abs(currentZoomLevel - prevZoom) > 0.001) {
+      const pitchGridContainer = document.getElementById('pitch-grid-container');
+      const containerHeight = pitchGridContainer?.clientHeight || (viewportHeight * 0.7);
+      const newCellHeight = store.state.cellHeight || BASE_ABSTRACT_UNIT;
+      const newHalfUnit = newCellHeight / 2;
+      const totalRanks = store.state.fullRowData.length;
 
+      // Calculate new scrollable distance with the updated cellHeight
+      const fullVirtualHeight = totalRanks * newHalfUnit;
+      const scrollableDist = Math.max(0, fullVirtualHeight - containerHeight);
+
+      if (scrollableDist > 0) {
+        // Calculate offset to show the preserved row at the top
+        const targetOffset = preservedStartRow * newHalfUnit;
+        currentScrollPosition = Math.max(0, Math.min(1, targetOffset / scrollableDist));
+      } else {
+        currentScrollPosition = 0;
+      }
+
+      // Re-apply layout with corrected scroll position
+      recalcAndApplyLayout();
+    }
   },
 
 
@@ -1956,20 +1981,25 @@ const LayoutService = {
 
 
 
+  /**
+   * SNAP ZOOM TO RANGE
+   * ==================
+   * Adjusts zoom level so that ALL rows in the current pitchRange
+   * fit exactly within the container height.
+   *
+   * Called when:
+   * - Clef preset is applied (via animateRangeTransition)
+   * - Wheel picker range is committed (when locked)
+   * - App initializes with a stored pitchRange
+   *
+   * Uses getDynamicMinZoomLevel() which calculates:
+   *   zoom = (2 * containerHeight) / (rowCount * BASE_ABSTRACT_UNIT)
+   */
   snapZoomToCurrentRange() {
-
-
     if (isZooming) {
-
-
       pendingSnapToRange = true;
-
-
       return;
-
-
     }
-
 
     const enforcedMinZoom = getDynamicMinZoomLevel();
 
@@ -2276,17 +2306,24 @@ const LayoutService = {
     const scrollOffset = scrollableDist * currentScrollPosition;
 
 
-    const startRank = Math.max(0, Math.floor(scrollOffset / halfUnit));
+    // Use pitchRange if available (set by clef wheels), otherwise calculate from scroll
+    // pitchRange defines the visible window when using clef presets
+    const pitchRange = store.state.pitchRange;
+    const scrollBasedStartRank = Math.max(0, Math.floor(scrollOffset / halfUnit));
+    const startRank = pitchRange ? pitchRange.topIndex : scrollBasedStartRank;
 
 
     const visibleRankCount = containerHeight / halfUnit;
 
-
-    const endRank = Math.min(totalRanks, Math.ceil(startRank + visibleRankCount)  );
-
-
-
-
+    // Include partial row at bottom to match top behavior (symmetric)
+    // Top: Row at relativeIndex 0 has center at Y=0, top edge at -halfUnit (partial row above visible)
+    // Bottom: Row at relativeIndex N+1 should have top edge < containerHeight (partial row below visible)
+    // Use Math.min(totalRanks, ...) not (totalRanks - 1) to allow endRank = 105 for the partial row at the absolute bottom
+    const scrollBasedEndRank = Math.min(totalRanks, Math.floor(startRank + visibleRankCount) + 1);
+    // When using pitchRange (clef presets), also include +1 for the partial row at bottom
+    const endRank = pitchRange
+      ? Math.min(totalRanks, pitchRange.bottomIndex + 1)
+      : scrollBasedEndRank;
 
     return {
 

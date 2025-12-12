@@ -285,6 +285,7 @@ export function initToolSelectors() {
     'flatBtn',
     'sharpBtn',
     'frequencyBtn',
+    'octaveLabelBtn',
     'focusColoursToggle'
   );
 
@@ -297,6 +298,7 @@ export function initToolSelectors() {
   const flatBtn = cachedElements['flatBtn'];
   const sharpBtn = cachedElements['sharpBtn'];
   const frequencyBtn = cachedElements['frequencyBtn'];
+  const octaveToggleBtn = cachedElements['octaveLabelBtn'];
   const focusColoursToggle = cachedElements['focusColoursToggle'] as HTMLInputElement | null;
 
   const getPreferredDegreeMode = (): Exclude<DegreeDisplayMode, 'off'> => {
@@ -776,6 +778,10 @@ export function initToolSelectors() {
     store.toggleFrequencyLabels();
     frequencyBtn.blur(); // Remove focus to prevent lingering blue highlight
   });}
+  if (octaveToggleBtn) {octaveToggleBtn.addEventListener('click', () => {
+    store.toggleOctaveLabels();
+    octaveToggleBtn.blur();
+  });}
 
   const setAccidentalButtonsLocked = (locked: boolean): void => {
     [flatBtn, sharpBtn].forEach(btn => {
@@ -791,6 +797,11 @@ export function initToolSelectors() {
       frequencyBtn.setAttribute('aria-pressed', showFrequencyLabels ? 'true' : 'false');
     }
     setAccidentalButtonsLocked(showFrequencyLabels);
+  };
+  const syncOctaveUiState = (showOctaveLabels: boolean): void => {
+    if (!octaveToggleBtn) {return;}
+    octaveToggleBtn.classList.toggle('active', showOctaveLabels);
+    octaveToggleBtn.setAttribute('aria-pressed', showOctaveLabels ? 'true' : 'false');
   };
   if (focusColoursToggle) {focusColoursToggle.addEventListener('change', () => {
     // If turning on Focus Colours, check for tonic shapes
@@ -871,7 +882,11 @@ export function initToolSelectors() {
   store.on('frequencyLabelsChanged', (showFrequencyLabels: boolean) => {
     syncFrequencyUiState(showFrequencyLabels);
   });
+  store.on('octaveLabelsChanged', (showOctaveLabels: boolean) => {
+    syncOctaveUiState(showOctaveLabels);
+  });
   syncFrequencyUiState(store.state.showFrequencyLabels);
+  syncOctaveUiState(store.state.showOctaveLabels);
 
   // Initialize accent colors on startup
   if (harmonyContainer && store.state.selectedNote) {

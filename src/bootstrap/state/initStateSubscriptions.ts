@@ -41,6 +41,7 @@ export function initStateSubscriptions(): { renderAll: () => void } {
   store.on('accidentalModeChanged', renderAll);
   store.on('frequencyLabelsChanged', renderAll);
   store.on('focusColoursChanged', renderAll);
+  store.on('octaveLabelsChanged', renderAll);
   store.on('degreeDisplayModeChanged', renderAll);
   store.on('layoutConfigChanged', () => {
     PitchGridController.renderMacrobeatTools();

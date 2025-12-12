@@ -85,8 +85,9 @@ class RhythmPlaybackService {
     // Use direct SynthEngine calls with absolute timing
     const now = Tone.now();
 
-    // Get the base row from pitch for calculating per-shape pitches
-    const baseRow = placement?.row;
+    // Get the base row for calculating per-shape pitches
+    // Use globalRow for pitch lookups (fullRowData is never sliced)
+    const baseRow = placement?.globalRow ?? placement?.row;
 
     events.forEach((event, index) => {
       try {
@@ -199,7 +200,9 @@ class RhythmPlaybackService {
 
     // Use direct SynthEngine calls with absolute timing
     const now = Tone.now();
-    const baseRow = placement?.row;
+    // Get the base row for calculating per-shape pitches
+    // Use globalRow for pitch lookups (fullRowData is never sliced)
+    const baseRow = placement?.globalRow ?? placement?.row;
 
     events.forEach((event, index) => {
       try {

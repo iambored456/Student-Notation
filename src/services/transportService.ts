@@ -20,7 +20,15 @@ const FLAT_SYMBOL = '\u266d';
 const SHARP_SYMBOL = '\u266f';
 const LOOP_EPSILON = 1e-4;
 
-// Helper function to get pitch from row index (like in pitchGridInteractor.js)
+/**
+ * Gets pitch from a global row index.
+ * fullRowData contains the complete pitch gamut (never sliced).
+ *
+ * @param rowIndex - Global row index (0-104, index into fullRowData)
+ * @returns Pitch in Tone.js notation (e.g., "C4", "Bb5")
+ *
+ * See src/utils/rowCoordinates.ts for coordinate system documentation.
+ */
 function getPitchFromRow(rowIndex: number) {
   const rowData = store.state.fullRowData[rowIndex];
   if (!rowData) {
@@ -266,10 +274,19 @@ function calculateRegularTimeMap(microbeatDuration: number, columnWidths: number
   logger.debug('TransportService', `[TIMEMAP] Complete. Total columns: ${timeMap.length}, Final time: ${currentTime.toFixed(3)}s`);
 }
 
+/**
+ * Gets the pitch (toneNote) for a placed note.
+ * Uses globalRow for pitch lookup since fullRowData contains the complete gamut.
+ * Falls back to note.row for legacy notes that don't have globalRow set.
+ *
+ * See src/utils/rowCoordinates.ts for coordinate system documentation.
+ */
 function getPitchForNote(note: any) {
   const rowData = store.state.fullRowData;
-  if (rowData?.[note.row]) {
-    const pitch = rowData[note.row].toneNote;
+  // Use globalRow for pitch lookup (fullRowData is never sliced)
+  const rowIndex = note.globalRow ?? note.row;
+  if (rowData?.[rowIndex]) {
+    const pitch = rowData[rowIndex].toneNote;
     return pitch
       .replace(FLAT_SYMBOL, 'b')
       .replace(SHARP_SYMBOL, '#');
@@ -442,7 +459,9 @@ function scheduleNotes() {
     } else {
       const pitch = getPitchForNote(note);
       const toolColor = note.color;
-      const pitchColor = store.state.fullRowData[note.row]?.hex || '#888888';
+      // Use globalRow for pitch data lookup (fullRowData is never sliced)
+      const rowIndex = note.globalRow ?? note.row;
+      const pitchColor = store.state.fullRowData[rowIndex]?.hex || '#888888';
       const noteId = note.uuid;
       const timbre = store.state.timbres[toolColor];
 

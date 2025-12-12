@@ -4,6 +4,26 @@ import { getInitialTimbresState } from './timbres.js';
 import { fullRowData as masterRowData } from '../pitchData.js';
 import type { AppState } from '../../../types/state.js';
 
+/**
+ * PITCH DATA ARCHITECTURE
+ * =======================
+ *
+ * fullRowData: Contains the COMPLETE pitch gamut (A0-C8, 105 rows).
+ *              This is NEVER sliced - all pitches are always available.
+ *              Used for: pitch lookups, playback, data persistence.
+ *
+ * pitchRange:  Defines the currently VISIBLE/RENDERED portion of fullRowData.
+ *              { topIndex, bottomIndex } are indices into fullRowData/masterRowData.
+ *              Used for: viewport calculations, canvas rendering bounds.
+ *
+ * This separation ensures:
+ * - Notes outside the viewport still play back correctly
+ * - Pitch data is always available regardless of scroll/zoom position
+ * - Rendering is virtualized (only visible rows drawn) for performance
+ *
+ * See src/utils/rowCoordinates.ts for coordinate system documentation.
+ */
+
 export const initialState: AppState = {
   // --- Data & History ---
   placedNotes: [],
@@ -20,7 +40,8 @@ export const initialState: AppState = {
   },
   history: [ { notes: [], parkedNotes: [], tonicSignGroups: {}, timbres: getInitialTimbresState().timbres, placedChords: [], stampPlacements: [], tripletPlacements: [], annotations: [], lassoSelection: { selectedItems: [], convexHull: null, isActive: false } } ],
   historyIndex: 0,
-  fullRowData: [],
+  // Full pitch gamut - NEVER sliced, all 107 pitches always available (C#8 to Ab0, including boundary rows)
+  fullRowData: [...masterRowData],
   pitchRange: {
     topIndex: 0,
     bottomIndex: Math.max(0, (masterRowData?.length || 1) - 1)
@@ -61,6 +82,7 @@ export const initialState: AppState = {
   degreeDisplayMode: 'off',
   accidentalMode: { sharp: true, flat: true },
   showFrequencyLabels: false,
+  showOctaveLabels: true,
   focusColours: false,
   snapZoomToRange: false,
   isPitchRangeLocked: false,

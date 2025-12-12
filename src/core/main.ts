@@ -257,8 +257,16 @@ document.addEventListener('DOMContentLoaded', () => void (async () => {
         Math.max(0, Math.min(fullRowData.length - 1, initialPitchRange.topIndex ?? 0));
     const clampedBottom =
         Math.max(clampedTop, Math.min(fullRowData.length - 1, initialPitchRange.bottomIndex ?? (fullRowData.length - 1)));
+    /**
+     * INITIALIZATION: FIT-TO-RANGE ZOOM
+     * ==================================
+     * Set pitchRange and fullRowData, then after layout is ready,
+     * apply zoom to fit all rows in the pitchRange within the container.
+     */
     store.state.pitchRange = { topIndex: clampedTop, bottomIndex: clampedBottom };
-    store.state.fullRowData = fullRowData.slice(clampedTop, clampedBottom + 1);
+    // Note: fullRowData should contain the complete pitch gamut (88 rows), not a slice
+    // pitchRange defines which portion is visible/rendered
+    store.state.fullRowData = [...fullRowData];  // Full gamut, not sliced
     // Allowed initialization mutation: fullRowData assignment
 
     // Phase 2a-b: Initializing layout + canvas services
@@ -266,6 +274,12 @@ document.addEventListener('DOMContentLoaded', () => void (async () => {
     markComponentReady('layoutService');
     markComponentReady('canvasContextService');
     await LayoutService.waitForInitialLayout();
+
+    // Apply fit-to-range zoom after container height is known
+    // This ensures clef preset ranges fill the container on app load
+    if (store.state.pitchRange && LayoutService.snapZoomToCurrentRange) {
+      LayoutService.snapZoomToCurrentRange();
+    }
 
     // Phase 2c: Initializing SynthEngine
     SynthEngine.init();

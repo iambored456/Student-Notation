@@ -100,7 +100,7 @@
 
 /* Print info box */
 .print-info-box {
-  background-color: var(--c-bg);
+  background-color: var(--c-surface-muted);
   border: 1px solid var(--c-border);
   border-radius: 4px;
   padding: 12px;

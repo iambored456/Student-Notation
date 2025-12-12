@@ -67,6 +67,13 @@ function loadStateFromLocalStorage(): Partial<AppState> | undefined {
       parsedState.parkedNotes.forEach(ensureCircleNoteSpan);
     }
 
+    // IMPORTANT: Always replace fullRowData with the complete masterRowData gamut (88 pitches)
+    // Even if localStorage has a sliced version from old code, we want the full gamut
+    // pitchRange (restored above) controls what's visible, not the data itself
+    if (masterRowData && masterRowData.length > 0) {
+      parsedState.fullRowData = [...masterRowData];
+    }
+
     return parsedState;
   } catch (err) {
     logger.error('Store', 'Could not load state from localStorage', err, 'general');
@@ -97,7 +104,8 @@ function saveStateToLocalStorage(state: AppState): void {
       pitchRange: state.pitchRange,
       snapZoomToRange: state.snapZoomToRange,
       isPitchRangeLocked: state.isPitchRangeLocked,
-      degreeDisplayMode: state.degreeDisplayMode
+      degreeDisplayMode: state.degreeDisplayMode,
+      showOctaveLabels: state.showOctaveLabels
     }));
 
     // THE FIX: Correctly convert the live Float32Array into a storable Array.

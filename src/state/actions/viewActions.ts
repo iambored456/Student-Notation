@@ -170,6 +170,19 @@ export const viewActions = {
     this.emit('layoutConfigChanged');
   },
 
+  toggleOctaveLabels(this: Store): void {
+    const previous = this.state.showOctaveLabels;
+    this.state.showOctaveLabels = !previous;
+
+    logger.debug('ViewActions', 'toggleOctaveLabels', {
+      previous,
+      next: this.state.showOctaveLabels
+    }, 'state');
+
+    this.emit('octaveLabelsChanged', this.state.showOctaveLabels);
+    this.emit('layoutConfigChanged');
+  },
+
   toggleFocusColours(this: Store): void {
     this.state.focusColours = !this.state.focusColours;
     const focusColoursEnabled = this.state.focusColours;
@@ -345,12 +358,13 @@ export const viewActions = {
     const newBottomIndex = Math.max(newTopIndex, Math.min(totalRows - 1, requestedBottom));
 
     if (oldRange.topIndex === newTopIndex && oldRange.bottomIndex === newBottomIndex) {
-      // Debug log removed
       return;
     }
 
-    const newFullRowData = masterRowData.slice(newTopIndex, newBottomIndex + 1);
-    const maxRowIndex = newFullRowData.length - 1;
+    // Note: fullRowData is NOT sliced - it always contains the complete pitch gamut (105 rows).
+    // pitchRange defines which portion is visible/rendered.
+    // See src/state/initialState/index.ts and src/utils/rowCoordinates.ts for architecture docs.
+    const maxRowIndex = totalRows - 1;
     let removedNotes = 0;
     let removedStamps = 0;
     let removedTriplets = 0;
@@ -408,25 +422,6 @@ export const viewActions = {
               newTopIndex,
               newBottomIndex
             );
-
-            // DEBUG: Log tonic remapping with pitch verification
-            const oldPitch = this.state.fullRowData[sign.row]?.toneNote;
-            const newPitch = newFullRowData[mappedRow]?.toneNote;
-            const masterPitch = masterRowData[globalRow]?.toneNote;
-            console.log('[TONIC REMAP DEBUG]', {
-              hasGlobalRow: typeof sign.globalRow === 'number',
-              storedGlobalRow: sign.globalRow,
-              inputRow: sign.row,
-              oldTopIndex: oldRange.topIndex,
-              newTopIndex,
-              calculatedGlobalRow: globalRow,
-              mappedRow,
-              maxRowIndex,
-              oldPitch,
-              newPitch,
-              masterPitch,
-              pitchMatch: oldPitch === newPitch && oldPitch === masterPitch
-            });
 
             if (outsideRange && shouldTrim) {
               return null;
@@ -522,7 +517,7 @@ export const viewActions = {
     }
 
     this.state.pitchRange = { topIndex: newTopIndex, bottomIndex: newBottomIndex };
-    this.state.fullRowData = newFullRowData;
+    // Note: fullRowData is NOT updated here - it remains the complete pitch gamut
 
     let maintainStartRow = null;
     if (typeof options.maintainGlobalStart === 'number' && Number.isFinite(options.maintainGlobalStart)) {

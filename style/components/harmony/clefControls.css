@@ -65,8 +65,8 @@
 }
 
 .clef-wheel:focus-visible {
-    border-color: var(--accent, #4a90e2);
-    box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.25), inset 0 1px 0 rgba(255,255,255,0.6);
+    border-color: var(--c-accent-neutral, #ffc107);
+    box-shadow: 0 0 0 3px rgba(var(--c-accent-neutral-rgb, 255, 193, 7), 0.25), inset 0 1px 0 rgba(255,255,255,0.6);
 }
 
 .clef-wheel:active {
@@ -143,8 +143,8 @@
     top: 50%;
     height: 30px;
     border-radius: 16px;
-    border: 1px solid rgba(74, 144, 226, 0.35);
-    background: rgba(74, 144, 226, 0.08);
+    border: 1px solid rgba(var(--c-accent-neutral-rgb, 255, 193, 7), 0.35);
+    background: rgba(var(--c-accent-neutral-rgb, 255, 193, 7), 0.12);
     transform: translateY(-50%);
     box-shadow: inset 0 0 0 1px rgba(255,255,255,0.4);
 }

@@ -101,7 +101,7 @@
     flex-direction: column;
     gap: var(--space-025);
     padding: var(--space-015);
-    background-color: var(--c-bg);
+    background-color: var(--c-surface-muted);
     border: 1px solid var(--c-border);
     border-radius: var(--border-radius-md);
     min-height: auto;
